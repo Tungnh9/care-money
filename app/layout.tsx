@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro, Bricolage_Grotesque, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { cn } from "@/lib/utils";
 
 const obDisplay = Bricolage_Grotesque({
   variable: "--font-ob-display",
@@ -29,7 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="vi"
-      className={`${obDisplay.variable} ${obText.variable} ${obNum.variable} h-full antialiased`}
+      className={cn("h-full", "antialiased", obDisplay.variable, obText.variable, obNum.variable)}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

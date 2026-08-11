@@ -1,4 +1,8 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
 
 /* ============================================================
    Orange Banana — design tokens
@@ -88,6 +92,27 @@
   --ob-color-income: var(--ob-la-500);
   --ob-color-expense: var(--ob-do-500);
   --ob-color-info: var(--ob-xanh-500);
+
+  /* ---- Map cho component shadcn/ui — trỏ vào token --ob-* phía trên, không dùng OKLCH mặc định ---- */
+  --background: var(--ob-color-bg);
+  --foreground: var(--ob-color-text);
+  --card: var(--ob-color-surface);
+  --card-foreground: var(--ob-color-text);
+  --popover: var(--ob-color-surface);
+  --popover-foreground: var(--ob-color-text);
+  --primary: var(--ob-color-action);
+  --primary-foreground: var(--ob-color-on-action);
+  --secondary: var(--ob-color-action-soft);
+  --secondary-foreground: var(--ob-color-action-strong);
+  --muted: var(--ob-color-surface-sunken);
+  --muted-foreground: var(--ob-color-text-subtle);
+  --accent: var(--ob-color-action-soft);
+  --accent-foreground: var(--ob-color-action-strong);
+  --destructive: var(--ob-color-expense);
+  --border: var(--ob-color-border);
+  --input: var(--ob-color-border);
+  --ring: var(--ob-color-focus);
+  --radius: var(--ob-radius-md);
 }
 
 /* ---------- typography ---------- */
@@ -185,10 +210,30 @@
 }
 
 @theme inline {
-  --color-background: var(--ob-color-bg);
-  --color-foreground: var(--ob-color-text);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
   --font-sans: var(--font-ob-text);
   --font-mono: var(--font-ob-num);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 10px);
 }
 
 /* ---------- base ---------- */
@@ -217,4 +262,10 @@ a:hover {
 :focus-visible {
   outline: 2px solid var(--ob-color-focus);
   outline-offset: 2px;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
 }
