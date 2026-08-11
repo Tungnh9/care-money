@@ -301,3 +301,33 @@
 {"id": "v-0301", "word": "go for a bike ride", "pos": "v. phr.", "phonetic": "/gəʊ fɔː(r) ə baɪk raɪd/", "meaning": "đạp xe đạp đi dạo", "topic": "time", "addedAt": "2026-08-11"}
 {"id": "v-0302", "word": "go dancing", "pos": "v. phr.", "phonetic": "/gəʊ ˈdænsɪŋ/", "meaning": "đi khiêu vũ", "topic": "time", "addedAt": "2026-08-11"}
 {"id": "v-0303", "word": "early", "pos": "adv.", "phonetic": "/ˈɜːli/", "meaning": "sớm", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0304", "word": "(A and B) get along", "pos": "v. phr.", "phonetic": "/get əˈlɒŋ/", "meaning": "hòa thuận với nhau", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0305", "word": "disagreement", "pos": "n.", "phonetic": "/ˌdɪsəˈgriːmənt/", "meaning": "(sự) bất đồng", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0306", "word": "give advice", "pos": "v. phr.", "phonetic": "/gɪv ədˈvaɪs/", "meaning": "đưa ra lời khuyên", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0307", "word": "send messages", "pos": "v. phr.", "phonetic": "/send ˈmesɪdʒiz/", "meaning": "gửi tin nhắn", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0308", "word": "do video calls", "pos": "v. phr.", "phonetic": "/duː ˈvɪdiəʊ kɔːlz/", "meaning": "gọi điện video", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0309", "word": "meet up", "pos": "phr. v.", "phonetic": "/miːt ʌp/", "meaning": "gặp gỡ, tụ họp", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0310", "word": "roommate", "pos": "n.", "phonetic": "/ˈruːmmeɪt/", "meaning": "bạn cùng nhà/phòng", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0311", "word": "noise", "pos": "n.", "phonetic": "/nɔɪz/", "meaning": "tiếng ồn", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0312", "word": "save money", "pos": "v. phr.", "phonetic": "/seɪv ˈmʌni/", "meaning": "tiết kiệm tiền", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0313", "word": "share", "pos": "v.", "phonetic": "/ʃeə(r)/", "meaning": "chia sẻ", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0314", "word": "clean", "pos": "v.", "phonetic": "/kliːn/", "meaning": "dọn dẹp", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0315", "word": "pay the rent", "pos": "v. phr.", "phonetic": "/peɪ ðə rent/", "meaning": "thanh toán tiền thuê nhà", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0316", "word": "do the dishes", "pos": "v. phr.", "phonetic": "/duː ðə ˈdɪʃɪz/", "meaning": "rửa chén", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0317", "word": "take out the garbage", "pos": "v. phr.", "phonetic": "/teɪk aʊt ðə ˈgɑːbɪdʒ/", "meaning": "đổ rác", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0318", "word": "try to ...", "pos": "v. phr.", "phonetic": "/traɪ tu/", "meaning": "cố gắng làm gì đó", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0319", "word": "loud", "pos": "adj.", "phonetic": "/laʊd/", "meaning": "to (âm thanh), ầm ĩ", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0320", "word": "forget (about ...)", "pos": "v.", "phonetic": "/fəˈget əˈbaʊt/", "meaning": "quên (cái gì/làm gì)", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0321", "word": "do the chores", "pos": "v. phr.", "phonetic": "/duː ðə tʃɔː(r)z/", "meaning": "làm việc nhà", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0322", "word": "do the laundry", "pos": "v. phr.", "phonetic": "/duː ðə ˈlɔːndri/", "meaning": "giặt quần áo", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0323", "word": "sweep", "pos": "v.", "phonetic": "/swiːp/", "meaning": "quét (bằng cây chổi)", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0324", "word": "mop", "pos": "v.", "phonetic": "/mɑːp/", "meaning": "lau (bằng cây lau nhà)", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0325", "word": "vacuum", "pos": "v.", "phonetic": "/ˈvækjuːm/", "meaning": "hút bụi", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0326", "word": "friendship", "pos": "n.", "phonetic": "/ˈfrendʃɪp/", "meaning": "tình bạn", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0327", "word": "become", "pos": "v.", "phonetic": "/bɪˈkʌm/", "meaning": "trở thành, trở nên", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0328", "word": "make (new) friends", "pos": "v. phr.", "phonetic": "/meɪk (nuː) frendz/", "meaning": "kết bạn (mới)", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0329", "word": "get together", "pos": "phr. v.", "phonetic": "/get təˈgeðə(r)/", "meaning": "tụ họp, gặp gỡ", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0330", "word": "best friend", "pos": "n. phr.", "phonetic": "/best frend/", "meaning": "bạn thân", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0331", "word": "keep in touch", "pos": "v. phr.", "phonetic": "/kiːp ɪn tʌtʃ/", "meaning": "giữ liên lạc", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0332", "word": "near", "pos": "prep.", "phonetic": "/nɪə(r)/", "meaning": "gần (vị trí địa lí)", "topic": "together", "addedAt": "2026-08-11"}
+{"id": "v-0333", "word": "it's hard to ...", "pos": "phr.", "phonetic": "/ɪts hɑːd tu/", "meaning": "khó khăn để làm việc gì", "topic": "together", "addedAt": "2026-08-11"}
