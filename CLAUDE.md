@@ -59,3 +59,9 @@ docs: update tech stack section
 - ✅ `npm run lint` sạch (Husky pre-commit đã tự chặn nếu lỗi)
 - ✅ Cập nhật `CLAUDE.md` nếu thay đổi ảnh hưởng tới quy ước hoặc tech stack
 - ✅ Báo lại để duyệt trước khi merge vào `developer`
+
+## 5. Testing
+
+- **Test framework: Vitest** + React Testing Library cho component test — chưa cài (project chưa có code cần test), chọn trước để khi viết feature đầu tiên biết dùng gì.
+- **Quy trình trước khi commit**: viết test cho phần vừa thêm/sửa → chạy test → tự review lại diff → commit.
+- **Trước khi push**: chạy lại toàn bộ test suite. Khi đã có test thật, thêm hook `pre-push` (Husky) tự chạy `npm run test`, chặn push nếu fail — chưa thêm hook vì chưa có script `test` để chạy.
