@@ -1,16 +1,20 @@
 # CLAUDE.md
-
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 @AGENTS.md
 
-## Next.js version warning
+## Git workflow
 
-This project runs Next.js 16.3.0 with a React 19.2 canary — newer than most training data, with real breaking changes from Next.js 15 and earlier. Before writing App Router code, check `node_modules/next/dist/docs/01-app/` for the current API rather than relying on memory. Highlights that are easy to get wrong:
+- **`developer` là branch nền.** Không bao giờ commit trực tiếp lên `developer` hoặc `main` — luôn tách branch mới trước khi bắt đầu task mới.
+- **Đặt tên branch**: `<type>/<mô-tả-ngắn>`, ví dụ `feat/shadcn-setup`, `fix/login-redirect`.
+- **Các loại `<type>`**:
 
-- **Turbopack is the default** bundler for `next dev` and `next build` now; no `--turbopack` flag needed, and a custom Webpack config will fail the build unless you pass `--webpack`.
-- **Async request APIs have no sync fallback anymore**: `cookies()`, `headers()`, `draftMode()`, `params`, and `searchParams` must always be `await`ed.
-- **`middleware.ts` is renamed to `proxy.ts`** (export `proxy`, not `middleware`); the edge runtime is not supported in `proxy`.
-- **Route-aware type helpers are auto-generated globals**: `PageProps<'/route'>`, `LayoutProps<'/route'>`, `RouteContext<'/route'>` — use these instead of hand-writing `params`/`searchParams` prop types. `app/layout.tsx` already does this (`LayoutProps<"/">`).
-- **`next lint` is removed.** `npm run lint` runs the ESLint CLI directly against the flat config in `eslint.config.mjs`.
-- **Caching model changed**: `revalidateTag` now requires a `cacheLife` profile as its second argument; `cacheLife`/`cacheTag` are stable (no more `unstable_` prefix). Cache Components (`cacheComponents: true` in `next.config.ts`) is the new opt-in model replacing experimental PPR — not enabled in this project yet.
+  | Type | Dùng khi |
+  | --- | --- |
+  | `feat` | Thêm tính năng hoặc nội dung mới |
+  | `fix` | Sửa lỗi |
+  | `change` | Điều chỉnh cái đã có — không phải sửa lỗi, không phải tính năng hoàn toàn mới |
+  | `chore` | Việc lặt vặt: cập nhật dependency, cấu hình, tooling — không đổi hành vi |
+  | `docs` | Chỉ sửa tài liệu (CLAUDE.md, README...) |
+  | `refactor` | Đổi cấu trúc code, không đổi hành vi |
+
+- **Commit message dùng cùng tiền tố**: `feat: ...`, `fix: ...`, `change: ...`.
+- **Quy trình**: làm xong task trên branch riêng → báo lại để duyệt → merge vào `developer` → mới tách branch cho task tiếp theo.
