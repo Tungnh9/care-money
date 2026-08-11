@@ -270,3 +270,34 @@
 {"id": "v-0270", "word": "month", "pos": "n.", "phonetic": "/mʌnθ/", "meaning": "tháng", "topic": "special occasions", "addedAt": "2026-08-11"}
 {"id": "v-0271", "word": "year", "pos": "n.", "phonetic": "/jɪə(r)/", "meaning": "năm", "topic": "special occasions", "addedAt": "2026-08-11"}
 {"id": "v-0272", "word": "last for ...", "pos": "v. phr.", "phonetic": "/læst fɔː(r)/", "meaning": "kéo dài trong khoảng ...", "topic": "special occasions", "addedAt": "2026-08-11"}
+{"id": "v-0273", "word": "work out", "pos": "phr. v.", "phonetic": "/wɜːk aʊt/", "meaning": "tập thể dục", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0274", "word": "hang out", "pos": "phr. v.", "phonetic": "/hæŋ aʊt/", "meaning": "đi chơi", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0275", "word": "use social media", "pos": "v. phr.", "phonetic": "/juːz ˌsəʊʃl ˈmiːdiə/", "meaning": "sử dụng mạng xã hội", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0276", "word": "order", "pos": "v.", "phonetic": "/ˈɔːdə(r)/", "meaning": "đặt (hàng)", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0277", "word": "spend time with", "pos": "v. phr.", "phonetic": "/spend taɪm wɪθ/", "meaning": "dành thời gian với ai đó", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0278", "word": "walk (my dog/cat/...)", "pos": "v.", "phonetic": "/wɔːk/", "meaning": "dắt (chó/mèo/...) đi dạo", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0279", "word": "leave home", "pos": "v. phr.", "phonetic": "/liːv həʊm/", "meaning": "rời khỏi nhà", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0280", "word": "go to sleep", "pos": "v. phr.", "phonetic": "/gəʊ tu sliːp/", "meaning": "đi ngủ", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0281", "word": "get dressed", "pos": "v. phr.", "phonetic": "/get drest/", "meaning": "sửa soạn, mặc quần áo", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0282", "word": "talk on the phone", "pos": "v. phr.", "phonetic": "/tɔːk ɒn ðə fəʊn/", "meaning": "nói chuyện điện thoại", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0283", "word": "project", "pos": "n.", "phonetic": "/ˈprɑːdʒekt/", "meaning": "dự án", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0284", "word": "plan ...", "pos": "v.", "phonetic": "/plæn/", "meaning": "lên kế hoạch cho ...", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0285", "word": "spacewalk", "pos": "n.", "phonetic": "/ˈspeɪswɔːk/", "meaning": "cuộc đi bộ ngoài không gian", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0286", "word": "fix", "pos": "v.", "phonetic": "/fɪks/", "meaning": "sửa chữa", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0287", "word": "start", "pos": "v.", "phonetic": "/stɑːt/", "meaning": "bắt đầu", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0288", "word": "finish", "pos": "v.", "phonetic": "/ˈfɪnɪʃ/", "meaning": "kết thúc", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0289", "word": "go driving", "pos": "v. phr.", "phonetic": "/gəʊ ˈdraɪvɪŋ/", "meaning": "lái xe ô tô đi dạo", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0290", "word": "go biking", "pos": "v. phr.", "phonetic": "/gəʊ ˈbaɪkɪŋ/", "meaning": "đạp xe đạp đi dạo", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0291", "word": "go for a swim", "pos": "v. phr.", "phonetic": "/gəʊ fɔː(r) ə swɪm/", "meaning": "đi bơi", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0292", "word": "go for a hike", "pos": "v. phr.", "phonetic": "/gəʊ fɔː(r) ə haɪk/", "meaning": "đi bộ đường dài", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0293", "word": "go to the mall", "pos": "v. phr.", "phonetic": "/gəʊ tu ðə mɔːl/", "meaning": "đi trung tâm mua sắm", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0294", "word": "go to the movies", "pos": "v. phr.", "phonetic": "/gəʊ tu ðə ˈmuːvɪz/", "meaning": "đi xem phim", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0295", "word": "go to the gym", "pos": "v. phr.", "phonetic": "/gəʊ tu ðə dʒɪm/", "meaning": "đi tập thể dục ở phòng gym", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0296", "word": "check emails", "pos": "v. phr.", "phonetic": "/tʃek ˈiːmeɪlz/", "meaning": "kiểm tra email", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0297", "word": "go out", "pos": "v. phr.", "phonetic": "/gəʊ aʊt/", "meaning": "đi chơi", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0298", "word": "think about", "pos": "v. phr.", "phonetic": "/θɪŋk əˈbaʊt/", "meaning": "suy nghĩ về", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0299", "word": "go for a walk", "pos": "v. phr.", "phonetic": "/gəʊ fɔː(r) ə wɔːk/", "meaning": "đi dạo", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0300", "word": "go for a run", "pos": "v. phr.", "phonetic": "/gəʊ fɔː(r) ə rʌn/", "meaning": "đi chạy bộ", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0301", "word": "go for a bike ride", "pos": "v. phr.", "phonetic": "/gəʊ fɔː(r) ə baɪk raɪd/", "meaning": "đạp xe đạp đi dạo", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0302", "word": "go dancing", "pos": "v. phr.", "phonetic": "/gəʊ ˈdænsɪŋ/", "meaning": "đi khiêu vũ", "topic": "time", "addedAt": "2026-08-11"}
+{"id": "v-0303", "word": "early", "pos": "adv.", "phonetic": "/ˈɜːli/", "meaning": "sớm", "topic": "time", "addedAt": "2026-08-11"}
