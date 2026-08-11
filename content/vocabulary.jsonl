@@ -189,3 +189,29 @@
 {"id": "v-0189", "word": "company", "pos": "n.", "phonetic": "/ˈkʌmpəni/", "meaning": "công ty", "topic": "jobs", "addedAt": "2026-08-11"}
 {"id": "v-0190", "word": "tell someone to do something", "pos": "v. phr.", "phonetic": "/tel ˈsʌmwʌn tu duː ˈsʌmθɪŋ/", "meaning": "bảo ai đó làm gì đó", "topic": "jobs", "addedAt": "2026-08-11"}
 {"id": "v-0191", "word": "bring ... to ...", "pos": "v. phr.", "phonetic": "/brɪŋ tu/", "meaning": "mang gì đó đến ai đó", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0192", "word": "favorite", "pos": "n.", "phonetic": "/ˈfeɪvərɪt/", "meaning": "món đồ yêu thích", "topic": "possessions", "addedAt": "2026-08-11"}
+{"id": "v-0193", "word": "easy to buy", "pos": "phr.", "phonetic": "/ˈiːzi tu baɪ/", "meaning": "dễ tìm mua", "topic": "possessions", "addedAt": "2026-08-11"}
+{"id": "v-0194", "word": "important", "pos": "adj.", "phonetic": "/ɪmˈpɔːtnt/", "meaning": "quan trọng", "topic": "possessions", "addedAt": "2026-08-11"}
+{"id": "v-0195", "word": "expensive", "pos": "adj.", "phonetic": "/ɪkˈspensɪv/", "meaning": "đắt tiền", "topic": "possessions", "addedAt": "2026-08-11"}
+{"id": "v-0196", "word": "keep", "pos": "v.", "phonetic": "/kiːp/", "meaning": "giữ lại", "topic": "possessions", "addedAt": "2026-08-11"}
+{"id": "v-0197", "word": "throw ... away", "pos": "phr. v.", "phonetic": "/θrəʊ əˈweɪ/", "meaning": "vứt ... đi", "topic": "possessions", "addedAt": "2026-08-11"}
+{"id": "v-0198", "word": "gadget", "pos": "n.", "phonetic": "/ˈgædʒɪt/", "meaning": "thiết bị tiện ích", "topic": "possessions", "addedAt": "2026-08-11"}
+{"id": "v-0199", "word": "organize", "pos": "v.", "phonetic": "/ˈɔːgənaɪz/", "meaning": "sắp xếp (công việc)", "topic": "possessions", "addedAt": "2026-08-11"}
+{"id": "v-0200", "word": "send something to someone", "pos": "v. phr.", "phonetic": "/send ˈsʌmθɪŋ tu ˈsʌmwʌn/", "meaning": "gửi gì đó đến ai đó", "topic": "possessions", "addedAt": "2026-08-11"}
+{"id": "v-0201", "word": "coffee machine", "pos": "n.", "phonetic": "/ˈkɒfi məʃiːn/", "meaning": "máy pha cà phê", "topic": "possessions", "addedAt": "2026-08-11"}
+{"id": "v-0202", "word": "different", "pos": "adj.", "phonetic": "/ˈdɪfrənt/", "meaning": "khác nhau", "topic": "possessions", "addedAt": "2026-08-11"}
+{"id": "v-0203", "word": "make", "pos": "v.", "phonetic": "/meɪk/", "meaning": "làm ra, tạo ra", "topic": "possessions", "addedAt": "2026-08-11"}
+{"id": "v-0204", "word": "wallet", "pos": "n.", "phonetic": "/ˈwɑːlɪt/", "meaning": "ví tiền", "topic": "possessions", "addedAt": "2026-08-11"}
+{"id": "v-0205", "word": "purse", "pos": "n.", "phonetic": "/pɜːs/", "meaning": "ví tiền (nữ)", "topic": "possessions", "addedAt": "2026-08-11"}
+{"id": "v-0206", "word": "remote", "pos": "n.", "phonetic": "/rɪˈməʊt/", "meaning": "đồ điều khiển", "topic": "possessions", "addedAt": "2026-08-11"}
+{"id": "v-0207", "word": "charger", "pos": "n.", "phonetic": "/ˈtʃɑːdʒə(r)/", "meaning": "đồ sạc", "topic": "possessions", "addedAt": "2026-08-11"}
+{"id": "v-0208", "word": "credit card", "pos": "n.", "phonetic": "/ˈkredɪt kɑːd/", "meaning": "thẻ tín dụng", "topic": "possessions", "addedAt": "2026-08-11"}
+{"id": "v-0209", "word": "ID card", "pos": "n.", "phonetic": "/ˌaɪ ˈdiː kɑːd/", "meaning": "thẻ nhận dạng cá nhân", "topic": "possessions", "addedAt": "2026-08-11"}
+{"id": "v-0210", "word": "gift", "pos": "n.", "phonetic": "/gɪft/", "meaning": "món quà, quà tặng", "topic": "possessions", "addedAt": "2026-08-11"}
+{"id": "v-0211", "word": "gift card", "pos": "n.", "phonetic": "/ˈgɪft kɑːd/", "meaning": "thẻ quà tặng", "topic": "possessions", "addedAt": "2026-08-11"}
+{"id": "v-0212", "word": "backpack", "pos": "n.", "phonetic": "/ˈbækpæk/", "meaning": "ba lô", "topic": "possessions", "addedAt": "2026-08-11"}
+{"id": "v-0213", "word": "headphones", "pos": "n.", "phonetic": "/ˈhedfəʊnz/", "meaning": "tai nghe", "topic": "possessions", "addedAt": "2026-08-11"}
+{"id": "v-0214", "word": "watch", "pos": "n.", "phonetic": "/wɑːtʃ/", "meaning": "đồng hồ", "topic": "possessions", "addedAt": "2026-08-11"}
+{"id": "v-0215", "word": "umbrella", "pos": "n.", "phonetic": "/ʌmˈbrelə/", "meaning": "ô/dù", "topic": "possessions", "addedAt": "2026-08-11"}
+{"id": "v-0216", "word": "dictionary", "pos": "n.", "phonetic": "/ˈdɪkʃəneri/", "meaning": "từ điển", "topic": "possessions", "addedAt": "2026-08-11"}
+{"id": "v-0217", "word": "scarf", "pos": "n.", "phonetic": "/skɑːf/", "meaning": "khăn choàng", "topic": "possessions", "addedAt": "2026-08-11"}
