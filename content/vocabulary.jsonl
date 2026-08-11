@@ -55,3 +55,27 @@
 {"id": "v-0055", "word": "formal", "pos": "adj.", "phonetic": "/ˈfɔːml/", "meaning": "trang trọng", "topic": "clothing", "addedAt": "2026-08-11"}
 {"id": "v-0056", "word": "tight", "pos": "adj.", "phonetic": "/taɪt/", "meaning": "bó sát, chật", "topic": "clothing", "addedAt": "2026-08-11"}
 {"id": "v-0057", "word": "jewelry", "pos": "n.", "phonetic": "/ˈdʒuːəlri/", "meaning": "trang sức", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0058", "word": "exciting", "pos": "adj.", "phonetic": "/ɪkˈsaɪtɪŋ/", "meaning": "thú vị", "topic": "countries", "addedAt": "2026-08-11"}
+{"id": "v-0059", "word": "friendly", "pos": "adj.", "phonetic": "/ˈfrendli/", "meaning": "thân thiện", "topic": "countries", "addedAt": "2026-08-11"}
+{"id": "v-0060", "word": "crowded", "pos": "adj.", "phonetic": "/ˈkraʊdɪd/", "meaning": "đông đúc", "topic": "countries", "addedAt": "2026-08-11"}
+{"id": "v-0061", "word": "relaxing", "pos": "adj.", "phonetic": "/rɪˈlæksɪŋ/", "meaning": "mang lại cảm giác thư giãn", "topic": "countries", "addedAt": "2026-08-11"}
+{"id": "v-0062", "word": "popular", "pos": "adj.", "phonetic": "/ˈpɒpjələ(r)/", "meaning": "nổi tiếng", "topic": "countries", "addedAt": "2026-08-11"}
+{"id": "v-0063", "word": "wonderful", "pos": "adj.", "phonetic": "/ˈwʌndəfl/", "meaning": "tuyệt vời", "topic": "countries", "addedAt": "2026-08-11"}
+{"id": "v-0064", "word": "famous", "pos": "adj.", "phonetic": "/ˈfeɪməs/", "meaning": "nổi tiếng", "topic": "countries", "addedAt": "2026-08-11"}
+{"id": "v-0065", "word": "incredible", "pos": "adj.", "phonetic": "/ɪnˈkredəbl/", "meaning": "kỳ diệu, xuất sắc", "topic": "countries", "addedAt": "2026-08-11"}
+{"id": "v-0066", "word": "volcano", "pos": "n.", "phonetic": "/vɑːlˈkeɪnəʊ/", "meaning": "núi lửa", "topic": "countries", "addedAt": "2026-08-11"}
+{"id": "v-0067", "word": "farming", "pos": "n.", "phonetic": "/ˈfɑːmɪŋ/", "meaning": "nghề nông, nông nghiệp", "topic": "countries", "addedAt": "2026-08-11"}
+{"id": "v-0068", "word": "river", "pos": "n.", "phonetic": "/ˈrɪvə(r)/", "meaning": "dòng sông", "topic": "countries", "addedAt": "2026-08-11"}
+{"id": "v-0069", "word": "rainforest", "pos": "n.", "phonetic": "/ˈreɪnfɔːrɪst/", "meaning": "rừng mưa nhiệt đới", "topic": "countries", "addedAt": "2026-08-11"}
+{"id": "v-0070", "word": "choice", "pos": "n.", "phonetic": "/tʃɔɪs/", "meaning": "sự lựa chọn", "topic": "countries", "addedAt": "2026-08-11"}
+{"id": "v-0071", "word": "main language", "pos": "n. phr.", "phonetic": "/meɪn ˈlæŋgwɪdʒ/", "meaning": "ngôn ngữ chính", "topic": "countries", "addedAt": "2026-08-11"}
+{"id": "v-0072", "word": "large", "pos": "adj.", "phonetic": "/lɑːdʒ/", "meaning": "lớn", "topic": "countries", "addedAt": "2026-08-11"}
+{"id": "v-0073", "word": "busy (with)", "pos": "adj.", "phonetic": "/ˈbɪzi/", "meaning": "đông đúc, tấp nập", "topic": "countries", "addedAt": "2026-08-11"}
+{"id": "v-0074", "word": "visitor", "pos": "n.", "phonetic": "/ˈvɪzɪtə(r)/", "meaning": "khách du lịch, khách tham quan", "topic": "countries", "addedAt": "2026-08-11"}
+{"id": "v-0075", "word": "fun", "pos": "adj.", "phonetic": "/fʌn/", "meaning": "vui, thú vị", "topic": "countries", "addedAt": "2026-08-11"}
+{"id": "v-0076", "word": "Colombia", "pos": "n.", "phonetic": "/kəˈlʌmbiə/", "meaning": "nước Cô-lôm-bi-a", "topic": "countries", "addedAt": "2026-08-11"}
+{"id": "v-0077", "word": "Peru", "pos": "n.", "phonetic": "/pəˈruː/", "meaning": "nước Pê-ru", "topic": "countries", "addedAt": "2026-08-11"}
+{"id": "v-0078", "word": "the United Kingdom (the UK)", "pos": "n.", "phonetic": "/ðə juˌnaɪtɪd ˈkɪŋdəm/", "meaning": "Vương quốc Anh", "topic": "countries", "addedAt": "2026-08-11"}
+{"id": "v-0079", "word": "New Zealand", "pos": "n.", "phonetic": "/ˌnuː ˈziːlənd/", "meaning": "nước Niu Di-Lân", "topic": "countries", "addedAt": "2026-08-11"}
+{"id": "v-0080", "word": "Jamaica", "pos": "n.", "phonetic": "/dʒəˈmeɪkə/", "meaning": "nước Ja-mai-ca", "topic": "countries", "addedAt": "2026-08-11"}
+{"id": "v-0081", "word": "the Dominican Republic", "pos": "n.", "phonetic": "/ðə dəˌmɪnɪkən rɪˈpʌblɪk/", "meaning": "Cộng hòa Đô-mi-ni-ca", "topic": "countries", "addedAt": "2026-08-11"}
