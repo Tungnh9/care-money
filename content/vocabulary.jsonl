@@ -79,3 +79,31 @@
 {"id": "v-0079", "word": "New Zealand", "pos": "n.", "phonetic": "/ˌnuː ˈziːlənd/", "meaning": "nước Niu Di-Lân", "topic": "countries", "addedAt": "2026-08-11"}
 {"id": "v-0080", "word": "Jamaica", "pos": "n.", "phonetic": "/dʒəˈmeɪkə/", "meaning": "nước Ja-mai-ca", "topic": "countries", "addedAt": "2026-08-11"}
 {"id": "v-0081", "word": "the Dominican Republic", "pos": "n.", "phonetic": "/ðə dəˌmɪnɪkən rɪˈpʌblɪk/", "meaning": "Cộng hòa Đô-mi-ni-ca", "topic": "countries", "addedAt": "2026-08-11"}
+{"id": "v-0082", "word": "eat vegetables", "pos": "v. phr.", "phonetic": "/iːt ˈvedʒtəblz/", "meaning": "ăn rau củ", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0083", "word": "take vitamins", "pos": "v. phr.", "phonetic": "/teɪk ˈvaɪtəmɪnz/", "meaning": "uống các loại vitamin", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0084", "word": "cook simple meals", "pos": "v. phr.", "phonetic": "/kʊk sɪmpl miːlz/", "meaning": "nấu ăn đơn giản", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0085", "word": "eat a healthy snack", "pos": "v. phr.", "phonetic": "/iːt ə ˈhelθi snæk/", "meaning": "ăn đồ ăn vặt lành mạnh", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0086", "word": "skip", "pos": "v.", "phonetic": "/skɪp/", "meaning": "bỏ bữa", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0087", "word": "practice (+ sport)", "pos": "v.", "phonetic": "/ˈpræktɪs/", "meaning": "luyện tập", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0088", "word": "meal", "pos": "n.", "phonetic": "/miːl/", "meaning": "bữa ăn", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0089", "word": "healthy", "pos": "adj.", "phonetic": "/ˈhelθi/", "meaning": "lành mạnh; khỏe mạnh", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0090", "word": "energy", "pos": "n.", "phonetic": "/ˈenədʒi/", "meaning": "năng lượng", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0091", "word": "busy", "pos": "adj.", "phonetic": "/ˈbɪzi/", "meaning": "bận rộn (với việc làm, việc học)", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0092", "word": "taste (good/bad/etc.)", "pos": "v.", "phonetic": "/teɪst/", "meaning": "có vị (ngon/dở/...)", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0093", "word": "snack", "pos": "n.", "phonetic": "/snæk/", "meaning": "đồ ăn vặt", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0094", "word": "bad for ...", "pos": "adj. phr.", "phonetic": "/bæd fɔː(r)/", "meaning": "có hại cho ...", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0095", "word": "be high in ...", "pos": "adj. phr.", "phonetic": "/bi haɪ ɪn/", "meaning": "có chứa nhiều ...", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0096", "word": "come from", "pos": "v. phr.", "phonetic": "/kʌm frəm/", "meaning": "có nguồn gốc, xuất xứ từ", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0097", "word": "type of ...", "pos": "n. phr.", "phonetic": "/taɪp əv/", "meaning": "loại ...", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0098", "word": "good for ...", "pos": "adj. phr.", "phonetic": "/gʊd fɔː(r)/", "meaning": "có lợi cho ...", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0099", "word": "illness", "pos": "n.", "phonetic": "/ˈɪlnəs/", "meaning": "bệnh", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0100", "word": "cold", "pos": "n.", "phonetic": "/kəʊld/", "meaning": "bệnh cảm", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0101", "word": "cancer", "pos": "n.", "phonetic": "/ˈkænsə(r)/", "meaning": "ung thư", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0102", "word": "medicine", "pos": "n.", "phonetic": "/ˈmedɪsn/", "meaning": "thuốc", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0103", "word": "dish", "pos": "n.", "phonetic": "/dɪʃ/", "meaning": "món ăn", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0104", "word": "be made with", "pos": "phr.", "phonetic": "/bi meɪd wɪθ/", "meaning": "được làm từ", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0105", "word": "be low in ...", "pos": "adj. phr.", "phonetic": "/bi ləʊ ɪn/", "meaning": "có chứa ít ...", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0106", "word": "sugar", "pos": "n.", "phonetic": "/ˈʃʊgə(r)/", "meaning": "đường", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0107", "word": "salt", "pos": "n.", "phonetic": "/sɔːlt/", "meaning": "muối", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0108", "word": "protein", "pos": "n.", "phonetic": "/ˈprəʊtiːn/", "meaning": "chất đạm", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0109", "word": "fat", "pos": "n.", "phonetic": "/fæt/", "meaning": "chất béo", "topic": "food", "addedAt": "2026-08-11"}
