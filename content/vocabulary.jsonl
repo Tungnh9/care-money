@@ -107,3 +107,32 @@
 {"id": "v-0107", "word": "salt", "pos": "n.", "phonetic": "/sɔːlt/", "meaning": "muối", "topic": "food", "addedAt": "2026-08-11"}
 {"id": "v-0108", "word": "protein", "pos": "n.", "phonetic": "/ˈprəʊtiːn/", "meaning": "chất đạm", "topic": "food", "addedAt": "2026-08-11"}
 {"id": "v-0109", "word": "fat", "pos": "n.", "phonetic": "/fæt/", "meaning": "chất béo", "topic": "food", "addedAt": "2026-08-11"}
+{"id": "v-0110", "word": "rent", "pos": "n.", "phonetic": "/rent/", "meaning": "tiền thuê nhà", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0111", "word": "bathtub", "pos": "n.", "phonetic": "/ˈbæθtʌb/", "meaning": "bồn tắm", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0112", "word": "air conditioner", "pos": "n.", "phonetic": "/ˈeə kəndɪʃənə(r)/", "meaning": "máy điều hòa", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0113", "word": "fan", "pos": "n.", "phonetic": "/fæn/", "meaning": "quạt máy", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0114", "word": "elevator", "pos": "n.", "phonetic": "/ˈelɪveɪtə(r)/", "meaning": "thang máy", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0115", "word": "stairs", "pos": "n.", "phonetic": "/steə(r)z/", "meaning": "thang bộ", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0116", "word": "dining area", "pos": "n. phr.", "phonetic": "/ˈdaɪnɪŋ ˈeəriə/", "meaning": "khu ăn uống", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0117", "word": "oven", "pos": "n.", "phonetic": "/ˈʌvn/", "meaning": "lò nướng", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0118", "word": "color", "pos": "n.", "phonetic": "/ˈkʌlə(r)/", "meaning": "màu sắc", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0119", "word": "feel", "pos": "v.", "phonetic": "/fiːl/", "meaning": "cảm thấy", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0120", "word": "nervous", "pos": "adj.", "phonetic": "/ˈnɜːvəs/", "meaning": "lo lắng", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0121", "word": "alert", "pos": "adj.", "phonetic": "/əˈlɜːt/", "meaning": "tỉnh táo", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0122", "word": "hungry", "pos": "adj.", "phonetic": "/ˈhʌŋgri/", "meaning": "đói bụng", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0123", "word": "light", "pos": "n.", "phonetic": "/laɪt/", "meaning": "đèn", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0124", "word": "wall", "pos": "n.", "phonetic": "/wɔːl/", "meaning": "bức tường", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0125", "word": "uncomfortable", "pos": "adj.", "phonetic": "/ʌnˈkʌmftəbl/", "meaning": "không thoải mái", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0126", "word": "building", "pos": "n.", "phonetic": "/ˈbɪldɪŋ/", "meaning": "tòa nhà", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0127", "word": "floor", "pos": "n.", "phonetic": "/flɔː(r)/", "meaning": "tầng", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0128", "word": "shower", "pos": "n.", "phonetic": "/ˈʃaʊə(r)/", "meaning": "buồng tắm đứng", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0129", "word": "business", "pos": "n.", "phonetic": "/ˈbɪznəs/", "meaning": "công ty, cửa hàng", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0130", "word": "art gallery", "pos": "n.", "phonetic": "/ˈɑːt gæləri/", "meaning": "nhà triển lãm nghệ thuật", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0131", "word": "subway", "pos": "n.", "phonetic": "/ˈsʌbweɪ/", "meaning": "tàu điện ngầm", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0132", "word": "rug", "pos": "n.", "phonetic": "/rʌg/", "meaning": "tấm thảm", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0133", "word": "painting", "pos": "n.", "phonetic": "/ˈpeɪntɪŋ/", "meaning": "bức tranh vẽ", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0134", "word": "nightstand", "pos": "n.", "phonetic": "/ˈnaɪtstænd/", "meaning": "tủ đầu giường", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0135", "word": "closet", "pos": "n.", "phonetic": "/ˈklɑːzɪt/", "meaning": "tủ đồ", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0136", "word": "shelf", "pos": "n.", "phonetic": "/ʃelf/", "meaning": "cái kệ", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0137", "word": "armchair", "pos": "n.", "phonetic": "/ˈɑːmtʃeə(r)/", "meaning": "ghế bành", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0138", "word": "bright", "pos": "adj.", "phonetic": "/braɪt/", "meaning": "sáng (màu sắc)", "topic": "home", "addedAt": "2026-08-11"}
