@@ -25,3 +25,33 @@
 {"id": "v-0025", "word": "plan to do something", "pos": "v. phr.", "phonetic": "/plæn tu duː ˈsʌmθɪŋ/", "meaning": "dự định sẽ làm gì", "topic": "activities", "addedAt": "2026-08-11"}
 {"id": "v-0026", "word": "part-time", "pos": "adv.", "phonetic": "/ˌpɑːt ˈtaɪm/", "meaning": "bán thời gian", "topic": "activities", "addedAt": "2026-08-11"}
 {"id": "v-0027", "word": "full-time", "pos": "adv.", "phonetic": "/ˌfʊl ˈtaɪm/", "meaning": "toàn thời gian", "topic": "activities", "addedAt": "2026-08-11"}
+{"id": "v-0028", "word": "T-shirt", "pos": "n.", "phonetic": "/ˈtiː ʃɜːt/", "meaning": "áo thun", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0029", "word": "shorts", "pos": "n.", "phonetic": "/ʃɔːts/", "meaning": "quần đùi", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0030", "word": "skirt", "pos": "n.", "phonetic": "/skɜːt/", "meaning": "váy", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0031", "word": "dress", "pos": "n.", "phonetic": "/dres/", "meaning": "đầm", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0032", "word": "boots", "pos": "n.", "phonetic": "/buːts/", "meaning": "giày ống", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0033", "word": "sandals", "pos": "n.", "phonetic": "/ˈsændlz/", "meaning": "giày/dép quai hậu", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0034", "word": "socks", "pos": "n.", "phonetic": "/sɑːk/", "meaning": "vớ", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0035", "word": "perfume", "pos": "n.", "phonetic": "/pəˈfjuːm/", "meaning": "nước hoa", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0036", "word": "suit", "pos": "n.", "phonetic": "/suːt/", "meaning": "com-lê", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0037", "word": "sneakers", "pos": "n.", "phonetic": "/ˈsniːkə(r)z/", "meaning": "giày thể thao", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0038", "word": "blouse", "pos": "n.", "phonetic": "/blaʊs/", "meaning": "áo kiểu (nữ)", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0039", "word": "flats", "pos": "n.", "phonetic": "/flæts/", "meaning": "giày đế bằng", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0040", "word": "heels", "pos": "n.", "phonetic": "/hiːlz/", "meaning": "giày cao gót", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0041", "word": "flip-flops", "pos": "n.", "phonetic": "/flɪp flɑːps/", "meaning": "dép xỏ ngón", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0042", "word": "baggy", "pos": "adj.", "phonetic": "/ˈbægi/", "meaning": "rộng (trang phục)", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0043", "word": "dress + clothes", "pos": "n. phr.", "phonetic": "/ˈdres/", "meaning": "đồ trang trọng", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0044", "word": "match", "pos": "v.", "phonetic": "/mætʃ/", "meaning": "hợp nhau (trang phục, màu sắc)", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0045", "word": "shirt", "pos": "n.", "phonetic": "/ʃɜːt/", "meaning": "áo sơ mi", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0046", "word": "jacket", "pos": "n.", "phonetic": "/ˈdʒækɪt/", "meaning": "áo khoác", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0047", "word": "pants", "pos": "n.", "phonetic": "/pænts/", "meaning": "quần dài", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0048", "word": "tie", "pos": "n.", "phonetic": "/taɪ/", "meaning": "cà vạt", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0049", "word": "kind of + adj.", "pos": "phr.", "phonetic": "/kaɪnd əv/", "meaning": "khá là", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0050", "word": "dressy", "pos": "adj.", "phonetic": "/ˈdresi/", "meaning": "trang trọng", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0051", "word": "light", "pos": "adj.", "phonetic": "/laɪt/", "meaning": "sáng (màu sắc)", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0052", "word": "stylish", "pos": "adj.", "phonetic": "/ˈstaɪlɪʃ/", "meaning": "sành điệu, hợp thời trang", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0053", "word": "comfortable", "pos": "adj.", "phonetic": "/ˈkʌmftəbl/", "meaning": "(mang lại sự) thoải mái", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0054", "word": "casual", "pos": "adj.", "phonetic": "/ˈkæʒuəl/", "meaning": "bình thường, đơn giản", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0055", "word": "formal", "pos": "adj.", "phonetic": "/ˈfɔːml/", "meaning": "trang trọng", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0056", "word": "tight", "pos": "adj.", "phonetic": "/taɪt/", "meaning": "bó sát, chật", "topic": "clothing", "addedAt": "2026-08-11"}
+{"id": "v-0057", "word": "jewelry", "pos": "n.", "phonetic": "/ˈdʒuːəlri/", "meaning": "trang sức", "topic": "clothing", "addedAt": "2026-08-11"}
