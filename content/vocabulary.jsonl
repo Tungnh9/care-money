@@ -215,3 +215,32 @@
 {"id": "v-0215", "word": "umbrella", "pos": "n.", "phonetic": "/ʌmˈbrelə/", "meaning": "ô/dù", "topic": "possessions", "addedAt": "2026-08-11"}
 {"id": "v-0216", "word": "dictionary", "pos": "n.", "phonetic": "/ˈdɪkʃəneri/", "meaning": "từ điển", "topic": "possessions", "addedAt": "2026-08-11"}
 {"id": "v-0217", "word": "scarf", "pos": "n.", "phonetic": "/skɑːf/", "meaning": "khăn choàng", "topic": "possessions", "addedAt": "2026-08-11"}
+{"id": "v-0218", "word": "niece", "pos": "n.", "phonetic": "/niːs/", "meaning": "cháu gái", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0219", "word": "nephew", "pos": "n.", "phonetic": "/ˈnefjuː/", "meaning": "cháu trai", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0220", "word": "twin", "pos": "adj.", "phonetic": "/twɪn/", "meaning": "sinh đôi", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0221", "word": "only child", "pos": "n.", "phonetic": "/ˌəʊnli ˈtʃaɪld/", "meaning": "con một", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0222", "word": "younger brother/sister", "pos": "n. phr.", "phonetic": "/ˈjʌŋgə(r)/", "meaning": "em trai / em gái", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0223", "word": "older brother/sister", "pos": "n. phr.", "phonetic": "/əʊldə(r)/", "meaning": "anh trai / chị gái", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0224", "word": "middle child", "pos": "n. phr.", "phonetic": "/mɪdl tʃaɪld/", "meaning": "con giữa", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0225", "word": "married", "pos": "adj.", "phonetic": "/ˈmærid/", "meaning": "đã kết hôn, có gia đình", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0226", "word": "single", "pos": "adj.", "phonetic": "/ˈsɪŋgl/", "meaning": "độc thân", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0227", "word": "get married", "pos": "v. phr.", "phonetic": "/get ˈmærid/", "meaning": "kết hôn", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0228", "word": "in the future", "pos": "phr.", "phonetic": "/ɪn ðə ˈfjuːtʃə(r)/", "meaning": "trong tương lai", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0229", "word": "plan (to do something)", "pos": "v.", "phonetic": "/plæn tu/", "meaning": "dự định/lên kế hoạch (để làm gì)", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0230", "word": "agree with", "pos": "v. phr.", "phonetic": "/əˈgriː wɪθ/", "meaning": "đồng ý với", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0231", "word": "soon", "pos": "adv.", "phonetic": "/suːn/", "meaning": "sớm", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0232", "word": "kind", "pos": "adj.", "phonetic": "/kaɪnd/", "meaning": "tốt bụng", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0233", "word": "shy", "pos": "adj.", "phonetic": "/ʃaɪ/", "meaning": "rụt rè, nhút nhát", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0234", "word": "hardworking", "pos": "adj.", "phonetic": "/ˌhɑːdˈwɜːkɪŋ/", "meaning": "chăm chỉ, siêng năng", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0235", "word": "serious", "pos": "adj.", "phonetic": "/ˈsɪriəs/", "meaning": "nghiêm túc", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0236", "word": "friendly", "pos": "adj.", "phonetic": "/ˈfrendli/", "meaning": "thân thiện", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0237", "word": "tidy", "pos": "adj.", "phonetic": "/ˈtaɪdi/", "meaning": "gọn gàng, ngăn nắp", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0238", "word": "relaxed", "pos": "adj.", "phonetic": "/rɪˈlækst/", "meaning": "thoải mái", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0239", "word": "tall", "pos": "adj.", "phonetic": "/tɔːl/", "meaning": "cao", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0240", "word": "thin", "pos": "adj.", "phonetic": "/θɪn/", "meaning": "gầy, ốm", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0241", "word": "long", "pos": "adj.", "phonetic": "/lɒŋ/", "meaning": "dài", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0242", "word": "straight", "pos": "adj.", "phonetic": "/streɪt/", "meaning": "thẳng (tóc)", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0243", "word": "curly", "pos": "adj.", "phonetic": "/ˈkɜːli/", "meaning": "xoăn (tóc)", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0244", "word": "helpful", "pos": "adj.", "phonetic": "/ˈhelpfl/", "meaning": "hay giúp đỡ", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0245", "word": "careful", "pos": "adj.", "phonetic": "/ˈkerfl/", "meaning": "cẩn trọng, cẩn thận", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0246", "word": "polite", "pos": "adj.", "phonetic": "/pəˈlaɪt/", "meaning": "nhã nhặn, lịch sự", "topic": "relationships", "addedAt": "2026-08-11"}
