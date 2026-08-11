@@ -161,3 +161,31 @@
 {"id": "v-0161", "word": "salsa music", "pos": "n. phr.", "phonetic": "/ˈsɑːlsə ˈmjuːzɪk/", "meaning": "nhạc salsa", "topic": "introductions", "addedAt": "2026-08-11"}
 {"id": "v-0162", "word": "classical music", "pos": "n. phr.", "phonetic": "/ˈklæsɪkl ˈmjuːzɪk/", "meaning": "nhạc cổ điển", "topic": "introductions", "addedAt": "2026-08-11"}
 {"id": "v-0163", "word": "TV show", "pos": "n. phr.", "phonetic": "/ˌtiː ˈviː ʃəʊ/", "meaning": "chương trình truyền hình", "topic": "introductions", "addedAt": "2026-08-11"}
+{"id": "v-0164", "word": "apply for (a job)", "pos": "v. phr.", "phonetic": "/əˈplaɪ fɔː(r) ə dʒɑːb/", "meaning": "ứng tuyển", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0165", "word": "self-employed", "pos": "adj.", "phonetic": "/ˌself ɪmˈplɔɪd/", "meaning": "làm việc tự do", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0166", "word": "degree", "pos": "n.", "phonetic": "/dɪˈgriː/", "meaning": "bằng cấp", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0167", "word": "experience", "pos": "n.", "phonetic": "/ɪkˈspɪriəns/", "meaning": "kinh nghiệm", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0168", "word": "remember information", "pos": "v. phr.", "phonetic": "/rɪˈmembə(r) ˌɪnfəˈmeɪʃn/", "meaning": "ghi nhớ thông tin", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0169", "word": "play an instrument", "pos": "v. phr.", "phonetic": "/pleɪ ən ˈɪnstrəmənt/", "meaning": "chơi một nhạc cụ", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0170", "word": "understand feelings", "pos": "v. phr.", "phonetic": "/ˌʌndəˈstænd ˈfiːlɪŋz/", "meaning": "thấu hiểu cảm xúc", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0171", "word": "difficult", "pos": "adj.", "phonetic": "/ˈdɪfɪkəlt/", "meaning": "khó khăn", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0172", "word": "stressful", "pos": "adj.", "phonetic": "/ˈstresfl/", "meaning": "áp lực", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0173", "word": "rewarding", "pos": "adj.", "phonetic": "/rɪˈwɔːdɪŋ/", "meaning": "đáng giá", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0174", "word": "lazy", "pos": "adj.", "phonetic": "/ˈleɪzi/", "meaning": "lười biếng", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0175", "word": "smart", "pos": "adj.", "phonetic": "/smɑːt/", "meaning": "thông minh", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0176", "word": "coworker", "pos": "n.", "phonetic": "/ˈkəʊ wɜːkə(r)/", "meaning": "đồng nghiệp", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0177", "word": "bilingual", "pos": "adj.", "phonetic": "/baɪˈlɪŋgwəl/", "meaning": "song ngữ; nói được hai thứ tiếng", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0178", "word": "field", "pos": "n.", "phonetic": "/fiːld/", "meaning": "lĩnh vực", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0179", "word": "pay", "pos": "n.", "phonetic": "/peɪ/", "meaning": "mức lương", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0180", "word": "make money", "pos": "v. phr.", "phonetic": "/meɪk ˈmʌni/", "meaning": "kiếm tiền", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0181", "word": "shortage", "pos": "n.", "phonetic": "/ˈʃɔːtɪdʒ/", "meaning": "sự thiếu hụt nhân lực", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0182", "word": "million", "pos": "no.", "phonetic": "/ˈmɪljən/", "meaning": "triệu", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0183", "word": "management", "pos": "n.", "phonetic": "/ˈmænɪdʒmənt/", "meaning": "cấp quản lý, vị trí quản lý", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0184", "word": "security guard", "pos": "n.", "phonetic": "/sɪˈkjʊərəti gɑːd/", "meaning": "bảo vệ", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0185", "word": "server", "pos": "n.", "phonetic": "/ˈsɜːvə(r)/", "meaning": "người phục vụ", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0186", "word": "manager", "pos": "n.", "phonetic": "/ˈmænɪdʒə(r)/", "meaning": "người quản lý", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0187", "word": "software developer", "pos": "n.", "phonetic": "/ˈsɒftweə(r) dɪˈveləpə(r)/", "meaning": "người phát triển phần mềm", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0188", "word": "aide", "pos": "n.", "phonetic": "/eɪd/", "meaning": "trợ lý", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0189", "word": "company", "pos": "n.", "phonetic": "/ˈkʌmpəni/", "meaning": "công ty", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0190", "word": "tell someone to do something", "pos": "v. phr.", "phonetic": "/tel ˈsʌmwʌn tu duː ˈsʌmθɪŋ/", "meaning": "bảo ai đó làm gì đó", "topic": "jobs", "addedAt": "2026-08-11"}
+{"id": "v-0191", "word": "bring ... to ...", "pos": "v. phr.", "phonetic": "/brɪŋ tu/", "meaning": "mang gì đó đến ai đó", "topic": "jobs", "addedAt": "2026-08-11"}
