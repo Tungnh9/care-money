@@ -9,15 +9,16 @@ Mỗi dòng là 1 object JSON độc lập (không phải 1 array bao ngoài) �
 ### `vocabulary.jsonl`
 
 ```jsonc
-{"id": "v-0001", "word": "resilient", "phonetic": "/rɪˈzɪliənt/", "meaning": "kiên cường, bền bỉ", "example": "She stayed resilient through the setback.", "topic": "tính cách", "addedAt": "2026-08-11"}
+{"id": "v-0001", "word": "resilient", "pos": "adj.", "phonetic": "/rɪˈzɪliənt/", "meaning": "kiên cường, bền bỉ", "example": "She stayed resilient through the setback.", "topic": "tính cách", "addedAt": "2026-08-11"}
 ```
 
 | Field | Bắt buộc | Ghi chú |
 | --- | --- | --- |
 | `id` | có | `v-0001`, `v-0002`... tăng dần theo thứ tự thêm |
-| `word` | có | từ tiếng Anh |
+| `word` | có | từ tiếng Anh (có thể kèm `...` nếu là cụm, ví dụ `offer ... (to ...)`) |
+| `pos` | không | loại từ, giữ đúng ký hiệu nguồn: `v.`, `n.`, `adj.`, `adv.`, `phr.`, `v. phr.`... |
 | `phonetic` | không | phiên âm IPA |
-| `meaning` | có | nghĩa tiếng Việt |
+| `meaning` | có | nghĩa tiếng Việt (không kèm loại từ, đã tách ra field `pos`) |
 | `example` | không | câu ví dụ |
 | `topic` | không | chủ đề (tự do, không cần danh sách cố định) |
 | `addedAt` | có | ngày xử lý ảnh, không phải ngày trong ảnh gốc |

@@ -1,0 +1,27 @@
+{"id": "v-0001", "word": "offer ... (to ...)", "pos": "v.", "phonetic": "/ˈɒfə(r) tu/", "meaning": "cung cấp (cái gì) (cho ai đó)", "topic": "activities", "addedAt": "2026-08-11"}
+{"id": "v-0002", "word": "exam", "pos": "n.", "phonetic": "/ɪɡˈzæm/", "meaning": "kỳ thi", "topic": "activities", "addedAt": "2026-08-11"}
+{"id": "v-0003", "word": "for free", "pos": "phr.", "phonetic": "/fɔ:(r) ˈfriː/", "meaning": "miễn phí, không mất phí", "topic": "activities", "addedAt": "2026-08-11"}
+{"id": "v-0004", "word": "pay", "pos": "n.", "phonetic": "/peɪ/", "meaning": "mức lương", "topic": "activities", "addedAt": "2026-08-11"}
+{"id": "v-0005", "word": "talk about", "pos": "v. phr.", "phonetic": "/tɔːk əˈbaʊt/", "meaning": "nói về", "topic": "activities", "addedAt": "2026-08-11"}
+{"id": "v-0006", "word": "learn to", "pos": "v. phr.", "phonetic": "/lɜːn tu/", "meaning": "học cách làm gì", "topic": "activities", "addedAt": "2026-08-11"}
+{"id": "v-0007", "word": "work in ...", "pos": "v. phr.", "phonetic": "/wɜːk ɪn/", "meaning": "làm trong lĩnh vực nào đó", "topic": "activities", "addedAt": "2026-08-11"}
+{"id": "v-0008", "word": "abroad", "pos": "adv.", "phonetic": "/əˈbrɔːd/", "meaning": "ở nước ngoài", "topic": "activities", "addedAt": "2026-08-11"}
+{"id": "v-0009", "word": "startup", "pos": "n.", "phonetic": "/ˈstɑːt ʌp/", "meaning": "công ty khởi nghiệp", "topic": "activities", "addedAt": "2026-08-11"}
+{"id": "v-0010", "word": "university", "pos": "n.", "phonetic": "/ˌjuːnɪˈvɜːsəti/", "meaning": "trường đại học", "topic": "activities", "addedAt": "2026-08-11"}
+{"id": "v-0011", "word": "all over the ...", "pos": "phr.", "phonetic": "/ɔːl ˈəʊvə(r) ðə/", "meaning": "ở khắp nơi trên/trong ...", "topic": "activities", "addedAt": "2026-08-11"}
+{"id": "v-0012", "word": "free", "pos": "adj.", "phonetic": "/friː/", "meaning": "miễn phí", "topic": "activities", "addedAt": "2026-08-11"}
+{"id": "v-0013", "word": "foreign", "pos": "adj.", "phonetic": "/ˈfɒrən/", "meaning": "nước ngoài", "topic": "activities", "addedAt": "2026-08-11"}
+{"id": "v-0014", "word": "exercise", "pos": "v.", "phonetic": "/ˈeksəsaɪz/", "meaning": "tập luyện (thể thao)", "topic": "activities", "addedAt": "2026-08-11"}
+{"id": "v-0015", "word": "wait for", "pos": "v. phr.", "phonetic": "/weɪt fɔː(r)/", "meaning": "chờ đợi (ai đó)", "topic": "activities", "addedAt": "2026-08-11"}
+{"id": "v-0016", "word": "shop for", "pos": "v. phr.", "phonetic": "/ʃɒp fɔː(r)/", "meaning": "mua sắm gì đó", "topic": "activities", "addedAt": "2026-08-11"}
+{"id": "v-0017", "word": "use", "pos": "v.", "phonetic": "/juːz/", "meaning": "sử dụng", "topic": "activities", "addedAt": "2026-08-11"}
+{"id": "v-0018", "word": "visit", "pos": "v.", "phonetic": "/ˈvɪzɪt/", "meaning": "tham quan", "topic": "activities", "addedAt": "2026-08-11"}
+{"id": "v-0019", "word": "study for", "pos": "v. phr.", "phonetic": "/ˈstʌdi fɔː(r)/", "meaning": "học cho mục đích gì đó", "topic": "activities", "addedAt": "2026-08-11"}
+{"id": "v-0020", "word": "go to ...", "pos": "v. phr.", "phonetic": "/ɡəʊ tu/", "meaning": "(đi) học ở ...", "topic": "activities", "addedAt": "2026-08-11"}
+{"id": "v-0021", "word": "major in ...", "pos": "v. phr.", "phonetic": "/ˈmeɪdʒə(r) ɪn/", "meaning": "học chuyên ngành ...", "topic": "activities", "addedAt": "2026-08-11"}
+{"id": "v-0022", "word": "study", "pos": "v.", "phonetic": "/ˈstʌdi/", "meaning": "học", "topic": "activities", "addedAt": "2026-08-11"}
+{"id": "v-0023", "word": "take ... class", "pos": "v. phr.", "phonetic": "/teɪk klæs/", "meaning": "tham gia lớp học ...", "topic": "activities", "addedAt": "2026-08-11"}
+{"id": "v-0024", "word": "prepare for ...", "pos": "v. phr.", "phonetic": "/prɪˈpeə(r) fɔː(r)/", "meaning": "chuẩn bị cho ...", "topic": "activities", "addedAt": "2026-08-11"}
+{"id": "v-0025", "word": "plan to do something", "pos": "v. phr.", "phonetic": "/plæn tu duː ˈsʌmθɪŋ/", "meaning": "dự định sẽ làm gì", "topic": "activities", "addedAt": "2026-08-11"}
+{"id": "v-0026", "word": "part-time", "pos": "adv.", "phonetic": "/ˌpɑːt ˈtaɪm/", "meaning": "bán thời gian", "topic": "activities", "addedAt": "2026-08-11"}
+{"id": "v-0027", "word": "full-time", "pos": "adv.", "phonetic": "/ˌfʊl ˈtaɪm/", "meaning": "toàn thời gian", "topic": "activities", "addedAt": "2026-08-11"}
