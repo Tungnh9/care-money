@@ -244,3 +244,29 @@
 {"id": "v-0244", "word": "helpful", "pos": "adj.", "phonetic": "/ˈhelpfl/", "meaning": "hay giúp đỡ", "topic": "relationships", "addedAt": "2026-08-11"}
 {"id": "v-0245", "word": "careful", "pos": "adj.", "phonetic": "/ˈkerfl/", "meaning": "cẩn trọng, cẩn thận", "topic": "relationships", "addedAt": "2026-08-11"}
 {"id": "v-0246", "word": "polite", "pos": "adj.", "phonetic": "/pəˈlaɪt/", "meaning": "nhã nhặn, lịch sự", "topic": "relationships", "addedAt": "2026-08-11"}
+{"id": "v-0247", "word": "event", "pos": "n.", "phonetic": "/ɪˈvent/", "meaning": "sự kiện", "topic": "special occasions", "addedAt": "2026-08-11"}
+{"id": "v-0248", "word": "celebrate", "pos": "v.", "phonetic": "/ˈselɪbreɪt/", "meaning": "ăn mừng, kỷ niệm", "topic": "special occasions", "addedAt": "2026-08-11"}
+{"id": "v-0249", "word": "visitor", "pos": "n.", "phonetic": "/ˈvɪzɪtə(r)/", "meaning": "khách tham quan", "topic": "special occasions", "addedAt": "2026-08-11"}
+{"id": "v-0250", "word": "compete", "pos": "v.", "phonetic": "/kəmˈpiːt/", "meaning": "cạnh tranh", "topic": "special occasions", "addedAt": "2026-08-11"}
+{"id": "v-0251", "word": "join", "pos": "v.", "phonetic": "/dʒɔɪn/", "meaning": "tham gia (vào)", "topic": "special occasions", "addedAt": "2026-08-11"}
+{"id": "v-0252", "word": "look like", "pos": "v. phr.", "phonetic": "/lʊk laɪk/", "meaning": "trông giống", "topic": "special occasions", "addedAt": "2026-08-11"}
+{"id": "v-0253", "word": "change", "pos": "v.", "phonetic": "/tʃeɪndʒ/", "meaning": "thay đổi", "topic": "special occasions", "addedAt": "2026-08-11"}
+{"id": "v-0254", "word": "date", "pos": "n.", "phonetic": "/deɪt/", "meaning": "ngày (cụ thể, có ngày tháng)", "topic": "special occasions", "addedAt": "2026-08-11"}
+{"id": "v-0255", "word": "leave", "pos": "v.", "phonetic": "/liːv/", "meaning": "rời, khởi hành", "topic": "special occasions", "addedAt": "2026-08-11"}
+{"id": "v-0256", "word": "return (to ...)", "pos": "v.", "phonetic": "/rɪˈtɜːn/", "meaning": "quay về, trở về (đâu đó)", "topic": "special occasions", "addedAt": "2026-08-11"}
+{"id": "v-0257", "word": "ticket", "pos": "n.", "phonetic": "/ˈtɪkɪt/", "meaning": "vé", "topic": "special occasions", "addedAt": "2026-08-11"}
+{"id": "v-0258", "word": "trip", "pos": "n.", "phonetic": "/trɪp/", "meaning": "chuyến đi", "topic": "special occasions", "addedAt": "2026-08-11"}
+{"id": "v-0259", "word": "festival", "pos": "n.", "phonetic": "/ˈfestɪvl/", "meaning": "lễ hội", "topic": "special occasions", "addedAt": "2026-08-11"}
+{"id": "v-0260", "word": "take place", "pos": "v. phr.", "phonetic": "/teɪk pleɪs/", "meaning": "diễn ra", "topic": "special occasions", "addedAt": "2026-08-11"}
+{"id": "v-0261", "word": "celebration", "pos": "n.", "phonetic": "/ˌselɪˈbreɪʃn/", "meaning": "lễ ăn mừng, lễ kỷ niệm", "topic": "special occasions", "addedAt": "2026-08-11"}
+{"id": "v-0262", "word": "lunar calendar", "pos": "n. phr.", "phonetic": "/ˈluːnə(r) ˈkælɪndə(r)/", "meaning": "lịch âm", "topic": "special occasions", "addedAt": "2026-08-11"}
+{"id": "v-0263", "word": "gather", "pos": "v.", "phonetic": "/ˈgæðə(r)/", "meaning": "tụ họp, họp mặt", "topic": "special occasions", "addedAt": "2026-08-11"}
+{"id": "v-0264", "word": "costume", "pos": "n.", "phonetic": "/ˈkɒstuːm/", "meaning": "trang phục", "topic": "special occasions", "addedAt": "2026-08-11"}
+{"id": "v-0265", "word": "spring", "pos": "n.", "phonetic": "/sprɪŋ/", "meaning": "mùa xuân", "topic": "special occasions", "addedAt": "2026-08-11"}
+{"id": "v-0266", "word": "summer", "pos": "n.", "phonetic": "/ˈsʌmə(r)/", "meaning": "mùa hạ/hè", "topic": "special occasions", "addedAt": "2026-08-11"}
+{"id": "v-0267", "word": "fall", "pos": "n.", "phonetic": "/fɔːl/", "meaning": "mùa thu", "topic": "special occasions", "addedAt": "2026-08-11"}
+{"id": "v-0268", "word": "winter", "pos": "n.", "phonetic": "/ˈwɪntə(r)/", "meaning": "mùa đông", "topic": "special occasions", "addedAt": "2026-08-11"}
+{"id": "v-0269", "word": "week", "pos": "n.", "phonetic": "/wiːk/", "meaning": "tuần", "topic": "special occasions", "addedAt": "2026-08-11"}
+{"id": "v-0270", "word": "month", "pos": "n.", "phonetic": "/mʌnθ/", "meaning": "tháng", "topic": "special occasions", "addedAt": "2026-08-11"}
+{"id": "v-0271", "word": "year", "pos": "n.", "phonetic": "/jɪə(r)/", "meaning": "năm", "topic": "special occasions", "addedAt": "2026-08-11"}
+{"id": "v-0272", "word": "last for ...", "pos": "v. phr.", "phonetic": "/læst fɔː(r)/", "meaning": "kéo dài trong khoảng ...", "topic": "special occasions", "addedAt": "2026-08-11"}
