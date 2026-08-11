@@ -136,3 +136,28 @@
 {"id": "v-0136", "word": "shelf", "pos": "n.", "phonetic": "/ʃelf/", "meaning": "cái kệ", "topic": "home", "addedAt": "2026-08-11"}
 {"id": "v-0137", "word": "armchair", "pos": "n.", "phonetic": "/ˈɑːmtʃeə(r)/", "meaning": "ghế bành", "topic": "home", "addedAt": "2026-08-11"}
 {"id": "v-0138", "word": "bright", "pos": "adj.", "phonetic": "/braɪt/", "meaning": "sáng (màu sắc)", "topic": "home", "addedAt": "2026-08-11"}
+{"id": "v-0139", "word": "be interested in", "pos": "phr.", "phonetic": "/bi ˈɪntrəstɪd ɪn/", "meaning": "thích, có hứng thú với", "topic": "introductions", "addedAt": "2026-08-11"}
+{"id": "v-0140", "word": "sports player", "pos": "n. phr.", "phonetic": "/spɔːts ˈpleɪə(r)/", "meaning": "vận động viên thể thao; người chơi thể thao", "topic": "introductions", "addedAt": "2026-08-11"}
+{"id": "v-0141", "word": "sports team", "pos": "n. phr.", "phonetic": "/spɔːts tiːm/", "meaning": "đội thể thao", "topic": "introductions", "addedAt": "2026-08-11"}
+{"id": "v-0142", "word": "movie", "pos": "n.", "phonetic": "/ˈmuːvi/", "meaning": "(bộ) phim", "topic": "introductions", "addedAt": "2026-08-11"}
+{"id": "v-0143", "word": "singer", "pos": "n.", "phonetic": "/ˈsɪŋə(r)/", "meaning": "ca sĩ", "topic": "introductions", "addedAt": "2026-08-11"}
+{"id": "v-0144", "word": "band", "pos": "n.", "phonetic": "/bænd/", "meaning": "ban nhạc", "topic": "introductions", "addedAt": "2026-08-11"}
+{"id": "v-0145", "word": "first name", "pos": "n.", "phonetic": "/ˈfɜːst neɪm/", "meaning": "tên", "topic": "introductions", "addedAt": "2026-08-11"}
+{"id": "v-0146", "word": "last name", "pos": "n.", "phonetic": "/ˈlæst neɪm/", "meaning": "họ", "topic": "introductions", "addedAt": "2026-08-11"}
+{"id": "v-0147", "word": "nickname", "pos": "n.", "phonetic": "/ˈnɪkneɪm/", "meaning": "biệt danh", "topic": "introductions", "addedAt": "2026-08-11"}
+{"id": "v-0148", "word": "email address", "pos": "n. phr.", "phonetic": "/ˈiːmeɪl əˈdres/", "meaning": "địa chỉ email", "topic": "introductions", "addedAt": "2026-08-11"}
+{"id": "v-0149", "word": "phone number", "pos": "n.", "phonetic": "/ˈfəʊn nʌmbə(r)/", "meaning": "số điện thoại", "topic": "introductions", "addedAt": "2026-08-11"}
+{"id": "v-0150", "word": "spell", "pos": "v.", "phonetic": "/spel/", "meaning": "đánh vần", "topic": "introductions", "addedAt": "2026-08-11"}
+{"id": "v-0151", "word": "interest", "pos": "n.", "phonetic": "/ˈɪntrəst/", "meaning": "sở thích", "topic": "introductions", "addedAt": "2026-08-11"}
+{"id": "v-0152", "word": "baseball", "pos": "n.", "phonetic": "/ˈbeɪsbɔːl/", "meaning": "bóng chày", "topic": "introductions", "addedAt": "2026-08-11"}
+{"id": "v-0153", "word": "rugby", "pos": "n.", "phonetic": "/ˈrʌgbi/", "meaning": "bóng bầu dục", "topic": "introductions", "addedAt": "2026-08-11"}
+{"id": "v-0154", "word": "skateboarding", "pos": "n.", "phonetic": "/ˈskeɪtbɔːdɪŋ/", "meaning": "môn trượt ván", "topic": "introductions", "addedAt": "2026-08-11"}
+{"id": "v-0155", "word": "reality show", "pos": "n.", "phonetic": "/riˈæləti ʃəʊ/", "meaning": "chương trình truyền hình thực tế", "topic": "introductions", "addedAt": "2026-08-11"}
+{"id": "v-0156", "word": "surf the internet", "pos": "v. phr.", "phonetic": "/sɜːf ði ˈɪntənet/", "meaning": "lướt mạng", "topic": "introductions", "addedAt": "2026-08-11"}
+{"id": "v-0157", "word": "website", "pos": "n.", "phonetic": "/ˈwebsaɪt/", "meaning": "trang mạng", "topic": "introductions", "addedAt": "2026-08-11"}
+{"id": "v-0158", "word": "favorite", "pos": "adj.", "phonetic": "/ˈfeɪvərɪt/", "meaning": "yêu thích", "topic": "introductions", "addedAt": "2026-08-11"}
+{"id": "v-0159", "word": "be into", "pos": "phr.", "phonetic": "/bi ˈɪntu/", "meaning": "thích", "topic": "introductions", "addedAt": "2026-08-11"}
+{"id": "v-0160", "word": "kind of music", "pos": "n. phr.", "phonetic": "/kaɪnd əv ˈmjuːzɪk/", "meaning": "thể loại nhạc", "topic": "introductions", "addedAt": "2026-08-11"}
+{"id": "v-0161", "word": "salsa music", "pos": "n. phr.", "phonetic": "/ˈsɑːlsə ˈmjuːzɪk/", "meaning": "nhạc salsa", "topic": "introductions", "addedAt": "2026-08-11"}
+{"id": "v-0162", "word": "classical music", "pos": "n. phr.", "phonetic": "/ˈklæsɪkl ˈmjuːzɪk/", "meaning": "nhạc cổ điển", "topic": "introductions", "addedAt": "2026-08-11"}
+{"id": "v-0163", "word": "TV show", "pos": "n. phr.", "phonetic": "/ˌtiː ˈviː ʃəʊ/", "meaning": "chương trình truyền hình", "topic": "introductions", "addedAt": "2026-08-11"}
