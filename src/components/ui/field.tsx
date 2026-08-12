@@ -19,6 +19,7 @@ interface FieldProps
   numeric?: boolean
   group?: boolean
   value?: string | number
+  invalid?: boolean
 }
 
 function Field({
@@ -30,6 +31,7 @@ function Field({
   numeric,
   group,
   value,
+  invalid,
   onChange,
   ...props
 }: FieldProps) {
@@ -49,7 +51,14 @@ function Field({
           {label}
         </span>
       ) : null}
-      <span className="flex min-h-[var(--ob-hit-min)] items-center gap-[var(--ob-space-2)] rounded-[var(--ob-radius-md)] border-[1.5px] border-[var(--ob-color-border)] bg-[var(--ob-color-surface)] px-[14px]">
+      <span
+        className={cn(
+          "flex min-h-[var(--ob-hit-min)] items-center gap-[var(--ob-space-2)] rounded-[var(--ob-radius-md)] border-[1.5px] bg-[var(--ob-color-surface)] px-[14px] transition-colors duration-[var(--ob-dur-fast)]",
+          invalid
+            ? "border-[var(--ob-color-expense)]"
+            : "border-[var(--ob-color-border)] focus-within:border-[var(--ob-color-focus)]"
+        )}
+      >
         {prefix ? (
           <span className="text-sm text-[var(--ob-color-text-subtle)]">{prefix}</span>
         ) : null}
@@ -57,6 +66,7 @@ function Field({
           value={shown}
           onChange={handleChange}
           inputMode={numeric ? "numeric" : undefined}
+          aria-invalid={invalid || undefined}
           className={cn(
             "flex-1 py-[11px]",
             numeric
@@ -70,7 +80,12 @@ function Field({
         ) : null}
       </span>
       {hint ? (
-        <span className="mt-1.5 block text-xs text-[var(--ob-color-text-subtle)]">
+        <span
+          className={cn(
+            "mt-1.5 block text-xs",
+            invalid ? "text-[var(--ob-color-expense)]" : "text-[var(--ob-color-text-subtle)]"
+          )}
+        >
           {hint}
         </span>
       ) : null}
