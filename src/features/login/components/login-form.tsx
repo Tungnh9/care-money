@@ -10,6 +10,7 @@ import { Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Field } from "@/components/ui/field"
+import { setStoredUser } from "@/lib/auth"
 import { login } from "../api"
 import { useLoginLockout, MAX_ATTEMPTS, LOCKOUT_MINUTES } from "../hooks/use-login-lockout"
 import { loginSchema, type LoginFormValues } from "../schemas"
@@ -33,6 +34,7 @@ function LoginForm() {
     const ok = await login(data.email, data.password)
     if (ok) {
       registerSuccess()
+      setStoredUser({ email: data.email })
       router.push("/")
       return
     }

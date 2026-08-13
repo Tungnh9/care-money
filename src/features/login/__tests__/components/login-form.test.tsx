@@ -5,6 +5,7 @@ import { LoginForm } from "../../components/login-form"
 import { EMPTY_CREDENTIALS_MESSAGE } from "../../schemas"
 import { MAX_ATTEMPTS, LOCKOUT_MINUTES } from "../../hooks/use-login-lockout"
 import { MOCK_ACCOUNT } from "../../mock-data"
+import { getStoredUser } from "@/lib/auth"
 
 const push = vi.fn()
 
@@ -57,6 +58,16 @@ describe("LoginForm", () => {
     vi.useRealTimers()
 
     expect(push).toHaveBeenCalledWith("/")
+  })
+
+  it("saves the user to localStorage on correct credentials", async () => {
+    vi.useFakeTimers()
+    render(<LoginForm />)
+
+    await submitCredentials(MOCK_ACCOUNT.email, MOCK_ACCOUNT.password)
+    vi.useRealTimers()
+
+    expect(getStoredUser()).toEqual({ email: MOCK_ACCOUNT.email })
   })
 
   it("locks the submit button after too many failed attempts", async () => {
