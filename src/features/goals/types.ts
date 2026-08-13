@@ -1,9 +1,7 @@
-import type { LucideIcon } from "lucide-react"
-
 interface Goal {
   key: string
   name: string
-  icon: LucideIcon
+  icon: string
   now: number
   target: number
   percent: number

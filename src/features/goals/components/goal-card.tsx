@@ -1,4 +1,4 @@
-import { Check } from "lucide-react"
+import Image from "next/image"
 
 import { Streak } from "@/components/ob/streak"
 import { Card } from "@/components/ui/card"
@@ -13,7 +13,7 @@ interface GoalCardProps {
 
 function GoalCard({ goal }: GoalCardProps) {
   const isCar = goal.key === "car"
-  const GoalIcon = goal.done ? Check : goal.icon
+  const iconName = goal.done ? "check" : goal.icon
 
   return (
     <Card label={goal.name}>
@@ -26,7 +26,7 @@ function GoalCard({ goal }: GoalCardProps) {
               : "bg-[var(--ob-color-action-soft)] text-[var(--ob-color-action-strong)]"
           )}
         >
-          <GoalIcon size={23} />
+          <Image src={`/assets/icons/${iconName}.svg`} width={23} height={23} alt="" />
         </span>
         <div className="min-w-0">
           <div className="[font-family:var(--ob-font-num)] text-[clamp(18px,9cqi,26px)] font-bold leading-none tracking-[-0.02em] tabular-nums">

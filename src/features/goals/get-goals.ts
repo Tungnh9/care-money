@@ -1,5 +1,3 @@
-import { Car, Coins, Flame, PiggyBank } from "lucide-react"
-
 import type { MockGoalsData } from "./mock-data"
 import type { Goal } from "./types"
 
@@ -34,7 +32,7 @@ function getGoals(data: MockGoalsData): { goals: Goal[]; avg: number } {
     {
       key: "savings",
       name: "Tiết kiệm 100 triệu",
-      icon: PiggyBank,
+      icon: "pig",
       now: savingsTotal,
       target: 100_000_000,
       format: formatMoney,
@@ -44,7 +42,7 @@ function getGoals(data: MockGoalsData): { goals: Goal[]; avg: number } {
     {
       key: "gold",
       name: "Tích lũy 10 chỉ vàng",
-      icon: Coins,
+      icon: "gold",
       now: goldPhan,
       target: 100,
       format: formatChi,
@@ -54,7 +52,7 @@ function getGoals(data: MockGoalsData): { goals: Goal[]; avg: number } {
     {
       key: "car",
       name: "Mua xe ô tô",
-      icon: Car,
+      icon: "car",
       now: 0,
       target: 1,
       format: (n: number) => (n ? formatMoney(n) : "0%"),
@@ -64,7 +62,7 @@ function getGoals(data: MockGoalsData): { goals: Goal[]; avg: number } {
     {
       key: "streak",
       name: `${BADGE_AT} ngày duy trì liên tục`,
-      icon: Flame,
+      icon: "flame",
       now: streak,
       target: BADGE_AT,
       format: (n: number) => `${n} ngày`,
