@@ -50,14 +50,14 @@ describe("LoginForm", () => {
     expect(push).not.toHaveBeenCalled()
   })
 
-  it("redirects to / on correct credentials", async () => {
+  it("redirects to /overview on correct credentials", async () => {
     vi.useFakeTimers()
     render(<LoginForm />)
 
     await submitCredentials(MOCK_ACCOUNT.email, MOCK_ACCOUNT.password)
     vi.useRealTimers()
 
-    expect(push).toHaveBeenCalledWith("/")
+    expect(push).toHaveBeenCalledWith("/overview")
   })
 
   it("saves the user to localStorage on correct credentials", async () => {
