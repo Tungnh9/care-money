@@ -35,7 +35,7 @@ function LoginForm() {
     if (ok) {
       registerSuccess()
       setStoredUser({ email: data.email })
-      router.push("/")
+      router.push("/overview")
       return
     }
     registerFailure()
