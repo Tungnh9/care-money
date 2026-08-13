@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Orange Banana
 
-## Getting Started
+App cá nhân quản lý Tài chính · Nhật ký · Học tập · Mục tiêu, port từ bản bàn giao thiết kế sang Next.js 16 (App Router). Xem `CLAUDE.md` cho quy ước code/git đầy đủ.
 
-First, run the development server:
+## Chạy dự án
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run dev     # dev server (Turbopack), http://localhost:3000
+npm run build   # build production
+npm run start   # chạy bản build
+npm run lint    # eslint
+npm run test    # vitest run
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Cần Node ≥ 20.9 để build; **riêng `npm run test` cần Node ≥ 22.14** (Vitest/jsdom yêu cầu, khác với Next.js).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Cấu trúc thư mục
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/                  # routing thuần (Next.js App Router) — page.tsx là shell mỏng
+│   ├── layout.tsx        # root layout: nạp font, bọc <AuthGuard>
+│   ├── login/            # trang đăng nhập (/login)
+│   └── sandbox/          # trang tạm xem trực quan các component ui/ob
+├── features/             # business logic theo feature — xem CLAUDE.md mục Feature Rules
+│   └── login/            # feature đăng nhập: components/, hooks/, schemas.ts, api.ts, mock-data.ts
+├── components/
+│   ├── ui/               # component nền từ shadcn/ui, custom theo token --ob-*
+│   ├── ob/                # component riêng Orange Banana, không có primitive shadcn tương ứng
+│   └── auth-guard.tsx    # bọc root layout, check localStorage, đẩy về /login nếu chưa đăng nhập
+├── lib/                  # helper dùng chung ≥ 2 feature (cn(), auth.ts)
+└── test/                 # setup file cho Vitest
 
-## Learn More
+content/                  # dữ liệu JSONL (từ vựng/ngữ pháp) — dữ liệu, không phải code
+public/assets/            # logo, icon SVG từ bản bàn giao thiết kế
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Component hiện có
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### `components/ui/` — nền shadcn/ui, custom theo token `--ob-*`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Component | Props chính |
+| --- | --- |
+| `Button` | `variant` primary/secondary/reward/ghost · `size` sm/md/lg · `fullWidth` |
+| `Card` | `tone` plain/invert/reward/soft · `label` · `action` · `elevated` |
+| `Switch` | `label` · `hint` · `checked` · `onCheckedChange` |
+| `Progress` | `value` · `track` · `tone` reward/action · `label` · `hint` |
+| `Field` | `label` · `hint` · `prefix` · `suffix` · `numeric` · `group` (format số kiểu `vi-VN`) |
+| `Tag` | `module` taichinh/hoctap/ghichu/tamtrang/muctieu/kehoach |
+| `Checkbox`, `Input`, `Label` | primitive gốc shadcn — dùng làm nền cho các component trên, ít khi gọi trực tiếp |
 
-## Deploy on Vercel
+### `components/ob/` — không có primitive shadcn tương ứng, viết riêng
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Component | Props chính |
+| --- | --- |
+| `Figure` | `value` · `unit` · `delta` · `direction` up/down · `caption` · `size` lg/sm |
+| `Streak` | `days` · `done` · `icon` |
+| `TaskItem` | `label` · `done` · `onToggle` |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Khác
+
+| Component | Vị trí | Vai trò |
+| --- | --- | --- |
+| `AuthGuard` | `src/components/auth-guard.tsx` | Bọc `children` trong root layout, check user trong `localStorage` (qua `src/lib/auth.ts`), đẩy về `/login` nếu chưa đăng nhập; hiện spinner trong lúc chờ check |
