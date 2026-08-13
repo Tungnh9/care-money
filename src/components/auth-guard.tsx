@@ -33,9 +33,19 @@ function AuthGuard({ children }: AuthGuardProps) {
   }, [pathname, router])
 
   // Không có localStorage lúc SSR/hydrate đầu tiên, nên phải chờ effect chạy
-  // trên client mới biết chắc — chấp nhận 1 nhịp trắng trang trước khi hiện
-  // nội dung, giống hạn chế đã biết của toàn bộ hệ thống đăng nhập mock này.
-  if (!checked) return null
+  // trên client mới biết chắc — hiện loading spinner trong lúc chờ để tránh
+  // trắng trang, đây là hạn chế đã biết của toàn bộ hệ thống đăng nhập mock này.
+  if (!checked) {
+    return (
+      <div className="flex min-h-svh items-center justify-center bg-[var(--ob-color-bg)]">
+        <div
+          role="status"
+          aria-label="Đang tải"
+          className="size-8 animate-spin rounded-full border-[3px] border-[var(--ob-color-border)] border-t-[var(--ob-color-action)]"
+        />
+      </div>
+    )
+  }
 
   return <>{children}</>
 }
