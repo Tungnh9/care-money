@@ -10,6 +10,7 @@ import { Tag } from "@/components/ui/tag";
 import { Figure } from "@/components/ob/figure";
 import { Streak } from "@/components/ob/streak";
 import { TaskItem } from "@/components/ob/task-item";
+import { JournalEditor } from "@/features/journal/components/journal-editor";
 
 export default function SandboxPage() {
   const [checked, setChecked] = useState(true);
@@ -91,6 +92,14 @@ export default function SandboxPage() {
           suffix="đ"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
+        />
+      </section>
+
+      {/* Demo tạm cho Phase 2 của Nhật ký — dọn khi có route /journal thật */}
+      <section>
+        <JournalEditor
+          selectedMood={null}
+          onSave={(input) => console.log("journal save", input)}
         />
       </section>
     </div>
