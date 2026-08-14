@@ -49,8 +49,8 @@ function StudySummarySection({ vocab, grammar, tasks, onToggleTask, learned }: S
   const doneTasks = tasks.filter((task) => task.done).length
 
   return (
-    <div className="flex flex-wrap gap-5">
-      <Card label="Nhiệm vụ hôm nay" className="min-w-0 flex-[1_1_280px]">
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-5">
+      <Card label="Nhiệm vụ hôm nay">
         <Figure value={String(doneTasks)} unit={`/${tasks.length}`} size="sm" className="mb-[14px]" />
         <div className="flex flex-col gap-[6px]">
           {tasks.map((task, i) => (
@@ -59,7 +59,7 @@ function StudySummarySection({ vocab, grammar, tasks, onToggleTask, learned }: S
         </div>
       </Card>
 
-      <Card label="5 từ hôm nay" className="min-w-0 flex-[1_1_300px]">
+      <Card label="5 từ hôm nay">
         <div className="flex flex-col gap-[9px]">
           {daily.map((entry) => (
             <VocabTeaserRow key={entry.id} entry={entry} learned={learned.includes(entry.id)} />
