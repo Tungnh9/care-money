@@ -29,7 +29,7 @@ function NetWorthCard({ summary }: NetWorthCardProps) {
   const total = savingsTotal + goldValue + investValue + debtTotal
 
   return (
-    <Card tone="invert" label="Tài sản ròng">
+    <Card tone="invert" label="Tài sản ròng" className="col-span-full">
       <Figure
         value={formatMoney(net)}
         delta={pct1(netPct)}
