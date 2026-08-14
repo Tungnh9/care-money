@@ -1,7 +1,7 @@
+import { BADGE_AT } from "@/lib/constants"
+
 import type { MockGoalsData } from "./mock-data"
 import type { Goal } from "./types"
-
-const BADGE_AT = 30
 
 function formatMoney(n: number): string {
   return n.toLocaleString("vi-VN") + " ₫"
@@ -79,4 +79,4 @@ function getGoals(data: MockGoalsData): { goals: Goal[]; avg: number } {
   return { goals, avg }
 }
 
-export { BADGE_AT, formatChi, formatMoney, getGoals }
+export { formatChi, formatMoney, getGoals }
