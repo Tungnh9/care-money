@@ -2,13 +2,13 @@
 
 import { cn } from "@/lib/utils"
 
-interface StudyTabsProps {
+interface TabsProps {
   tabs: string[]
   active: string
   onChange: (tab: string) => void
 }
 
-function StudyTabs({ tabs, active, onChange }: StudyTabsProps) {
+function Tabs({ tabs, active, onChange }: TabsProps) {
   return (
     <div className="mb-[18px] flex flex-wrap gap-1">
       {tabs.map((tab) => {
@@ -33,4 +33,4 @@ function StudyTabs({ tabs, active, onChange }: StudyTabsProps) {
   )
 }
 
-export { StudyTabs }
+export { Tabs }

@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest"
 
 import { BADGE_AT } from "@/lib/constants"
-import { formatChi, formatMoney, getGoals } from "../get-goals"
+import { formatMoney } from "@/lib/format"
+import { formatChi, getGoals } from "../get-goals"
 import { MOCK_GOALS_DATA } from "../mock-data"
 
 describe("getGoals", () => {

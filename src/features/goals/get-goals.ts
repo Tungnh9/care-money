@@ -1,11 +1,8 @@
 import { BADGE_AT } from "@/lib/constants"
+import { formatMoney } from "@/lib/format"
 
 import type { MockGoalsData } from "./mock-data"
 import type { Goal } from "./types"
-
-function formatMoney(n: number): string {
-  return n.toLocaleString("vi-VN") + " ₫"
-}
 
 function formatChi(phan: number): string {
   const chi = Math.floor(phan / 10)
@@ -79,4 +76,4 @@ function getGoals(data: MockGoalsData): { goals: Goal[]; avg: number } {
   return { goals, avg }
 }
 
-export { formatChi, formatMoney, getGoals }
+export { formatChi, getGoals }
