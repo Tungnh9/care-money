@@ -3,6 +3,7 @@
 import { useState } from "react"
 
 import { Tabs } from "@/components/ob/tabs"
+import { longDate } from "@/lib/date"
 import { formatMoney } from "@/lib/format"
 import { pct1, summarizeFinance } from "../finance-calculations"
 import { useFinance } from "../hooks/use-finance"
@@ -14,13 +15,6 @@ import { PillarCard } from "./pillar-card"
 import { SavingsTab } from "./savings-tab"
 
 const TABS = ["Tiết kiệm", "Nợ thẻ tín dụng", "Tích lũy vàng", "Đầu tư"]
-
-const WEEKDAYS = ["Chủ nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"]
-
-function longDate(): string {
-  const d = new Date()
-  return `${WEEKDAYS[d.getDay()]}, ${d.getDate()} tháng ${d.getMonth() + 1}`
-}
 
 function FinanceView() {
   const [tab, setTab] = useState(TABS[0])

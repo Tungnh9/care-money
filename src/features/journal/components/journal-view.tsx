@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 
+import { longDate } from "@/lib/date"
 import { useSettings } from "@/features/settings/hooks/use-settings"
 import { useJournal } from "../hooks/use-journal"
 import { JournalEditor } from "./journal-editor"
@@ -9,13 +10,6 @@ import { JournalEntriesCard } from "./journal-entries-card"
 import { JournalSaveSuccess } from "./journal-save-success"
 import { MoodPickerCard } from "./mood-picker-card"
 import type { JournalEntry } from "../types"
-
-const WEEKDAYS = ["Chủ nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"]
-
-function longDate(): string {
-  const d = new Date()
-  return `${WEEKDAYS[d.getDay()]}, ${d.getDate()} tháng ${d.getMonth() + 1}`
-}
 
 function JournalView() {
   const { settings } = useSettings()
