@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import { act, renderHook, waitFor } from "@testing-library/react"
 
-import { useStudy } from "../hooks/use-study"
-import { DEFAULT_STUDY_STATE, getStoredStudy } from "../study-storage"
+import { useStudy } from "../../hooks/use-study"
+import { DEFAULT_STUDY_STATE, STUDY_STORAGE_KEY, getStoredStudy } from "../../study-storage"
 
 describe("useStudy", () => {
   beforeEach(() => {
@@ -52,5 +52,24 @@ describe("useStudy", () => {
       result.current.toggleLearned("v-0001")
     })
     expect(result.current.learned).toEqual(["v-0002"])
+  })
+
+  it("replaceStudy overwrites the whole state and persists it, e.g. after restoring a backup", async () => {
+    const { result } = renderHook(() => useStudy())
+    await waitFor(() => expect(result.current.tasks).toEqual(DEFAULT_STUDY_STATE.tasks))
+
+    const restored = { tasks: [{ label: "Việc mới", done: true }], learned: ["v-0009"] }
+    act(() => {
+      result.current.replaceStudy(restored)
+    })
+
+    expect(result.current.tasks).toEqual(restored.tasks)
+    expect(getStoredStudy().learned).toEqual(["v-0009"])
+  })
+
+  it("getStoredStudy falls back to defaults when localStorage has corrupted JSON", () => {
+    window.localStorage.setItem(STUDY_STORAGE_KEY, "{not valid json")
+
+    expect(getStoredStudy()).toEqual(DEFAULT_STUDY_STATE)
   })
 })

@@ -33,6 +33,10 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null
 }
 
+function ensureArray<T>(value: unknown, fallback: T[]): T[] {
+  return Array.isArray(value) ? (value as T[]) : fallback
+}
+
 function parseImportPayload(raw: string): ImportResult {
   let parsed: unknown
   try {
@@ -45,12 +49,37 @@ function parseImportPayload(raw: string): ImportResult {
     return { ok: false, error: "Không phải bản sao Orange Banana (thiếu version 1)." }
   }
 
-  const journal: JournalState = { ...DEFAULT_JOURNAL_STATE, ...(isObject(parsed.journal) ? parsed.journal : {}) }
-  const finance: FinanceState = { ...DEFAULT_FINANCE_STATE, ...(isObject(parsed.finance) ? parsed.finance : {}) }
-  const study: StudyState = { ...DEFAULT_STUDY_STATE, ...(isObject(parsed.study) ? parsed.study : {}) }
+  const journalOverride = isObject(parsed.journal) ? parsed.journal : {}
+  const journal: JournalState = {
+    ...DEFAULT_JOURNAL_STATE,
+    ...journalOverride,
+    entries: ensureArray(journalOverride.entries, DEFAULT_JOURNAL_STATE.entries),
+  }
+
+  const financeOverride = isObject(parsed.finance) ? parsed.finance : {}
+  const finance: FinanceState = {
+    ...DEFAULT_FINANCE_STATE,
+    ...financeOverride,
+    savings: ensureArray(financeOverride.savings, DEFAULT_FINANCE_STATE.savings),
+    cards: ensureArray(financeOverride.cards, DEFAULT_FINANCE_STATE.cards),
+    gold: ensureArray(financeOverride.gold, DEFAULT_FINANCE_STATE.gold),
+    invests: ensureArray(financeOverride.invests, DEFAULT_FINANCE_STATE.invests),
+  }
+
+  const studyOverride = isObject(parsed.study) ? parsed.study : {}
+  const study: StudyState = {
+    ...DEFAULT_STUDY_STATE,
+    ...studyOverride,
+    tasks: ensureArray(studyOverride.tasks, DEFAULT_STUDY_STATE.tasks),
+    learned: ensureArray(studyOverride.learned, DEFAULT_STUDY_STATE.learned),
+  }
+
+  const settingsOverride = isObject(parsed.settings) ? parsed.settings : {}
   const settings: AppSettings = {
     ...DEFAULT_SETTINGS,
-    ...(isObject(parsed.settings) ? parsed.settings : {}),
+    ...settingsOverride,
+    moods: ensureArray(settingsOverride.moods, DEFAULT_SETTINGS.moods),
+    modules: ensureArray(settingsOverride.modules, DEFAULT_SETTINGS.modules),
   }
 
   const summary = `${journal.entries.length} bài nhật ký · ${finance.gold.length} lần mua vàng · đã khôi phục tiết kiệm, nợ thẻ, mục tiêu`

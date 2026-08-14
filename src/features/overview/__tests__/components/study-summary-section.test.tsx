@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { fireEvent, render, screen } from "@testing-library/react"
 
-import { dayKey, pickDaily } from "@/features/study/daily-pick"
+import { pickDaily } from "@/features/study/daily-pick"
 import type { GrammarEntry, Task, VocabEntry } from "@/features/study/types"
+import { dayKey } from "@/lib/date"
 import { StudySummarySection } from "../../components/study-summary-section"
 
 const VOCAB: VocabEntry[] = Array.from({ length: 10 }, (_, i) => ({

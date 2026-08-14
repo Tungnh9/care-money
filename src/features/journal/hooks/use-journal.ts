@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 
+import { dayKey } from "@/lib/date"
 import {
   DEFAULT_JOURNAL_STATE,
   getStoredJournal,
@@ -10,8 +11,16 @@ import {
 } from "../journal-storage"
 import type { JournalEntry, MoodSnapshot } from "../types"
 
-function dayKey(d: Date = new Date()): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+function parseDay(key: string): Date {
+  const [year, month, day] = key.split("-").map(Number)
+  return new Date(year, month - 1, day)
+}
+
+function isNextDay(previousKey: string, currentKey: string): boolean {
+  if (!previousKey) return false
+  const previous = parseDay(previousKey)
+  const next = new Date(previous.getFullYear(), previous.getMonth(), previous.getDate() + 1)
+  return dayKey(next) === currentKey
 }
 
 interface SaveEntryInput {
@@ -48,10 +57,15 @@ function useJournal() {
 
       const today = dayKey(now)
       const isNewDay = state.lastEntryDay !== today
+      const streak = isNewDay
+        ? isNextDay(state.lastEntryDay, today)
+          ? state.streak + 1
+          : 1
+        : state.streak
 
       persist({
         entries: [entry, ...state.entries],
-        streak: isNewDay ? state.streak + 1 : state.streak,
+        streak,
         lastEntryDay: today,
       })
 
@@ -67,7 +81,13 @@ function useJournal() {
     [state, persist]
   )
 
-  return { entries: state.entries, streak: state.streak, saveEntry, deleteEntry }
+  return {
+    entries: state.entries,
+    streak: state.streak,
+    saveEntry,
+    deleteEntry,
+    replaceJournal: persist,
+  }
 }
 
 export { useJournal }

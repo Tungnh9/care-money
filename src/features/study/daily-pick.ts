@@ -1,7 +1,3 @@
-function dayKey(d: Date = new Date()): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
-}
-
 function seedFrom(str: string): number {
   let h = 2166136261
   for (let i = 0; i < str.length; i++) {
@@ -29,4 +25,4 @@ function pickDaily<T>(list: T[], n: number, key: string, salt: string): T[] {
   return out
 }
 
-export { dayKey, seedFrom, pickDaily }
+export { seedFrom, pickDaily }

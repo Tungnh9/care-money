@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest"
 import { act, renderHook, waitFor } from "@testing-library/react"
 
 import { useSettings } from "../../hooks/use-settings"
-import { DEFAULT_SETTINGS, getStoredSettings } from "@/lib/settings-storage"
+import { DEFAULT_SETTINGS, SETTINGS_STORAGE_KEY, getStoredSettings } from "@/lib/settings-storage"
 
 describe("useSettings", () => {
   beforeEach(() => {
@@ -85,5 +85,11 @@ describe("useSettings", () => {
 
     expect(result.current.settings).toEqual(restored)
     expect(getStoredSettings().profile.displayName).toBe("Khôi phục")
+  })
+
+  it("getStoredSettings falls back to defaults when localStorage has corrupted JSON", () => {
+    window.localStorage.setItem(SETTINGS_STORAGE_KEY, "{not valid json")
+
+    expect(getStoredSettings()).toEqual(DEFAULT_SETTINGS)
   })
 })
