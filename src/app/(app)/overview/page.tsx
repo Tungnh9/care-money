@@ -1,9 +1,15 @@
 import type { Metadata } from "next"
 
+import { getGrammar, getVocab } from "@/features/study/content-loader"
+import { OverviewView } from "@/features/overview"
+
 export const metadata: Metadata = {
   title: "Tổng quan – Orange Banana",
 }
 
 export default function OverviewPage() {
-  return <h1 className="[font:var(--ob-text-h2)] tracking-[var(--ob-track-heading)]">Tổng quan</h1>
+  const vocab = getVocab()
+  const grammar = getGrammar()
+
+  return <OverviewView vocab={vocab} grammar={grammar} />
 }
