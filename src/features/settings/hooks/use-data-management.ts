@@ -2,9 +2,9 @@
 
 import { useCallback, useState } from "react"
 
-import { DEFAULT_FINANCE_STATE, getStoredFinance, setStoredFinance } from "@/features/finance/finance-storage"
-import { DEFAULT_JOURNAL_STATE, getStoredJournal, setStoredJournal } from "@/features/journal/journal-storage"
-import { DEFAULT_STUDY_STATE, getStoredStudy, setStoredStudy } from "@/features/study/study-storage"
+import { getStoredFinance, type FinanceState } from "@/features/finance/finance-storage"
+import { DEFAULT_JOURNAL_STATE, getStoredJournal, type JournalState } from "@/features/journal/journal-storage"
+import { DEFAULT_STUDY_STATE, getStoredStudy, type StudyState } from "@/features/study/study-storage"
 import { getStoredSettings, type AppSettings } from "@/lib/settings-storage"
 import { buildExportPayload, exportFileName, parseImportPayload } from "../data-transfer"
 
@@ -17,10 +17,18 @@ interface ExportedInfo {
 type ImportedInfo = { ok: true; file: string; summary: string } | { ok: false; error: string }
 
 interface UseDataManagementOptions {
-  onImportSettings: (settings: AppSettings) => void
+  onReplaceJournal: (journal: JournalState) => void
+  onReplaceFinance: (finance: FinanceState) => void
+  onReplaceStudy: (study: StudyState) => void
+  onReplaceSettings: (settings: AppSettings) => void
 }
 
-function useDataManagement({ onImportSettings }: UseDataManagementOptions) {
+function useDataManagement({
+  onReplaceJournal,
+  onReplaceFinance,
+  onReplaceStudy,
+  onReplaceSettings,
+}: UseDataManagementOptions) {
   const [exported, setExported] = useState<ExportedInfo | null>(null)
   const [imported, setImported] = useState<ImportedInfo | null>(null)
 
@@ -57,27 +65,27 @@ function useDataManagement({ onImportSettings }: UseDataManagementOptions) {
       const result = parseImportPayload(await file.text())
 
       if (result.ok) {
-        setStoredJournal(result.data.journal)
-        setStoredFinance(result.data.finance)
-        setStoredStudy(result.data.study)
-        onImportSettings(result.data.settings)
+        onReplaceJournal(result.data.journal)
+        onReplaceFinance(result.data.finance)
+        onReplaceStudy(result.data.study)
+        onReplaceSettings(result.data.settings)
         setImported({ ok: true, file: file.name, summary: result.summary })
       } else {
         setImported({ ok: false, error: result.error })
       }
       setExported(null)
     },
-    [onImportSettings]
+    [onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceSettings]
   )
 
   const wipeData = useCallback(() => {
     const { goldPrice } = getStoredFinance()
-    setStoredJournal(DEFAULT_JOURNAL_STATE)
-    setStoredFinance({ ...DEFAULT_FINANCE_STATE, goldPrice })
-    setStoredStudy(DEFAULT_STUDY_STATE)
+    onReplaceJournal(DEFAULT_JOURNAL_STATE)
+    onReplaceFinance({ savings: [], cards: [], gold: [], invests: [], goldPrice })
+    onReplaceStudy(DEFAULT_STUDY_STATE)
     setExported(null)
     setImported(null)
-  }, [])
+  }, [onReplaceJournal, onReplaceFinance, onReplaceStudy])
 
   return { exported, imported, exportData, importData, wipeData }
 }

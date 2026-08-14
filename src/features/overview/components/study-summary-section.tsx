@@ -1,11 +1,12 @@
 import { Check, Circle } from "lucide-react"
 
 import { GrammarHighlightCard } from "@/features/study/components/grammar-card"
-import { dayKey, pickDaily } from "@/features/study/daily-pick"
+import { pickDaily } from "@/features/study/daily-pick"
 import type { GrammarEntry, Task, VocabEntry } from "@/features/study/types"
 import { Card } from "@/components/ui/card"
 import { Figure } from "@/components/ob/figure"
 import { TaskItem } from "@/components/ob/task-item"
+import { dayKey } from "@/lib/date"
 import { cn } from "@/lib/utils"
 
 interface StudySummarySectionProps {

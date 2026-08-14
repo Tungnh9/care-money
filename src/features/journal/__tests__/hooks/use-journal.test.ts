@@ -1,9 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { act, renderHook, waitFor } from "@testing-library/react"
 
-import { useJournal } from "../hooks/use-journal"
-import { DEFAULT_JOURNAL_STATE, getStoredJournal } from "../journal-storage"
-import type { JournalEntry } from "../types"
+import { useJournal } from "../../hooks/use-journal"
+import {
+  DEFAULT_JOURNAL_STATE,
+  JOURNAL_STORAGE_KEY,
+  getStoredJournal,
+} from "../../journal-storage"
+import type { JournalEntry } from "../../types"
 
 describe("useJournal", () => {
   beforeEach(() => {
@@ -55,7 +59,7 @@ describe("useJournal", () => {
     expect(result.current.streak).toBe(1)
   })
 
-  it("increments the streak again when saving on a new day", async () => {
+  it("increments the streak again when saving on the very next day", async () => {
     vi.setSystemTime(new Date(2026, 7, 10, 9, 0))
     const { result } = renderHook(() => useJournal())
     await waitFor(() => expect(result.current.streak).toBe(0))
@@ -71,6 +75,25 @@ describe("useJournal", () => {
     })
 
     expect(result.current.streak).toBe(2)
+  })
+
+  it("resets the streak to 1 instead of incrementing it when a day is missed", async () => {
+    vi.setSystemTime(new Date(2026, 7, 1, 9, 0))
+    const { result } = renderHook(() => useJournal())
+    await waitFor(() => expect(result.current.streak).toBe(0))
+
+    act(() => {
+      result.current.saveEntry({ text: "Bài 1", words: 2, mood: null })
+    })
+    expect(result.current.streak).toBe(1)
+
+    // Skip 12 days instead of saving the very next day.
+    vi.setSystemTime(new Date(2026, 7, 13, 9, 0))
+    act(() => {
+      result.current.saveEntry({ text: "Bài 2", words: 2, mood: null })
+    })
+
+    expect(result.current.streak).toBe(1)
   })
 
   it("deleteEntry removes only the matching entry", async () => {
@@ -94,5 +117,24 @@ describe("useJournal", () => {
 
     expect(result.current.entries).toHaveLength(1)
     expect(result.current.entries[0].text).toBe("Bài 2")
+  })
+
+  it("replaceJournal overwrites the whole state and persists it, e.g. after restoring a backup", async () => {
+    const { result } = renderHook(() => useJournal())
+    await waitFor(() => expect(result.current.streak).toBe(0))
+
+    const restored = { entries: [], streak: 9, lastEntryDay: "2026-08-01" }
+    act(() => {
+      result.current.replaceJournal(restored)
+    })
+
+    expect(result.current.streak).toBe(9)
+    expect(getStoredJournal().streak).toBe(9)
+  })
+
+  it("getStoredJournal falls back to defaults when localStorage has corrupted JSON", () => {
+    window.localStorage.setItem(JOURNAL_STORAGE_KEY, "{not valid json")
+
+    expect(getStoredJournal()).toEqual(DEFAULT_JOURNAL_STATE)
   })
 })

@@ -1,13 +1,6 @@
 import { describe, it, expect } from "vitest"
 
-import { dayKey, pickDaily, seedFrom } from "../daily-pick"
-
-describe("dayKey", () => {
-  it("formats as yyyy-mm-dd with zero-padded month and day", () => {
-    expect(dayKey(new Date(2026, 0, 5))).toBe("2026-01-05")
-    expect(dayKey(new Date(2026, 10, 20))).toBe("2026-11-20")
-  })
-})
+import { pickDaily, seedFrom } from "../daily-pick"
 
 describe("seedFrom", () => {
   it("is deterministic for the same string", () => {

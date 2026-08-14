@@ -3,13 +3,13 @@
 import { summarizeFinance } from "@/features/finance/finance-calculations"
 import { useFinance } from "@/features/finance/hooks/use-finance"
 import { useJournal } from "@/features/journal/hooks/use-journal"
-import { dayKey, pickDaily } from "@/features/study/daily-pick"
+import { pickDaily } from "@/features/study/daily-pick"
 import { useStudy } from "@/features/study/hooks/use-study"
 import type { GrammarEntry, VocabEntry } from "@/features/study/types"
 import { useSettings } from "@/features/settings/hooks/use-settings"
-import { longDate } from "@/lib/date"
+import { dayKey, longDate } from "@/lib/date"
 import { formatMoney } from "@/lib/format"
-import { daysLeftInCycle, getMiniGoals, greet } from "../overview-calculations"
+import { daysLeftInCycle, getMiniGoals } from "../overview-calculations"
 import { FinanceSummarySection } from "./finance-summary-section"
 import { GoalsSummarySection } from "./goals-summary-section"
 import { JournalSummarySection } from "./journal-summary-section"
@@ -46,7 +46,7 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
   return (
     <div>
       <h1 className="mb-1 [font:var(--ob-text-h2)] tracking-[var(--ob-track-heading)]">
-        {greet()}, {settings.profile.displayName}
+        {settings.profile.greeting}
       </h1>
       <p className="mb-5 text-sm text-[var(--ob-color-text-subtle)]">
         {longDate()} · còn {daysLeftInCycle(settings.budget.cycleStart)} ngày trong chu kỳ ngân sách

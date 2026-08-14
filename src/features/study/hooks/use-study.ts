@@ -43,7 +43,13 @@ function useStudy() {
     [state, persist]
   )
 
-  return { tasks: state.tasks, learned: state.learned, toggleTask, toggleLearned }
+  return {
+    tasks: state.tasks,
+    learned: state.learned,
+    toggleTask,
+    toggleLearned,
+    replaceStudy: persist,
+  }
 }
 
 export { useStudy }

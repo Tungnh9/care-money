@@ -80,4 +80,37 @@ describe("parseImportPayload", () => {
       )
     }
   })
+
+  it("falls back to the default array instead of crashing when an array field is wrong-typed", () => {
+    const raw = JSON.stringify({
+      version: EXPORT_VERSION,
+      journal: { entries: null },
+      finance: { gold: "not-an-array" },
+    })
+
+    const result = parseImportPayload(raw)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.journal.entries).toEqual(DEFAULT_JOURNAL_STATE.entries)
+      expect(result.data.finance.gold).toEqual(DEFAULT_FINANCE_STATE.gold)
+      expect(result.summary).toBe(
+        "0 bài nhật ký · 0 lần mua vàng · đã khôi phục tiết kiệm, nợ thẻ, mục tiêu"
+      )
+    }
+  })
+
+  it("falls back to the default modules array instead of corrupting it when wrong-typed", () => {
+    const raw = JSON.stringify({
+      version: EXPORT_VERSION,
+      settings: { modules: "x" },
+    })
+
+    const result = parseImportPayload(raw)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.settings.modules).toEqual(DEFAULT_SETTINGS.modules)
+    }
+  })
 })

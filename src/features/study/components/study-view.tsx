@@ -3,7 +3,8 @@
 import { useState } from "react"
 
 import { Tabs } from "@/components/ob/tabs"
-import { dayKey, pickDaily } from "../daily-pick"
+import { dayKey } from "@/lib/date"
+import { pickDaily } from "../daily-pick"
 import { useStudy } from "../hooks/use-study"
 import type { GrammarEntry, VocabEntry } from "../types"
 import { GrammarHighlightCard, GrammarListCard } from "./grammar-card"

@@ -23,11 +23,14 @@ function SettingsView() {
     addMood,
     replaceSettings,
   } = useSettings()
-  const { entries, streak } = useJournal()
-  const { savings, cards, gold, invests } = useFinance()
-  const { tasks, learned } = useStudy()
+  const { entries, streak, replaceJournal } = useJournal()
+  const { savings, cards, gold, invests, replaceFinance } = useFinance()
+  const { tasks, learned, replaceStudy } = useStudy()
   const { exported, imported, exportData, importData, wipeData } = useDataManagement({
-    onImportSettings: replaceSettings,
+    onReplaceJournal: replaceJournal,
+    onReplaceFinance: replaceFinance,
+    onReplaceStudy: replaceStudy,
+    onReplaceSettings: replaceSettings,
   })
 
   const counts = [

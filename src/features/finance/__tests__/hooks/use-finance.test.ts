@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { act, renderHook, waitFor } from "@testing-library/react"
 
-import { useFinance } from "../hooks/use-finance"
-import { DEFAULT_FINANCE_STATE, getStoredFinance } from "../finance-storage"
+import { useFinance } from "../../hooks/use-finance"
+import { DEFAULT_FINANCE_STATE, FINANCE_STORAGE_KEY, getStoredFinance } from "../../finance-storage"
 
 describe("useFinance", () => {
   beforeEach(() => {
@@ -126,5 +126,30 @@ describe("useFinance", () => {
     expect(result.current.invests).toHaveLength(1)
     expect(result.current.invests[0]).toMatchObject({ name: "Quỹ cổ phiếu", cost: 10_000_000, value: 12_000_000 })
     expect(typeof result.current.invests[0].id).toBe("number")
+  })
+
+  it("replaceFinance overwrites the whole state and persists it, e.g. after restoring a backup", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.savings).toEqual([]))
+
+    const restored = {
+      savings: [{ name: "Quỹ mới", amount: 1, target: 2 }],
+      cards: [],
+      gold: [],
+      goldPrice: "935.000",
+      invests: [],
+    }
+    act(() => {
+      result.current.replaceFinance(restored)
+    })
+
+    expect(result.current.savings).toEqual(restored.savings)
+    expect(getStoredFinance().goldPrice).toBe("935.000")
+  })
+
+  it("getStoredFinance falls back to defaults when localStorage has corrupted JSON", () => {
+    window.localStorage.setItem(FINANCE_STORAGE_KEY, "{not valid json")
+
+    expect(getStoredFinance()).toEqual(DEFAULT_FINANCE_STATE)
   })
 })

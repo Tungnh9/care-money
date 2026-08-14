@@ -91,6 +91,7 @@ function useFinance() {
     addGold,
     removeGold,
     addInvest,
+    replaceFinance: persist,
   }
 }
 

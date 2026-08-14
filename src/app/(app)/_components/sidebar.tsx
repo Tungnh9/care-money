@@ -47,7 +47,7 @@ function Sidebar() {
   }
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-10 flex w-[248px] flex-col border-r border-[var(--ob-color-border)] bg-[#FFFCF7] p-[22px_16px]">
+    <aside className="fixed inset-y-0 left-0 z-10 flex w-[248px] flex-col border-r border-[var(--ob-color-border)] bg-[var(--ob-color-bg)] p-[22px_16px]">
       <div className="flex items-center gap-[10px] px-2 pb-[22px]">
         <Image src="/assets/logo-mark.svg" width={32} height={32} alt="" />
         <span className="[font:700_17px/1_var(--ob-font-display)] tracking-[-0.02em] whitespace-nowrap">
@@ -87,7 +87,7 @@ function Sidebar() {
         <button
           type="button"
           onClick={handleLogout}
-          className="flex items-center gap-[11px] rounded-[var(--ob-radius-md)] px-[14px] py-[11px] text-left [font:var(--ob-text-sm)] font-medium text-[var(--ob-color-text-muted)]"
+          className="flex items-center gap-[11px] rounded-[var(--ob-radius-md)] px-[14px] py-[11px] text-left text-[length:var(--ob-size-sm)] leading-[var(--ob-lh-normal)] font-medium text-[var(--ob-color-text-muted)]"
         >
           <LogOut size={18} />
           Đăng xuất

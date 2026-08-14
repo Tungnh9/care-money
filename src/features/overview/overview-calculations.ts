@@ -1,16 +1,5 @@
 import { BADGE_AT } from "@/lib/constants"
 
-function greet(d: Date = new Date()): string {
-  const h = d.getHours()
-  return h < 11
-    ? "Chào buổi sáng"
-    : h < 14
-      ? "Chào buổi trưa"
-      : h < 18
-        ? "Chào buổi chiều"
-        : "Chào buổi tối"
-}
-
 function monthLabel(d: Date = new Date()): string {
   return `tháng ${d.getMonth() + 1}`
 }
@@ -44,4 +33,4 @@ function getMiniGoals({ savingsTotal, goldPhan, streak }: MiniGoalsInput): MiniG
   ]
 }
 
-export { greet, monthLabel, daysLeftInCycle, getMiniGoals, type MiniGoal }
+export { monthLabel, daysLeftInCycle, getMiniGoals, type MiniGoal }
