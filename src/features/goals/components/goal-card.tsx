@@ -3,8 +3,8 @@ import Image from "next/image"
 import { Streak } from "@/components/ob/streak"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { BADGE_AT } from "@/lib/constants"
 import { cn } from "@/lib/utils"
-import { BADGE_AT } from "../get-goals"
 import type { Goal } from "../types"
 
 interface GoalCardProps {
