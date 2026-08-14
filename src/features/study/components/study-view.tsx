@@ -2,13 +2,13 @@
 
 import { useState } from "react"
 
+import { Tabs } from "@/components/ob/tabs"
 import { dayKey, pickDaily } from "../daily-pick"
 import { useStudy } from "../hooks/use-study"
 import type { GrammarEntry, VocabEntry } from "../types"
 import { GrammarHighlightCard, GrammarListCard } from "./grammar-card"
 import { LearnedProgressCard } from "./learned-progress-card"
 import { Pomodoro } from "./pomodoro"
-import { StudyTabs } from "./study-tabs"
 import { TasksCard } from "./tasks-card"
 import { VocabCard } from "./vocab-card"
 
@@ -38,7 +38,7 @@ function StudyView({ vocab, grammar }: StudyViewProps) {
         {done}/{tasks.length} nhiệm vụ · {learnedToday}/5 từ hôm nay · ngày {day}/{month}
       </p>
 
-      <StudyTabs tabs={TABS} active={tab} onChange={setTab} />
+      <Tabs tabs={TABS} active={tab} onChange={setTab} />
 
       {tab === "Hôm nay" ? (
         <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-5">
