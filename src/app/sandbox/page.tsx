@@ -11,7 +11,6 @@ import { Figure } from "@/components/ob/figure";
 import { Streak } from "@/components/ob/streak";
 import { TaskItem } from "@/components/ob/task-item";
 import { JournalEditor } from "@/features/journal/components/journal-editor";
-import { Pomodoro } from "@/features/study/components/pomodoro";
 
 export default function SandboxPage() {
   const [checked, setChecked] = useState(true);
@@ -102,11 +101,6 @@ export default function SandboxPage() {
           selectedMood={null}
           onSave={(input) => console.log("journal save", input)}
         />
-      </section>
-
-      {/* Demo tạm cho Phase 2 của Học tập — dọn khi có route /study thật */}
-      <section>
-        <Pomodoro />
       </section>
     </div>
   );
