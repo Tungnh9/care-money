@@ -72,4 +72,18 @@ describe("useSettings", () => {
     expect(result.current.settings.moods.some((m) => m.label === removedLabel)).toBe(false)
     expect(getStoredSettings().moods).toHaveLength(countBefore - 1)
   })
+
+  it("replaces the whole settings object and persists it, e.g. after restoring a backup", async () => {
+    const { result } = renderHook(() => useSettings())
+    await waitFor(() => expect(result.current.settings).toEqual(DEFAULT_SETTINGS))
+
+    const restored = { ...DEFAULT_SETTINGS, profile: { ...DEFAULT_SETTINGS.profile, displayName: "Khôi phục" } }
+
+    act(() => {
+      result.current.replaceSettings(restored)
+    })
+
+    expect(result.current.settings).toEqual(restored)
+    expect(getStoredSettings().profile.displayName).toBe("Khôi phục")
+  })
 })
