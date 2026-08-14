@@ -3,8 +3,8 @@ import path from "node:path"
 
 import type { GrammarEntry, VocabEntry } from "./types"
 
-function loadJsonl<T>(relativePath: string): T[] {
-  const raw = fs.readFileSync(path.join(process.cwd(), relativePath), "utf-8")
+function loadJsonl<T>(filename: string): T[] {
+  const raw = fs.readFileSync(path.join(process.cwd(), "content", filename), "utf-8")
   return raw
     .split("\n")
     .map((line) => line.trim())
@@ -13,11 +13,11 @@ function loadJsonl<T>(relativePath: string): T[] {
 }
 
 function getVocab(): VocabEntry[] {
-  return loadJsonl<VocabEntry>("content/vocabulary.jsonl")
+  return loadJsonl<VocabEntry>("vocabulary.jsonl")
 }
 
 function getGrammar(): GrammarEntry[] {
-  return loadJsonl<GrammarEntry>("content/grammar.jsonl")
+  return loadJsonl<GrammarEntry>("grammar.jsonl")
 }
 
 export { getVocab, getGrammar }
