@@ -17,6 +17,7 @@ import {
 import { cn } from "@/lib/utils"
 import { clearStoredUser } from "@/lib/auth"
 import { useSettings } from "@/features/settings/hooks/use-settings"
+import { useJournal } from "@/features/journal/hooks/use-journal"
 
 const NAV = [
   { label: "Tổng quan", href: "/overview", icon: LayoutDashboard, moduleKey: null },
@@ -27,12 +28,11 @@ const NAV = [
   { label: "Cài đặt", href: "/settings", icon: Settings, moduleKey: null },
 ] as const
 
-const STREAK_DAYS = 14
-
 function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { settings } = useSettings()
+  const { streak } = useJournal()
 
   function isModuleOn(key: string) {
     return settings.modules.find((m) => m.key === key)?.on ?? true
@@ -81,7 +81,7 @@ function Sidebar() {
         {showStreak ? (
           <div className="flex items-center gap-[9px] rounded-[var(--ob-radius-md)] bg-[var(--ob-color-reward-soft)] px-[14px] py-[11px] text-[13px] font-bold text-[var(--ob-color-reward-text)]">
             <Flame size={16} />
-            Chuỗi {STREAK_DAYS} ngày
+            Chuỗi {streak} ngày
           </div>
         ) : null}
         <button
