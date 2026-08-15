@@ -13,7 +13,7 @@ function OverallProgressCard({ goals, avg }: OverallProgressCardProps) {
   return (
     <Card tone="invert" label="Tiến độ chung" className="col-span-full">
       <Figure value={`${avg}%`} caption={`trung bình ${goals.length} mục tiêu`} />
-      <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-[18px] border-t border-[var(--ob-vo-700)] pt-5">
+      <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-[18px] border-t border-[var(--ob-vo-700)] pt-5 sm:grid-cols-2">
         {goals.map((goal) => (
           <div key={goal.key}>
             <div className="mb-2 flex items-center gap-2 text-[var(--ob-vo-300)]">

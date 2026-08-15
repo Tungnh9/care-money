@@ -8,6 +8,7 @@ import { formatMoney } from "@/lib/format"
 import { parseGoldPrice, pct1, phanToChi, type FinanceSummary } from "../finance-calculations"
 import type { GoldPurchase } from "../types"
 import { AddGoldForm } from "./add-gold-form"
+import { GoldTransactionsCards } from "./gold-transactions-cards"
 import { GoldTransactionsTable } from "./gold-transactions-table"
 
 interface GoldTabProps {
@@ -120,7 +121,12 @@ function GoldTab({
       <AddGoldForm onAdd={onAddGold} />
 
       <Card label={`Các lần mua vàng${gold.length ? ` · ${gold.length}` : ""}`}>
-        <GoldTransactionsTable gold={gold} goldPrice={goldPrice} onRemove={onRemoveGold} />
+        <div className="hidden lg:block">
+          <GoldTransactionsTable gold={gold} goldPrice={goldPrice} onRemove={onRemoveGold} />
+        </div>
+        <div className="lg:hidden">
+          <GoldTransactionsCards gold={gold} goldPrice={goldPrice} onRemove={onRemoveGold} />
+        </div>
       </Card>
     </div>
   )
