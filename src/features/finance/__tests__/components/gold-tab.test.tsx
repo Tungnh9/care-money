@@ -49,9 +49,11 @@ describe("GoldTab", () => {
       screen.getByText(`Bạn đang lãi ${formatMoney(0)} so với giá vốn nhờ giá vàng tăng.`)
     ).toBeInTheDocument()
     expect(screen.getByText(pct1(0), { exact: false })).toBeInTheDocument()
+    // Thông báo rỗng hiện ở cả GoldTransactionsTable và GoldTransactionsCards (song song trong DOM,
+    // chỉ ẩn/hiện qua CSS theo breakpoint), nên xuất hiện 2 lần.
     expect(
-      screen.getByText("Chưa có giao dịch vàng nào. Thêm lần mua đầu tiên để bắt đầu theo dõi lãi/lỗ.")
-    ).toBeInTheDocument()
+      screen.getAllByText("Chưa có giao dịch vàng nào. Thêm lần mua đầu tiên để bắt đầu theo dõi lãi/lỗ.")
+    ).toHaveLength(2)
   })
 
   it("renders the P&L hero, comparison bars and stat grid for a gain", () => {
