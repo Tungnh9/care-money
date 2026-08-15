@@ -1,0 +1,275 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================================
+   Orange Banana — design tokens
+   Nguồn: /home/tungnh/Downloads/handoff/styles.css (bàn giao thiết kế)
+   Sửa token ở đây là mọi trang đổi theo.
+   ============================================================ */
+
+/* ---------- colors ---------- */
+:root {
+  /* ---- Cam (chính) ---- */
+  --ob-cam-50: #fff2e7;
+  --ob-cam-100: #ffe0c7;
+  --ob-cam-200: #ffc08f;
+  --ob-cam-300: #ffa05b;
+  --ob-cam-400: #ff8330;
+  --ob-cam-500: #f26311;
+  --ob-cam-600: #d14c06;
+  --ob-cam-700: #a63a05;
+
+  /* ---- Chuối (phụ / khen thưởng) ---- */
+  --ob-chuoi-50: #fffae6;
+  --ob-chuoi-100: #fff0b8;
+  --ob-chuoi-200: #ffe072;
+  --ob-chuoi-300: #ffd23d;
+  --ob-chuoi-400: #f7be12;
+  --ob-chuoi-500: #d99c00;
+  --ob-chuoi-700: #8f6600;
+
+  /* ---- Vỏ (trung tính ấm) ---- */
+  --ob-kem: #fff8ef;
+  --ob-white: #ffffff;
+  --ob-vo-50: #fbf5ec;
+  --ob-vo-100: #f2e9dc;
+  --ob-vo-200: #e4d8c9;
+  --ob-vo-300: #b9a695;
+  --ob-vo-500: #7a6455;
+  --ob-vo-700: #4a382a;
+  --ob-vo-900: #241a12;
+
+  /* ---- Lá & ý nghĩa ---- */
+  --ob-la-300: #4cd69b;
+  --ob-la-500: #16a06a;
+  --ob-do-300: #ff8a8e;
+  --ob-do-500: #e5484d;
+  --ob-xanh-500: #4a7cf7;
+  --ob-ma-hong: #d6303a;
+
+  /* ---- Màu minh hoạ (chỉ dùng trong bộ icon vẽ tay) ---- */
+  --ob-heo: #f5a0be;
+  --ob-heo-toi: #e07098;
+  --ob-kinh: #eaf1fe;
+
+  /* ---- Nhãn module (chỉ dùng cho chip nhỏ) ---- */
+  --ob-tag-taichinh: #f26311;
+  --ob-tag-hoctap: #4a7cf7;
+  --ob-tag-ghichu: #16a06a;
+  --ob-tag-tamtrang: #e9558f;
+  --ob-tag-muctieu: #7c5cf0;
+  --ob-tag-kehoach: #d99c00;
+
+  /* ---- Semantic ---- */
+  --ob-color-bg: var(--ob-kem);
+  --ob-color-surface: var(--ob-white);
+  --ob-color-surface-sunken: var(--ob-vo-50);
+  --ob-color-surface-invert: var(--ob-vo-900);
+
+  --ob-color-text: var(--ob-vo-900);
+  --ob-color-text-muted: var(--ob-vo-700);
+  --ob-color-text-subtle: var(--ob-vo-500);
+  --ob-color-text-invert: var(--ob-kem);
+
+  --ob-color-border: var(--ob-vo-200);
+  --ob-color-border-strong: var(--ob-vo-300);
+
+  --ob-color-action: var(--ob-cam-500);
+  --ob-color-action-hover: var(--ob-cam-600);
+  --ob-color-action-press: var(--ob-cam-700);
+  --ob-color-action-soft: var(--ob-cam-50);
+  --ob-color-action-strong: var(--ob-cam-700);
+  --ob-color-on-action: #ffffff;
+  --ob-color-focus: var(--ob-cam-400);
+
+  --ob-color-reward: var(--ob-chuoi-400);
+  --ob-color-reward-soft: var(--ob-chuoi-50);
+  --ob-color-reward-text: var(--ob-chuoi-700);
+
+  --ob-color-income: var(--ob-la-500);
+  --ob-color-expense: var(--ob-do-500);
+  --ob-color-info: var(--ob-xanh-500);
+
+  /* ---- Map cho component shadcn/ui — trỏ vào token --ob-* phía trên, không dùng OKLCH mặc định ---- */
+  --background: var(--ob-color-bg);
+  --foreground: var(--ob-color-text);
+  --card: var(--ob-color-surface);
+  --card-foreground: var(--ob-color-text);
+  --popover: var(--ob-color-surface);
+  --popover-foreground: var(--ob-color-text);
+  --primary: var(--ob-color-action);
+  --primary-foreground: var(--ob-color-on-action);
+  --secondary: var(--ob-color-action-soft);
+  --secondary-foreground: var(--ob-color-action-strong);
+  --muted: var(--ob-color-surface-sunken);
+  --muted-foreground: var(--ob-color-text-subtle);
+  --accent: var(--ob-color-action-soft);
+  --accent-foreground: var(--ob-color-action-strong);
+  --destructive: var(--ob-color-expense);
+  --border: var(--ob-color-border);
+  --input: var(--ob-color-border);
+  --ring: var(--ob-color-focus);
+  --radius: var(--ob-radius-md);
+}
+
+/* ---------- typography ---------- */
+:root {
+  /* 3 biến font trỏ vào next/font/google (xem app/layout.tsx), không @import trực tiếp từ Google nữa */
+  --ob-font-display: var(--font-ob-display), system-ui, sans-serif;
+  --ob-font-text: var(--font-ob-text), system-ui, sans-serif;
+  --ob-font-num: var(--font-ob-num), var(--font-ob-text), ui-monospace, monospace;
+
+  --ob-size-display: 64px;
+  --ob-size-h1: 32px;
+  --ob-size-h2: 24px;
+  --ob-size-h3: 20px;
+  --ob-size-body-lg: 17px;
+  --ob-size-body: 16px;
+  --ob-size-sm: 14px;
+  --ob-size-xs: 13px;
+  --ob-size-micro: 11px;
+  --ob-size-num-lg: 36px;
+  --ob-size-num: 20px;
+
+  --ob-lh-tight: 1.02;
+  --ob-lh-snug: 1.2;
+  --ob-lh-normal: 1.5;
+  --ob-lh-relaxed: 1.65;
+  --ob-track-display: -0.035em;
+  --ob-track-heading: -0.02em;
+  --ob-track-flat: 0;
+  --ob-track-micro: 0.08em;
+
+  --ob-weight-regular: 400;
+  --ob-weight-medium: 500;
+  --ob-weight-semibold: 600;
+  --ob-weight-bold: 700;
+  --ob-weight-black: 800;
+
+  /* shorthand: font: var(--ob-text-*) */
+  --ob-text-display: 800 var(--ob-size-display) / var(--ob-lh-tight) var(--ob-font-display);
+  --ob-text-h1: 800 var(--ob-size-h1) / var(--ob-lh-snug) var(--ob-font-text);
+  --ob-text-h2: 800 var(--ob-size-h2) / 1.25 var(--ob-font-text);
+  --ob-text-h3: 700 var(--ob-size-h3) / 1.35 var(--ob-font-text);
+  --ob-text-body: 400 var(--ob-size-body) / var(--ob-lh-relaxed) var(--ob-font-text);
+  --ob-text-sm: 400 var(--ob-size-sm) / var(--ob-lh-normal) var(--ob-font-text);
+  --ob-text-micro: 700 var(--ob-size-micro) / 1 var(--ob-font-text);
+  /* dùng khi nhãn micro có thể xuống dòng — /1 không có leading, hai dòng sẽ dính nhau */
+  --ob-text-micro-wrap: 700 var(--ob-size-micro) / 1.35 var(--ob-font-text);
+  --ob-text-num-lg: 700 var(--ob-size-num-lg) / 1 var(--ob-font-num);
+  --ob-text-num: 500 var(--ob-size-num) / 1.2 var(--ob-font-num);
+}
+
+/* ---------- spacing ---------- */
+:root {
+  --ob-space-1: 4px;
+  --ob-space-2: 8px;
+  --ob-space-3: 12px;
+  --ob-space-4: 16px;
+  --ob-space-5: 20px;
+  --ob-space-6: 24px;
+  --ob-space-7: 32px;
+  --ob-space-8: 40px;
+  --ob-space-9: 56px;
+  --ob-space-10: 80px;
+  --ob-space-11: 96px;
+
+  --ob-container: 1160px;
+  --ob-gutter: 40px;
+  --ob-card-pad: 24px;
+  --ob-section-gap: 96px;
+  --ob-hit-min: 44px;
+}
+
+/* ---------- shape ---------- */
+:root {
+  --ob-radius-sm: 8px;
+  --ob-radius-md: 14px;
+  --ob-radius-lg: 24px;
+  --ob-radius-xl: 32px;
+  --ob-radius-pill: 999px;
+  --ob-radius-icon: 24px; /* app icon squircle @104px */
+
+  --ob-border: 1.5px solid var(--ob-color-border);
+  --ob-border-strong: 1.5px solid var(--ob-color-border-strong);
+
+  /* Bóng luôn ám nâu ấm — không bao giờ xám xanh */
+  --ob-shadow-sm: 0 2px 6px -1px rgb(90 44 10 / 0.16);
+  --ob-shadow-md: 0 10px 22px -8px rgb(90 44 10 / 0.3);
+  --ob-shadow-lg: 0 24px 48px -18px rgb(90 44 10 / 0.44);
+  --ob-shadow-hero: 0 24px 60px -24px rgb(90 44 10 / 0.32);
+
+  --ob-dur-fast: 120ms;
+  --ob-dur-base: 200ms;
+  --ob-dur-slow: 320ms;
+  --ob-ease-out: cubic-bezier(0.22, 0.7, 0.28, 1);
+  --ob-ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-ob-text);
+  --font-mono: var(--font-ob-num);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 10px);
+}
+
+/* ---------- base ---------- */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--ob-color-bg);
+  color: var(--ob-color-text);
+  font: var(--ob-text-body);
+  -webkit-font-smoothing: antialiased;
+  text-wrap: pretty;
+}
+
+@layer base {
+  a {
+    color: var(--ob-color-action);
+    text-decoration: none;
+  }
+  a:hover {
+    color: var(--ob-color-action-strong);
+    text-decoration: underline;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ob-color-focus);
+    outline-offset: 2px;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  * {
+    @apply border-border outline-ring/50;
+  }
+}
