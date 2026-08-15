@@ -84,7 +84,7 @@ function JournalEditor({ selectedMood, onSave }: JournalEditorProps) {
         onInput={handleInput}
         data-placeholder="Hôm nay của bạn thế nào?"
         className={cn(
-          "min-h-[300px] text-[var(--ob-color-text)] outline-none",
+          "min-h-[220px] text-[var(--ob-color-text)] outline-none md:min-h-[300px]",
           "[font:var(--ob-text-body)]",
           "empty:before:text-[var(--ob-color-text-subtle)] empty:before:content-[attr(data-placeholder)]",
           "[&_h3]:mt-[18px] [&_h3]:mb-2 [&_h3]:[font:var(--ob-text-h3)]",
