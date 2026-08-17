@@ -135,7 +135,7 @@ function LoginForm() {
 
         <div className="flex items-center justify-center gap-[var(--ob-space-2)] text-[12.5px] text-[var(--ob-color-text-subtle)] min-[900px]:hidden">
           <Lock size={14} />
-          Dữ liệu nằm trên máy bạn. Không tài khoản chia sẻ, không máy chủ.
+          Mặc định lưu trên máy bạn. Đồng bộ giữa thiết bị là tuỳ chọn, chỉ bạn giữ secret.
         </div>
       </form>
     </Card>

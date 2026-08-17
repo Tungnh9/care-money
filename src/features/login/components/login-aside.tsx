@@ -43,7 +43,7 @@ function LoginAside() {
 
       <div className="flex items-center gap-[var(--ob-space-2)] text-[13px] text-[var(--ob-vo-300)]">
         <Lock size={16} />
-        Dữ liệu nằm trên máy bạn. Không tài khoản chia sẻ, không máy chủ.
+        Mặc định lưu trên máy bạn. Đồng bộ giữa thiết bị là tuỳ chọn, chỉ bạn giữ secret.
       </div>
     </aside>
   )

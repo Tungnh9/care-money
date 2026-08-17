@@ -6,6 +6,7 @@ import { getStoredFinance, type FinanceState } from "@/features/finance/finance-
 import { DEFAULT_JOURNAL_STATE, getStoredJournal, type JournalState } from "@/features/journal/journal-storage"
 import { DEFAULT_STUDY_STATE, getStoredStudy, type StudyState } from "@/features/study/study-storage"
 import { getStoredSettings, type AppSettings } from "@/lib/settings-storage"
+import { pushSnapshot, pullSnapshot } from "../api"
 import { buildExportPayload, exportFileName, parseImportPayload } from "../data-transfer"
 
 interface ExportedInfo {
@@ -15,6 +16,7 @@ interface ExportedInfo {
 }
 
 type ImportedInfo = { ok: true; file: string; summary: string } | { ok: false; error: string }
+type SyncResult = { ok: true; summary: string } | { ok: false; error: string }
 
 interface UseDataManagementOptions {
   onReplaceJournal: (journal: JournalState) => void
@@ -31,6 +33,42 @@ function useDataManagement({
 }: UseDataManagementOptions) {
   const [exported, setExported] = useState<ExportedInfo | null>(null)
   const [imported, setImported] = useState<ImportedInfo | null>(null)
+  const [syncing, setSyncing] = useState(false)
+  const [syncResult, setSyncResult] = useState<SyncResult | null>(null)
+
+  const pushToCloud = useCallback(async (secret: string) => {
+    setSyncing(true)
+    const payload = buildExportPayload(
+      {
+        journal: getStoredJournal(),
+        finance: getStoredFinance(),
+        study: getStoredStudy(),
+        settings: getStoredSettings(),
+      },
+      new Date().toISOString()
+    )
+    const result = await pushSnapshot(secret, payload)
+    setSyncResult(result)
+    setSyncing(false)
+  }, [])
+
+  const pullFromCloud = useCallback(
+    async (secret: string) => {
+      setSyncing(true)
+      const result = await pullSnapshot(secret)
+      if (result.ok) {
+        onReplaceJournal(result.data.journal)
+        onReplaceFinance(result.data.finance)
+        onReplaceStudy(result.data.study)
+        onReplaceSettings(result.data.settings)
+        setSyncResult({ ok: true, summary: result.summary })
+      } else {
+        setSyncResult({ ok: false, error: result.error })
+      }
+      setSyncing(false)
+    },
+    [onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceSettings]
+  )
 
   const exportData = useCallback(() => {
     const now = new Date()
@@ -87,7 +125,17 @@ function useDataManagement({
     setImported(null)
   }, [onReplaceJournal, onReplaceFinance, onReplaceStudy])
 
-  return { exported, imported, exportData, importData, wipeData }
+  return {
+    exported,
+    imported,
+    exportData,
+    importData,
+    wipeData,
+    syncing,
+    syncResult,
+    pushToCloud,
+    pullFromCloud,
+  }
 }
 
-export { useDataManagement, type ExportedInfo, type ImportedInfo }
+export { useDataManagement, type ExportedInfo, type ImportedInfo, type SyncResult }
