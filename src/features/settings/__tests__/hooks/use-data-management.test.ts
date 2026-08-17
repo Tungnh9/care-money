@@ -8,6 +8,13 @@ import { DEFAULT_SETTINGS } from "@/lib/settings-storage"
 import { EXPORT_VERSION } from "../../data-transfer"
 import { useDataManagement } from "../../hooks/use-data-management"
 
+vi.mock("../../api", () => ({
+  pushSnapshot: vi.fn(),
+  pullSnapshot: vi.fn(),
+}))
+
+import { pushSnapshot, pullSnapshot } from "../../api"
+
 function renderDataManagement() {
   const onReplaceJournal = vi.fn()
   const onReplaceFinance = vi.fn()
@@ -98,5 +105,67 @@ describe("useDataManagement", () => {
       goldPrice: "935.000",
     })
     expect(onReplaceStudy).toHaveBeenCalledWith(DEFAULT_STUDY_STATE)
+  })
+
+  it("pushToCloud sends a snapshot of every feature's storage and reports the result", async () => {
+    setStoredJournal({ ...DEFAULT_JOURNAL_STATE, streak: 3 })
+    vi.mocked(pushSnapshot).mockResolvedValue({ ok: true, summary: "Đã tải lên" })
+    const { result } = renderDataManagement()
+
+    await act(async () => {
+      await result.current.pushToCloud("my-secret")
+    })
+
+    expect(pushSnapshot).toHaveBeenCalledWith(
+      "my-secret",
+      expect.objectContaining({
+        version: EXPORT_VERSION,
+        journal: expect.objectContaining({ streak: 3 }),
+        finance: DEFAULT_FINANCE_STATE,
+        study: DEFAULT_STUDY_STATE,
+        settings: DEFAULT_SETTINGS,
+      })
+    )
+    expect(result.current.syncResult).toEqual({ ok: true, summary: "Đã tải lên" })
+    expect(result.current.syncing).toBe(false)
+  })
+
+  it("pullFromCloud reports the restored data to each domain's replace callback", async () => {
+    const { result, onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceSettings } =
+      renderDataManagement()
+
+    const journal = { ...DEFAULT_JOURNAL_STATE, streak: 5 }
+    vi.mocked(pullSnapshot).mockResolvedValue({
+      ok: true,
+      data: { journal, finance: DEFAULT_FINANCE_STATE, study: DEFAULT_STUDY_STATE, settings: DEFAULT_SETTINGS },
+      summary: "5 bài nhật ký",
+    })
+
+    await act(async () => {
+      await result.current.pullFromCloud("my-secret")
+    })
+
+    expect(pullSnapshot).toHaveBeenCalledWith("my-secret")
+    expect(onReplaceJournal).toHaveBeenCalledWith(journal)
+    expect(onReplaceFinance).toHaveBeenCalledWith(DEFAULT_FINANCE_STATE)
+    expect(onReplaceStudy).toHaveBeenCalledWith(DEFAULT_STUDY_STATE)
+    expect(onReplaceSettings).toHaveBeenCalledWith(DEFAULT_SETTINGS)
+    expect(result.current.syncResult).toEqual({ ok: true, summary: "5 bài nhật ký" })
+  })
+
+  it("pullFromCloud reports an error and calls no replace callback when it fails", async () => {
+    const { result, onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceSettings } =
+      renderDataManagement()
+    vi.mocked(pullSnapshot).mockResolvedValue({ ok: false, error: "Sai secret đồng bộ." })
+
+    await act(async () => {
+      await result.current.pullFromCloud("wrong-secret")
+    })
+
+    expect(result.current.syncResult).toEqual({ ok: false, error: "Sai secret đồng bộ." })
+    expect(onReplaceJournal).not.toHaveBeenCalled()
+    expect(onReplaceFinance).not.toHaveBeenCalled()
+    expect(onReplaceStudy).not.toHaveBeenCalled()
+    expect(onReplaceSettings).not.toHaveBeenCalled()
   })
 })
