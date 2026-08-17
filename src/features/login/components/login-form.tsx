@@ -5,7 +5,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff, Lock } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -132,6 +132,11 @@ function LoginForm() {
         <Button type="submit" size="lg" fullWidth disabled={isSubmitting || isLocked}>
           {isSubmitting ? "Đang vào…" : "Đăng nhập"}
         </Button>
+
+        <div className="flex items-center justify-center gap-[var(--ob-space-2)] text-[12.5px] text-[var(--ob-color-text-subtle)] min-[900px]:hidden">
+          <Lock size={14} />
+          Mặc định lưu trên máy bạn. Đồng bộ giữa thiết bị là tuỳ chọn, chỉ bạn giữ secret.
+        </div>
       </form>
     </Card>
   )

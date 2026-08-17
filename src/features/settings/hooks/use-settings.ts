@@ -84,6 +84,7 @@ function useSettings() {
     toggleMood,
     removeMood,
     addMood,
+    replaceSettings: persist,
   }
 }
 

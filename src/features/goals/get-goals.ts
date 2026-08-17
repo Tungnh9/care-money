@@ -1,0 +1,79 @@
+import { BADGE_AT } from "@/lib/constants"
+import { formatMoney } from "@/lib/format"
+
+import type { MockGoalsData } from "./mock-data"
+import type { Goal } from "./types"
+
+function formatChi(phan: number): string {
+  const chi = Math.floor(phan / 10)
+  const rest = phan % 10
+  return `${chi} chỉ${rest ? ` ${rest} phân` : ""}`
+}
+
+function goldRemainingNote(goldPhan: number, goldPricePerPhan: number): string {
+  const remaining = 100 - goldPhan
+  const remainingChi =
+    remaining % 10 === 0 ? String(remaining / 10) : (remaining / 10).toFixed(1).replace(".", ",")
+  return `Còn ${remainingChi} chỉ · tương đương ${formatMoney(remaining * goldPricePerPhan)}`
+}
+
+function withPercent(now: number, target: number) {
+  const percent = Math.min(Math.round((now / target) * 100), 100)
+  return { percent, done: now >= target }
+}
+
+function getGoals(data: MockGoalsData): { goals: Goal[]; avg: number } {
+  const { savingsTotal, goldPhan, goldPricePerPhan, streak } = data
+
+  const defs = [
+    {
+      key: "savings",
+      name: "Tiết kiệm 100 triệu",
+      icon: "pig",
+      now: savingsTotal,
+      target: 100_000_000,
+      format: formatMoney,
+      note: "Lấy từ Quỹ dự phòng ở màn Tài chính",
+      tone: "action" as const,
+    },
+    {
+      key: "gold",
+      name: "Tích lũy 10 chỉ vàng",
+      icon: "gold",
+      now: goldPhan,
+      target: 100,
+      format: formatChi,
+      note: goldRemainingNote(goldPhan, goldPricePerPhan),
+      tone: "reward" as const,
+    },
+    {
+      key: "car",
+      name: "Mua xe ô tô",
+      icon: "car",
+      now: 0,
+      target: 1,
+      format: (n: number) => (n ? formatMoney(n) : "0%"),
+      note: "Chưa trích đồng nào. Mỗi lần để dành sẽ nhích thanh này lên.",
+      tone: "action" as const,
+    },
+    {
+      key: "streak",
+      name: `${BADGE_AT} ngày duy trì liên tục`,
+      icon: "flame",
+      now: streak,
+      target: BADGE_AT,
+      format: (n: number) => `${n} ngày`,
+      note: "Ghi nhật ký hoặc xong nhiệm vụ mỗi ngày để giữ chuỗi",
+      tone: "reward" as const,
+    },
+  ]
+
+  const goals: Goal[] = defs.map((g) => ({ ...g, ...withPercent(g.now, g.target) }))
+  const avg = Math.round(
+    (goals.reduce((sum, g) => sum + Math.min(g.now / g.target, 1), 0) / goals.length) * 100
+  )
+
+  return { goals, avg }
+}
+
+export { formatChi, getGoals }

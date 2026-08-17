@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest"
 import { act, renderHook, waitFor } from "@testing-library/react"
 
 import { useSettings } from "../../hooks/use-settings"
-import { DEFAULT_SETTINGS, getStoredSettings } from "@/lib/settings-storage"
+import { DEFAULT_SETTINGS, SETTINGS_STORAGE_KEY, getStoredSettings } from "@/lib/settings-storage"
 
 describe("useSettings", () => {
   beforeEach(() => {
@@ -71,5 +71,25 @@ describe("useSettings", () => {
     expect(result.current.settings.moods).toHaveLength(countBefore - 1)
     expect(result.current.settings.moods.some((m) => m.label === removedLabel)).toBe(false)
     expect(getStoredSettings().moods).toHaveLength(countBefore - 1)
+  })
+
+  it("replaces the whole settings object and persists it, e.g. after restoring a backup", async () => {
+    const { result } = renderHook(() => useSettings())
+    await waitFor(() => expect(result.current.settings).toEqual(DEFAULT_SETTINGS))
+
+    const restored = { ...DEFAULT_SETTINGS, profile: { ...DEFAULT_SETTINGS.profile, displayName: "Khôi phục" } }
+
+    act(() => {
+      result.current.replaceSettings(restored)
+    })
+
+    expect(result.current.settings).toEqual(restored)
+    expect(getStoredSettings().profile.displayName).toBe("Khôi phục")
+  })
+
+  it("getStoredSettings falls back to defaults when localStorage has corrupted JSON", () => {
+    window.localStorage.setItem(SETTINGS_STORAGE_KEY, "{not valid json")
+
+    expect(getStoredSettings()).toEqual(DEFAULT_SETTINGS)
   })
 })
