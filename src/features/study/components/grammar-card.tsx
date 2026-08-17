@@ -20,7 +20,7 @@ interface GrammarHighlightCardProps {
 
 function GrammarHighlightCard({ entry }: GrammarHighlightCardProps) {
   return (
-    <Card tone="reward" label="Ngữ pháp hôm nay" className="col-span-full">
+    <Card tone="reward" label="Ngữ pháp hôm nay" className="min-w-0 flex-[1_1_100%]">
       <div className="mb-3 text-[19px] font-bold">{entry.title}</div>
       <div className="mb-[10px] text-sm leading-[1.6] text-[#5C4200]">{entry.explanation}</div>
       <ExampleList examples={entry.examples} />

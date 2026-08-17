@@ -3,6 +3,7 @@
 import { useState } from "react"
 
 import { longDate } from "@/lib/date"
+import { cn } from "@/lib/utils"
 import { useSettings } from "@/features/settings/hooks/use-settings"
 import { useJournal } from "../hooks/use-journal"
 import { JournalEditor } from "./journal-editor"
@@ -42,21 +43,27 @@ function JournalView() {
       <p className="mb-5 text-sm text-[var(--ob-color-text-subtle)]">
         {longDate()} · viết bao nhiêu cũng được
       </p>
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-5">
-        {justSaved ? (
-          <JournalSaveSuccess
-            entry={justSaved}
-            streak={streak}
-            onWriteMore={() => setJustSaved(null)}
-            onViewEntries={handleViewEntries}
-          />
-        ) : (
-          <JournalEditor selectedMood={selectedMoodSnapshot} onSave={handleSave} />
-        )}
+      <div className="flex flex-wrap gap-5">
+        <div className="min-w-0 flex-[1_1_100%]">
+          {justSaved ? (
+            <JournalSaveSuccess
+              entry={justSaved}
+              streak={streak}
+              onWriteMore={() => setJustSaved(null)}
+              onViewEntries={handleViewEntries}
+            />
+          ) : (
+            <JournalEditor selectedMood={selectedMoodSnapshot} onSave={handleSave} />
+          )}
+        </div>
         {moodEnabled ? (
-          <MoodPickerCard moods={settings.moods} selected={mood} onSelect={setMood} />
+          <div className="min-w-0 flex-[1_1_300px]">
+            <MoodPickerCard moods={settings.moods} selected={mood} onSelect={setMood} />
+          </div>
         ) : null}
-        <JournalEntriesCard entries={entries} onDelete={deleteEntry} />
+        <div className={cn("min-w-0", entries.length ? "flex-[1_1_100%]" : "flex-[1_1_300px]")}>
+          <JournalEntriesCard entries={entries} onDelete={deleteEntry} />
+        </div>
       </div>
     </div>
   )

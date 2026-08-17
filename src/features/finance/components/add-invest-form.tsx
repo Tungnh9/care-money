@@ -38,14 +38,16 @@ function AddInvestForm({ onAdd }: AddInvestFormProps) {
       <div className="mb-3 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
         Khoản đầu tư mới
       </div>
-      <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+      <div className="flex flex-wrap gap-3">
         <Field
+          className="min-w-0 flex-[1_1_220px]"
           label="Tên khoản"
           placeholder="vd: Chứng chỉ quỹ VESAF"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
         <Field
+          className="min-w-0 flex-[1_1_220px]"
           label="Số tiền đã bỏ vào"
           numeric
           group
@@ -55,6 +57,7 @@ function AddInvestForm({ onAdd }: AddInvestFormProps) {
           onChange={(e) => setCost(e.target.value)}
         />
         <Field
+          className="min-w-0 flex-[1_1_220px]"
           label="Giá trị hiện tại"
           numeric
           group

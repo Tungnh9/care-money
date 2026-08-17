@@ -60,7 +60,7 @@ function SettingsView() {
       <p className="mb-5 text-sm text-[var(--ob-color-text-subtle)]">
         Chỉ mình bạn dùng · mặc định lưu trên máy bạn, đồng bộ giữa thiết bị là tuỳ chọn
       </p>
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-5">
+      <div className="flex flex-wrap gap-5">
         <ProfileCard profile={settings.profile} onChange={updateProfile} />
         <BudgetCard budget={settings.budget} onChange={updateBudget} />
         <MoodsCard moods={settings.moods} onToggle={toggleMood} onRemove={removeMood} onAdd={addMood} />

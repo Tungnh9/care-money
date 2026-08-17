@@ -11,7 +11,7 @@ interface ModulesCardProps {
 
 function ModulesCard({ modules, onToggle }: ModulesCardProps) {
   return (
-    <Card label="Module hiển thị">
+    <Card label="Module hiển thị" className="min-w-0 flex-[1_1_300px]">
       <p className="mb-[14px] text-[13.5px] leading-[1.55] text-[var(--ob-color-text-muted)]">
         Tắt bớt phần bạn không dùng để màn hình chính gọn hơn.
       </p>

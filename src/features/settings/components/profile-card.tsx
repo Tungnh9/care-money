@@ -12,7 +12,7 @@ interface ProfileCardProps {
 
 function ProfileCard({ profile, onChange }: ProfileCardProps) {
   return (
-    <Card label="Hồ sơ">
+    <Card label="Hồ sơ" className="min-w-0 flex-[1_1_300px]">
       <div className="mb-[18px] flex items-center gap-[14px]">
         <span className="size-[52px] flex-none rounded-full bg-[var(--ob-vo-200)]" />
         <Button variant="ghost" size="sm" type="button">

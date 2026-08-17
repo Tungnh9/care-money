@@ -18,7 +18,7 @@ function ResetCard({ counts, onWipe, onExport }: ResetCardProps) {
 
   if (step === 2) {
     return (
-      <Card label="Bắt đầu lại">
+      <Card label="Bắt đầu lại" className="min-w-0 flex-[1_1_300px]">
         <div className="flex items-start gap-[11px]">
           <span className="flex size-[38px] flex-none items-center justify-center">
             <Image src="/assets/icons/check.svg" width={36} height={36} alt="" />
@@ -36,7 +36,7 @@ function ResetCard({ counts, onWipe, onExport }: ResetCardProps) {
 
   if (step === 1) {
     return (
-      <Card label="Bắt đầu lại">
+      <Card label="Bắt đầu lại" className="min-w-0 flex-[1_1_300px]">
         <div className="mb-4 flex items-start gap-[11px] rounded-[var(--ob-radius-md)] bg-[#FDEBF2] px-[15px] py-[13px] text-[#B92E63]">
           <AlertTriangle size={18} className="mt-[1px] flex-none" />
           <div className="text-[13.5px] leading-[1.5]">
@@ -83,7 +83,7 @@ function ResetCard({ counts, onWipe, onExport }: ResetCardProps) {
   }
 
   return (
-    <Card label="Bắt đầu lại">
+    <Card label="Bắt đầu lại" className="min-w-0 flex-[1_1_300px]">
       <p className="mb-[14px] text-[13.5px] leading-[1.55] text-[var(--ob-color-text-muted)]">
         Xoá sạch chi tiêu, nhật ký và chuỗi ngày. Không khôi phục được.
       </p>
