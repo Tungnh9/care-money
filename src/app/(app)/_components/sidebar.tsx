@@ -86,7 +86,6 @@ function Sidebar() {
               <Link
                 key={label}
                 href={href}
-                title={label}
                 className={cn(
                   "flex min-h-[var(--ob-hit-min)] flex-col items-center justify-center gap-0.5 rounded-[var(--ob-radius-md)] px-2 py-1.5 text-center text-[10.5px] leading-[var(--ob-lh-normal)] no-underline transition-[background-color,color] duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] md:flex-row md:justify-center md:gap-[11px] md:px-[14px] md:py-[11px] md:text-left md:text-[length:var(--ob-size-sm)] lg:justify-start",
                   active

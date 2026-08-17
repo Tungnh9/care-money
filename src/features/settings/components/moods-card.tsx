@@ -16,7 +16,7 @@ interface MoodsCardProps {
 
 function MoodsCard({ moods, onToggle, onRemove, onAdd }: MoodsCardProps) {
   return (
-    <Card label="Tâm trạng dùng trong nhật ký" className="col-span-full">
+    <Card label="Tâm trạng dùng trong nhật ký" className="min-w-0 w-full">
       <p className="mb-[14px] text-[13.5px] leading-[1.55] text-[var(--ob-color-text-muted)]">
         Bật những trạng thái bạn hay dùng, thêm mới hoặc xoá bớt. Cái nào đang bật sẽ thành chip ở màn Nhật ký.
       </p>
