@@ -2,16 +2,18 @@ import Image from "next/image"
 
 import { Figure } from "@/components/ob/figure"
 import { Card } from "@/components/ui/card"
+import { cn } from "@/lib/utils"
 import type { Goal } from "../types"
 
 interface OverallProgressCardProps {
   goals: Goal[]
   avg: number
+  className?: string
 }
 
-function OverallProgressCard({ goals, avg }: OverallProgressCardProps) {
+function OverallProgressCard({ goals, avg, className }: OverallProgressCardProps) {
   return (
-    <Card tone="invert" label="Tiến độ chung" className="col-span-full">
+    <Card tone="invert" label="Tiến độ chung" className={cn(className)}>
       <Figure value={`${avg}%`} caption={`trung bình ${goals.length} mục tiêu`} />
       <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-[18px] border-t border-[var(--ob-vo-700)] pt-5 sm:grid-cols-2">
         {goals.map((goal) => (

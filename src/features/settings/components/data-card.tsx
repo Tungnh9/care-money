@@ -59,7 +59,7 @@ function DataCard({
   }
 
   return (
-    <Card label="Dữ liệu">
+    <Card label="Dữ liệu" className="min-w-0 flex-[1_1_300px]">
       <div>
         <span className="mb-1 block [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
           Sao lưu file

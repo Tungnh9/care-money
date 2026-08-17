@@ -37,12 +37,12 @@ function CreditCardsTab({ cards, onAddCard, onPayCard }: CreditCardsTabProps) {
 
   return (
     <div>
-      <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]">
+      <div className="flex flex-wrap gap-4">
         {cards.length ? (
           cards.map((card) => {
             const limitPct = card.limit ? (card.balance / card.limit) * 100 : 0
             return (
-              <Card key={card.name} label={card.name}>
+              <Card key={card.name} label={card.name} className="min-w-0 flex-[1_1_300px]">
                 <Figure value={formatMoney(card.balance)} />
                 <div className="my-4 grid grid-cols-3 gap-3 text-center">
                   {(
@@ -82,7 +82,7 @@ function CreditCardsTab({ cards, onAddCard, onPayCard }: CreditCardsTabProps) {
             )
           })
         ) : (
-          <Card label="Nợ thẻ tín dụng">
+          <Card label="Nợ thẻ tín dụng" className="min-w-0 flex-[1_1_300px]">
             <p className="text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)]">
               Chưa có thẻ tín dụng nào. Thêm thẻ đầu tiên để theo dõi dư nợ và hạn trả.
             </p>
@@ -90,7 +90,10 @@ function CreditCardsTab({ cards, onAddCard, onPayCard }: CreditCardsTabProps) {
         )}
 
         {payingCard ? (
-          <Card label={`Ghi một lần trả · ${payingCard.name}`}>
+          <Card
+            label={`Ghi một lần trả · ${payingCard.name}`}
+            className="min-w-0 flex-[1_1_300px]"
+          >
             <Field
               label="Số tiền trả"
               numeric
@@ -123,7 +126,7 @@ function CreditCardsTab({ cards, onAddCard, onPayCard }: CreditCardsTabProps) {
           </Card>
         ) : null}
 
-        <Card tone="soft" label="Nhắc trả nợ">
+        <Card tone="soft" label="Nhắc trả nợ" className="min-w-0 flex-[1_1_300px]">
           <p className="text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)]">
             Trả đủ và đúng hạn để tránh mất lãi phát sinh trên dư nợ thẻ tín dụng.
           </p>

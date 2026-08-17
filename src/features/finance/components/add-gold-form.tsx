@@ -38,14 +38,16 @@ function AddGoldForm({ onAdd }: AddGoldFormProps) {
       <div className="mb-3 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
         Lần mua vàng mới
       </div>
-      <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+      <div className="flex flex-wrap gap-3">
         <Field
+          className="min-w-0 flex-[1_1_220px]"
           label="Ngày mua"
           placeholder="vd: 10/08/2026"
           value={date}
           onChange={(e) => setDate(e.target.value)}
         />
         <Field
+          className="min-w-0 flex-[1_1_220px]"
           label="Khối lượng (phân)"
           numeric
           placeholder="0"
@@ -54,6 +56,7 @@ function AddGoldForm({ onAdd }: AddGoldFormProps) {
           hint="10 phân = 1 chỉ"
         />
         <Field
+          className="min-w-0 flex-[1_1_220px]"
           label="Giá mua (mỗi phân)"
           numeric
           group

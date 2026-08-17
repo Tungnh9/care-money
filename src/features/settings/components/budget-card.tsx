@@ -11,7 +11,7 @@ interface BudgetCardProps {
 
 function BudgetCard({ budget, onChange }: BudgetCardProps) {
   return (
-    <Card label="Tài chính">
+    <Card label="Tài chính" className="min-w-0 flex-[1_1_300px]">
       <Field
         label="Ngân sách mỗi tháng"
         numeric
