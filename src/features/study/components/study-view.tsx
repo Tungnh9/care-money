@@ -42,8 +42,8 @@ function StudyView({ vocab, grammar }: StudyViewProps) {
       <Tabs tabs={TABS} active={tab} onChange={setTab} />
 
       {tab === "Hôm nay" ? (
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-5">
-          <div className="col-span-full">
+        <div className="flex flex-wrap gap-5">
+          <div className="min-w-0 flex-[1_1_100%]">
             <Pomodoro />
           </div>
           <VocabCard
@@ -57,11 +57,15 @@ function StudyView({ vocab, grammar }: StudyViewProps) {
             entries={daily}
             learned={learned}
             onToggleLearned={toggleLearned}
-            className="col-span-full"
+            className="min-w-0 flex-[1_1_100%]"
           />
           {dailyGrammar ? <GrammarHighlightCard entry={dailyGrammar} /> : null}
-          <TasksCard tasks={tasks} onToggle={toggleTask} />
-          <LearnedProgressCard learnedCount={learned.length} totalCount={vocab.length} />
+          <TasksCard tasks={tasks} onToggle={toggleTask} className="min-w-0 flex-[1_1_300px]" />
+          <LearnedProgressCard
+            learnedCount={learned.length}
+            totalCount={vocab.length}
+            className="min-w-0 flex-[1_1_300px]"
+          />
         </div>
       ) : tab === "Từ vựng" ? (
         <VocabCard

@@ -7,11 +7,12 @@ import type { Task } from "../types"
 interface TasksCardProps {
   tasks: Task[]
   onToggle: (index: number) => void
+  className?: string
 }
 
-function TasksCard({ tasks, onToggle }: TasksCardProps) {
+function TasksCard({ tasks, onToggle, className }: TasksCardProps) {
   return (
-    <Card label="Nhiệm vụ hôm nay">
+    <Card label="Nhiệm vụ hôm nay" className={className}>
       <div className="flex flex-col gap-[10px]">
         {tasks.map((task, i) => (
           <TaskItem key={task.label} label={task.label} done={task.done} onToggle={() => onToggle(i)} />

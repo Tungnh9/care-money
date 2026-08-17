@@ -42,9 +42,16 @@ function AddCreditCardForm({ onAdd }: AddCreditCardFormProps) {
       <div className="mb-3 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
         Thẻ tín dụng mới
       </div>
-      <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
-        <Field label="Tên thẻ" placeholder="vd: Techcombank Visa" value={name} onChange={(e) => setName(e.target.value)} />
+      <div className="flex flex-wrap gap-3">
         <Field
+          className="min-w-0 flex-[1_1_220px]"
+          label="Tên thẻ"
+          placeholder="vd: Techcombank Visa"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <Field
+          className="min-w-0 flex-[1_1_220px]"
           label="Dư nợ hiện tại"
           numeric
           group
@@ -54,6 +61,7 @@ function AddCreditCardForm({ onAdd }: AddCreditCardFormProps) {
           onChange={(e) => setBalance(e.target.value)}
         />
         <Field
+          className="min-w-0 flex-[1_1_220px]"
           label="Số tiền tối thiểu"
           numeric
           group
@@ -63,6 +71,7 @@ function AddCreditCardForm({ onAdd }: AddCreditCardFormProps) {
           onChange={(e) => setMin(e.target.value)}
         />
         <Field
+          className="min-w-0 flex-[1_1_220px]"
           label="Hạn mức"
           numeric
           group
@@ -72,6 +81,7 @@ function AddCreditCardForm({ onAdd }: AddCreditCardFormProps) {
           onChange={(e) => setLimit(e.target.value)}
         />
         <Field
+          className="min-w-0 flex-[1_1_220px]"
           label="Ngày đến hạn"
           placeholder="vd: 15 hàng tháng"
           value={due}

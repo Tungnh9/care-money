@@ -15,7 +15,17 @@ function SettingsView() {
   const { entries, streak, replaceJournal } = useJournal()
   const { savings, cards, gold, invests, replaceFinance } = useFinance()
   const { tasks, learned, replaceStudy } = useStudy()
-  const { exported, imported, exportData, importData, wipeData } = useDataManagement({
+  const {
+    exported,
+    imported,
+    exportData,
+    importData,
+    wipeData,
+    syncing,
+    syncResult,
+    pushToCloud,
+    pullFromCloud,
+  } = useDataManagement({
     onReplaceJournal: replaceJournal,
     onReplaceFinance: replaceFinance,
     onReplaceStudy: replaceStudy,
@@ -37,12 +47,21 @@ function SettingsView() {
     <div>
       <h1 className="mb-1 [font:var(--ob-text-h2)] tracking-[var(--ob-track-heading)]">Cài đặt</h1>
       <p className="mb-5 text-sm text-[var(--ob-color-text-subtle)]">
-        Chỉ mình bạn dùng · dữ liệu nằm trên máy bạn
+        Chỉ mình bạn dùng · mặc định lưu trên máy bạn, đồng bộ giữa thiết bị là tuỳ chọn
       </p>
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-5">
+      <div className="flex flex-wrap gap-5">
         <MoodsCard moods={settings.moods} onToggle={toggleMood} onRemove={removeMood} onAdd={addMood} />
         <ModulesCard modules={settings.modules} onToggle={toggleModule} />
-        <DataCard exported={exported} imported={imported} onExport={exportData} onImport={importData} />
+        <DataCard
+          exported={exported}
+          imported={imported}
+          syncing={syncing}
+          syncResult={syncResult}
+          onExport={exportData}
+          onImport={importData}
+          onPushToCloud={pushToCloud}
+          onPullFromCloud={pullFromCloud}
+        />
         <ResetCard counts={counts} onWipe={wipeData} onExport={exportData} />
       </div>
     </div>

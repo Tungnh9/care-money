@@ -55,14 +55,16 @@ function AddMoodForm({ onAdd }: AddMoodFormProps) {
           </button>
         ))}
       </div>
-      <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+      <div className="flex flex-wrap gap-3">
         <Field
+          className="min-w-0 flex-[1_1_220px]"
           label="Tên"
           placeholder="vd: Hào hứng"
           value={label}
           onChange={(e) => setLabel(e.target.value)}
         />
         <Field
+          className="min-w-0 flex-[1_1_220px]"
           label="Mô tả ngắn"
           placeholder="vd: Có việc đang mong chờ"
           value={desc}

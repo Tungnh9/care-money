@@ -12,10 +12,10 @@ function GoalsView() {
       <p className="mb-5 text-sm text-[var(--ob-color-text-subtle)]">
         {goals.length} mục tiêu đang chạy · hoàn thành trung bình {avg}%
       </p>
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-5">
-        <OverallProgressCard goals={goals} avg={avg} />
+      <div className="flex flex-wrap gap-5">
+        <OverallProgressCard goals={goals} avg={avg} className="min-w-0 basis-full" />
         {goals.map((goal) => (
-          <GoalCard key={goal.key} goal={goal} />
+          <GoalCard key={goal.key} goal={goal} className="min-w-0 flex-[1_1_300px]" />
         ))}
       </div>
     </div>

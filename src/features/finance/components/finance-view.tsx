@@ -44,7 +44,7 @@ function FinanceView() {
         Tài sản ròng {formatMoney(summary.net)} · cập nhật {longDate()}
       </p>
 
-      <div className="mb-6 grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-4">
+      <div className="mb-6 flex flex-wrap gap-4">
         <NetWorthCard summary={summary} />
         <PillarCard
           icon="pig"
@@ -52,6 +52,7 @@ function FinanceView() {
           amount={summary.savingsTotal}
           tone="income"
           hint={savings.length ? `${savings.length} quỹ đang chạy` : "Chưa có quỹ nào"}
+          className="min-w-0 flex-[1_1_260px]"
         />
         <PillarCard
           icon="card"
@@ -61,6 +62,7 @@ function FinanceView() {
           hint={
             cards.length ? `${cards.length} thẻ · hạn gần nhất ${cards[0].due}` : "Chưa có thẻ nào"
           }
+          className="min-w-0 flex-[1_1_260px]"
         />
         <PillarCard
           icon="gold"
@@ -68,6 +70,7 @@ function FinanceView() {
           amount={summary.goldValue}
           tone={summary.goldPL >= 0 ? "income" : "expense"}
           hint={`${summary.goldPhan} phân · ${pct1(summary.goldPct)}`}
+          className="min-w-0 flex-[1_1_260px]"
         />
         <PillarCard
           icon="chart"
@@ -77,6 +80,7 @@ function FinanceView() {
           hint={
             invests.length ? `${invests.length} khoản · ${pct1(summary.investPct)}` : "Chưa có khoản nào"
           }
+          className="min-w-0 flex-[1_1_260px]"
         />
       </div>
 

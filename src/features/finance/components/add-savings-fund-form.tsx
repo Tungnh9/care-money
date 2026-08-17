@@ -40,9 +40,16 @@ function AddSavingsFundForm({ onAdd }: AddSavingsFundFormProps) {
       <div className="mb-3 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
         Quỹ tiết kiệm mới
       </div>
-      <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
-        <Field label="Tên quỹ" placeholder="vd: Quỹ khẩn cấp" value={name} onChange={(e) => setName(e.target.value)} />
+      <div className="flex flex-wrap gap-3">
         <Field
+          className="min-w-0 flex-[1_1_220px]"
+          label="Tên quỹ"
+          placeholder="vd: Quỹ khẩn cấp"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <Field
+          className="min-w-0 flex-[1_1_220px]"
           label="Số tiền hiện có"
           numeric
           group
@@ -52,6 +59,7 @@ function AddSavingsFundForm({ onAdd }: AddSavingsFundFormProps) {
           onChange={(e) => setAmount(e.target.value)}
         />
         <Field
+          className="min-w-0 flex-[1_1_220px]"
           label="Mục tiêu"
           numeric
           group
@@ -61,6 +69,7 @@ function AddSavingsFundForm({ onAdd }: AddSavingsFundFormProps) {
           onChange={(e) => setTarget(e.target.value)}
         />
         <Field
+          className="min-w-0 flex-[1_1_220px]"
           label="Ghi chú"
           placeholder="vd: Duy trì 3-6 tháng chi tiêu"
           value={note}
