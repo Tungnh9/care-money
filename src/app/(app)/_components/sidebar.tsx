@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
   BookOpen,
+  Clover,
   Flame,
   GraduationCap,
   LayoutDashboard,
@@ -64,13 +65,13 @@ function Sidebar() {
           type="button"
           onClick={handleLogout}
           aria-label="Đăng xuất"
-          className="flex items-center justify-center text-[var(--ob-color-text-muted)]"
+          className="flex items-center justify-center text-[var(--ob-color-text-muted)] transition-colors duration-[var(--ob-dur-fast)] hover:text-[var(--ob-color-expense)]"
         >
           <LogOut size={18} />
         </button>
       </div>
 
-      <aside className="fixed inset-x-0 bottom-0 z-10 flex items-center justify-around gap-1 border-t border-[var(--ob-color-border)] bg-[var(--ob-color-bg)] p-[6px_4px] pb-[calc(6px+env(safe-area-inset-bottom))] md:inset-x-auto md:inset-y-0 md:right-auto md:bottom-auto md:left-0 md:w-[76px] md:flex-col md:items-stretch md:justify-start md:border-t-0 md:border-r md:p-[18px_10px] lg:w-[248px] lg:p-[22px_16px]">
+      <aside className="fixed inset-x-0 bottom-0 z-10 flex items-center justify-around gap-1 border-t border-[var(--ob-color-border)] bg-[var(--ob-color-bg)] p-[6px_4px] pb-[calc(6px+env(safe-area-inset-bottom))] md:inset-x-auto md:inset-y-0 md:right-auto md:left-0 md:w-[76px] md:flex-col md:items-stretch md:justify-start md:border-t-0 md:border-r md:p-[18px_10px] lg:w-[248px] lg:p-[22px_16px]">
         <div className="hidden items-center justify-center gap-[10px] px-2 pb-[22px] md:flex lg:justify-start">
           <Image src="/assets/logo-mark.svg" width={32} height={32} alt="" />
           <span className="hidden [font:700_17px/1_var(--ob-font-display)] tracking-[-0.02em] whitespace-nowrap lg:inline">
@@ -108,20 +109,22 @@ function Sidebar() {
               <span className="hidden whitespace-nowrap lg:inline">Chuỗi {streak} ngày</span>
             </div>
           ) : null}
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="flex items-center justify-center gap-[11px] rounded-[var(--ob-radius-md)] px-[14px] py-[11px] text-left text-[length:var(--ob-size-sm)] leading-[var(--ob-lh-normal)] font-medium text-[var(--ob-color-text-muted)] lg:justify-start"
-          >
-            <LogOut size={18} />
-            <span className="hidden whitespace-nowrap lg:inline">Đăng xuất</span>
-          </button>
           <div className="flex items-center justify-center gap-[10px] px-[6px] pt-0.5 lg:justify-start">
-            <span className="size-8 flex-none rounded-full bg-[var(--ob-vo-200)]" />
+            <span className="flex size-8 flex-none items-center justify-center rounded-full bg-[var(--ob-color-reward-soft)]">
+              <Clover size={18} className="text-[var(--ob-chuoi-500)]" />
+            </span>
             <span className="hidden text-[13.5px] font-bold whitespace-nowrap lg:inline">
               {settings.profile.displayName}
             </span>
           </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex items-center justify-center gap-[11px] rounded-[var(--ob-radius-md)] px-[14px] py-[11px] text-left text-[length:var(--ob-size-sm)] leading-[var(--ob-lh-normal)] font-medium text-[var(--ob-color-text-muted)] transition-colors duration-[var(--ob-dur-fast)] hover:text-[var(--ob-color-expense)] lg:justify-start"
+          >
+            <LogOut size={18} />
+            <span className="hidden whitespace-nowrap lg:inline">Đăng xuất</span>
+          </button>
         </div>
       </aside>
     </>
