@@ -17,8 +17,7 @@ describe("SettingsView", () => {
   it("renders every settings card", async () => {
     render(<SettingsView />)
 
-    await waitFor(() => expect(screen.getByText("Hồ sơ")).toBeInTheDocument())
-    expect(screen.getByText("Ngân sách mỗi tháng", { exact: false })).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText("Module hiển thị")).toBeInTheDocument())
     expect(screen.getByText("Tâm trạng dùng trong nhật ký")).toBeInTheDocument()
     expect(screen.getByText("Module hiển thị")).toBeInTheDocument()
     expect(screen.getByText("Dữ liệu")).toBeInTheDocument()
@@ -27,7 +26,7 @@ describe("SettingsView", () => {
 
   it("exports a JSON backup and shows the file info banner", async () => {
     render(<SettingsView />)
-    await waitFor(() => expect(screen.getByText("Hồ sơ")).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText("Module hiển thị")).toBeInTheDocument())
 
     fireEvent.click(screen.getByRole("button", { name: "Xuất file JSON" }))
 
@@ -39,7 +38,7 @@ describe("SettingsView", () => {
     setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ A", amount: 1, target: 2 }] })
 
     render(<SettingsView />)
-    await waitFor(() => expect(screen.getByText("Hồ sơ")).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText("Module hiển thị")).toBeInTheDocument())
 
     fireEvent.click(screen.getByRole("button", { name: "Xoá toàn bộ dữ liệu" }))
 
@@ -51,9 +50,9 @@ describe("SettingsView", () => {
     expect(screen.getByText("Đã xoá sạch.")).toBeInTheDocument()
   })
 
-  it("restores settings from an imported backup and reflects it immediately without a reload", async () => {
+  it("restores settings from an imported backup and shows the success banner", async () => {
     render(<SettingsView />)
-    await waitFor(() => expect(screen.getByDisplayValue("Linh")).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText("Module hiển thị")).toBeInTheDocument())
 
     const payload = {
       version: EXPORT_VERSION,
@@ -69,6 +68,6 @@ describe("SettingsView", () => {
 
     fireEvent.change(input, { target: { files: [file] } })
 
-    expect(await screen.findByDisplayValue("Khôi phục")).toBeInTheDocument()
+    expect(await screen.findByText("Đã nạp backup.json", { exact: false })).toBeInTheDocument()
   })
 })

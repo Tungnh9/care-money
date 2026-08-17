@@ -33,8 +33,8 @@ interface AppSettings {
 const SETTINGS_STORAGE_KEY = "app-settings"
 
 const DEFAULT_PROFILE: Profile = {
-  displayName: "Linh",
-  greeting: "Chào buổi sáng, Linh",
+  displayName: "Tungnh2k1",
+  greeting: "Chào buổi sáng, Tungnh2k1",
 }
 
 const DEFAULT_BUDGET: Budget = {
