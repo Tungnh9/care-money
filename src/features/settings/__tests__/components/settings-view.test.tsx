@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 
 import { setStoredJournal } from "@/features/journal/journal-storage"
 import { setStoredFinance, DEFAULT_FINANCE_STATE } from "@/features/finance/finance-storage"
+import { getStoredSettings } from "@/lib/settings-storage"
 import { EXPORT_VERSION } from "../../data-transfer"
 import { SettingsView } from "../../components/settings-view"
 
@@ -77,5 +78,23 @@ describe("SettingsView", () => {
     fireEvent.change(input, { target: { files: [file] } })
 
     expect(await screen.findByText("Đã nạp backup.json", { exact: false })).toBeInTheDocument()
+  })
+
+  it("saves a new display name, keeping the greeting prefix and persisting both to localStorage", async () => {
+    render(<SettingsView />)
+    await waitFor(() => expect(screen.getByText("Module hiển thị")).toBeInTheDocument())
+
+    const originalGreeting = getStoredSettings().profile.greeting
+
+    fireEvent.change(screen.getByLabelText("Tên hiển thị", { exact: false }), {
+      target: { value: "Tùng mới" },
+    })
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
+
+    expect(getStoredSettings().profile.displayName).toBe("Tùng mới")
+    expect(getStoredSettings().profile.greeting).toBe(
+      originalGreeting.replace("Tungnh2k1", "Tùng mới")
+    )
+    expect(screen.getByLabelText("Tên hiển thị", { exact: false })).toHaveValue("Tùng mới")
   })
 })

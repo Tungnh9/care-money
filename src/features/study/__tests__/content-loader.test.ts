@@ -40,4 +40,13 @@ describe("getGrammar", () => {
     const ids = new Set(grammar.map((g) => g.id))
     expect(ids.size).toBe(grammar.length)
   })
+
+  it("carries a non-empty structure field for every entry", () => {
+    const grammar = getGrammar()
+    expect(grammar.length).toBeGreaterThan(0)
+    for (const entry of grammar) {
+      expect(typeof entry.structure).toBe("string")
+      expect(entry.structure?.length).toBeGreaterThan(0)
+    }
+  })
 })
