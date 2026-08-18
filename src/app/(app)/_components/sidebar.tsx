@@ -125,11 +125,9 @@ function Sidebar() {
               {hideMoney ? "Hiện số tiền" : "Ẩn số tiền"}
             </span>
           </button>
-          <div className="flex items-center justify-center gap-[10px] px-[6px] pt-0.5 lg:justify-start">
-            <span className="flex size-8 flex-none items-center justify-center rounded-full bg-[var(--ob-color-reward-soft)]">
-              <Image src="/assets/avatar-clover.svg" width={20} height={20} alt="" />
-            </span>
-            <span className="hidden text-[13.5px] font-bold whitespace-nowrap lg:inline">
+          <div className="flex items-center justify-center gap-[10px] rounded-[var(--ob-radius-md)] px-0 py-2 lg:justify-start lg:bg-[var(--ob-vo-100)] lg:px-[10px]">
+            <Image src="/assets/avatar-clover.svg" width={32} height={32} alt="" className="flex-none" />
+            <span className="hidden overflow-hidden bg-gradient-to-r from-[var(--ob-color-action)] to-[var(--ob-color-reward)] bg-clip-text text-[13.5px] font-bold text-ellipsis whitespace-nowrap text-transparent lg:inline">
               {settings.profile.displayName}
             </span>
           </div>
