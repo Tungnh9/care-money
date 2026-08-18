@@ -26,6 +26,7 @@ function Monkey({ pose = "wave", size = 72, dark = false, className }: MonkeyPro
       className={className}
       style={{ flex: "none", display: "block" }}
       aria-hidden="true"
+      data-pose={pose}
     >
       <ellipse cx={32} cy={60.4} rx={14} ry={2.4} fill={bodyColor} opacity={0.16} />
       <path

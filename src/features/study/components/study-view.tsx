@@ -57,6 +57,7 @@ function StudyView({ vocab, grammar }: StudyViewProps) {
             entries={daily}
             learned={learned}
             onToggleLearned={toggleLearned}
+            celebrate={learnedToday === 5}
             className="min-w-0 flex-[1_1_100%]"
           />
           {dailyGrammar ? <GrammarHighlightCard entry={dailyGrammar} /> : null}

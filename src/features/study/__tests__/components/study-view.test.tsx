@@ -87,4 +87,20 @@ describe("StudyView", () => {
     expect(screen.getByText("Ngữ pháp tiếng Anh · 5 mục")).toBeInTheDocument()
     GRAMMAR.forEach((g) => expect(screen.getByText(g.title)).toBeInTheDocument())
   })
+
+  it("celebrates with confetti once all 5 daily words are learned", async () => {
+    render(<StudyView vocab={VOCAB} grammar={GRAMMAR} />)
+
+    for (let i = 0; i < 5; i++) {
+      const [button] = screen.getAllByRole("button", { name: "Đánh dấu đã học" })
+      fireEvent.click(button)
+      await waitFor(() =>
+        expect(screen.getAllByRole("button", { name: "Bỏ đánh dấu đã học" })).toHaveLength(i + 1)
+      )
+    }
+
+    const vocabCard = screen.getByText("5/5").closest("section")
+    expect(vocabCard).toHaveClass("ob-tada")
+    expect(vocabCard?.querySelector(".ob-conf")).toBeInTheDocument()
+  })
 })
