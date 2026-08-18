@@ -112,4 +112,19 @@ describe("parseImportPayload", () => {
       expect(result.data.settings.modules).toEqual(DEFAULT_SETTINGS.modules)
     }
   })
+
+  it("drops legacy settings fields no longer part of AppSettings (e.g. old budget) from an imported backup", () => {
+    const raw = JSON.stringify({
+      version: EXPORT_VERSION,
+      settings: { ...DEFAULT_SETTINGS, budget: { amount: "20.000.000", cycleStart: "1" } },
+    })
+
+    const result = parseImportPayload(raw)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.settings).not.toHaveProperty("budget")
+      expect(result.data.settings).toEqual(DEFAULT_SETTINGS)
+    }
+  })
 })

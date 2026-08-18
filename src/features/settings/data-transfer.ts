@@ -75,9 +75,11 @@ function parseImportPayload(raw: string): ImportResult {
   }
 
   const settingsOverride = isObject(parsed.settings) ? parsed.settings : {}
+  const profileOverride = isObject(settingsOverride.profile) ? settingsOverride.profile : {}
+  // Chỉ build đúng 3 field của AppSettings hiện tại — không spread nguyên settingsOverride,
+  // để field cũ đã xoá khỏi type (vd. "budget") không theo file backup cũ sống lại.
   const settings: AppSettings = {
-    ...DEFAULT_SETTINGS,
-    ...settingsOverride,
+    profile: { ...DEFAULT_SETTINGS.profile, ...profileOverride },
     moods: ensureArray(settingsOverride.moods, DEFAULT_SETTINGS.moods),
     modules: ensureArray(settingsOverride.modules, DEFAULT_SETTINGS.modules),
   }
