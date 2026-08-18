@@ -1,25 +1,20 @@
-import Image from "next/image"
 import Link from "next/link"
 
 import type { JournalEntry } from "@/features/journal/types"
 import { Card } from "@/components/ui/card"
-import { Figure } from "@/components/ob/figure"
-import { Streak } from "@/components/ob/streak"
 import { buttonVariants } from "@/components/ui/button"
-import { BADGE_AT } from "@/lib/constants"
+import { Empty } from "@/components/ob/empty"
 
 interface JournalSummarySectionProps {
   entries: JournalEntry[]
-  streak: number
-  showStreak: boolean
 }
 
-function JournalSummarySection({ entries, streak, showStreak }: JournalSummarySectionProps) {
+function JournalSummarySection({ entries }: JournalSummarySectionProps) {
   const recent = entries.slice(0, 3)
 
   return (
     <div className="ob-card-grid flex flex-wrap gap-5">
-      <Card label="Bài gần đây" className="min-w-0 flex-[2_1_460px]">
+      <Card label="Bài gần đây" className="min-w-0 flex-[1_1_100%]">
         {recent.length ? (
           <div>
             {recent.map((entry) => (
@@ -45,38 +40,13 @@ function JournalSummarySection({ entries, streak, showStreak }: JournalSummarySe
             </Link>
           </div>
         ) : (
-          <div>
-            <p className="mb-4 text-sm leading-[1.6] text-[var(--ob-color-text-muted)]">
-              Chưa có bài nào cho hôm nay. Ba câu là đủ.
-            </p>
+          <Empty pose="book" size={78} title="Chưa có bài nào cho hôm nay" hint="Ba câu là đủ để tuần sau nhìn lại.">
             <Link href="/journal" className={buttonVariants({ variant: "primary", size: "sm" })}>
               Viết nhật ký hôm nay
             </Link>
-          </div>
+          </Empty>
         )}
       </Card>
-
-      {showStreak ? (
-        <Card tone="reward" label="Chuỗi ngày" className="min-w-0 flex-[1_1_280px]">
-          <Figure value={String(streak)} />
-          <Streak
-            days={7}
-            done={Math.min(streak, 7)}
-            icon={<Image src="/assets/icons/flame-on.svg" width={19} height={19} alt="" />}
-            className="mt-4"
-          />
-          <p className="mt-[14px] text-[13px] leading-[1.5] text-[#5C4200]">
-            {streak >= BADGE_AT
-              ? "Bạn đã mở huy hiệu "
-              : `Viết nhật ký đủ ${BADGE_AT - streak} ngày nữa để mở huy hiệu `}
-            <strong className="inline-flex items-center gap-[5px] align-[-4px] font-bold">
-              Chuỗi Vàng
-              <Image src="/assets/icons/badge.svg" width={18} height={18} alt="" />
-            </strong>
-            .
-          </p>
-        </Card>
-      ) : null}
     </div>
   )
 }

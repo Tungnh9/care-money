@@ -439,6 +439,15 @@ body {
 
   button {
     cursor: pointer;
+    transition:
+      transform var(--ob-dur-fast) var(--ob-ease-out),
+      background var(--ob-dur-fast) var(--ob-ease-out);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    button:active {
+      transform: scale(0.95);
+    }
   }
 
   * {

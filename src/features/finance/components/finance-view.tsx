@@ -3,6 +3,7 @@
 import { useState } from "react"
 
 import { Tabs } from "@/components/ob/tabs"
+import { NetWorthCard } from "@/components/ob/net-worth-card"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { longDate } from "@/lib/date"
 import { formatMoney } from "@/lib/format"
@@ -11,7 +12,6 @@ import { useFinance } from "../hooks/use-finance"
 import { CreditCardsTab } from "./credit-cards-tab"
 import { GoldTab } from "./gold-tab"
 import { InvestmentsTab } from "./investments-tab"
-import { NetWorthCard } from "./net-worth-card"
 import { PillarCard } from "./pillar-card"
 import { SavingsTab } from "./savings-tab"
 
@@ -46,7 +46,7 @@ function FinanceView() {
         Tài sản ròng {formatMoney(summary.net, hidden)} · cập nhật {longDate()}
       </p>
 
-      <div className="mb-6 flex flex-wrap gap-4">
+      <div className="ob-card-grid mb-6 flex flex-wrap gap-4">
         <NetWorthCard summary={summary} />
         <PillarCard
           icon="pig"
@@ -88,22 +88,24 @@ function FinanceView() {
 
       <Tabs tabs={TABS} active={tab} onChange={setTab} />
 
-      {tab === "Tiết kiệm" ? (
-        <SavingsTab savings={savings} onAddSavingsFund={addSavingsFund} />
-      ) : tab === "Nợ thẻ tín dụng" ? (
-        <CreditCardsTab cards={cards} onAddCard={addCard} onPayCard={payCard} />
-      ) : tab === "Tích lũy vàng" ? (
-        <GoldTab
-          summary={summary}
-          goldPrice={goldPrice}
-          onSetGoldPrice={setGoldPrice}
-          gold={gold}
-          onAddGold={addGold}
-          onRemoveGold={removeGold}
-        />
-      ) : (
-        <InvestmentsTab invests={invests} onAddInvest={addInvest} />
-      )}
+      <div className="ob-card-grid">
+        {tab === "Tiết kiệm" ? (
+          <SavingsTab savings={savings} onAddSavingsFund={addSavingsFund} />
+        ) : tab === "Nợ thẻ tín dụng" ? (
+          <CreditCardsTab cards={cards} onAddCard={addCard} onPayCard={payCard} />
+        ) : tab === "Tích lũy vàng" ? (
+          <GoldTab
+            summary={summary}
+            goldPrice={goldPrice}
+            onSetGoldPrice={setGoldPrice}
+            gold={gold}
+            onAddGold={addGold}
+            onRemoveGold={removeGold}
+          />
+        ) : (
+          <InvestmentsTab invests={invests} onAddInvest={addInvest} />
+        )}
+      </div>
     </div>
   )
 }

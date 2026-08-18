@@ -14,7 +14,7 @@ import type { JournalEntry } from "../types"
 
 function JournalView() {
   const { settings } = useSettings()
-  const { entries, streak, saveEntry, deleteEntry } = useJournal()
+  const { entries, saveEntry, deleteEntry } = useJournal()
   const [mood, setMood] = useState("")
   const [justSaved, setJustSaved] = useState<JournalEntry | null>(null)
 
@@ -43,12 +43,11 @@ function JournalView() {
       <p className="mb-5 text-sm text-[var(--ob-color-text-subtle)]">
         {longDate()} · viết bao nhiêu cũng được
       </p>
-      <div className="flex flex-wrap gap-5">
+      <div className="ob-card-grid flex flex-wrap gap-5">
         <div className="min-w-0 flex-[1_1_100%]">
           {justSaved ? (
             <JournalSaveSuccess
               entry={justSaved}
-              streak={streak}
               onWriteMore={() => setJustSaved(null)}
               onViewEntries={handleViewEntries}
             />
@@ -57,11 +56,16 @@ function JournalView() {
           )}
         </div>
         {moodEnabled ? (
-          <div className="min-w-0 flex-[1_1_300px]">
+          <div className="min-w-0 flex-[1_1_300px] [&>*]:h-full">
             <MoodPickerCard moods={settings.moods} selected={mood} onSelect={setMood} />
           </div>
         ) : null}
-        <div className={cn("min-w-0", entries.length ? "flex-[1_1_100%]" : "flex-[1_1_300px]")}>
+        <div
+          className={cn(
+            "min-w-0 [&>*]:h-full",
+            entries.length ? "flex-[1_1_100%]" : "flex-[2_1_360px]"
+          )}
+        >
           <JournalEntriesCard entries={entries} onDelete={deleteEntry} />
         </div>
       </div>

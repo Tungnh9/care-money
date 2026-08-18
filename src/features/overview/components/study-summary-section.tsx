@@ -1,6 +1,5 @@
 import { Check, Circle } from "lucide-react"
 
-import { GrammarHighlightCard } from "@/features/study/components/grammar-card"
 import { pickDaily } from "@/features/study/daily-pick"
 import type { GrammarEntry, Task, VocabEntry } from "@/features/study/types"
 import { Card } from "@/components/ui/card"
@@ -43,6 +42,19 @@ function VocabTeaserRow({ entry, learned }: { entry: VocabEntry; learned: boolea
   )
 }
 
+function GrammarTeaserCard({ entry }: { entry: GrammarEntry }) {
+  return (
+    <Card label="Ngữ pháp hôm nay" className="min-w-0 flex-[1_1_280px]">
+      <div className="mb-2.5 text-[15px] font-bold">{entry.title}</div>
+      {entry.examples?.[0] ? (
+        <p className="text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)] italic">
+          {entry.examples[0]}
+        </p>
+      ) : null}
+    </Card>
+  )
+}
+
 function StudySummarySection({ vocab, grammar, tasks, onToggleTask, learned }: StudySummarySectionProps) {
   const key = dayKey()
   const daily = pickDaily(vocab, 5, key, "vocab")
@@ -68,7 +80,7 @@ function StudySummarySection({ vocab, grammar, tasks, onToggleTask, learned }: S
         </div>
       </Card>
 
-      {dailyGrammar ? <GrammarHighlightCard entry={dailyGrammar} /> : null}
+      {dailyGrammar ? <GrammarTeaserCard entry={dailyGrammar} /> : null}
     </div>
   )
 }

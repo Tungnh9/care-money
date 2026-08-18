@@ -60,6 +60,13 @@ describe("CreditCardsTab", () => {
     expect(onPayCard).not.toHaveBeenCalled()
     expect(screen.queryByLabelText("Số tiền trả", { exact: false })).not.toBeInTheDocument()
   })
+
+  it("stagger-animates its stacked cards in via the shared ob-card-grid wrapper", () => {
+    render(<CreditCardsTab cards={[CARD]} onAddCard={vi.fn()} onPayCard={vi.fn()} />)
+
+    const cardSection = screen.getByText(CARD.name).closest("section") as HTMLElement
+    expect(cardSection.parentElement).toHaveClass("ob-card-grid")
+  })
 })
 
 describe("AddCreditCardForm", () => {

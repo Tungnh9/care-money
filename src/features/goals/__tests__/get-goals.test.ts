@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest"
 
-import { BADGE_AT } from "@/lib/constants"
 import { formatMoney } from "@/lib/format"
 import { formatChi, getGoals } from "../get-goals"
 import { MOCK_GOALS_DATA } from "../mock-data"
@@ -13,24 +12,23 @@ describe("getGoals", () => {
       ["savings", 44],
       ["gold", 60],
       ["car", 0],
-      ["streak", 47],
     ])
   })
 
   it("computes the overall average from the raw ratios, not the rounded percents", () => {
     const { avg } = getGoals(MOCK_GOALS_DATA)
 
-    expect(avg).toBe(38)
+    expect(avg).toBe(35)
   })
 
   it("marks a goal as done only once now reaches its target", () => {
-    const { goals } = getGoals({ ...MOCK_GOALS_DATA, streak: BADGE_AT })
+    const { goals } = getGoals({ ...MOCK_GOALS_DATA, savingsTotal: 100_000_000 })
 
-    const streakGoal = goals.find((g) => g.key === "streak")
-    expect(streakGoal?.done).toBe(true)
-    expect(streakGoal?.percent).toBe(100)
+    const savingsGoal = goals.find((g) => g.key === "savings")
+    expect(savingsGoal?.done).toBe(true)
+    expect(savingsGoal?.percent).toBe(100)
 
-    const untouched = getGoals(MOCK_GOALS_DATA).goals.find((g) => g.key === "streak")
+    const untouched = getGoals(MOCK_GOALS_DATA).goals.find((g) => g.key === "savings")
     expect(untouched?.done).toBe(false)
   })
 

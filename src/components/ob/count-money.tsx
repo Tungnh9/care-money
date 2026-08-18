@@ -17,18 +17,26 @@ function prefersReducedMotion(): boolean {
 
 function useCountUp(target: number, ms = 800): number {
   const [value, setValue] = React.useState(target)
-  const isFirstRun = React.useRef(true)
+  const hasAnimated = React.useRef(false)
 
   React.useEffect(() => {
-    if (!isFirstRun.current) {
+    if (hasAnimated.current) {
       // Đổi target khi đã chạy xong lần đầu (vd. tài khoản mới nạp thêm tiền) — cập nhật thẳng, không chạy lại animation.
       setValue(target)
       return
     }
-    isFirstRun.current = false
 
-    if (prefersReducedMotion() || !target) {
+    if (!target) {
+      // target=0 có thể là dữ liệu thật, hoặc chỉ là placeholder lúc localStorage chưa kịp nạp (useFinance/useSettings
+      // khởi tạo bằng 0 trước, nạp dữ liệu thật ngay sau qua effect) — chưa đánh dấu đã chạy, để dành animation cho
+      // lần target thật sự khác 0 tới, tránh mất hiệu ứng đếm dần ngay khi vào trang.
       // eslint-disable-next-line react-hooks/set-state-in-effect
+      setValue(0)
+      return
+    }
+    hasAnimated.current = true
+
+    if (prefersReducedMotion()) {
       setValue(target)
       return
     }

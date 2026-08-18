@@ -12,7 +12,7 @@ import { useSettings } from "../hooks/use-settings"
 
 function SettingsView() {
   const { settings, toggleModule, toggleMood, removeMood, addMood, replaceSettings } = useSettings()
-  const { entries, streak, replaceJournal } = useJournal()
+  const { entries, replaceJournal } = useJournal()
   const { savings, cards, gold, invests, replaceFinance } = useFinance()
   const { tasks, learned, replaceStudy } = useStudy()
   const {
@@ -38,7 +38,6 @@ function SettingsView() {
     invests.length ? `${invests.length} khoản đầu tư` : null,
     savings.length ? `${savings.length} quỹ tiết kiệm` : null,
     cards.length ? `${cards.length} thẻ tín dụng` : null,
-    streak ? `chuỗi ${streak} ngày` : null,
     tasks.some((task) => task.done) ? "nhiệm vụ đã tick" : null,
     learned.length ? `${learned.length} từ đã học` : null,
   ].filter((count): count is string => count !== null)
@@ -49,7 +48,7 @@ function SettingsView() {
       <p className="mb-5 text-sm text-[var(--ob-color-text-subtle)]">
         Chỉ mình bạn dùng · mặc định lưu trên máy bạn, đồng bộ giữa thiết bị là tuỳ chọn
       </p>
-      <div className="flex flex-wrap gap-5">
+      <div className="ob-card-grid flex flex-wrap gap-5">
         <MoodsCard moods={settings.moods} onToggle={toggleMood} onRemove={removeMood} onAdd={addMood} />
         <ModulesCard modules={settings.modules} onToggle={toggleModule} />
         <DataCard
