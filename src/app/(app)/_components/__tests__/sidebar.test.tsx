@@ -26,4 +26,11 @@ describe("Sidebar", () => {
 
     await waitFor(() => expect(screen.getByText("Chuỗi 7 ngày")).toBeInTheDocument())
   })
+
+  it("shows the avatar image next to the display name", () => {
+    render(<Sidebar />)
+
+    const images = screen.getAllByAltText("")
+    expect(images.some((img) => img.getAttribute("src")?.includes("avatar-clover.svg"))).toBe(true)
+  })
 })

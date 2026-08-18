@@ -5,7 +5,6 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
   BookOpen,
-  Clover,
   Flame,
   GraduationCap,
   LayoutDashboard,
@@ -110,7 +109,7 @@ function Sidebar() {
           ) : null}
           <div className="flex items-center justify-center gap-[10px] px-[6px] pt-0.5 lg:justify-start">
             <span className="flex size-8 flex-none items-center justify-center rounded-full bg-[var(--ob-color-reward-soft)]">
-              <Clover size={18} className="text-[var(--ob-chuoi-500)]" />
+              <Image src="/assets/avatar-clover.svg" width={20} height={20} alt="" />
             </span>
             <span className="hidden text-[13.5px] font-bold whitespace-nowrap lg:inline">
               {settings.profile.displayName}
