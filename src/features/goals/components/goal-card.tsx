@@ -1,5 +1,6 @@
 import Image from "next/image"
 
+import { Confetti } from "@/components/ob/confetti"
 import { Streak } from "@/components/ob/streak"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -17,7 +18,8 @@ function GoalCard({ goal, className }: GoalCardProps) {
   const iconName = goal.done ? "check" : goal.icon
 
   return (
-    <Card label={goal.name} className={className}>
+    <Card label={goal.name} className={cn(goal.done && "ob-tada relative", className)}>
+      {goal.done ? <Confetti n={12} /> : null}
       <div className="mb-[18px] grid grid-cols-[auto_1fr_auto] items-center gap-x-[14px]">
         <span
           className={cn(
