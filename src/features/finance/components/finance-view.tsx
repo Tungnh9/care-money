@@ -3,6 +3,7 @@
 import { useState } from "react"
 
 import { Tabs } from "@/components/ob/tabs"
+import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { longDate } from "@/lib/date"
 import { formatMoney } from "@/lib/format"
 import { pct1, summarizeFinance } from "../finance-calculations"
@@ -17,6 +18,7 @@ import { SavingsTab } from "./savings-tab"
 const TABS = ["Tiết kiệm", "Nợ thẻ tín dụng", "Tích lũy vàng", "Đầu tư"]
 
 function FinanceView() {
+  const { hidden } = useMoneyVisibility()
   const [tab, setTab] = useState(TABS[0])
   const {
     savings,
@@ -41,7 +43,7 @@ function FinanceView() {
         Tài chính
       </h1>
       <p className="mb-5 text-sm text-[var(--ob-color-text-subtle)]">
-        Tài sản ròng {formatMoney(summary.net)} · cập nhật {longDate()}
+        Tài sản ròng {formatMoney(summary.net, hidden)} · cập nhật {longDate()}
       </p>
 
       <div className="mb-6 flex flex-wrap gap-4">

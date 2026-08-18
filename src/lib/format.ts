@@ -1,5 +1,5 @@
-function formatMoney(n: number): string {
-  return n.toLocaleString("vi-VN") + " ₫"
+function formatMoney(n: number, hidden = false): string {
+  return hidden ? "•••••••• ₫" : n.toLocaleString("vi-VN") + " ₫"
 }
 
 export { formatMoney }

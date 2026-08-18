@@ -1,10 +1,14 @@
+"use client"
+
+import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { getGoals } from "../get-goals"
 import { MOCK_GOALS_DATA } from "../mock-data"
 import { GoalCard } from "./goal-card"
 import { OverallProgressCard } from "./overall-progress-card"
 
 function GoalsView() {
-  const { goals, avg } = getGoals(MOCK_GOALS_DATA)
+  const { hidden } = useMoneyVisibility()
+  const { goals, avg } = getGoals(MOCK_GOALS_DATA, hidden)
 
   return (
     <div>

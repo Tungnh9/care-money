@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card"
 import { Field } from "@/components/ui/field"
 import { Figure } from "@/components/ob/figure"
 import { Progress } from "@/components/ui/progress"
+import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import { parseGoldPrice, pct1, phanToChi, type FinanceSummary } from "../finance-calculations"
 import type { GoldPurchase } from "../types"
@@ -20,8 +21,8 @@ interface GoldTabProps {
   onRemoveGold: (id: number) => void
 }
 
-function signedMoney(n: number): string {
-  return (n >= 0 ? "+ " : "− ") + formatMoney(Math.abs(n))
+function signedMoney(n: number, hidden: boolean): string {
+  return (n >= 0 ? "+ " : "− ") + formatMoney(Math.abs(n), hidden)
 }
 
 function GoldTab({
@@ -32,6 +33,7 @@ function GoldTab({
   onAddGold,
   onRemoveGold,
 }: GoldTabProps) {
+  const { hidden } = useMoneyVisibility()
   const { goldPhan, goldCost, goldValue, goldPL, goldPct } = summary
   const gain = goldPL >= 0
   const maxBar = Math.max(goldCost, goldValue, 1)
@@ -41,8 +43,8 @@ function GoldTab({
   const stats = [
     ["Đang giữ", `${goldPhan} phân`],
     ["Quy đổi", phanToChi(goldPhan)],
-    ["Giá vốn bình quân", `${formatMoney(Math.round(avgCost))} / phân`],
-    ["Giá thị trường", `${formatMoney(marketPrice)} / phân`],
+    ["Giá vốn bình quân", `${formatMoney(Math.round(avgCost), hidden)} / phân`],
+    ["Giá thị trường", `${formatMoney(marketPrice, hidden)} / phân`],
   ] as const
 
   return (
@@ -55,7 +57,7 @@ function GoldTab({
                 <span
                   style={{ color: gain ? "var(--ob-color-income)" : "var(--ob-color-expense)" }}
                 >
-                  {signedMoney(goldPL)}
+                  {signedMoney(goldPL, hidden)}
                 </span>
               }
               delta={pct1(goldPct)}
@@ -63,8 +65,8 @@ function GoldTab({
             />
             <p className="mt-[10px] max-w-[28ch] text-[13.5px] leading-[1.5] text-[var(--ob-color-text-muted)]">
               {gain
-                ? `Bạn đang lãi ${formatMoney(goldPL)} so với giá vốn nhờ giá vàng tăng.`
-                : `Bạn đang lỗ ${formatMoney(Math.abs(goldPL))} so với giá vốn do giá vàng giảm.`}
+                ? `Bạn đang lãi ${formatMoney(goldPL, hidden)} so với giá vốn nhờ giá vàng tăng.`
+                : `Bạn đang lỗ ${formatMoney(Math.abs(goldPL), hidden)} so với giá vốn do giá vàng giảm.`}
             </p>
           </div>
           <div className="min-w-[240px] flex-1">
@@ -74,7 +76,7 @@ function GoldTab({
                   Giá vốn
                 </span>
                 <span className="text-[13.5px] [font-family:var(--ob-font-num)] tabular-nums text-[var(--ob-color-text-muted)]">
-                  {formatMoney(goldCost)}
+                  {formatMoney(goldCost, hidden)}
                 </span>
               </div>
               <Progress value={(goldCost / maxBar) * 100} tone="action" />
@@ -85,7 +87,7 @@ function GoldTab({
                   Giá trị nay
                 </span>
                 <span className="text-[13.5px] font-bold [font-family:var(--ob-font-num)] tabular-nums">
-                  {formatMoney(goldValue)}
+                  {formatMoney(goldValue, hidden)}
                 </span>
               </div>
               <Progress value={(goldValue / maxBar) * 100} tone="reward" />

@@ -2,6 +2,7 @@ import Image from "next/image"
 
 import { Figure } from "@/components/ob/figure"
 import { Card } from "@/components/ui/card"
+import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 
 interface PillarCardProps {
@@ -14,6 +15,7 @@ interface PillarCardProps {
 }
 
 function PillarCard({ icon, label, amount, hint, tone, className }: PillarCardProps) {
+  const { hidden } = useMoneyVisibility()
   const amountColor = tone
     ? tone === "income"
       ? "var(--ob-color-income)"
@@ -28,7 +30,7 @@ function PillarCard({ icon, label, amount, hint, tone, className }: PillarCardPr
         </span>
         <Figure
           className="min-w-0"
-          value={<span style={{ color: amountColor }}>{formatMoney(amount)}</span>}
+          value={<span style={{ color: amountColor }}>{formatMoney(amount, hidden)}</span>}
         />
         <p className="col-start-2 mt-1.5 min-w-0 text-[12.5px] text-[var(--ob-color-text-subtle)]">
           {hint}

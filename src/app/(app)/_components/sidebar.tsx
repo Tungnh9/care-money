@@ -5,6 +5,8 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
   BookOpen,
+  Eye,
+  EyeOff,
   Flame,
   GraduationCap,
   LayoutDashboard,
@@ -16,6 +18,7 @@ import {
 
 import { cn } from "@/lib/utils"
 import { clearStoredUser } from "@/lib/auth"
+import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { useSettings } from "@/features/settings/hooks/use-settings"
 import { useJournal } from "@/features/journal/hooks/use-journal"
 
@@ -33,6 +36,7 @@ function Sidebar() {
   const router = useRouter()
   const { settings } = useSettings()
   const { streak } = useJournal()
+  const { hidden: hideMoney, toggle: toggleHideMoney } = useMoneyVisibility()
 
   function isModuleOn(key: string) {
     return settings.modules.find((m) => m.key === key)?.on ?? true
@@ -60,6 +64,20 @@ function Sidebar() {
             {streak}
           </div>
         ) : null}
+        <button
+          type="button"
+          onClick={toggleHideMoney}
+          aria-label={hideMoney ? "Hiện số tiền" : "Ẩn số tiền"}
+          aria-pressed={hideMoney}
+          className={cn(
+            "flex items-center justify-center rounded-[var(--ob-radius-sm)] transition-colors duration-[var(--ob-dur-fast)]",
+            hideMoney
+              ? "text-[var(--ob-color-action-strong)]"
+              : "text-[var(--ob-color-text-subtle)] hover:text-[var(--ob-color-action-strong)]"
+          )}
+        >
+          {hideMoney ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
         <button
           type="button"
           onClick={handleLogout}
@@ -107,6 +125,22 @@ function Sidebar() {
               <span className="hidden whitespace-nowrap lg:inline">Chuỗi {streak} ngày</span>
             </div>
           ) : null}
+          <button
+            type="button"
+            onClick={toggleHideMoney}
+            aria-pressed={hideMoney}
+            className={cn(
+              "flex items-center justify-center gap-[11px] rounded-[var(--ob-radius-md)] px-[14px] py-[11px] text-left text-[length:var(--ob-size-sm)] leading-[var(--ob-lh-normal)] font-medium lg:justify-start",
+              hideMoney
+                ? "bg-[var(--ob-color-action-soft)] text-[var(--ob-color-action-strong)]"
+                : "text-[var(--ob-color-text-muted)]"
+            )}
+          >
+            {hideMoney ? <EyeOff size={18} /> : <Eye size={18} />}
+            <span className="hidden whitespace-nowrap lg:inline">
+              {hideMoney ? "Hiện số tiền" : "Ẩn số tiền"}
+            </span>
+          </button>
           <div className="flex items-center justify-center gap-[10px] px-[6px] pt-0.5 lg:justify-start">
             <span className="flex size-8 flex-none items-center justify-center rounded-full bg-[var(--ob-color-reward-soft)]">
               <Image src="/assets/avatar-clover.svg" width={20} height={20} alt="" />

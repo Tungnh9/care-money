@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import type { SavingsFund } from "../types"
 import { AddSavingsFundForm } from "./add-savings-fund-form"
@@ -10,10 +11,11 @@ interface SavingsTabProps {
 }
 
 function SavingsTab({ savings, onAddSavingsFund }: SavingsTabProps) {
+  const { hidden } = useMoneyVisibility()
   const savingsTotal = savings.reduce((sum, fund) => sum + fund.amount, 0)
 
   return (
-    <Card label={`Tiết kiệm · ${formatMoney(savingsTotal)}`}>
+    <Card label={`Tiết kiệm · ${formatMoney(savingsTotal, hidden)}`}>
       {savings.length ? (
         savings.map((fund) => (
           <div
@@ -24,8 +26,8 @@ function SavingsTab({ savings, onAddSavingsFund }: SavingsTabProps) {
             <Progress
               value={Math.min((fund.amount / fund.target) * 100, 100)}
               tone="action"
-              label={formatMoney(fund.amount)}
-              hint={`trên ${formatMoney(fund.target)}`}
+              label={formatMoney(fund.amount, hidden)}
+              hint={`trên ${formatMoney(fund.target, hidden)}`}
             />
             {fund.note ? (
               <div className="mt-2 text-[12.5px] text-[var(--ob-color-text-subtle)]">

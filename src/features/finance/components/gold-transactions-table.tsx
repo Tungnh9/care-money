@@ -2,6 +2,7 @@
 
 import { Trash2 } from "lucide-react"
 
+import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import { parseGoldPrice, phanToChi } from "../finance-calculations"
 import type { GoldPurchase } from "../types"
@@ -12,8 +13,8 @@ interface GoldTransactionsTableProps {
   onRemove: (id: number) => void
 }
 
-function signedMoney(n: number): string {
-  return (n >= 0 ? "+ " : "− ") + formatMoney(Math.abs(n))
+function signedMoney(n: number, hidden: boolean): string {
+  return (n >= 0 ? "+ " : "− ") + formatMoney(Math.abs(n), hidden)
 }
 
 const HEADERS = [
@@ -27,6 +28,8 @@ const HEADERS = [
 ]
 
 function GoldTransactionsTable({ gold, goldPrice, onRemove }: GoldTransactionsTableProps) {
+  const { hidden } = useMoneyVisibility()
+
   if (!gold.length) {
     return (
       <p className="text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)]">
@@ -69,19 +72,19 @@ function GoldTransactionsTable({ gold, goldPrice, onRemove }: GoldTransactionsTa
                   {phanToChi(purchase.phan)}
                 </td>
                 <td className="whitespace-nowrap py-[10px] px-[12px] text-right text-[13px] [font-family:var(--ob-font-num)] tabular-nums">
-                  {formatMoney(purchase.buy)}
+                  {formatMoney(purchase.buy, hidden)}
                 </td>
                 <td className="whitespace-nowrap py-[10px] px-[12px] text-right text-[13px] [font-family:var(--ob-font-num)] tabular-nums text-[var(--ob-color-text-subtle)]">
-                  {formatMoney(cost)}
+                  {formatMoney(cost, hidden)}
                 </td>
                 <td className="whitespace-nowrap py-[10px] px-[12px] text-right text-[13px] [font-family:var(--ob-font-num)] tabular-nums">
-                  {formatMoney(value)}
+                  {formatMoney(value, hidden)}
                 </td>
                 <td
                   className="whitespace-nowrap py-[10px] px-[12px] text-right text-[13px] font-semibold [font-family:var(--ob-font-num)] tabular-nums"
                   style={{ color: pl >= 0 ? "var(--ob-color-income)" : "var(--ob-color-expense)" }}
                 >
-                  {signedMoney(pl)}
+                  {signedMoney(pl, hidden)}
                 </td>
                 <td className="py-[10px] px-[12px] text-right">
                   <button
