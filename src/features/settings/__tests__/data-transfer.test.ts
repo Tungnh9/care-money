@@ -71,7 +71,6 @@ describe("parseImportPayload", () => {
     expect(result.ok).toBe(true)
     if (result.ok) {
       expect(result.data.journal.entries).toHaveLength(1)
-      expect(result.data.journal.streak).toBe(DEFAULT_JOURNAL_STATE.streak)
       expect(result.data.finance.savings).toHaveLength(1)
       expect(result.data.finance.goldPrice).toBe(DEFAULT_FINANCE_STATE.goldPrice)
       expect(result.data.study).toEqual(DEFAULT_STUDY_STATE)

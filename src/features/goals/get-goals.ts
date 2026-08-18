@@ -1,4 +1,3 @@
-import { BADGE_AT } from "@/lib/constants"
 import { formatMoney } from "@/lib/format"
 
 import type { MockGoalsData } from "./mock-data"
@@ -23,7 +22,7 @@ function withPercent(now: number, target: number) {
 }
 
 function getGoals(data: MockGoalsData, hidden = false): { goals: Goal[]; avg: number } {
-  const { savingsTotal, goldPhan, goldPricePerPhan, streak } = data
+  const { savingsTotal, goldPhan, goldPricePerPhan } = data
 
   const defs = [
     {
@@ -55,16 +54,6 @@ function getGoals(data: MockGoalsData, hidden = false): { goals: Goal[]; avg: nu
       format: (n: number) => (n ? formatMoney(n, hidden) : "0%"),
       note: "Chưa trích đồng nào. Mỗi lần để dành sẽ nhích thanh này lên.",
       tone: "action" as const,
-    },
-    {
-      key: "streak",
-      name: `${BADGE_AT} ngày duy trì liên tục`,
-      icon: "flame",
-      now: streak,
-      target: BADGE_AT,
-      format: (n: number) => `${n} ngày`,
-      note: "Ghi nhật ký hoặc xong nhiệm vụ mỗi ngày để giữ chuỗi",
-      tone: "reward" as const,
     },
   ]
 

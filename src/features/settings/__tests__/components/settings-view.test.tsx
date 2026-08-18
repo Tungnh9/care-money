@@ -34,7 +34,7 @@ describe("SettingsView", () => {
   })
 
   it("shows the real content counts before wiping, then clears storage and shows the done state", async () => {
-    setStoredJournal({ entries: [], streak: 5, lastEntryDay: "2026-08-13" })
+    setStoredJournal({ entries: [{ id: 1, text: "Bài 1", time: "09:00", date: "13/08", words: 2, mood: null }] })
     setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ A", amount: 1, target: 2 }] })
 
     render(<SettingsView />)
@@ -42,12 +42,20 @@ describe("SettingsView", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Xoá toàn bộ dữ liệu" }))
 
-    expect(screen.getByText("chuỗi 5 ngày", { exact: false })).toBeInTheDocument()
+    expect(screen.getByText("1 bài nhật ký", { exact: false })).toBeInTheDocument()
     expect(screen.getByText("1 quỹ tiết kiệm", { exact: false })).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole("button", { name: "Xoá vĩnh viễn" }))
 
     expect(screen.getByText("Đã xoá sạch.")).toBeInTheDocument()
+  })
+
+  it("wraps the settings cards in the ob-card-grid entrance animation class", async () => {
+    render(<SettingsView />)
+    await waitFor(() => expect(screen.getByText("Module hiển thị")).toBeInTheDocument())
+
+    const grid = screen.getByText("Module hiển thị").closest("section")?.parentElement
+    expect(grid).toHaveClass("ob-card-grid")
   })
 
   it("restores settings from an imported backup and shows the success banner", async () => {

@@ -11,7 +11,7 @@ import { Monkey } from "@/components/ob/monkey"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { dayKey, longDate } from "@/lib/date"
 import { formatMoney } from "@/lib/format"
-import { daysLeftInCycle, getMiniGoals } from "../overview-calculations"
+import { daysLeftInCycle, getMiniGoals, splitGreeting } from "../overview-calculations"
 import { FinanceSummarySection } from "./finance-summary-section"
 import { GoalsSummarySection } from "./goals-summary-section"
 import { JournalSummarySection } from "./journal-summary-section"
@@ -27,7 +27,7 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
   const { hidden } = useMoneyVisibility()
   const { settings } = useSettings()
   const { savings, cards, gold, goldPrice, invests } = useFinance()
-  const { entries, streak } = useJournal()
+  const { entries } = useJournal()
   const { tasks, toggleTask, learned } = useStudy()
 
   function enabled(key: string): boolean {
@@ -42,9 +42,9 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
   const miniGoals = getMiniGoals({
     savingsTotal: summary.savingsTotal,
     goldPhan: summary.goldPhan,
-    streak,
   })
   const avgGoal = Math.round(miniGoals.reduce((sum, g) => sum + g.percent, 0) / miniGoals.length)
+  const greeting = splitGreeting(settings.profile.greeting, settings.profile.displayName)
 
   return (
     <div>
@@ -52,7 +52,12 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
         <Monkey pose="wave" size={56} />
         <div>
           <h1 className="mb-1 [font:var(--ob-text-h2)] tracking-[var(--ob-track-heading)]">
-            <span className="ob-hi">{settings.profile.greeting}</span>
+            {greeting.prefix}
+            {greeting.name ? (
+              <>
+                , <span className="ob-hi">{greeting.name}</span>
+              </>
+            ) : null}
           </h1>
           <p className="text-sm text-[var(--ob-color-text-subtle)]">
             {longDate()} · còn {daysLeftInCycle(settings.budget.cycleStart)} ngày trong chu kỳ ngân sách
@@ -68,13 +73,7 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
             hint={`tài sản ròng ${formatMoney(summary.net, hidden)}`}
             href="/finance"
           />
-          <FinanceSummarySection
-            budget={settings.budget}
-            savings={savings}
-            cards={cards}
-            invests={invests}
-            summary={summary}
-          />
+          <FinanceSummarySection savings={savings} cards={cards} invests={invests} summary={summary} />
         </>
       ) : null}
 
@@ -86,7 +85,7 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
             hint={entries.length ? `${entries.length} bài đã viết` : "chưa có bài nào"}
             href="/journal"
           />
-          <JournalSummarySection entries={entries} streak={streak} showStreak={enabled("chuoingay")} />
+          <JournalSummarySection entries={entries} />
         </>
       ) : null}
 

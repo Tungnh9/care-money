@@ -39,7 +39,7 @@ function CreditCardsTab({ cards, onAddCard, onPayCard }: CreditCardsTabProps) {
 
   return (
     <div>
-      <div className="flex flex-wrap gap-4">
+      <div className="ob-card-grid flex flex-wrap gap-4">
         {cards.length ? (
           cards.map((card) => {
             const limitPct = card.limit ? (card.balance / card.limit) * 100 : 0

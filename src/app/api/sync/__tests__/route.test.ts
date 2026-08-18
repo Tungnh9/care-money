@@ -14,7 +14,7 @@ const SECRET = "test-secret"
 const VALID_PAYLOAD = {
   version: 1,
   exportedAt: "2026-08-17T00:00:00.000Z",
-  journal: { entries: [], streak: 0, lastEntryDay: "" },
+  journal: { entries: [] },
   finance: { savings: [], cards: [], gold: [], goldPrice: "", invests: [] },
   study: { tasks: [], learned: [] },
   settings: { profile: { displayName: "", greeting: "" }, budget: { amount: 0, cycleStart: 1 }, moods: [], modules: [] },

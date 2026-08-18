@@ -59,7 +59,6 @@ const DEFAULT_MODULES: ModuleToggle[] = [
   { key: "hoctap", label: "Học tập", hint: "Mục trên sidebar · thẻ học hôm nay", on: true },
   { key: "muctieu", label: "Mục tiêu", hint: "Mục trên sidebar · thẻ mục tiêu tiết kiệm", on: true },
   { key: "tamtrang", label: "Tâm trạng", hint: "Chip tâm trạng trong màn Nhật ký", on: true },
-  { key: "chuoingay", label: "Chuỗi ngày", hint: "Thẻ chuỗi ngày · chip ở đáy sidebar", on: true },
 ]
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -82,11 +81,22 @@ const TINT_PALETTE = [
 
 const EMOJI_PICKER = ["😄", "🙂", "😌", "😐", "😴", "😟", "😔", "😣", "🥳", "🤯", "🤒", "😍"]
 
+function mergeModules(stored: ModuleToggle[] | undefined): ModuleToggle[] {
+  // label/hint luôn lấy từ DEFAULT_MODULES (nguồn) — chỉ "on" lấy từ storage.
+  // Nếu lưu cả object storage sẽ giữ nguyên bản cũ mãi mãi mỗi khi thêm/sửa module mới,
+  // người đang dùng không bao giờ thấy module mới (vd. "chuoingay") xuất hiện.
+  return DEFAULT_MODULES.map((def) => {
+    const hit = stored?.find((m) => m.key === def.key)
+    return hit ? { ...def, on: hit.on } : def
+  })
+}
+
 function getStoredSettings(): AppSettings {
   try {
     const raw = window.localStorage.getItem(SETTINGS_STORAGE_KEY)
     if (!raw) return DEFAULT_SETTINGS
-    return { ...DEFAULT_SETTINGS, ...(JSON.parse(raw) as Partial<AppSettings>) }
+    const parsed = JSON.parse(raw) as Partial<AppSettings>
+    return { ...DEFAULT_SETTINGS, ...parsed, modules: mergeModules(parsed.modules) }
   } catch {
     return DEFAULT_SETTINGS
   }
@@ -99,6 +109,7 @@ function setStoredSettings(settings: AppSettings) {
 export {
   SETTINGS_STORAGE_KEY,
   DEFAULT_SETTINGS,
+  DEFAULT_MODULES,
   TINT_PALETTE,
   EMOJI_PICKER,
   getStoredSettings,

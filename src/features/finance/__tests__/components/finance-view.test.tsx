@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from "vitest"
-import { render, screen, fireEvent, within } from "@testing-library/react"
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
+import { act, render, screen, fireEvent, within } from "@testing-library/react"
 
 import { formatMoney } from "@/lib/format"
 import { FinanceView } from "../../components/finance-view"
@@ -7,6 +7,11 @@ import { FinanceView } from "../../components/finance-view"
 describe("FinanceView", () => {
   beforeEach(() => {
     window.localStorage.clear()
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it("adding a savings fund updates the net-worth card's figure and the Tiết kiệm pillar", () => {
@@ -27,6 +32,11 @@ describe("FinanceView", () => {
       target: { value: "5000000" },
     })
     fireEvent.click(screen.getByRole("button", { name: "Thêm" }))
+
+    // Tài sản ròng đếm tăng dần (CountMoney) khi lần đầu có giá trị thật khác 0 — chờ animation chạy xong.
+    act(() => {
+      vi.advanceTimersByTime(1200)
+    })
 
     expect(within(netSection).getByText(formatMoney(3_000_000))).toBeInTheDocument()
 
@@ -69,6 +79,22 @@ describe("FinanceView", () => {
     expect(
       screen.getByText(`Bạn đang lãi ${formatMoney(1_000_000)} so với giá vốn nhờ giá vàng tăng.`)
     ).toBeInTheDocument()
+  })
+
+  it("stagger-animates the net-worth and pillar cards in on mount, like the Tổng quan sections", () => {
+    render(<FinanceView />)
+
+    const netSection = screen.getByText("Tài sản ròng").closest("section") as HTMLElement
+    expect(netSection.parentElement).toHaveClass("ob-card-grid")
+  })
+
+  it("stagger-animates the active tab's content back in on every tab switch", () => {
+    render(<FinanceView />)
+
+    const savingsSection = screen
+      .getByText("Tiết kiệm ·", { exact: false })
+      .closest("section") as HTMLElement
+    expect(savingsSection.parentElement).toHaveClass("ob-card-grid")
   })
 
   it("switches through all four tabs and renders each tab's distinctive content", () => {

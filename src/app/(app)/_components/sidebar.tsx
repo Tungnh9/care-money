@@ -7,7 +7,6 @@ import {
   BookOpen,
   Eye,
   EyeOff,
-  Flame,
   GraduationCap,
   LayoutDashboard,
   LogOut,
@@ -20,7 +19,6 @@ import { cn } from "@/lib/utils"
 import { clearStoredUser } from "@/lib/auth"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { useSettings } from "@/features/settings/hooks/use-settings"
-import { useJournal } from "@/features/journal/hooks/use-journal"
 
 const NAV = [
   { label: "Tổng quan", href: "/overview", icon: LayoutDashboard, moduleKey: null },
@@ -35,7 +33,6 @@ function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { settings } = useSettings()
-  const { streak } = useJournal()
   const { hidden: hideMoney, toggle: toggleHideMoney } = useMoneyVisibility()
 
   function isModuleOn(key: string) {
@@ -43,7 +40,6 @@ function Sidebar() {
   }
 
   const nav = NAV.filter((item) => !item.moduleKey || isModuleOn(item.moduleKey))
-  const showStreak = isModuleOn("chuoingay")
 
   function handleLogout() {
     clearStoredUser()
@@ -58,12 +54,6 @@ function Sidebar() {
           <span className="text-[var(--ob-color-action)]">Orange</span>{" "}
           <span className="text-[var(--ob-chuoi-500)]">Banana</span>
         </span>
-        {showStreak ? (
-          <div className="flex items-center gap-1 rounded-[var(--ob-radius-pill)] bg-[var(--ob-color-reward-soft)] px-2.5 py-1 text-[12.5px] font-bold text-[var(--ob-color-reward-text)]">
-            <Flame size={14} />
-            {streak}
-          </div>
-        ) : null}
         <button
           type="button"
           onClick={toggleHideMoney}
@@ -119,12 +109,6 @@ function Sidebar() {
         </nav>
 
         <div className="hidden md:mt-auto md:flex md:flex-col md:gap-[14px]">
-          {showStreak ? (
-            <div className="flex items-center justify-center gap-[9px] rounded-[var(--ob-radius-md)] bg-[var(--ob-color-reward-soft)] px-[14px] py-[11px] text-[13px] font-bold text-[var(--ob-color-reward-text)] lg:justify-start">
-              <Flame size={16} />
-              <span className="hidden whitespace-nowrap lg:inline">Chuỗi {streak} ngày</span>
-            </div>
-          ) : null}
           <button
             type="button"
             onClick={toggleHideMoney}

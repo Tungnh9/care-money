@@ -48,7 +48,7 @@ function GoldTab({
   ] as const
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="ob-card-grid flex flex-col gap-4">
       <Card label="Lãi / lỗ theo giá thị trường">
         <div className="flex flex-wrap gap-[28px]">
           <div className="flex-none">

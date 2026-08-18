@@ -41,6 +41,24 @@ describe("useCountUp", () => {
 
     expect(result.current).toBe(1000)
   })
+
+  it("still animates once the real value arrives after mounting at 0 (vd. dữ liệu từ localStorage nạp trễ)", () => {
+    const { result, rerender } = renderHook(({ target }) => useCountUp(target, 400), {
+      initialProps: { target: 0 },
+    })
+
+    expect(result.current).toBe(0)
+
+    rerender({ target: 2000 })
+    // Vừa reset để bắt đầu đếm lại từ 0, chưa nhảy thẳng lên target.
+    expect(result.current).toBe(0)
+
+    act(() => {
+      vi.advanceTimersByTime(1000)
+    })
+
+    expect(result.current).toBe(2000)
+  })
 })
 
 describe("CountMoney", () => {

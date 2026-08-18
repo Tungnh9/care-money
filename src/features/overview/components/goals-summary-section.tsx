@@ -16,8 +16,8 @@ function GoalsSummarySection({ goals, savings }: GoalsSummarySectionProps) {
   const { hidden } = useMoneyVisibility()
   return (
     <div className="ob-card-grid flex flex-wrap gap-5">
-      <Card label="Bốn mục tiêu đang chạy" className="min-w-0 flex-[2_1_460px]">
-        <div className="grid grid-cols-1 gap-x-6 gap-y-[18px] sm:grid-cols-2">
+      <Card label={`${goals.length} mục tiêu đang chạy`} className="min-w-0 flex-[2_1_460px]">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-x-6 gap-y-[18px]">
           {goals.map((goal) => (
             <div key={goal.name}>
               <div className="mb-2 flex flex-wrap items-center gap-[9px]">
