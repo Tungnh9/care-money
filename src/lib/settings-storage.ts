@@ -3,11 +3,6 @@ interface Profile {
   greeting: string
 }
 
-interface Budget {
-  amount: string
-  cycleStart: string
-}
-
 interface Mood {
   label: string
   emoji: string
@@ -25,7 +20,6 @@ interface ModuleToggle {
 
 interface AppSettings {
   profile: Profile
-  budget: Budget
   moods: Mood[]
   modules: ModuleToggle[]
 }
@@ -35,11 +29,6 @@ const SETTINGS_STORAGE_KEY = "app-settings"
 const DEFAULT_PROFILE: Profile = {
   displayName: "Tungnh2k1",
   greeting: "Chào buổi sáng, Tungnh2k1",
-}
-
-const DEFAULT_BUDGET: Budget = {
-  amount: "20.000.000",
-  cycleStart: "1",
 }
 
 const DEFAULT_MOODS: Mood[] = [
@@ -63,7 +52,6 @@ const DEFAULT_MODULES: ModuleToggle[] = [
 
 const DEFAULT_SETTINGS: AppSettings = {
   profile: DEFAULT_PROFILE,
-  budget: DEFAULT_BUDGET,
   moods: DEFAULT_MOODS,
   modules: DEFAULT_MODULES,
 }
@@ -96,7 +84,14 @@ function getStoredSettings(): AppSettings {
     const raw = window.localStorage.getItem(SETTINGS_STORAGE_KEY)
     if (!raw) return DEFAULT_SETTINGS
     const parsed = JSON.parse(raw) as Partial<AppSettings>
-    return { ...DEFAULT_SETTINGS, ...parsed, modules: mergeModules(parsed.modules) }
+    // Chỉ đọc đúng 3 field của AppSettings hiện tại — không spread nguyên `parsed`,
+    // để field cũ đã xoá khỏi type (vd. "budget") tự rụng thay vì sống mãi trong storage.
+    const profile =
+      parsed.profile && typeof parsed.profile === "object"
+        ? { ...DEFAULT_SETTINGS.profile, ...parsed.profile }
+        : DEFAULT_SETTINGS.profile
+    const moods = Array.isArray(parsed.moods) ? parsed.moods : DEFAULT_SETTINGS.moods
+    return { profile, moods, modules: mergeModules(parsed.modules) }
   } catch {
     return DEFAULT_SETTINGS
   }
@@ -116,7 +111,6 @@ export {
   setStoredSettings,
   type AppSettings,
   type Profile,
-  type Budget,
   type Mood,
   type ModuleToggle,
 }

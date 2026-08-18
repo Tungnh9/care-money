@@ -2,14 +2,6 @@ function monthLabel(d: Date = new Date()): string {
   return `tháng ${d.getMonth() + 1}`
 }
 
-function daysLeftInCycle(cycleStart: string, d: Date = new Date()): number {
-  const startDay = Math.min(Math.max(Number(cycleStart) || 1, 1), 28)
-  let next = new Date(d.getFullYear(), d.getMonth(), startDay)
-  if (next <= d) next = new Date(d.getFullYear(), d.getMonth() + 1, startDay)
-  const today = new Date(d.getFullYear(), d.getMonth(), d.getDate())
-  return Math.max(0, Math.round((next.getTime() - today.getTime()) / 86_400_000))
-}
-
 interface GreetingParts {
   prefix: string
   name: string
@@ -42,4 +34,4 @@ function getMiniGoals({ savingsTotal, goldPhan }: MiniGoalsInput): MiniGoal[] {
   ]
 }
 
-export { monthLabel, daysLeftInCycle, splitGreeting, getMiniGoals, type MiniGoal, type GreetingParts }
+export { monthLabel, splitGreeting, getMiniGoals, type MiniGoal, type GreetingParts }

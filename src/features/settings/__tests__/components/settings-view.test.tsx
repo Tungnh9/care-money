@@ -67,7 +67,6 @@ describe("SettingsView", () => {
       version: EXPORT_VERSION,
       settings: {
         profile: { displayName: "Khôi phục", greeting: "Chào buổi sáng, Khôi phục" },
-        budget: { amount: "10.000.000", cycleStart: "1" },
         moods: [],
         modules: [],
       },

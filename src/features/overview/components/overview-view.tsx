@@ -11,7 +11,7 @@ import { Monkey } from "@/components/ob/monkey"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { dayKey, longDate } from "@/lib/date"
 import { formatMoney } from "@/lib/format"
-import { daysLeftInCycle, getMiniGoals, splitGreeting } from "../overview-calculations"
+import { getMiniGoals, splitGreeting } from "../overview-calculations"
 import { FinanceSummarySection } from "./finance-summary-section"
 import { GoalsSummarySection } from "./goals-summary-section"
 import { JournalSummarySection } from "./journal-summary-section"
@@ -59,9 +59,7 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
               </>
             ) : null}
           </h1>
-          <p className="text-sm text-[var(--ob-color-text-subtle)]">
-            {longDate()} · còn {daysLeftInCycle(settings.budget.cycleStart)} ngày trong chu kỳ ngân sách
-          </p>
+          <p className="text-sm text-[var(--ob-color-text-subtle)]">{longDate()}</p>
         </div>
       </div>
 

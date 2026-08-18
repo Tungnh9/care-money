@@ -73,4 +73,16 @@ describe("getStoredSettings", () => {
 
     expect(getStoredSettings().modules).toEqual(DEFAULT_MODULES)
   })
+
+  it("drops legacy fields no longer part of AppSettings (e.g. old budget) instead of carrying them forever", () => {
+    window.localStorage.setItem(
+      SETTINGS_STORAGE_KEY,
+      JSON.stringify({ ...DEFAULT_SETTINGS, budget: { amount: "20.000.000", cycleStart: "1" } })
+    )
+
+    const settings = getStoredSettings()
+
+    expect(settings).not.toHaveProperty("budget")
+    expect(settings).toEqual(DEFAULT_SETTINGS)
+  })
 })
