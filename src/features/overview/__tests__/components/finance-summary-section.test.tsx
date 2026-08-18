@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
+import { act, render, screen } from "@testing-library/react"
 
 import type { FinanceSummary } from "@/features/finance/finance-calculations"
 import { formatMoney } from "@/lib/format"
@@ -25,10 +25,22 @@ const ZERO_SUMMARY: FinanceSummary = {
 const BUDGET: Budget = { amount: "20.000.000", cycleStart: "1" }
 
 describe("FinanceSummarySection", () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it("shows the zero-spend caption, 0% progress, and every asset's empty-state hint when there is no data", () => {
     render(
       <FinanceSummarySection budget={BUDGET} savings={[]} cards={[]} invests={[]} summary={ZERO_SUMMARY} />
     )
+    // Số dư đầu tháng đếm tăng dần (CountMoney) — chờ animation chạy xong trước khi assert.
+    act(() => {
+      vi.advanceTimersByTime(1200)
+    })
 
     expect(screen.getByText(formatMoney(20_000_000))).toBeInTheDocument()
     expect(screen.getByText("chưa có chi tiêu nào tháng này")).toBeInTheDocument()

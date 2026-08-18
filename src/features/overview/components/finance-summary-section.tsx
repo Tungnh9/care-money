@@ -1,7 +1,7 @@
 import type { FinanceSummary } from "@/features/finance/finance-calculations"
 import type { CreditCard, Investment, SavingsFund } from "@/features/finance/types"
 import { Card } from "@/components/ui/card"
-import { Figure } from "@/components/ob/figure"
+import { CountMoney } from "@/components/ob/count-money"
 import { Progress } from "@/components/ui/progress"
 import { formatMoney } from "@/lib/format"
 import type { Budget } from "@/lib/settings-storage"
@@ -36,9 +36,9 @@ function FinanceSummarySection({
   const cycleLeft = daysLeftInCycle(budget.cycleStart)
 
   return (
-    <div className="flex flex-wrap gap-5">
+    <div className="ob-card-grid flex flex-wrap gap-5">
       <Card tone="invert" label={`Số dư ${monthLabel()}`} className="min-w-0 flex-[1_1_300px]">
-        <Figure value={formatMoney(budgetAmount - spent)} caption="chưa có chi tiêu nào tháng này" />
+        <CountMoney value={budgetAmount - spent} caption="chưa có chi tiêu nào tháng này" />
         <Progress
           value={pct}
           label={`Đã dùng ${pct}% ngân sách`}

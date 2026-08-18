@@ -50,7 +50,7 @@ function StudySummarySection({ vocab, grammar, tasks, onToggleTask, learned }: S
   const doneTasks = tasks.filter((task) => task.done).length
 
   return (
-    <div className="flex flex-wrap gap-5">
+    <div className="ob-card-grid flex flex-wrap gap-5">
       <Card label="Nhiệm vụ hôm nay" className="min-w-0 flex-[1_1_280px]">
         <Figure value={String(doneTasks)} unit={`/${tasks.length}`} size="sm" className="mb-[14px]" />
         <div className="flex flex-col gap-[6px]">
