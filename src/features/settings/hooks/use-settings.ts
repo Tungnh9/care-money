@@ -9,7 +9,6 @@ import {
   getStoredSettings,
   setStoredSettings,
   type AppSettings,
-  type Budget,
   type Mood,
   type Profile,
 } from "@/lib/settings-storage"
@@ -43,13 +42,6 @@ function useSettings() {
   const updateProfile = useCallback(
     (profile: Partial<Profile>) => {
       persist({ ...settings, profile: { ...settings.profile, ...profile } })
-    },
-    [settings, persist]
-  )
-
-  const updateBudget = useCallback(
-    (budget: Partial<Budget>) => {
-      persist({ ...settings, budget: { ...settings.budget, ...budget } })
     },
     [settings, persist]
   )
@@ -92,7 +84,6 @@ function useSettings() {
   return {
     settings,
     updateProfile,
-    updateBudget,
     toggleModule,
     toggleMood,
     removeMood,

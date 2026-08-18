@@ -3,11 +3,6 @@ interface Profile {
   greeting: string
 }
 
-interface Budget {
-  amount: string
-  cycleStart: string
-}
-
 interface Mood {
   label: string
   emoji: string
@@ -25,7 +20,6 @@ interface ModuleToggle {
 
 interface AppSettings {
   profile: Profile
-  budget: Budget
   moods: Mood[]
   modules: ModuleToggle[]
 }
@@ -35,11 +29,6 @@ const SETTINGS_STORAGE_KEY = "app-settings"
 const DEFAULT_PROFILE: Profile = {
   displayName: "Tungnh2k1",
   greeting: "Chào buổi sáng, Tungnh2k1",
-}
-
-const DEFAULT_BUDGET: Budget = {
-  amount: "20.000.000",
-  cycleStart: "1",
 }
 
 const DEFAULT_MOODS: Mood[] = [
@@ -63,7 +52,6 @@ const DEFAULT_MODULES: ModuleToggle[] = [
 
 const DEFAULT_SETTINGS: AppSettings = {
   profile: DEFAULT_PROFILE,
-  budget: DEFAULT_BUDGET,
   moods: DEFAULT_MOODS,
   modules: DEFAULT_MODULES,
 }
@@ -116,7 +104,6 @@ export {
   setStoredSettings,
   type AppSettings,
   type Profile,
-  type Budget,
   type Mood,
   type ModuleToggle,
 }

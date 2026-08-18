@@ -17,7 +17,7 @@ const VALID_PAYLOAD = {
   journal: { entries: [] },
   finance: { savings: [], cards: [], gold: [], goldPrice: "", invests: [] },
   study: { tasks: [], learned: [] },
-  settings: { profile: { displayName: "", greeting: "" }, budget: { amount: 0, cycleStart: 1 }, moods: [], modules: [] },
+  settings: { profile: { displayName: "", greeting: "" }, moods: [], modules: [] },
 }
 
 function requestWith(method: string, options: { auth?: string; body?: unknown } = {}) {
