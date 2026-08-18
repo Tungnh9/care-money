@@ -37,4 +37,23 @@ describe("JournalView", () => {
 
     expect(await screen.findByText("Tâm trạng hôm nay")).toBeInTheDocument()
   })
+
+  it("shows the mascot empty-state when there are no entries yet", async () => {
+    render(<JournalView />)
+
+    expect(await screen.findByText("Chưa có bài nào")).toBeInTheDocument()
+    expect(screen.getByText("Bài đầu tiên bạn lưu sẽ hiện ở đây.")).toBeInTheDocument()
+  })
+
+  it("celebrates a saved entry with the mascot and a tada card", async () => {
+    render(<JournalView />)
+
+    const editor = await screen.findByRole("textbox")
+    typeInto(editor, "Hôm nay mình đã đi bộ")
+    fireEvent.click(screen.getByRole("button", { name: "Lưu vào nhật ký" }))
+
+    const successCard = (await screen.findByText("Đã lưu vào nhật ký")).closest("section")
+    expect(successCard).toHaveClass("ob-tada")
+    expect(successCard?.querySelector("svg")).toBeInTheDocument()
+  })
 })

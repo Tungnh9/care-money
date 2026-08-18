@@ -3,6 +3,7 @@
 import { Trash2 } from "lucide-react"
 
 import { Card } from "@/components/ui/card"
+import { Empty } from "@/components/ob/empty"
 import { cn } from "@/lib/utils"
 import type { JournalEntry } from "../types"
 
@@ -59,9 +60,7 @@ function JournalEntriesCard({ entries, onDelete }: JournalEntriesCardProps) {
           </div>
         ))
       ) : (
-        <p className="text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)]">
-          Chưa có bài nào. Bài đầu tiên bạn lưu sẽ hiện ở đây.
-        </p>
+        <Empty pose="book" title="Chưa có bài nào" hint="Bài đầu tiên bạn lưu sẽ hiện ở đây." />
       )}
     </Card>
   )
