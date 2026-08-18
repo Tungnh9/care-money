@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img" aria-label="Cỏ bốn lá">
+  <path d="M24 24 C24.5 30 22.5 35 19 39.5" fill="none" stroke="#16A06A" stroke-width="2.8" stroke-linecap="round"></path>
+  <g fill="#F7BE12">
+    <path d="M24 22 C24 14.8 20.6 10 16.4 10 C12.9 10 10.4 12.6 10.4 16.2 C10.4 19.9 15.4 22 24 22 Z"></path>
+    <path d="M24 22 C24 14.8 20.6 10 16.4 10 C12.9 10 10.4 12.6 10.4 16.2 C10.4 19.9 15.4 22 24 22 Z" transform="rotate(90 24 22)"></path>
+    <path d="M24 22 C24 14.8 20.6 10 16.4 10 C12.9 10 10.4 12.6 10.4 16.2 C10.4 19.9 15.4 22 24 22 Z" transform="rotate(180 24 22)"></path>
+    <path d="M24 22 C24 14.8 20.6 10 16.4 10 C12.9 10 10.4 12.6 10.4 16.2 C10.4 19.9 15.4 22 24 22 Z" transform="rotate(270 24 22)"></path>
+  </g>
+  <circle cx="24" cy="22" r="2.4" fill="#D99C00"></circle>
+</svg>

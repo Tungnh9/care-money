@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 
 import { setStoredJournal } from "@/features/journal/journal-storage"
 import { setStoredFinance, DEFAULT_FINANCE_STATE } from "@/features/finance/finance-storage"
+import { getStoredSettings } from "@/lib/settings-storage"
 import { EXPORT_VERSION } from "../../data-transfer"
 import { SettingsView } from "../../components/settings-view"
 
@@ -17,8 +18,7 @@ describe("SettingsView", () => {
   it("renders every settings card", async () => {
     render(<SettingsView />)
 
-    await waitFor(() => expect(screen.getByText("Hồ sơ")).toBeInTheDocument())
-    expect(screen.getByText("Ngân sách mỗi tháng", { exact: false })).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText("Module hiển thị")).toBeInTheDocument())
     expect(screen.getByText("Tâm trạng dùng trong nhật ký")).toBeInTheDocument()
     expect(screen.getByText("Module hiển thị")).toBeInTheDocument()
     expect(screen.getByText("Dữ liệu")).toBeInTheDocument()
@@ -27,7 +27,7 @@ describe("SettingsView", () => {
 
   it("exports a JSON backup and shows the file info banner", async () => {
     render(<SettingsView />)
-    await waitFor(() => expect(screen.getByText("Hồ sơ")).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText("Module hiển thị")).toBeInTheDocument())
 
     fireEvent.click(screen.getByRole("button", { name: "Xuất file JSON" }))
 
@@ -35,15 +35,15 @@ describe("SettingsView", () => {
   })
 
   it("shows the real content counts before wiping, then clears storage and shows the done state", async () => {
-    setStoredJournal({ entries: [], streak: 5, lastEntryDay: "2026-08-13" })
+    setStoredJournal({ entries: [{ id: 1, text: "Bài 1", time: "09:00", date: "13/08", words: 2, mood: null }] })
     setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ A", amount: 1, target: 2 }] })
 
     render(<SettingsView />)
-    await waitFor(() => expect(screen.getByText("Hồ sơ")).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText("Module hiển thị")).toBeInTheDocument())
 
     fireEvent.click(screen.getByRole("button", { name: "Xoá toàn bộ dữ liệu" }))
 
-    expect(screen.getByText("chuỗi 5 ngày", { exact: false })).toBeInTheDocument()
+    expect(screen.getByText("1 bài nhật ký", { exact: false })).toBeInTheDocument()
     expect(screen.getByText("1 quỹ tiết kiệm", { exact: false })).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole("button", { name: "Xoá vĩnh viễn" }))
@@ -51,9 +51,17 @@ describe("SettingsView", () => {
     expect(screen.getByText("Đã xoá sạch.")).toBeInTheDocument()
   })
 
-  it("restores settings from an imported backup and reflects it immediately without a reload", async () => {
+  it("wraps the settings cards in the ob-card-grid entrance animation class", async () => {
     render(<SettingsView />)
-    await waitFor(() => expect(screen.getByDisplayValue("Linh")).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText("Module hiển thị")).toBeInTheDocument())
+
+    const grid = screen.getByText("Module hiển thị").closest("section")?.parentElement
+    expect(grid).toHaveClass("ob-card-grid")
+  })
+
+  it("restores settings from an imported backup and shows the success banner", async () => {
+    render(<SettingsView />)
+    await waitFor(() => expect(screen.getByText("Module hiển thị")).toBeInTheDocument())
 
     const payload = {
       version: EXPORT_VERSION,
@@ -69,6 +77,24 @@ describe("SettingsView", () => {
 
     fireEvent.change(input, { target: { files: [file] } })
 
-    expect(await screen.findByDisplayValue("Khôi phục")).toBeInTheDocument()
+    expect(await screen.findByText("Đã nạp backup.json", { exact: false })).toBeInTheDocument()
+  })
+
+  it("saves a new display name, keeping the greeting prefix and persisting both to localStorage", async () => {
+    render(<SettingsView />)
+    await waitFor(() => expect(screen.getByText("Module hiển thị")).toBeInTheDocument())
+
+    const originalGreeting = getStoredSettings().profile.greeting
+
+    fireEvent.change(screen.getByLabelText("Tên hiển thị", { exact: false }), {
+      target: { value: "Tùng mới" },
+    })
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
+
+    expect(getStoredSettings().profile.displayName).toBe("Tùng mới")
+    expect(getStoredSettings().profile.greeting).toBe(
+      originalGreeting.replace("Tungnh2k1", "Tùng mới")
+    )
+    expect(screen.getByLabelText("Tên hiển thị", { exact: false })).toHaveValue("Tùng mới")
   })
 })

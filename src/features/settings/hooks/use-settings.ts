@@ -1,6 +1,7 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect } from "react"
+import { create } from "zustand"
 
 import {
   DEFAULT_SETTINGS,
@@ -13,19 +14,31 @@ import {
   type Profile,
 } from "@/lib/settings-storage"
 
+interface SettingsStore {
+  settings: AppSettings
+  setSettings: (next: AppSettings) => void
+}
+
+const useSettingsStore = create<SettingsStore>((set) => ({
+  settings: DEFAULT_SETTINGS,
+  setSettings: (next) => {
+    setStoredSettings(next)
+    set({ settings: next })
+  },
+}))
+
 function useSettings() {
-  const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS)
+  const settings = useSettingsStore((s) => s.settings)
+  const setSettings = useSettingsStore((s) => s.setSettings)
 
   useEffect(() => {
     // localStorage không có lúc SSR, chỉ đọc được thật sau khi mount trên client.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSettings(getStoredSettings())
+    // Không gate "chỉ hydrate 1 lần": mỗi component mount (sidebar, settings,
+    // tổng quan...) đều tự đồng bộ store dùng chung theo giá trị mới nhất.
+    useSettingsStore.setState({ settings: getStoredSettings() })
   }, [])
 
-  const persist = useCallback((next: AppSettings) => {
-    setSettings(next)
-    setStoredSettings(next)
-  }, [])
+  const persist = useCallback((next: AppSettings) => setSettings(next), [setSettings])
 
   const updateProfile = useCallback(
     (profile: Partial<Profile>) => {

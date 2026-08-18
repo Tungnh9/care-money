@@ -42,7 +42,7 @@ describe("OverviewView", () => {
 
     await waitFor(() => expect(screen.getByText("Tài chính")).toBeInTheDocument())
     expect(screen.queryByText("Mục tiêu")).not.toBeInTheDocument()
-    expect(screen.queryByText("Bốn mục tiêu đang chạy")).not.toBeInTheDocument()
+    expect(screen.queryByText("3 mục tiêu đang chạy")).not.toBeInTheDocument()
   })
 
   it("ticks the real task through useStudy(), not a mock", async () => {

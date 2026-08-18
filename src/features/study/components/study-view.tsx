@@ -42,7 +42,7 @@ function StudyView({ vocab, grammar }: StudyViewProps) {
       <Tabs tabs={TABS} active={tab} onChange={setTab} />
 
       {tab === "Hôm nay" ? (
-        <div className="flex flex-wrap gap-5">
+        <div className="ob-card-grid flex flex-wrap gap-5">
           <div className="min-w-0 flex-[1_1_100%]">
             <Pomodoro />
           </div>
@@ -57,6 +57,7 @@ function StudyView({ vocab, grammar }: StudyViewProps) {
             entries={daily}
             learned={learned}
             onToggleLearned={toggleLearned}
+            celebrate={learnedToday === 5}
             className="min-w-0 flex-[1_1_100%]"
           />
           {dailyGrammar ? <GrammarHighlightCard entry={dailyGrammar} /> : null}
@@ -67,20 +68,24 @@ function StudyView({ vocab, grammar }: StudyViewProps) {
             className="min-w-0 flex-[1_1_300px]"
           />
         </div>
-      ) : tab === "Từ vựng" ? (
-        <VocabCard
-          label={`Kho từ vựng giao tiếp · ${vocab.length} từ`}
-          action={
-            <span className="text-[12.5px] text-[var(--ob-color-text-subtle)]">
-              Đã học {learned.length}
-            </span>
-          }
-          entries={vocab}
-          learned={learned}
-          onToggleLearned={toggleLearned}
-        />
       ) : (
-        <GrammarListCard entries={grammar} />
+        <div className="ob-card-grid">
+          {tab === "Từ vựng" ? (
+            <VocabCard
+              label={`Kho từ vựng giao tiếp · ${vocab.length} từ`}
+              action={
+                <span className="text-[12.5px] text-[var(--ob-color-text-subtle)]">
+                  Đã học {learned.length}
+                </span>
+              }
+              entries={vocab}
+              learned={learned}
+              onToggleLearned={toggleLearned}
+            />
+          ) : (
+            <GrammarListCard entries={grammar} />
+          )}
+        </div>
       )}
     </div>
   )

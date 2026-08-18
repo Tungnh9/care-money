@@ -35,7 +35,9 @@ describe("useDataManagement", () => {
   })
 
   it("exportData builds a snapshot of every feature's storage and reports the file info", () => {
-    setStoredJournal({ ...DEFAULT_JOURNAL_STATE, streak: 3 })
+    setStoredJournal({
+      entries: [{ id: 1, text: "Bài 1", time: "09:00", date: "10/08", words: 2, mood: null }],
+    })
     const { result } = renderDataManagement()
 
     act(() => {
@@ -51,7 +53,9 @@ describe("useDataManagement", () => {
     const { result, onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceSettings } =
       renderDataManagement()
 
-    const journal = { ...DEFAULT_JOURNAL_STATE, streak: 5 }
+    const journal = {
+      entries: [{ id: 1, text: "Bài 1", time: "09:00", date: "10/08", words: 2, mood: null }],
+    }
     const finance = { ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ A", amount: 1, target: 2 }] }
     const settings = { ...DEFAULT_SETTINGS, profile: { ...DEFAULT_SETTINGS.profile, displayName: "Khôi phục" } }
     const payload = { version: EXPORT_VERSION, journal, finance, study: DEFAULT_STUDY_STATE, settings }
@@ -108,7 +112,9 @@ describe("useDataManagement", () => {
   })
 
   it("pushToCloud sends a snapshot of every feature's storage and reports the result", async () => {
-    setStoredJournal({ ...DEFAULT_JOURNAL_STATE, streak: 3 })
+    setStoredJournal({
+      entries: [{ id: 1, text: "Bài 1", time: "09:00", date: "10/08", words: 2, mood: null }],
+    })
     vi.mocked(pushSnapshot).mockResolvedValue({ ok: true, summary: "Đã tải lên" })
     const { result } = renderDataManagement()
 
@@ -120,7 +126,7 @@ describe("useDataManagement", () => {
       "my-secret",
       expect.objectContaining({
         version: EXPORT_VERSION,
-        journal: expect.objectContaining({ streak: 3 }),
+        journal: expect.objectContaining({ entries: expect.arrayContaining([expect.objectContaining({ text: "Bài 1" })]) }),
         finance: DEFAULT_FINANCE_STATE,
         study: DEFAULT_STUDY_STATE,
         settings: DEFAULT_SETTINGS,
@@ -134,7 +140,9 @@ describe("useDataManagement", () => {
     const { result, onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceSettings } =
       renderDataManagement()
 
-    const journal = { ...DEFAULT_JOURNAL_STATE, streak: 5 }
+    const journal = {
+      entries: [{ id: 1, text: "Bài 1", time: "09:00", date: "10/08", words: 2, mood: null }],
+    }
     vi.mocked(pullSnapshot).mockResolvedValue({
       ok: true,
       data: { journal, finance: DEFAULT_FINANCE_STATE, study: DEFAULT_STUDY_STATE, settings: DEFAULT_SETTINGS },

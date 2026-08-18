@@ -7,7 +7,6 @@ import { GoalsSummarySection } from "../../components/goals-summary-section"
 
 const GOALS: MiniGoal[] = [
   { name: "Tiết kiệm 100 triệu", icon: "pig", percent: 50 },
-  { name: "30 ngày liên tục", icon: "flame", percent: 100 },
   { name: "10 chỉ vàng", icon: "gold", percent: 20 },
   { name: "Mua xe ô tô", icon: "car", percent: 0 },
 ]
@@ -20,6 +19,19 @@ describe("GoalsSummarySection", () => {
       expect(screen.getByText(goal.name)).toBeInTheDocument()
       expect(screen.getByText(`${goal.percent}%`)).toBeInTheDocument()
     }
+  })
+
+  it("labels the card with the current goal count", () => {
+    render(<GoalsSummarySection goals={GOALS} savings={[]} />)
+
+    expect(screen.getByText(`${GOALS.length} mục tiêu đang chạy`)).toBeInTheDocument()
+  })
+
+  it("lays out mini goals with an auto-fit grid so they share one row when there's room", () => {
+    const { container } = render(<GoalsSummarySection goals={GOALS} savings={[]} />)
+
+    const grid = container.querySelector(".grid")
+    expect(grid).toHaveClass("grid-cols-[repeat(auto-fit,minmax(150px,1fr))]")
   })
 
   it("shows the empty-state message when there are no savings funds", () => {

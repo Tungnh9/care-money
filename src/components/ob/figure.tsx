@@ -55,3 +55,4 @@ function Figure({
 }
 
 export { Figure }
+export type { FigureProps }

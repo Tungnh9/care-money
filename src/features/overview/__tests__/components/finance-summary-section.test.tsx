@@ -1,9 +1,8 @@
-import { describe, it, expect } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
+import { act, render, screen } from "@testing-library/react"
 
 import type { FinanceSummary } from "@/features/finance/finance-calculations"
 import { formatMoney } from "@/lib/format"
-import type { Budget } from "@/lib/settings-storage"
 import { FinanceSummarySection } from "../../components/finance-summary-section"
 
 const ZERO_SUMMARY: FinanceSummary = {
@@ -22,17 +21,24 @@ const ZERO_SUMMARY: FinanceSummary = {
   netPct: 0,
 }
 
-const BUDGET: Budget = { amount: "20.000.000", cycleStart: "1" }
-
 describe("FinanceSummarySection", () => {
-  it("shows the zero-spend caption, 0% progress, and every asset's empty-state hint when there is no data", () => {
-    render(
-      <FinanceSummarySection budget={BUDGET} savings={[]} cards={[]} invests={[]} summary={ZERO_SUMMARY} />
-    )
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
 
-    expect(screen.getByText(formatMoney(20_000_000))).toBeInTheDocument()
-    expect(screen.getByText("chưa có chi tiêu nào tháng này")).toBeInTheDocument()
-    expect(screen.getByText("Đã dùng 0% ngân sách")).toBeInTheDocument()
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it("shows the net worth card and every asset's empty-state hint when there is no data", () => {
+    render(<FinanceSummarySection savings={[]} cards={[]} invests={[]} summary={ZERO_SUMMARY} />)
+    // Tài sản ròng đếm tăng dần (CountMoney) — chờ animation chạy xong trước khi assert.
+    act(() => {
+      vi.advanceTimersByTime(1200)
+    })
+
+    expect(screen.getByText("Tài sản ròng")).toBeInTheDocument()
+    expect(screen.getAllByText(formatMoney(0)).length).toBeGreaterThan(0)
     expect(screen.getByText("chưa có quỹ")).toBeInTheDocument()
     expect(screen.getByText("chưa có")).toBeInTheDocument()
     expect(screen.getByText("chưa có khoản nào")).toBeInTheDocument()
@@ -48,11 +54,12 @@ describe("FinanceSummarySection", () => {
       goldValue: 18_000_000,
       goldPL: -1_000_000,
       investValue: 5_000_000,
+      net: 31_000_000,
+      netPct: 5,
     }
 
     render(
       <FinanceSummarySection
-        budget={BUDGET}
         savings={[{ name: "Quỹ dự phòng", amount: 10_000_000, target: 20_000_000 }]}
         cards={[{ name: "Thẻ A", balance: 2_000_000, min: 200_000, limit: 10_000_000, due: "15/08" }]}
         invests={[{ id: 1, name: "Quỹ cổ phiếu", cost: 4_000_000, value: 5_000_000 }]}
@@ -60,6 +67,11 @@ describe("FinanceSummarySection", () => {
       />
     )
 
+    act(() => {
+      vi.advanceTimersByTime(1200)
+    })
+
+    expect(screen.getByText(formatMoney(summary.net))).toBeInTheDocument()
     expect(screen.getByText(formatMoney(10_000_000))).toBeInTheDocument()
     expect(screen.getByText("1 quỹ")).toBeInTheDocument()
     expect(screen.getByText(formatMoney(18_000_000))).toBeInTheDocument()

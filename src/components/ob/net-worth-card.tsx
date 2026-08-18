@@ -1,7 +1,6 @@
-import { Figure } from "@/components/ob/figure"
+import { CountMoney } from "@/components/ob/count-money"
 import { Card } from "@/components/ui/card"
-import { formatMoney } from "@/lib/format"
-import { pct1, type FinanceSummary } from "../finance-calculations"
+import { pct1, type FinanceSummary } from "@/features/finance/finance-calculations"
 
 interface NetWorthCardProps {
   summary: FinanceSummary
@@ -30,11 +29,7 @@ function NetWorthCard({ summary }: NetWorthCardProps) {
 
   return (
     <Card tone="invert" label="Tài sản ròng" className="min-w-0 w-full">
-      <Figure
-        value={formatMoney(net)}
-        delta={pct1(netPct)}
-        direction={netPct >= 0 ? "up" : "down"}
-      />
+      <CountMoney value={net} delta={pct1(netPct)} direction={netPct >= 0 ? "up" : "down"} />
       <div className="mt-5 flex h-2 gap-1.5 overflow-hidden rounded-[var(--ob-radius-pill)]">
         {total > 0 ? (
           segments.map((segment) => (

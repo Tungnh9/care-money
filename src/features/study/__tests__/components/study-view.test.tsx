@@ -70,6 +70,13 @@ describe("StudyView", () => {
     )
   })
 
+  it("stagger-animates the Hôm nay boxes in on mount, like the Tài chính page", () => {
+    render(<StudyView vocab={VOCAB} grammar={GRAMMAR} />)
+
+    const pomodoroSection = screen.getByText("Pomodoro · tập trung").closest("section") as HTMLElement
+    expect(pomodoroSection.parentElement?.parentElement).toHaveClass("ob-card-grid")
+  })
+
   it("lists every vocab word on the Từ vựng tab", () => {
     render(<StudyView vocab={VOCAB} grammar={GRAMMAR} />)
 
@@ -79,6 +86,17 @@ describe("StudyView", () => {
     VOCAB.forEach((v) => expect(screen.getByText(v.word)).toBeInTheDocument())
   })
 
+  it("stagger-animates the Từ vựng tab content in on tab switch", () => {
+    render(<StudyView vocab={VOCAB} grammar={GRAMMAR} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Từ vựng" }))
+
+    const vocabSection = screen
+      .getByText("Kho từ vựng giao tiếp · 10 từ")
+      .closest("section") as HTMLElement
+    expect(vocabSection.parentElement).toHaveClass("ob-card-grid")
+  })
+
   it("lists every grammar entry on the Ngữ pháp tab", () => {
     render(<StudyView vocab={VOCAB} grammar={GRAMMAR} />)
 
@@ -86,5 +104,32 @@ describe("StudyView", () => {
 
     expect(screen.getByText("Ngữ pháp tiếng Anh · 5 mục")).toBeInTheDocument()
     GRAMMAR.forEach((g) => expect(screen.getByText(g.title)).toBeInTheDocument())
+  })
+
+  it("stagger-animates the Ngữ pháp tab content in on tab switch", () => {
+    render(<StudyView vocab={VOCAB} grammar={GRAMMAR} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Ngữ pháp" }))
+
+    const grammarSection = screen
+      .getByText("Ngữ pháp tiếng Anh · 5 mục")
+      .closest("section") as HTMLElement
+    expect(grammarSection.parentElement).toHaveClass("ob-card-grid")
+  })
+
+  it("celebrates with confetti once all 5 daily words are learned", async () => {
+    render(<StudyView vocab={VOCAB} grammar={GRAMMAR} />)
+
+    for (let i = 0; i < 5; i++) {
+      const [button] = screen.getAllByRole("button", { name: "Đánh dấu đã học" })
+      fireEvent.click(button)
+      await waitFor(() =>
+        expect(screen.getAllByRole("button", { name: "Bỏ đánh dấu đã học" })).toHaveLength(i + 1)
+      )
+    }
+
+    const vocabCard = screen.getByText("5/5").closest("section")
+    expect(vocabCard).toHaveClass("ob-tada")
+    expect(vocabCard?.querySelector(".ob-conf")).toBeInTheDocument()
   })
 })

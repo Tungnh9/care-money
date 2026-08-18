@@ -1,35 +1,52 @@
 "use client"
 
-import { Card } from "@/components/ui/card"
+import { useState } from "react"
+import { Check } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import { Field } from "@/components/ui/field"
-import type { Profile } from "@/lib/settings-storage"
 
 interface ProfileCardProps {
-  profile: Profile
-  onChange: (profile: Partial<Profile>) => void
+  displayName: string
+  onSave: (name: string) => void
 }
 
-function ProfileCard({ profile, onChange }: ProfileCardProps) {
+function ProfileCard({ displayName, onSave }: ProfileCardProps) {
+  const [name, setName] = useState(displayName)
+  const [saved, setSaved] = useState(false)
+
+  const trimmed = name.trim()
+  const disabled = !trimmed || trimmed === displayName
+
+  function handleSave() {
+    onSave(trimmed)
+    setSaved(true)
+  }
+
   return (
     <Card label="Hồ sơ" className="min-w-0 flex-[1_1_300px]">
-      <div className="mb-[18px] flex items-center gap-[14px]">
-        <span className="size-[52px] flex-none rounded-full bg-[var(--ob-vo-200)]" />
-        <Button variant="ghost" size="sm" type="button">
-          Đổi ảnh
-        </Button>
-      </div>
+      <p className="mb-[14px] text-[13.5px] leading-[1.55] text-[var(--ob-color-text-muted)]">
+        Tên hiển thị dùng ở sidebar và lời chào Tổng quan.
+      </p>
       <Field
         label="Tên hiển thị"
-        value={profile.displayName}
-        onChange={(e) => onChange({ displayName: e.target.value })}
+        value={name}
+        onChange={(e) => {
+          setName(e.target.value)
+          setSaved(false)
+        }}
       />
-      <div className="h-[14px]" />
-      <Field
-        label="Lời chào buổi sáng"
-        value={profile.greeting}
-        onChange={(e) => onChange({ greeting: e.target.value })}
-      />
+      <div className="mt-[14px] flex items-center gap-[10px]">
+        <Button variant="secondary" size="sm" type="button" disabled={disabled} onClick={handleSave}>
+          Lưu
+        </Button>
+        {saved ? (
+          <span className="flex items-center gap-1 text-[13px] text-[#0E7A50]">
+            <Check size={15} /> Đã lưu
+          </span>
+        ) : null}
+      </div>
     </Card>
   )
 }

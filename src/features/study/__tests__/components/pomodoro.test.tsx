@@ -13,11 +13,22 @@ describe("Pomodoro", () => {
   })
 
   it("starts at 25:00 in work mode with no sessions yet", () => {
-    render(<Pomodoro />)
+    const { container } = render(<Pomodoro />)
 
     expect(screen.getByText("25:00")).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Bắt đầu" })).toBeInTheDocument()
     expect(screen.getByText("Chưa có phiên nào hôm nay")).toBeInTheDocument()
+    expect(container.querySelector('[data-pose="sleep"]')).toBeInTheDocument()
+  })
+
+  it("shows the focus mascot while running, and the banana mascot on break", () => {
+    const { container } = render(<Pomodoro />)
+
+    fireClickAndAdvance("Bắt đầu", 1000)
+    expect(container.querySelector('[data-pose="focus"]')).toBeInTheDocument()
+
+    fireClickAndAdvance("Sang nghỉ 5 phút", 0)
+    expect(container.querySelector('[data-pose="banana"]')).toBeInTheDocument()
   })
 
   it("counts down once started, and can be paused", () => {

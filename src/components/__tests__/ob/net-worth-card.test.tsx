@@ -1,9 +1,9 @@
-import { describe, it, expect } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
+import { act, render, screen } from "@testing-library/react"
 
 import { formatMoney } from "@/lib/format"
-import { NetWorthCard } from "../../components/net-worth-card"
-import { pct1, type FinanceSummary } from "../../finance-calculations"
+import { NetWorthCard } from "@/components/ob/net-worth-card"
+import { pct1, type FinanceSummary } from "@/features/finance/finance-calculations"
 
 function buildSummary(overrides: Partial<FinanceSummary> = {}): FinanceSummary {
   return {
@@ -25,13 +25,38 @@ function buildSummary(overrides: Partial<FinanceSummary> = {}): FinanceSummary {
 }
 
 describe("NetWorthCard", () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it("renders the card label, the formatted net worth and the percent", () => {
     const summary = buildSummary()
     render(<NetWorthCard summary={summary} />)
 
+    act(() => {
+      vi.advanceTimersByTime(1200)
+    })
+
     expect(screen.getByText("Tài sản ròng")).toBeInTheDocument()
     expect(screen.getByText(formatMoney(summary.net))).toBeInTheDocument()
     expect(screen.getByText(pct1(summary.netPct), { exact: false })).toBeInTheDocument()
+  })
+
+  it("counts the net worth figure up from 0 on mount, each time the page is entered", () => {
+    const summary = buildSummary()
+    render(<NetWorthCard summary={summary} />)
+
+    expect(screen.getByText(formatMoney(0))).toBeInTheDocument()
+
+    act(() => {
+      vi.advanceTimersByTime(1200)
+    })
+
+    expect(screen.getByText(formatMoney(summary.net))).toBeInTheDocument()
   })
 
   it("renders the legend entries for savings, gold and debt", () => {

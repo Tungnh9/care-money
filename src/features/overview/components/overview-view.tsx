@@ -7,9 +7,11 @@ import { pickDaily } from "@/features/study/daily-pick"
 import { useStudy } from "@/features/study/hooks/use-study"
 import type { GrammarEntry, VocabEntry } from "@/features/study/types"
 import { useSettings } from "@/features/settings/hooks/use-settings"
+import { Monkey } from "@/components/ob/monkey"
+import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { dayKey, longDate } from "@/lib/date"
 import { formatMoney } from "@/lib/format"
-import { daysLeftInCycle, getMiniGoals } from "../overview-calculations"
+import { daysLeftInCycle, getMiniGoals, splitGreeting } from "../overview-calculations"
 import { FinanceSummarySection } from "./finance-summary-section"
 import { GoalsSummarySection } from "./goals-summary-section"
 import { JournalSummarySection } from "./journal-summary-section"
@@ -22,9 +24,10 @@ interface OverviewViewProps {
 }
 
 function OverviewView({ vocab, grammar }: OverviewViewProps) {
+  const { hidden } = useMoneyVisibility()
   const { settings } = useSettings()
   const { savings, cards, gold, goldPrice, invests } = useFinance()
-  const { entries, streak } = useJournal()
+  const { entries } = useJournal()
   const { tasks, toggleTask, learned } = useStudy()
 
   function enabled(key: string): boolean {
@@ -39,34 +42,38 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
   const miniGoals = getMiniGoals({
     savingsTotal: summary.savingsTotal,
     goldPhan: summary.goldPhan,
-    streak,
   })
   const avgGoal = Math.round(miniGoals.reduce((sum, g) => sum + g.percent, 0) / miniGoals.length)
+  const greeting = splitGreeting(settings.profile.greeting, settings.profile.displayName)
 
   return (
     <div>
-      <h1 className="mb-1 [font:var(--ob-text-h2)] tracking-[var(--ob-track-heading)]">
-        {settings.profile.greeting}
-      </h1>
-      <p className="mb-5 text-sm text-[var(--ob-color-text-subtle)]">
-        {longDate()} · còn {daysLeftInCycle(settings.budget.cycleStart)} ngày trong chu kỳ ngân sách
-      </p>
+      <div className="mb-5 flex items-center gap-[14px]">
+        <Monkey pose="wave" size={56} />
+        <div>
+          <h1 className="mb-1 [font:var(--ob-text-h2)] tracking-[var(--ob-track-heading)]">
+            {greeting.prefix}
+            {greeting.name ? (
+              <>
+                , <span className="ob-hi">{greeting.name}</span>
+              </>
+            ) : null}
+          </h1>
+          <p className="text-sm text-[var(--ob-color-text-subtle)]">
+            {longDate()} · còn {daysLeftInCycle(settings.budget.cycleStart)} ngày trong chu kỳ ngân sách
+          </p>
+        </div>
+      </div>
 
       {enabled("taichinh") ? (
         <>
           <SectionHead
             icon="wallet"
             title="Tài chính"
-            hint={`tài sản ròng ${formatMoney(summary.net)}`}
+            hint={`tài sản ròng ${formatMoney(summary.net, hidden)}`}
             href="/finance"
           />
-          <FinanceSummarySection
-            budget={settings.budget}
-            savings={savings}
-            cards={cards}
-            invests={invests}
-            summary={summary}
-          />
+          <FinanceSummarySection savings={savings} cards={cards} invests={invests} summary={summary} />
         </>
       ) : null}
 
@@ -78,7 +85,7 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
             hint={entries.length ? `${entries.length} bài đã viết` : "chưa có bài nào"}
             href="/journal"
           />
-          <JournalSummarySection entries={entries} streak={streak} showStreak={enabled("chuoingay")} />
+          <JournalSummarySection entries={entries} />
         </>
       ) : null}
 

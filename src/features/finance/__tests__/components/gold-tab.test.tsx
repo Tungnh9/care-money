@@ -143,4 +143,22 @@ describe("GoldTab", () => {
       buy: 900_000,
     })
   })
+
+  it("stagger-animates its stacked cards in via the shared ob-card-grid wrapper", () => {
+    render(
+      <GoldTab
+        summary={ZERO_SUMMARY}
+        goldPrice=""
+        onSetGoldPrice={vi.fn()}
+        gold={[]}
+        onAddGold={vi.fn()}
+        onRemoveGold={vi.fn()}
+      />
+    )
+
+    const plSection = screen
+      .getByText("Lãi / lỗ theo giá thị trường")
+      .closest("section") as HTMLElement
+    expect(plSection.parentElement).toHaveClass("ob-card-grid")
+  })
 })

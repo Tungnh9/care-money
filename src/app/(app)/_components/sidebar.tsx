@@ -5,7 +5,8 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
   BookOpen,
-  Flame,
+  Eye,
+  EyeOff,
   GraduationCap,
   LayoutDashboard,
   LogOut,
@@ -16,8 +17,8 @@ import {
 
 import { cn } from "@/lib/utils"
 import { clearStoredUser } from "@/lib/auth"
+import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { useSettings } from "@/features/settings/hooks/use-settings"
-import { useJournal } from "@/features/journal/hooks/use-journal"
 
 const NAV = [
   { label: "Tổng quan", href: "/overview", icon: LayoutDashboard, moduleKey: null },
@@ -32,14 +33,13 @@ function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { settings } = useSettings()
-  const { streak } = useJournal()
+  const { hidden: hideMoney, toggle: toggleHideMoney } = useMoneyVisibility()
 
   function isModuleOn(key: string) {
     return settings.modules.find((m) => m.key === key)?.on ?? true
   }
 
   const nav = NAV.filter((item) => !item.moduleKey || isModuleOn(item.moduleKey))
-  const showStreak = isModuleOn("chuoingay")
 
   function handleLogout() {
     clearStoredUser()
@@ -54,23 +54,31 @@ function Sidebar() {
           <span className="text-[var(--ob-color-action)]">Orange</span>{" "}
           <span className="text-[var(--ob-chuoi-500)]">Banana</span>
         </span>
-        {showStreak ? (
-          <div className="flex items-center gap-1 rounded-[var(--ob-radius-pill)] bg-[var(--ob-color-reward-soft)] px-2.5 py-1 text-[12.5px] font-bold text-[var(--ob-color-reward-text)]">
-            <Flame size={14} />
-            {streak}
-          </div>
-        ) : null}
+        <button
+          type="button"
+          onClick={toggleHideMoney}
+          aria-label={hideMoney ? "Hiện số tiền" : "Ẩn số tiền"}
+          aria-pressed={hideMoney}
+          className={cn(
+            "flex items-center justify-center rounded-[var(--ob-radius-sm)] transition-colors duration-[var(--ob-dur-fast)]",
+            hideMoney
+              ? "text-[var(--ob-color-action-strong)]"
+              : "text-[var(--ob-color-text-subtle)] hover:text-[var(--ob-color-action-strong)]"
+          )}
+        >
+          {hideMoney ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
         <button
           type="button"
           onClick={handleLogout}
           aria-label="Đăng xuất"
-          className="flex items-center justify-center text-[var(--ob-color-text-muted)]"
+          className="flex items-center justify-center text-[var(--ob-color-text-muted)] transition-colors duration-[var(--ob-dur-fast)] hover:text-[var(--ob-color-expense)]"
         >
           <LogOut size={18} />
         </button>
       </div>
 
-      <aside className="fixed inset-x-0 bottom-0 z-10 flex items-center justify-around gap-1 border-t border-[var(--ob-color-border)] bg-[var(--ob-color-bg)] p-[6px_4px] pb-[calc(6px+env(safe-area-inset-bottom))] md:inset-x-auto md:inset-y-0 md:right-auto md:bottom-auto md:left-0 md:w-[76px] md:flex-col md:items-stretch md:justify-start md:border-t-0 md:border-r md:p-[18px_10px] lg:w-[248px] lg:p-[22px_16px]">
+      <aside className="fixed inset-x-0 bottom-0 z-10 flex items-center justify-around gap-1 border-t border-[var(--ob-color-border)] bg-[var(--ob-color-bg)] p-[6px_4px] pb-[calc(6px+env(safe-area-inset-bottom))] md:inset-x-auto md:inset-y-0 md:right-auto md:left-0 md:w-[76px] md:flex-col md:items-stretch md:justify-start md:border-t-0 md:border-r md:p-[18px_10px] lg:w-[248px] lg:p-[22px_16px]">
         <div className="hidden items-center justify-center gap-[10px] px-2 pb-[22px] md:flex lg:justify-start">
           <Image src="/assets/logo-mark.svg" width={32} height={32} alt="" />
           <span className="hidden [font:700_17px/1_var(--ob-font-display)] tracking-[-0.02em] whitespace-nowrap lg:inline">
@@ -101,26 +109,36 @@ function Sidebar() {
         </nav>
 
         <div className="hidden md:mt-auto md:flex md:flex-col md:gap-[14px]">
-          {showStreak ? (
-            <div className="flex items-center justify-center gap-[9px] rounded-[var(--ob-radius-md)] bg-[var(--ob-color-reward-soft)] px-[14px] py-[11px] text-[13px] font-bold text-[var(--ob-color-reward-text)] lg:justify-start">
-              <Flame size={16} />
-              <span className="hidden whitespace-nowrap lg:inline">Chuỗi {streak} ngày</span>
-            </div>
-          ) : null}
+          <button
+            type="button"
+            onClick={toggleHideMoney}
+            aria-pressed={hideMoney}
+            className={cn(
+              "flex items-center justify-center gap-[11px] rounded-[var(--ob-radius-md)] px-[14px] py-[11px] text-left text-[length:var(--ob-size-sm)] leading-[var(--ob-lh-normal)] font-medium lg:justify-start",
+              hideMoney
+                ? "bg-[var(--ob-color-action-soft)] text-[var(--ob-color-action-strong)]"
+                : "text-[var(--ob-color-text-muted)]"
+            )}
+          >
+            {hideMoney ? <EyeOff size={18} /> : <Eye size={18} />}
+            <span className="hidden whitespace-nowrap lg:inline">
+              {hideMoney ? "Hiện số tiền" : "Ẩn số tiền"}
+            </span>
+          </button>
+          <div className="flex items-center justify-center gap-[10px] rounded-[var(--ob-radius-md)] px-0 py-2 lg:justify-start lg:bg-[var(--ob-vo-100)] lg:px-[10px]">
+            <Image src="/assets/avatar-clover.svg" width={32} height={32} alt="" className="flex-none" />
+            <span className="hidden overflow-hidden bg-gradient-to-r from-[var(--ob-color-action)] to-[var(--ob-color-reward)] bg-clip-text text-[13.5px] font-bold text-ellipsis whitespace-nowrap text-transparent lg:inline">
+              {settings.profile.displayName}
+            </span>
+          </div>
           <button
             type="button"
             onClick={handleLogout}
-            className="flex items-center justify-center gap-[11px] rounded-[var(--ob-radius-md)] px-[14px] py-[11px] text-left text-[length:var(--ob-size-sm)] leading-[var(--ob-lh-normal)] font-medium text-[var(--ob-color-text-muted)] lg:justify-start"
+            className="flex items-center justify-center gap-[11px] rounded-[var(--ob-radius-md)] px-[14px] py-[11px] text-left text-[length:var(--ob-size-sm)] leading-[var(--ob-lh-normal)] font-medium text-[var(--ob-color-text-muted)] transition-colors duration-[var(--ob-dur-fast)] hover:text-[var(--ob-color-expense)] lg:justify-start"
           >
             <LogOut size={18} />
             <span className="hidden whitespace-nowrap lg:inline">Đăng xuất</span>
           </button>
-          <div className="flex items-center justify-center gap-[10px] px-[6px] pt-0.5 lg:justify-start">
-            <span className="size-8 flex-none rounded-full bg-[var(--ob-vo-200)]" />
-            <span className="hidden text-[13.5px] font-bold whitespace-nowrap lg:inline">
-              {settings.profile.displayName}
-            </span>
-          </div>
         </div>
       </aside>
     </>

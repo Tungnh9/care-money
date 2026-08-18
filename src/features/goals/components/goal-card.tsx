@@ -1,9 +1,8 @@
 import Image from "next/image"
 
-import { Streak } from "@/components/ob/streak"
+import { Confetti } from "@/components/ob/confetti"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { BADGE_AT } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 import type { Goal } from "../types"
 
@@ -17,7 +16,8 @@ function GoalCard({ goal, className }: GoalCardProps) {
   const iconName = goal.done ? "check" : goal.icon
 
   return (
-    <Card label={goal.name} className={className}>
+    <Card label={goal.name} className={cn(goal.done && "ob-tada relative", className)}>
+      {goal.done ? <Confetti n={12} /> : null}
       <div className="mb-[18px] grid grid-cols-[auto_1fr_auto] items-center gap-x-[14px]">
         <span
           className={cn(
@@ -48,11 +48,7 @@ function GoalCard({ goal, className }: GoalCardProps) {
           {isCar ? "Đã trích được" : `trên ${goal.format(goal.target)}`}
         </div>
       </div>
-      {goal.key === "streak" ? (
-        <Streak days={BADGE_AT} done={goal.now} icon={null} />
-      ) : (
-        <Progress value={goal.percent} tone={goal.tone} />
-      )}
+      <Progress value={goal.percent} tone={goal.tone} />
       <p className="mt-[14px] text-[13px] leading-[1.55] text-[var(--ob-color-text-muted)]">{goal.note}</p>
     </Card>
   )

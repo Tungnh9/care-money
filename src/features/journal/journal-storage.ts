@@ -2,16 +2,12 @@ import type { JournalEntry } from "./types"
 
 interface JournalState {
   entries: JournalEntry[]
-  streak: number
-  lastEntryDay: string
 }
 
 const JOURNAL_STORAGE_KEY = "journal-entries"
 
 const DEFAULT_JOURNAL_STATE: JournalState = {
   entries: [],
-  streak: 0,
-  lastEntryDay: "",
 }
 
 function getStoredJournal(): JournalState {
