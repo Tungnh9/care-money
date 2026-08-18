@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { Monkey } from "@/components/ob/monkey"
 
 const WORK_SECONDS = 25 * 60
 const BREAK_SECONDS = 5 * 60
@@ -64,6 +65,7 @@ function Pomodoro() {
   return (
     <Card tone={isWork ? "plain" : "reward"} label={isWork ? "Pomodoro · tập trung" : "Pomodoro · nghỉ ngắn"}>
       <div className="flex flex-wrap items-center gap-6">
+        <Monkey size={72} pose={!isWork ? "banana" : running ? "focus" : "sleep"} />
         <div className="relative size-[132px] flex-none">
           <svg width="132" height="132" viewBox="0 0 132 132" className="rotate-[-90deg]">
             <circle
