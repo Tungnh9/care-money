@@ -2,6 +2,7 @@
 
 import * as React from "react"
 
+import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import { Figure } from "./figure"
 import type { FigureProps } from "./figure"
@@ -59,7 +60,8 @@ interface CountMoneyProps extends Omit<FigureProps, "value" | "unit"> {
 }
 
 function CountMoney({ value, ...rest }: CountMoneyProps) {
-  return <Figure value={formatMoney(useCountUp(value))} {...rest} />
+  const { hidden } = useMoneyVisibility()
+  return <Figure value={formatMoney(useCountUp(value), hidden)} {...rest} />
 }
 
 export { useCountUp, CountMoney }

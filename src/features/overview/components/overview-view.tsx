@@ -8,6 +8,7 @@ import { useStudy } from "@/features/study/hooks/use-study"
 import type { GrammarEntry, VocabEntry } from "@/features/study/types"
 import { useSettings } from "@/features/settings/hooks/use-settings"
 import { Monkey } from "@/components/ob/monkey"
+import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { dayKey, longDate } from "@/lib/date"
 import { formatMoney } from "@/lib/format"
 import { daysLeftInCycle, getMiniGoals } from "../overview-calculations"
@@ -23,6 +24,7 @@ interface OverviewViewProps {
 }
 
 function OverviewView({ vocab, grammar }: OverviewViewProps) {
+  const { hidden } = useMoneyVisibility()
   const { settings } = useSettings()
   const { savings, cards, gold, goldPrice, invests } = useFinance()
   const { entries, streak } = useJournal()
@@ -63,7 +65,7 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
           <SectionHead
             icon="wallet"
             title="Tài chính"
-            hint={`tài sản ròng ${formatMoney(summary.net)}`}
+            hint={`tài sản ròng ${formatMoney(summary.net, hidden)}`}
             href="/finance"
           />
           <FinanceSummarySection

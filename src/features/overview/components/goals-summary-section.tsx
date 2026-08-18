@@ -3,6 +3,7 @@ import Image from "next/image"
 import type { SavingsFund } from "@/features/finance/types"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import type { MiniGoal } from "../overview-calculations"
 
@@ -12,6 +13,7 @@ interface GoalsSummarySectionProps {
 }
 
 function GoalsSummarySection({ goals, savings }: GoalsSummarySectionProps) {
+  const { hidden } = useMoneyVisibility()
   return (
     <div className="ob-card-grid flex flex-wrap gap-5">
       <Card label="Bốn mục tiêu đang chạy" className="min-w-0 flex-[2_1_460px]">
@@ -43,7 +45,7 @@ function GoalsSummarySection({ goals, savings }: GoalsSummarySectionProps) {
                 <div className="mb-[7px] flex flex-wrap justify-between gap-3 text-[13.5px] font-semibold">
                   <span>{fund.name}</span>
                   <span className="[font-family:var(--ob-font-num)] text-[12.5px] text-[var(--ob-color-text-subtle)]">
-                    {formatMoney(fund.amount)} / {formatMoney(fund.target)}
+                    {formatMoney(fund.amount, hidden)} / {formatMoney(fund.target, hidden)}
                   </span>
                 </div>
                 <Progress value={Math.round((fund.amount / fund.target) * 100)} tone="action" />

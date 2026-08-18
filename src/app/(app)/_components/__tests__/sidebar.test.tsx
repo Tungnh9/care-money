@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { render, screen, waitFor } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 
+import { MoneyVisibilityProvider } from "@/components/money-visibility-provider"
 import { Sidebar } from "../sidebar"
 import { setStoredJournal } from "@/features/journal/journal-storage"
 
@@ -32,5 +33,21 @@ describe("Sidebar", () => {
 
     const images = screen.getAllByAltText("")
     expect(images.some((img) => img.getAttribute("src")?.includes("avatar-clover.svg"))).toBe(true)
+  })
+
+  it("toggles Ẩn số tiền and persists the choice", async () => {
+    render(
+      <MoneyVisibilityProvider>
+        <Sidebar />
+      </MoneyVisibilityProvider>
+    )
+
+    const [toggleButton] = await screen.findAllByRole("button", { name: "Ẩn số tiền" })
+    fireEvent.click(toggleButton)
+
+    await waitFor(() =>
+      expect(screen.getAllByRole("button", { name: "Hiện số tiền" })).toHaveLength(2)
+    )
+    expect(window.localStorage.getItem("hide-money")).toBe("1")
   })
 })

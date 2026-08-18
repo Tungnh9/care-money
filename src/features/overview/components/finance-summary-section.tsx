@@ -3,6 +3,7 @@ import type { CreditCard, Investment, SavingsFund } from "@/features/finance/typ
 import { Card } from "@/components/ui/card"
 import { CountMoney } from "@/components/ob/count-money"
 import { Progress } from "@/components/ui/progress"
+import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import type { Budget } from "@/lib/settings-storage"
 import { daysLeftInCycle, monthLabel } from "../overview-calculations"
@@ -28,6 +29,7 @@ function FinanceSummarySection({
   invests,
   summary,
 }: FinanceSummarySectionProps) {
+  const { hidden } = useMoneyVisibility()
   // Chưa có tính năng ghi chi tiêu (expense tracking) trong app — spent tạm để 0,
   // rơi đúng vào nhánh zero-state ("chưa có chi tiêu nào tháng này") bản gốc đã có sẵn.
   const spent = 0
@@ -52,16 +54,16 @@ function FinanceSummarySection({
           <MiniStat
             icon="pig"
             label="Tiết kiệm"
-            value={formatMoney(summary.savingsTotal)}
+            value={formatMoney(summary.savingsTotal, hidden)}
             hint={savings.length ? `${savings.length} quỹ` : "chưa có quỹ"}
           />
           <MiniStat
             icon="gold"
             label="Vàng"
-            value={formatMoney(summary.goldValue)}
+            value={formatMoney(summary.goldValue, hidden)}
             hint={
               summary.goldPhan
-                ? `${summary.goldPhan} phân · ${summary.goldPL >= 0 ? "lời " : "lỗ "}${formatMoney(Math.abs(summary.goldPL))}`
+                ? `${summary.goldPhan} phân · ${summary.goldPL >= 0 ? "lời " : "lỗ "}${formatMoney(Math.abs(summary.goldPL), hidden)}`
                 : "chưa có"
             }
             color={
@@ -75,13 +77,13 @@ function FinanceSummarySection({
           <MiniStat
             icon="chart"
             label="Đầu tư"
-            value={formatMoney(summary.investValue)}
+            value={formatMoney(summary.investValue, hidden)}
             hint={invests.length ? `${invests.length} khoản` : "chưa có khoản nào"}
           />
           <MiniStat
             icon="card"
             label="Nợ thẻ"
-            value={formatMoney(summary.debtTotal)}
+            value={formatMoney(summary.debtTotal, hidden)}
             hint={cards.length ? `hạn ${cards[0].due}` : "không nợ"}
             color={summary.debtTotal ? "var(--ob-color-expense)" : undefined}
           />

@@ -10,11 +10,11 @@ function formatChi(phan: number): string {
   return `${chi} chỉ${rest ? ` ${rest} phân` : ""}`
 }
 
-function goldRemainingNote(goldPhan: number, goldPricePerPhan: number): string {
+function goldRemainingNote(goldPhan: number, goldPricePerPhan: number, hidden: boolean): string {
   const remaining = 100 - goldPhan
   const remainingChi =
     remaining % 10 === 0 ? String(remaining / 10) : (remaining / 10).toFixed(1).replace(".", ",")
-  return `Còn ${remainingChi} chỉ · tương đương ${formatMoney(remaining * goldPricePerPhan)}`
+  return `Còn ${remainingChi} chỉ · tương đương ${formatMoney(remaining * goldPricePerPhan, hidden)}`
 }
 
 function withPercent(now: number, target: number) {
@@ -22,7 +22,7 @@ function withPercent(now: number, target: number) {
   return { percent, done: now >= target }
 }
 
-function getGoals(data: MockGoalsData): { goals: Goal[]; avg: number } {
+function getGoals(data: MockGoalsData, hidden = false): { goals: Goal[]; avg: number } {
   const { savingsTotal, goldPhan, goldPricePerPhan, streak } = data
 
   const defs = [
@@ -32,7 +32,7 @@ function getGoals(data: MockGoalsData): { goals: Goal[]; avg: number } {
       icon: "pig",
       now: savingsTotal,
       target: 100_000_000,
-      format: formatMoney,
+      format: (n: number) => formatMoney(n, hidden),
       note: "Lấy từ Quỹ dự phòng ở màn Tài chính",
       tone: "action" as const,
     },
@@ -43,7 +43,7 @@ function getGoals(data: MockGoalsData): { goals: Goal[]; avg: number } {
       now: goldPhan,
       target: 100,
       format: formatChi,
-      note: goldRemainingNote(goldPhan, goldPricePerPhan),
+      note: goldRemainingNote(goldPhan, goldPricePerPhan, hidden),
       tone: "reward" as const,
     },
     {
@@ -52,7 +52,7 @@ function getGoals(data: MockGoalsData): { goals: Goal[]; avg: number } {
       icon: "car",
       now: 0,
       target: 1,
-      format: (n: number) => (n ? formatMoney(n) : "0%"),
+      format: (n: number) => (n ? formatMoney(n, hidden) : "0%"),
       note: "Chưa trích đồng nào. Mỗi lần để dành sẽ nhích thanh này lên.",
       tone: "action" as const,
     },

@@ -2,6 +2,7 @@ import Image from "next/image"
 
 import { Card } from "@/components/ui/card"
 import { Figure } from "@/components/ob/figure"
+import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import { pct1 } from "../finance-calculations"
 import type { Investment } from "../types"
@@ -12,11 +13,12 @@ interface InvestmentsTabProps {
   onAddInvest: (invest: Omit<Investment, "id">) => void
 }
 
-function signedMoney(n: number): string {
-  return (n >= 0 ? "+ " : "− ") + formatMoney(Math.abs(n))
+function signedMoney(n: number, hidden: boolean): string {
+  return (n >= 0 ? "+ " : "− ") + formatMoney(Math.abs(n), hidden)
 }
 
 function InvestmentsTab({ invests, onAddInvest }: InvestmentsTabProps) {
+  const { hidden } = useMoneyVisibility()
   const investCost = invests.reduce((sum, invest) => sum + invest.cost, 0)
   const investValue = invests.reduce((sum, invest) => sum + invest.value, 0)
   const investPL = investValue - investCost
@@ -32,7 +34,7 @@ function InvestmentsTab({ invests, onAddInvest }: InvestmentsTabProps) {
               <div className="mb-[5px] [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
                 Giá trị hiện tại
               </div>
-              <Figure value={formatMoney(investValue)} />
+              <Figure value={formatMoney(investValue, hidden)} />
             </div>
             <div>
               <div className="mb-[5px] [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
@@ -42,7 +44,7 @@ function InvestmentsTab({ invests, onAddInvest }: InvestmentsTabProps) {
                 className="whitespace-nowrap text-[15px] font-bold [font-family:var(--ob-font-num)] tabular-nums"
                 style={{ color: gain ? "var(--ob-color-income)" : "var(--ob-color-expense)" }}
               >
-                {signedMoney(investPL)} · {pct1(investPct)}
+                {signedMoney(investPL, hidden)} · {pct1(investPct)}
               </div>
             </div>
           </div>
@@ -61,16 +63,16 @@ function InvestmentsTab({ invests, onAddInvest }: InvestmentsTabProps) {
                   {investment.name}
                 </span>
                 <span className="whitespace-nowrap text-[13px] [font-family:var(--ob-font-num)] tabular-nums text-[var(--ob-color-text-subtle)]">
-                  vốn {formatMoney(investment.cost)}
+                  vốn {formatMoney(investment.cost, hidden)}
                 </span>
                 <span className="whitespace-nowrap text-[13px] [font-family:var(--ob-font-num)] tabular-nums">
-                  {formatMoney(investment.value)}
+                  {formatMoney(investment.value, hidden)}
                 </span>
                 <span
                   className="whitespace-nowrap text-[13px] font-bold [font-family:var(--ob-font-num)] tabular-nums"
                   style={{ color: pl >= 0 ? "var(--ob-color-income)" : "var(--ob-color-expense)" }}
                 >
-                  {signedMoney(pl)}
+                  {signedMoney(pl, hidden)}
                 </span>
               </div>
             )
@@ -78,7 +80,7 @@ function InvestmentsTab({ invests, onAddInvest }: InvestmentsTabProps) {
         </>
       ) : (
         <div>
-          <Figure value={formatMoney(0)} />
+          <Figure value={formatMoney(0, hidden)} />
           <p className="mt-[10px] text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)]">
             Chưa có khoản đầu tư nào. Thêm khoản đầu tư đầu tiên để bắt đầu theo dõi lãi/lỗ.
           </p>

@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card"
 import { Field } from "@/components/ui/field"
 import { Figure } from "@/components/ob/figure"
 import { Progress } from "@/components/ui/progress"
+import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import { AddCreditCardForm } from "./add-credit-card-form"
 import type { CreditCard } from "../types"
@@ -25,6 +26,7 @@ function todayLabel() {
 }
 
 function CreditCardsTab({ cards, onAddCard, onPayCard }: CreditCardsTabProps) {
+  const { hidden } = useMoneyVisibility()
   const [payCard, setPayCard] = useState("")
   const [payAmount, setPayAmount] = useState("")
 
@@ -43,13 +45,13 @@ function CreditCardsTab({ cards, onAddCard, onPayCard }: CreditCardsTabProps) {
             const limitPct = card.limit ? (card.balance / card.limit) * 100 : 0
             return (
               <Card key={card.name} label={card.name} className="min-w-0 flex-[1_1_300px]">
-                <Figure value={formatMoney(card.balance)} />
+                <Figure value={formatMoney(card.balance, hidden)} />
                 <div className="my-4 grid grid-cols-3 gap-3 text-center">
                   {(
                     [
                       ["Hạn thanh toán", card.due],
-                      ["Trả tối thiểu", formatMoney(card.min)],
-                      ["Hạn mức", formatMoney(card.limit)],
+                      ["Trả tối thiểu", formatMoney(card.min, hidden)],
+                      ["Hạn mức", formatMoney(card.limit, hidden)],
                     ] as const
                   ).map(([k, v]) => (
                     <div key={k}>
@@ -102,7 +104,7 @@ function CreditCardsTab({ cards, onAddCard, onPayCard }: CreditCardsTabProps) {
               placeholder="0"
               value={payAmount}
               onChange={(e) => setPayAmount(e.target.value)}
-              hint={`Dư nợ hiện tại ${formatMoney(payingCard.balance)}`}
+              hint={`Dư nợ hiện tại ${formatMoney(payingCard.balance, hidden)}`}
             />
             <div className="h-[14px]" />
             <Field label="Ngày trả" placeholder={todayLabel()} />

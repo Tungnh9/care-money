@@ -1,5 +1,6 @@
 import { Figure } from "@/components/ob/figure"
 import { Card } from "@/components/ui/card"
+import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import { pct1, type FinanceSummary } from "../finance-calculations"
 
@@ -15,6 +16,7 @@ interface Segment {
 }
 
 function NetWorthCard({ summary }: NetWorthCardProps) {
+  const { hidden } = useMoneyVisibility()
   const { savingsTotal, goldValue, investValue, debtTotal, net, netPct } = summary
 
   const segments: Segment[] = [
@@ -31,7 +33,7 @@ function NetWorthCard({ summary }: NetWorthCardProps) {
   return (
     <Card tone="invert" label="Tài sản ròng" className="min-w-0 w-full">
       <Figure
-        value={formatMoney(net)}
+        value={formatMoney(net, hidden)}
         delta={pct1(netPct)}
         direction={netPct >= 0 ? "up" : "down"}
       />
