@@ -7,6 +7,7 @@ import { pickDaily } from "@/features/study/daily-pick"
 import { useStudy } from "@/features/study/hooks/use-study"
 import type { GrammarEntry, VocabEntry } from "@/features/study/types"
 import { useSettings } from "@/features/settings/hooks/use-settings"
+import { Monkey } from "@/components/ob/monkey"
 import { dayKey, longDate } from "@/lib/date"
 import { formatMoney } from "@/lib/format"
 import { daysLeftInCycle, getMiniGoals } from "../overview-calculations"
@@ -45,12 +46,17 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
 
   return (
     <div>
-      <h1 className="mb-1 [font:var(--ob-text-h2)] tracking-[var(--ob-track-heading)]">
-        {settings.profile.greeting}
-      </h1>
-      <p className="mb-5 text-sm text-[var(--ob-color-text-subtle)]">
-        {longDate()} · còn {daysLeftInCycle(settings.budget.cycleStart)} ngày trong chu kỳ ngân sách
-      </p>
+      <div className="mb-5 flex items-center gap-[14px]">
+        <Monkey pose="wave" size={56} />
+        <div>
+          <h1 className="mb-1 [font:var(--ob-text-h2)] tracking-[var(--ob-track-heading)]">
+            <span className="ob-hi">{settings.profile.greeting}</span>
+          </h1>
+          <p className="text-sm text-[var(--ob-color-text-subtle)]">
+            {longDate()} · còn {daysLeftInCycle(settings.budget.cycleStart)} ngày trong chu kỳ ngân sách
+          </p>
+        </div>
+      </div>
 
       {enabled("taichinh") ? (
         <>

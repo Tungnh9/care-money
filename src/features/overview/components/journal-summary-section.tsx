@@ -18,7 +18,7 @@ function JournalSummarySection({ entries, streak, showStreak }: JournalSummarySe
   const recent = entries.slice(0, 3)
 
   return (
-    <div className="flex flex-wrap gap-5">
+    <div className="ob-card-grid flex flex-wrap gap-5">
       <Card label="Bài gần đây" className="min-w-0 flex-[2_1_460px]">
         {recent.length ? (
           <div>
