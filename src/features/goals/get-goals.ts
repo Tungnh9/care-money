@@ -1,7 +1,6 @@
 import { formatMoney } from "@/lib/format"
 
-import type { MockGoalsData } from "./mock-data"
-import type { Goal } from "./types"
+import type { Goal, GoalsInput } from "./types"
 
 function formatChi(phan: number): string {
   const chi = Math.floor(phan / 10)
@@ -21,7 +20,7 @@ function withPercent(now: number, target: number) {
   return { percent, done: now >= target }
 }
 
-function getGoals(data: MockGoalsData, hidden = false): { goals: Goal[]; avg: number } {
+function getGoals(data: GoalsInput, hidden = false): { goals: Goal[]; avg: number } {
   const { savingsTotal, goldPhan, goldPricePerPhan } = data
 
   const defs = [
@@ -32,7 +31,7 @@ function getGoals(data: MockGoalsData, hidden = false): { goals: Goal[]; avg: nu
       now: savingsTotal,
       target: 100_000_000,
       format: (n: number) => formatMoney(n, hidden),
-      note: "Lấy từ Quỹ dự phòng ở màn Tài chính",
+      note: "Tổng các quỹ tiết kiệm ở màn Tài chính",
       tone: "action" as const,
     },
     {
