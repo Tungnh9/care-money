@@ -23,6 +23,10 @@ function withPercent(now: number, target: number) {
 function getGoals(data: GoalsInput, hidden = false): { goals: Goal[]; avg: number } {
   const { savingsTotal, goldPhan, goldPricePerPhan } = data
 
+  const carFund = data.carFundName
+    ? data.savings.find((f) => f.name === data.carFundName)
+    : undefined
+
   const defs = [
     {
       key: "savings",
@@ -33,6 +37,7 @@ function getGoals(data: GoalsInput, hidden = false): { goals: Goal[]; avg: numbe
       format: (n: number) => formatMoney(n, hidden),
       note: "Tổng các quỹ tiết kiệm ở màn Tài chính",
       tone: "action" as const,
+      linked: true,
     },
     {
       key: "gold",
@@ -43,16 +48,20 @@ function getGoals(data: GoalsInput, hidden = false): { goals: Goal[]; avg: numbe
       format: formatChi,
       note: goldRemainingNote(goldPhan, goldPricePerPhan, hidden),
       tone: "reward" as const,
+      linked: true,
     },
     {
       key: "car",
       name: "Mua xe ô tô",
       icon: "car",
-      now: 0,
-      target: 1,
-      format: (n: number) => (n ? formatMoney(n, hidden) : "0%"),
-      note: "Chưa trích đồng nào. Mỗi lần để dành sẽ nhích thanh này lên.",
+      now: carFund ? carFund.amount : 0,
+      target: carFund ? carFund.target : 1,
+      format: (n: number) => formatMoney(n, hidden),
+      note: carFund
+        ? `Đang gắn với quỹ "${carFund.name}" ở màn Tài chính`
+        : "Chưa gắn quỹ tiết kiệm nào. Chọn 1 quỹ bên dưới để bắt đầu theo dõi.",
       tone: "action" as const,
+      linked: !!carFund,
     },
   ]
 

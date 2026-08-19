@@ -16,6 +16,7 @@ function buildGoal(overrides: Partial<Goal> = {}): Goal {
     format: (n) => `${n.toLocaleString("vi-VN")} ₫`,
     note: "Lấy từ Quỹ dự phòng ở màn Tài chính",
     tone: "action",
+    linked: true,
     ...overrides,
   }
 }

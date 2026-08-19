@@ -4,15 +4,21 @@ import { Confetti } from "@/components/ob/confetti"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
+import type { SavingsFund } from "@/features/finance/types"
 import type { Goal } from "../types"
+import { CarFundPicker } from "./car-fund-picker"
 
 interface GoalCardProps {
   goal: Goal
   className?: string
+  savings?: SavingsFund[]
+  selectedFundName?: string | null
+  onSelectFund?: (name: string | null) => void
 }
 
-function GoalCard({ goal, className }: GoalCardProps) {
+function GoalCard({ goal, className, savings, selectedFundName, onSelectFund }: GoalCardProps) {
   const isCar = goal.key === "car"
+  const unlinked = !goal.linked
   const iconName = goal.done ? "check" : goal.icon
 
   return (
@@ -30,9 +36,9 @@ function GoalCard({ goal, className }: GoalCardProps) {
           <Image src={`/assets/icons/${iconName}.svg`} width={23} height={23} alt="" />
         </span>
         <div className="min-w-0 [font-family:var(--ob-font-num)] text-[clamp(18px,9cqi,26px)] font-bold leading-none tracking-[-0.02em] tabular-nums">
-          {isCar ? `${goal.percent}%` : goal.format(goal.now)}
+          {unlinked ? `${goal.percent}%` : goal.format(goal.now)}
         </div>
-        {isCar ? null : (
+        {unlinked ? null : (
           <span
             className={cn(
               "flex-none rounded-[var(--ob-radius-pill)] px-[11px] py-[6px] [font-family:var(--ob-font-num)] text-[12.5px] font-bold",
@@ -45,11 +51,14 @@ function GoalCard({ goal, className }: GoalCardProps) {
           </span>
         )}
         <div className="col-start-2 min-w-0 mt-1.5 text-[12.5px] text-[var(--ob-color-text-subtle)]">
-          {isCar ? "Đã trích được" : `trên ${goal.format(goal.target)}`}
+          {unlinked ? "Đã trích được" : `trên ${goal.format(goal.target)}`}
         </div>
       </div>
       <Progress value={goal.percent} tone={goal.tone} />
       <p className="mt-[14px] text-[13px] leading-[1.55] text-[var(--ob-color-text-muted)]">{goal.note}</p>
+      {isCar && savings && onSelectFund ? (
+        <CarFundPicker savings={savings} selected={selectedFundName ?? null} onSelect={onSelectFund} />
+      ) : null}
     </Card>
   )
 }
