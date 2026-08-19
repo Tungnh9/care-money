@@ -15,14 +15,28 @@ const PURCHASES: GoldPurchase[] = [
 
 describe("GoldTransactionsTable", () => {
   it("renders the empty-state message when there are no purchases", () => {
-    render(<GoldTransactionsTable gold={[]} goldPrice={GOLD_PRICE} onRemove={vi.fn()} />)
+    render(
+      <GoldTransactionsTable
+        gold={[]}
+        goldPrice={GOLD_PRICE}
+        onRemove={vi.fn()}
+        onEdit={vi.fn()}
+      />,
+    )
 
     expect(screen.getByText(/Chưa có giao dịch vàng nào/)).toBeInTheDocument()
     expect(screen.queryByRole("table")).not.toBeInTheDocument()
   })
 
   it("renders each purchase's date, quantity and money figures, including a losing purchase's Lãi lỗ figure", () => {
-    render(<GoldTransactionsTable gold={PURCHASES} goldPrice={GOLD_PRICE} onRemove={vi.fn()} />)
+    render(
+      <GoldTransactionsTable
+        gold={PURCHASES}
+        goldPrice={GOLD_PRICE}
+        onRemove={vi.fn()}
+        onEdit={vi.fn()}
+      />,
+    )
 
     // Purchase A: 10 phân @ 800.000 -> cost 8.000.000, value 10*850.000 = 8.500.000, pl +500.000
     expect(screen.getByText("01/08/2026")).toBeInTheDocument()
@@ -42,7 +56,14 @@ describe("GoldTransactionsTable", () => {
 
   it("calls onRemove with the matching purchase id when its delete button is clicked", () => {
     const onRemove = vi.fn()
-    render(<GoldTransactionsTable gold={PURCHASES} goldPrice={GOLD_PRICE} onRemove={onRemove} />)
+    render(
+      <GoldTransactionsTable
+        gold={PURCHASES}
+        goldPrice={GOLD_PRICE}
+        onRemove={onRemove}
+        onEdit={vi.fn()}
+      />,
+    )
 
     const deleteButtons = screen.getAllByRole("button", { name: "Xoá giao dịch vàng" })
     expect(deleteButtons).toHaveLength(2)
@@ -51,5 +72,42 @@ describe("GoldTransactionsTable", () => {
 
     expect(onRemove).toHaveBeenCalledWith(2)
     expect(onRemove).not.toHaveBeenCalledWith(1)
+  })
+
+  it("calls onEdit with the matching purchase object when its edit button is clicked", () => {
+    const onEdit = vi.fn()
+    render(
+      <GoldTransactionsTable
+        gold={PURCHASES}
+        goldPrice={GOLD_PRICE}
+        onRemove={vi.fn()}
+        onEdit={onEdit}
+      />,
+    )
+
+    const editButton = screen.getByRole("button", { name: "Sửa giao dịch vàng 05/08/2026" })
+    fireEvent.click(editButton)
+
+    expect(onEdit).toHaveBeenCalledWith(PURCHASES[1])
+    expect(onEdit).toHaveBeenCalledTimes(1)
+  })
+
+  it("centers each row's edit and delete buttons together in a shared flex container", () => {
+    render(
+      <GoldTransactionsTable
+        gold={PURCHASES}
+        goldPrice={GOLD_PRICE}
+        onRemove={vi.fn()}
+        onEdit={vi.fn()}
+      />,
+    )
+
+    const editButton = screen.getByRole("button", { name: "Sửa giao dịch vàng 05/08/2026" })
+    const deleteButtons = screen.getAllByRole("button", { name: "Xoá giao dịch vàng" })
+    const deleteButton = deleteButtons[1]
+
+    const container = editButton.parentElement
+    expect(container).toBe(deleteButton.parentElement)
+    expect(container).toHaveClass("flex", "items-center", "justify-center")
   })
 })

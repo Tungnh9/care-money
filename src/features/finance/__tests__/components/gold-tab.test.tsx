@@ -40,6 +40,7 @@ describe("GoldTab", () => {
         gold={[]}
         onAddGold={vi.fn()}
         onRemoveGold={vi.fn()}
+        onUpdateGold={vi.fn()}
       />
     )
 
@@ -65,6 +66,7 @@ describe("GoldTab", () => {
         gold={[]}
         onAddGold={vi.fn()}
         onRemoveGold={vi.fn()}
+        onUpdateGold={vi.fn()}
       />
     )
 
@@ -100,6 +102,7 @@ describe("GoldTab", () => {
         gold={[]}
         onAddGold={vi.fn()}
         onRemoveGold={vi.fn()}
+        onUpdateGold={vi.fn()}
       />
     )
 
@@ -120,6 +123,7 @@ describe("GoldTab", () => {
         gold={[]}
         onAddGold={onAddGold}
         onRemoveGold={vi.fn()}
+        onUpdateGold={vi.fn()}
       />
     )
 
@@ -153,6 +157,7 @@ describe("GoldTab", () => {
         gold={[]}
         onAddGold={vi.fn()}
         onRemoveGold={vi.fn()}
+        onUpdateGold={vi.fn()}
       />
     )
 
@@ -160,5 +165,111 @@ describe("GoldTab", () => {
       .getByText("Lãi / lỗ theo giá thị trường")
       .closest("section") as HTMLElement
     expect(plSection.parentElement).toHaveClass("ob-card-grid")
+  })
+
+  it("opens a prefilled edit form for a purchase and reports the update on Lưu", () => {
+    const onUpdateGold = vi.fn()
+    const PURCHASE = { id: 1, date: "10/08/2026", phan: 10, buy: 900_000 }
+    render(
+      <GoldTab
+        summary={ZERO_SUMMARY}
+        goldPrice=""
+        onSetGoldPrice={vi.fn()}
+        gold={[PURCHASE]}
+        onAddGold={vi.fn()}
+        onRemoveGold={vi.fn()}
+        onUpdateGold={onUpdateGold}
+      />
+    )
+
+    fireEvent.click(screen.getAllByRole("button", { name: /Sửa giao dịch vàng/ })[0])
+
+    expect(screen.getByDisplayValue("10/08/2026")).toBeInTheDocument()
+    expect(screen.getByDisplayValue("10")).toBeInTheDocument()
+    const buyInput = screen.getByDisplayValue("900.000")
+    fireEvent.change(buyInput, { target: { value: "950000" } })
+
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
+
+    expect(onUpdateGold).toHaveBeenCalledWith(1, {
+      date: "10/08/2026",
+      phan: 10,
+      buy: 950_000,
+    })
+    expect(screen.queryByText("Sửa lần mua vàng")).not.toBeInTheDocument()
+  })
+
+  it("closes the edit form without saving when Huỷ is clicked", () => {
+    const onUpdateGold = vi.fn()
+    const PURCHASE = { id: 1, date: "10/08/2026", phan: 10, buy: 900_000 }
+    render(
+      <GoldTab
+        summary={ZERO_SUMMARY}
+        goldPrice=""
+        onSetGoldPrice={vi.fn()}
+        gold={[PURCHASE]}
+        onAddGold={vi.fn()}
+        onRemoveGold={vi.fn()}
+        onUpdateGold={onUpdateGold}
+      />
+    )
+
+    fireEvent.click(screen.getAllByRole("button", { name: /Sửa giao dịch vàng/ })[0])
+    expect(screen.getByText("Sửa lần mua vàng")).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: "Huỷ" }))
+
+    expect(onUpdateGold).not.toHaveBeenCalled()
+    expect(screen.queryByText("Sửa lần mua vàng")).not.toBeInTheDocument()
+  })
+
+  it("asks for confirmation before removing a purchase and removes it on Xoá", () => {
+    const onRemoveGold = vi.fn()
+    const PURCHASE = { id: 1, date: "10/08/2026", phan: 10, buy: 900_000 }
+    render(
+      <GoldTab
+        summary={ZERO_SUMMARY}
+        goldPrice=""
+        onSetGoldPrice={vi.fn()}
+        gold={[PURCHASE]}
+        onAddGold={vi.fn()}
+        onRemoveGold={onRemoveGold}
+        onUpdateGold={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Xoá giao dịch vàng" })[0])
+
+    expect(screen.getByText("Xoá giao dịch vàng?")).toBeInTheDocument()
+    expect(onRemoveGold).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole("button", { name: "Xoá" }))
+
+    expect(onRemoveGold).toHaveBeenCalledTimes(1)
+    expect(onRemoveGold).toHaveBeenCalledWith(1)
+  })
+
+  it("closes the confirmation dialog without removing the purchase when Huỷ is clicked", () => {
+    const onRemoveGold = vi.fn()
+    const PURCHASE = { id: 1, date: "10/08/2026", phan: 10, buy: 900_000 }
+    render(
+      <GoldTab
+        summary={ZERO_SUMMARY}
+        goldPrice=""
+        onSetGoldPrice={vi.fn()}
+        gold={[PURCHASE]}
+        onAddGold={vi.fn()}
+        onRemoveGold={onRemoveGold}
+        onUpdateGold={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Xoá giao dịch vàng" })[0])
+    expect(screen.getByText("Xoá giao dịch vàng?")).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: "Huỷ" }))
+
+    expect(onRemoveGold).not.toHaveBeenCalled()
+    expect(screen.queryByText("Xoá giao dịch vàng?")).not.toBeInTheDocument()
   })
 })

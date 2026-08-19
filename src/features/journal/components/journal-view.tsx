@@ -26,7 +26,7 @@ function JournalView() {
 
   function handleSave(input: { text: string; words: number; mood: typeof selectedMoodSnapshot }) {
     const entry = saveEntry(input)
-    setJustSaved(entry)
+    if (entry) setJustSaved(entry)
   }
 
   function handleViewEntries() {

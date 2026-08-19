@@ -12,6 +12,7 @@ import {
   type Mood,
   type Profile,
 } from "@/lib/settings-storage"
+import { toast } from "sonner"
 
 interface SettingsStore {
   settings: AppSettings
@@ -68,15 +69,26 @@ function useSettings() {
 
   const removeMood = useCallback(
     (index: number) => {
-      persist({ ...settings, moods: settings.moods.filter((_, i) => i !== index) })
+      const label = settings.moods[index]?.label
+      try {
+        persist({ ...settings, moods: settings.moods.filter((_, i) => i !== index) })
+        toast.success(label ? `Đã xoá tâm trạng "${label}"` : "Đã xoá tâm trạng")
+      } catch {
+        toast.error("Không thể xoá tâm trạng. Vui lòng thử lại.")
+      }
     },
     [settings, persist]
   )
 
   const addMood = useCallback(
     (mood: Omit<Mood, "tint" | "on">) => {
-      const tint = TINT_PALETTE[settings.moods.length % TINT_PALETTE.length]
-      persist({ ...settings, moods: [...settings.moods, { ...mood, tint, on: true }] })
+      try {
+        const tint = TINT_PALETTE[settings.moods.length % TINT_PALETTE.length]
+        persist({ ...settings, moods: [...settings.moods, { ...mood, tint, on: true }] })
+        toast.success(`Đã thêm tâm trạng "${mood.label}"`)
+      } catch {
+        toast.error(`Không thể thêm tâm trạng "${mood.label}". Vui lòng thử lại.`)
+      }
     },
     [settings, persist]
   )
