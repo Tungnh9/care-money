@@ -11,4 +11,10 @@ interface Goal {
   tone: "action" | "reward"
 }
 
-export type { Goal }
+interface GoalsInput {
+  savingsTotal: number
+  goldPhan: number
+  goldPricePerPhan: number
+}
+
+export type { Goal, GoalsInput }
