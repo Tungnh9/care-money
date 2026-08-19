@@ -28,4 +28,26 @@ describe("MiniStat", () => {
     render(<MiniStat icon="pig" label="Tiết kiệm" value="0 ₫" />)
     expect(screen.getByText("0 ₫")).toHaveStyle({ color: "var(--ob-color-text)" })
   })
+
+  it("renders a ReactNode hint as-is, so the caller can style just part of it (e.g. bold+colored lời/lỗ) independently", () => {
+    render(
+      <MiniStat
+        icon="gold"
+        label="Vàng"
+        value="1.455.000 ₫"
+        hint={
+          <>
+            1 phân ·{" "}
+            <span className="font-bold" style={{ color: "var(--ob-color-income)" }}>
+              lời 255.000 ₫
+            </span>
+          </>
+        }
+      />
+    )
+    expect(screen.getByText("1 phân", { exact: false })).toBeInTheDocument()
+    const highlighted = screen.getByText("lời 255.000 ₫")
+    expect(highlighted).toHaveStyle({ color: "var(--ob-color-income)" })
+    expect(highlighted).toHaveClass("font-bold")
+  })
 })
