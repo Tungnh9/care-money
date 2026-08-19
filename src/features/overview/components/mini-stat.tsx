@@ -1,10 +1,11 @@
 import Image from "next/image"
+import type { ReactNode } from "react"
 
 interface MiniStatProps {
   icon: string
   label: string
   value: string
-  hint?: string
+  hint?: ReactNode
   color?: string
 }
 

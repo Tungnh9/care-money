@@ -27,10 +27,15 @@ function FinanceView() {
     goldPrice,
     invests,
     addSavingsFund,
+    updateSavingsFund,
+    removeSavingsFund,
     addCard,
+    updateCard,
+    removeCard,
     payCard,
     setGoldPrice,
     addGold,
+    updateGold,
     removeGold,
     addInvest,
   } = useFinance()
@@ -90,9 +95,20 @@ function FinanceView() {
 
       <div className="ob-card-grid">
         {tab === "Tiết kiệm" ? (
-          <SavingsTab savings={savings} onAddSavingsFund={addSavingsFund} />
+          <SavingsTab
+            savings={savings}
+            onAddSavingsFund={addSavingsFund}
+            onUpdateSavingsFund={updateSavingsFund}
+            onRemoveSavingsFund={removeSavingsFund}
+          />
         ) : tab === "Nợ thẻ tín dụng" ? (
-          <CreditCardsTab cards={cards} onAddCard={addCard} onPayCard={payCard} />
+          <CreditCardsTab
+            cards={cards}
+            onAddCard={addCard}
+            onPayCard={payCard}
+            onUpdateCard={updateCard}
+            onRemoveCard={removeCard}
+          />
         ) : tab === "Tích lũy vàng" ? (
           <GoldTab
             summary={summary}
@@ -100,6 +116,7 @@ function FinanceView() {
             onSetGoldPrice={setGoldPrice}
             gold={gold}
             onAddGold={addGold}
+            onUpdateGold={updateGold}
             onRemoveGold={removeGold}
           />
         ) : (

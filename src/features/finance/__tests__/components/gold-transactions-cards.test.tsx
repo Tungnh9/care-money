@@ -15,14 +15,28 @@ const PURCHASES: GoldPurchase[] = [
 
 describe("GoldTransactionsCards", () => {
   it("renders the empty-state message when there are no purchases", () => {
-    render(<GoldTransactionsCards gold={[]} goldPrice={GOLD_PRICE} onRemove={vi.fn()} />)
+    render(
+      <GoldTransactionsCards
+        gold={[]}
+        goldPrice={GOLD_PRICE}
+        onRemove={vi.fn()}
+        onEdit={vi.fn()}
+      />
+    )
 
     expect(screen.getByText(/Chưa có giao dịch vàng nào/)).toBeInTheDocument()
     expect(screen.queryAllByRole("button", { name: "Xoá giao dịch vàng" })).toHaveLength(0)
   })
 
   it("renders each purchase's date, quantity and money figures, including a losing purchase's Lãi lỗ figure", () => {
-    render(<GoldTransactionsCards gold={PURCHASES} goldPrice={GOLD_PRICE} onRemove={vi.fn()} />)
+    render(
+      <GoldTransactionsCards
+        gold={PURCHASES}
+        goldPrice={GOLD_PRICE}
+        onRemove={vi.fn()}
+        onEdit={vi.fn()}
+      />
+    )
 
     // Purchase A: 10 phân @ 800.000 -> cost 8.000.000, value 10*850.000 = 8.500.000, pl +500.000
     expect(screen.getByText("01/08/2026")).toBeInTheDocument()
@@ -42,7 +56,14 @@ describe("GoldTransactionsCards", () => {
 
   it("calls onRemove with the matching purchase id when its delete button is clicked", () => {
     const onRemove = vi.fn()
-    render(<GoldTransactionsCards gold={PURCHASES} goldPrice={GOLD_PRICE} onRemove={onRemove} />)
+    render(
+      <GoldTransactionsCards
+        gold={PURCHASES}
+        goldPrice={GOLD_PRICE}
+        onRemove={onRemove}
+        onEdit={vi.fn()}
+      />
+    )
 
     const deleteButtons = screen.getAllByRole("button", { name: "Xoá giao dịch vàng" })
     expect(deleteButtons).toHaveLength(2)
@@ -51,5 +72,25 @@ describe("GoldTransactionsCards", () => {
 
     expect(onRemove).toHaveBeenCalledWith(2)
     expect(onRemove).not.toHaveBeenCalledWith(1)
+  })
+
+  it("calls onEdit with the matching purchase object when its edit button is clicked", () => {
+    const onEdit = vi.fn()
+    render(
+      <GoldTransactionsCards
+        gold={PURCHASES}
+        goldPrice={GOLD_PRICE}
+        onRemove={vi.fn()}
+        onEdit={onEdit}
+      />
+    )
+
+    const editButtons = screen.getAllByRole("button", { name: /Sửa giao dịch vàng/ })
+    expect(editButtons).toHaveLength(2)
+
+    fireEvent.click(editButtons[1])
+
+    expect(onEdit).toHaveBeenCalledWith(PURCHASES[1])
+    expect(onEdit).not.toHaveBeenCalledWith(PURCHASES[0])
   })
 })

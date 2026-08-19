@@ -1,6 +1,6 @@
 "use client"
 
-import { Trash2 } from "lucide-react"
+import { Pencil, Trash2 } from "lucide-react"
 
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
@@ -11,6 +11,7 @@ interface GoldTransactionsTableProps {
   gold: GoldPurchase[]
   goldPrice: string
   onRemove: (id: number) => void
+  onEdit: (purchase: GoldPurchase) => void
 }
 
 function signedMoney(n: number, hidden: boolean): string {
@@ -27,7 +28,7 @@ const HEADERS = [
   "",
 ]
 
-function GoldTransactionsTable({ gold, goldPrice, onRemove }: GoldTransactionsTableProps) {
+function GoldTransactionsTable({ gold, goldPrice, onRemove, onEdit }: GoldTransactionsTableProps) {
   const { hidden } = useMoneyVisibility()
 
   if (!gold.length) {
@@ -50,7 +51,11 @@ function GoldTransactionsTable({ gold, goldPrice, onRemove }: GoldTransactionsTa
                 key={header || `col-${index}`}
                 className={
                   "whitespace-nowrap py-[10px] px-[12px] [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)] " +
-                  (index === 0 ? "text-left" : "text-right")
+                  (index === 0
+                    ? "text-left"
+                    : index === HEADERS.length - 1
+                      ? "text-center"
+                      : "text-right")
                 }
               >
                 {header}
@@ -86,15 +91,25 @@ function GoldTransactionsTable({ gold, goldPrice, onRemove }: GoldTransactionsTa
                 >
                   {signedMoney(pl, hidden)}
                 </td>
-                <td className="py-[10px] px-[12px] text-right">
-                  <button
-                    type="button"
-                    aria-label="Xoá giao dịch vàng"
-                    onClick={() => onRemove(purchase.id)}
-                    className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)]"
-                  >
-                    <Trash2 size={17} />
-                  </button>
+                <td className="py-[10px] px-[12px] text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <button
+                      type="button"
+                      aria-label={`Sửa giao dịch vàng ${purchase.date}`}
+                      onClick={() => onEdit(purchase)}
+                      className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-info)]"
+                    >
+                      <Pencil size={17} />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Xoá giao dịch vàng"
+                      onClick={() => onRemove(purchase.id)}
+                      className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
+                    >
+                      <Trash2 size={17} />
+                    </button>
+                  </div>
                 </td>
               </tr>
             )

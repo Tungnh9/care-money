@@ -1,7 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import { Pencil, Trash2 } from "lucide-react"
 
+import { AlertDialog } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Field } from "@/components/ui/field"
@@ -16,6 +18,8 @@ interface CreditCardsTabProps {
   cards: CreditCard[]
   onAddCard: (card: CreditCard) => void
   onPayCard: (name: string, amount: number) => void
+  onUpdateCard: (originalName: string, card: CreditCard) => void
+  onRemoveCard: (name: string) => void
 }
 
 function todayLabel() {
@@ -25,15 +29,54 @@ function todayLabel() {
   return `${day}/${month}/${now.getFullYear()}`
 }
 
-function CreditCardsTab({ cards, onAddCard, onPayCard }: CreditCardsTabProps) {
+function CreditCardsTab({
+  cards,
+  onAddCard,
+  onPayCard,
+  onUpdateCard,
+  onRemoveCard,
+}: CreditCardsTabProps) {
   const { hidden } = useMoneyVisibility()
   const [payCard, setPayCard] = useState("")
   const [payAmount, setPayAmount] = useState("")
+  const [editingCard, setEditingCard] = useState("")
+  const [editName, setEditName] = useState("")
+  const [editBalance, setEditBalance] = useState("")
+  const [editMin, setEditMin] = useState("")
+  const [editLimit, setEditLimit] = useState("")
+  const [editDue, setEditDue] = useState("")
+  const [deletingCard, setDeletingCard] = useState("")
 
   const payingCard = cards.find((card) => card.name === payCard)
+  const cardBeingEdited = cards.find((card) => card.name === editingCard)
 
   function resetPay() {
     setPayCard("")
+    setPayAmount("")
+  }
+
+  function resetEdit() {
+    setEditingCard("")
+    setEditName("")
+    setEditBalance("")
+    setEditMin("")
+    setEditLimit("")
+    setEditDue("")
+  }
+
+  function startEdit(card: CreditCard) {
+    resetPay()
+    setEditingCard(card.name)
+    setEditName(card.name)
+    setEditBalance(String(card.balance))
+    setEditMin(String(card.min))
+    setEditLimit(String(card.limit))
+    setEditDue(card.due)
+  }
+
+  function startPay(name: string) {
+    resetEdit()
+    setPayCard(name)
     setPayAmount("")
   }
 
@@ -67,18 +110,31 @@ function CreditCardsTab({ cards, onAddCard, onPayCard }: CreditCardsTabProps) {
                   tone="action"
                   hint={`${Math.round(limitPct)}% hạn mức`}
                 />
-                <div className="mt-4">
+                <div className="mt-4 flex flex-wrap items-center gap-[10px]">
                   <Button
                     variant="secondary"
                     size="sm"
                     type="button"
-                    onClick={() => {
-                      setPayCard(card.name)
-                      setPayAmount("")
-                    }}
+                    onClick={() => startPay(card.name)}
                   >
                     Ghi một lần trả
                   </Button>
+                  <button
+                    type="button"
+                    aria-label={`Sửa thẻ ${card.name}`}
+                    onClick={() => startEdit(card)}
+                    className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-info)]"
+                  >
+                    <Pencil size={17} />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Xoá thẻ ${card.name}`}
+                    onClick={() => setDeletingCard(card.name)}
+                    className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
+                  >
+                    <Trash2 size={17} />
+                  </button>
                 </div>
               </Card>
             )
@@ -128,6 +184,80 @@ function CreditCardsTab({ cards, onAddCard, onPayCard }: CreditCardsTabProps) {
           </Card>
         ) : null}
 
+        {cardBeingEdited ? (
+          <Card label={`Sửa thẻ · ${cardBeingEdited.name}`} className="min-w-0 flex-[1_1_300px]">
+            <div className="flex flex-wrap gap-3">
+              <Field
+                className="min-w-0 flex-[1_1_220px]"
+                label="Tên thẻ"
+                placeholder="vd: Techcombank Visa"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+              />
+              <Field
+                className="min-w-0 flex-[1_1_220px]"
+                label="Dư nợ hiện tại"
+                numeric
+                group
+                suffix="đ"
+                placeholder="0"
+                value={editBalance}
+                onChange={(e) => setEditBalance(e.target.value)}
+              />
+              <Field
+                className="min-w-0 flex-[1_1_220px]"
+                label="Số tiền tối thiểu"
+                numeric
+                group
+                suffix="đ"
+                placeholder="0"
+                value={editMin}
+                onChange={(e) => setEditMin(e.target.value)}
+              />
+              <Field
+                className="min-w-0 flex-[1_1_220px]"
+                label="Hạn mức"
+                numeric
+                group
+                suffix="đ"
+                placeholder="0"
+                value={editLimit}
+                onChange={(e) => setEditLimit(e.target.value)}
+              />
+              <Field
+                className="min-w-0 flex-[1_1_220px]"
+                label="Ngày đến hạn"
+                placeholder="vd: 15 hàng tháng"
+                value={editDue}
+                onChange={(e) => setEditDue(e.target.value)}
+              />
+            </div>
+            <div className="mt-4 flex flex-wrap gap-[10px]">
+              <Button
+                variant="primary"
+                size="sm"
+                type="button"
+                disabled={!editName.trim() || !editBalance.trim() || !editLimit.trim() || !editDue.trim()}
+                onClick={() => {
+                  onUpdateCard(cardBeingEdited.name, {
+                    name: editName.trim(),
+                    balance: Number(editBalance) || 0,
+                    min: Number(editMin) || 0,
+                    limit: Number(editLimit) || 0,
+                    due: editDue.trim(),
+                  })
+                  resetEdit()
+                }}
+              >
+                Lưu
+              </Button>
+              <Button variant="ghost" size="sm" type="button" onClick={resetEdit}>
+                Huỷ
+              </Button>
+            </div>
+          </Card>
+        ) : null}
+
         <Card tone="soft" label="Nhắc trả nợ" className="min-w-0 flex-[1_1_300px]">
           <p className="text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)]">
             Trả đủ và đúng hạn để tránh mất lãi phát sinh trên dư nợ thẻ tín dụng.
@@ -135,6 +265,21 @@ function CreditCardsTab({ cards, onAddCard, onPayCard }: CreditCardsTabProps) {
         </Card>
       </div>
       <AddCreditCardForm onAdd={onAddCard} />
+      <AlertDialog
+        open={!!deletingCard}
+        onOpenChange={(open) => !open && setDeletingCard("")}
+        title="Xoá thẻ tín dụng?"
+        description={
+          <>
+            Xoá thẻ &quot;<strong>{deletingCard}</strong>&quot; sẽ không thể hoàn tác.
+          </>
+        }
+        confirmLabel="Xoá"
+        destructive
+        onConfirm={() => {
+          if (deletingCard) onRemoveCard(deletingCard)
+        }}
+      />
     </div>
   )
 }
