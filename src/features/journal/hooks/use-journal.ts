@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 
+import { toast } from "sonner"
 import {
   DEFAULT_JOURNAL_STATE,
   getStoredJournal,
@@ -26,12 +27,12 @@ function useJournal() {
   }, [])
 
   const persist = useCallback((next: JournalState) => {
-    setState(next)
     setStoredJournal(next)
+    setState(next)
   }, [])
 
   const saveEntry = useCallback(
-    (input: SaveEntryInput): JournalEntry => {
+    (input: SaveEntryInput): JournalEntry | null => {
       const now = new Date()
       const entry: JournalEntry = {
         id: now.getTime(),
@@ -42,16 +43,25 @@ function useJournal() {
         mood: input.mood,
       }
 
-      persist({ entries: [entry, ...state.entries] })
-
-      return entry
+      try {
+        persist({ entries: [entry, ...state.entries] })
+        return entry
+      } catch {
+        toast.error("Không thể lưu bài viết. Vui lòng thử lại.")
+        return null
+      }
     },
     [state, persist]
   )
 
   const deleteEntry = useCallback(
     (id: number) => {
-      persist({ ...state, entries: state.entries.filter((entry) => entry.id !== id) })
+      try {
+        persist({ ...state, entries: state.entries.filter((entry) => entry.id !== id) })
+        toast.success("Đã xoá bài viết")
+      } catch {
+        toast.error("Không thể xoá bài viết. Vui lòng thử lại.")
+      }
     },
     [state, persist]
   )
