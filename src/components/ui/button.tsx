@@ -13,10 +13,10 @@ const buttonVariants = cva(
           "bg-[var(--ob-color-action-soft)] text-[var(--ob-color-action-strong)]",
         reward: "bg-[var(--ob-color-reward)] text-[var(--ob-vo-900)]",
         ghost:
-          "border-[var(--ob-color-border)] bg-transparent text-[var(--ob-color-text)]",
+          "border-[var(--ob-color-border)] bg-transparent text-[var(--ob-color-text)] hover:bg-[var(--ob-color-surface-sunken)]",
       },
       size: {
-        sm: "px-[14px] py-[8px] text-[13px]",
+        sm: "px-[18px] py-[8px] text-[13px]",
         md: "px-[20px] py-[11px] text-[14px]",
         lg: "px-[26px] py-[14px] text-[16px]",
       },
