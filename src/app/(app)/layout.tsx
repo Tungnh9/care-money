@@ -1,4 +1,5 @@
 import { MoneyVisibilityProvider } from "@/components/money-visibility-provider"
+import { Toaster } from "@/components/ui/sonner"
 import { Sidebar } from "./_components/sidebar"
 
 interface AppLayoutProps {
@@ -14,6 +15,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
           {children}
         </main>
       </div>
+      <Toaster />
     </MoneyVisibilityProvider>
   )
 }
