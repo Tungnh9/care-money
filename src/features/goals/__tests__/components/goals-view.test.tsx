@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest"
-import { render, screen, waitFor } from "@testing-library/react"
+import { render, screen, waitFor, within, fireEvent } from "@testing-library/react"
 
 import { DEFAULT_FINANCE_STATE, setStoredFinance } from "@/features/finance/finance-storage"
 import { formatMoney } from "@/lib/format"
@@ -32,5 +32,24 @@ describe("GoalsView", () => {
     // Số liệu mock cũ (44 triệu / 6 chỉ) không còn xuất hiện.
     expect(screen.queryByText(formatMoney(44_000_000))).not.toBeInTheDocument()
     expect(screen.queryByText("6 chỉ")).not.toBeInTheDocument()
+  })
+
+  it("computes the car goal from the fund selected via the car fund picker", async () => {
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      savings: [{ name: "Quỹ mua xe", amount: 30_000_000, target: 200_000_000 }],
+    })
+
+    render(<GoalsView />)
+
+    await waitFor(() => expect(screen.getByText("Mua xe ô tô")).toBeInTheDocument())
+    const carCard = screen.getByText("Mua xe ô tô").closest("section") as HTMLElement
+
+    fireEvent.click(within(carCard).getByRole("button", { name: "Quỹ mua xe" }))
+
+    await waitFor(() =>
+      expect(within(carCard).getByText(formatMoney(30_000_000))).toBeInTheDocument()
+    )
+    expect(within(carCard).getByText("15%")).toBeInTheDocument()
   })
 })

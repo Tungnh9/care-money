@@ -8,6 +8,8 @@ const GOALS_INPUT: GoalsInput = {
   savingsTotal: 44_000_000,
   goldPhan: 60,
   goldPricePerPhan: 935_000,
+  savings: [],
+  carFundName: null,
 }
 
 describe("getGoals", () => {
@@ -44,6 +46,40 @@ describe("getGoals", () => {
     const goldGoal = goals.find((g) => g.key === "gold")
     expect(goldGoal?.percent).toBe(100)
     expect(goldGoal?.done).toBe(true)
+  })
+
+  it("defaults the car goal to zeroed placeholder when no fund is linked", () => {
+    const { goals } = getGoals(GOALS_INPUT)
+
+    const carGoal = goals.find((g) => g.key === "car")
+    expect(carGoal).toMatchObject({ now: 0, target: 1, percent: 0, linked: false })
+  })
+
+  it("computes the car goal from the linked savings fund when carFundName matches", () => {
+    const { goals } = getGoals({
+      ...GOALS_INPUT,
+      savings: [{ name: "Quỹ mua xe", amount: 30_000_000, target: 200_000_000 }],
+      carFundName: "Quỹ mua xe",
+    })
+
+    const carGoal = goals.find((g) => g.key === "car")
+    expect(carGoal).toMatchObject({
+      now: 30_000_000,
+      target: 200_000_000,
+      percent: 15,
+      linked: true,
+    })
+  })
+
+  it("falls back to the unlinked placeholder when carFundName points to a deleted fund", () => {
+    const { goals } = getGoals({
+      ...GOALS_INPUT,
+      savings: [{ name: "Quỹ mua xe", amount: 30_000_000, target: 200_000_000 }],
+      carFundName: "Quỹ đã xóa",
+    })
+
+    const carGoal = goals.find((g) => g.key === "car")
+    expect(carGoal).toMatchObject({ now: 0, target: 1, percent: 0, linked: false })
   })
 })
 
