@@ -1,6 +1,6 @@
 "use client"
 
-import { Trash2 } from "lucide-react"
+import { Pencil, Trash2 } from "lucide-react"
 
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
@@ -11,13 +11,19 @@ interface GoldTransactionsCardsProps {
   gold: GoldPurchase[]
   goldPrice: string
   onRemove: (id: number) => void
+  onEdit: (purchase: GoldPurchase) => void
 }
 
 function signedMoney(n: number, hidden: boolean): string {
   return (n >= 0 ? "+ " : "− ") + formatMoney(Math.abs(n), hidden)
 }
 
-function GoldTransactionsCards({ gold, goldPrice, onRemove }: GoldTransactionsCardsProps) {
+function GoldTransactionsCards({
+  gold,
+  goldPrice,
+  onRemove,
+  onEdit,
+}: GoldTransactionsCardsProps) {
   const { hidden } = useMoneyVisibility()
 
   if (!gold.length) {
@@ -45,14 +51,24 @@ function GoldTransactionsCards({ gold, goldPrice, onRemove }: GoldTransactionsCa
               <span className="text-[13px] [font-family:var(--ob-font-num)] tabular-nums">
                 {purchase.date}
               </span>
-              <button
-                type="button"
-                aria-label="Xoá giao dịch vàng"
-                onClick={() => onRemove(purchase.id)}
-                className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)]"
-              >
-                <Trash2 size={17} />
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  aria-label={`Sửa giao dịch vàng ${purchase.date}`}
+                  onClick={() => onEdit(purchase)}
+                  className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-info)]"
+                >
+                  <Pencil size={17} />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Xoá giao dịch vàng"
+                  onClick={() => onRemove(purchase.id)}
+                  className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
+                >
+                  <Trash2 size={17} />
+                </button>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
