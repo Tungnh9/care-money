@@ -1,14 +1,24 @@
 "use client"
 
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
+import { parseGoldPrice, summarizeFinance } from "@/features/finance/finance-calculations"
+import { useFinance } from "@/features/finance/hooks/use-finance"
 import { getGoals } from "../get-goals"
-import { MOCK_GOALS_DATA } from "../mock-data"
 import { GoalCard } from "./goal-card"
 import { OverallProgressCard } from "./overall-progress-card"
 
 function GoalsView() {
   const { hidden } = useMoneyVisibility()
-  const { goals, avg } = getGoals(MOCK_GOALS_DATA, hidden)
+  const { savings, cards, gold, goldPrice, invests } = useFinance()
+  const summary = summarizeFinance({ savings, cards, gold, goldPrice, invests })
+  const { goals, avg } = getGoals(
+    {
+      savingsTotal: summary.savingsTotal,
+      goldPhan: summary.goldPhan,
+      goldPricePerPhan: parseGoldPrice(goldPrice),
+    },
+    hidden
+  )
 
   return (
     <div>
