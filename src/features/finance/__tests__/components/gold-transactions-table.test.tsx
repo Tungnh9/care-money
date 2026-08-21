@@ -92,6 +92,32 @@ describe("GoldTransactionsTable", () => {
     expect(onEdit).toHaveBeenCalledTimes(1)
   })
 
+  it("tints the Lãi lỗ badge and the row's left-border accent by gain/loss, and zebra-stripes alternating rows", () => {
+    render(
+      <GoldTransactionsTable
+        gold={PURCHASES}
+        goldPrice={GOLD_PRICE}
+        onRemove={vi.fn()}
+        onEdit={vi.fn()}
+      />,
+    )
+
+    const winningBadge = screen.getByText("+ " + formatMoney(500_000))
+    expect(winningBadge).toHaveClass("bg-[var(--ob-color-income)]/10", "text-[var(--ob-color-income)]")
+    const winningRow = winningBadge.closest("tr") as HTMLTableRowElement
+    const winningFirstCell = winningRow.querySelector("td") as HTMLTableCellElement
+    expect(winningFirstCell).toHaveClass("border-l-[var(--ob-color-income)]")
+
+    const losingBadge = screen.getByText("− " + formatMoney(250_000))
+    expect(losingBadge).toHaveClass("bg-[var(--ob-color-expense)]/10", "text-[var(--ob-color-expense)]")
+    const losingRow = losingBadge.closest("tr") as HTMLTableRowElement
+    const losingFirstCell = losingRow.querySelector("td") as HTMLTableCellElement
+    expect(losingFirstCell).toHaveClass("border-l-[var(--ob-color-expense)]")
+
+    expect(winningRow).not.toHaveClass("bg-[var(--ob-color-surface-sunken)]")
+    expect(losingRow).toHaveClass("bg-[var(--ob-color-surface-sunken)]")
+  })
+
   it("centers each row's edit and delete buttons together in a shared flex container", () => {
     render(
       <GoldTransactionsTable
