@@ -53,8 +53,8 @@ function GoldTransactionsTable({ gold, goldPrice, onRemove, onEdit }: GoldTransa
                 className={
                   "whitespace-nowrap py-[10px] px-[12px] [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)] " +
                   (index === 0
-                    ? "border-l-[3px] border-l-transparent text-left"
-                    : index === HEADERS.length - 1
+                    ? "border-l border-l-transparent text-left"
+                    : index === 5 || index === HEADERS.length - 1
                       ? "text-center"
                       : "text-right")
                 }
@@ -80,7 +80,7 @@ function GoldTransactionsTable({ gold, goldPrice, onRemove, onEdit }: GoldTransa
               >
                 <td
                   className={cn(
-                    "whitespace-nowrap py-[10px] px-[12px] text-[13px] [font-family:var(--ob-font-num)] tabular-nums border-l-[3px]",
+                    "whitespace-nowrap py-[10px] px-[12px] text-[13px] [font-family:var(--ob-font-num)] tabular-nums border-l",
                     positive ? "border-l-[var(--ob-color-income)]" : "border-l-[var(--ob-color-expense)]"
                   )}
                 >
@@ -98,7 +98,7 @@ function GoldTransactionsTable({ gold, goldPrice, onRemove, onEdit }: GoldTransa
                 <td className="whitespace-nowrap py-[10px] px-[12px] text-right text-[13px] [font-family:var(--ob-font-num)] tabular-nums">
                   {formatMoney(value, hidden)}
                 </td>
-                <td className="whitespace-nowrap py-[10px] px-[12px] text-right text-[13px]">
+                <td className="whitespace-nowrap py-[10px] px-[12px] text-center text-[13px]">
                   <span
                     className={cn(
                       "inline-flex items-center gap-[4px] rounded-full px-[9px] py-[3px] font-semibold [font-family:var(--ob-font-num)] tabular-nums",
