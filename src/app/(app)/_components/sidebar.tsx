@@ -1,10 +1,12 @@
 "use client"
 
+import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
   BookOpen,
+  Calculator,
   Eye,
   EyeOff,
   GraduationCap,
@@ -19,6 +21,7 @@ import { cn } from "@/lib/utils"
 import { clearStoredUser } from "@/lib/auth"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { useSettings } from "@/features/settings/hooks/use-settings"
+import { CalculatorModal } from "@/features/calc"
 
 const NAV = [
   { label: "Tổng quan", href: "/overview", icon: LayoutDashboard, moduleKey: null },
@@ -34,6 +37,7 @@ function Sidebar() {
   const router = useRouter()
   const { settings } = useSettings()
   const { hidden: hideMoney, toggle: toggleHideMoney } = useMoneyVisibility()
+  const [calcOpen, setCalcOpen] = useState(false)
 
   function isModuleOn(key: string) {
     return settings.modules.find((m) => m.key === key)?.on ?? true
@@ -54,6 +58,14 @@ function Sidebar() {
           <span className="text-[var(--ob-color-action)]">Orange</span>{" "}
           <span className="text-[var(--ob-chuoi-500)]">Banana</span>
         </span>
+        <button
+          type="button"
+          onClick={() => setCalcOpen(true)}
+          aria-label="Máy tính"
+          className="flex items-center justify-center text-[var(--ob-color-text-muted)] transition-colors duration-[var(--ob-dur-fast)] hover:text-[var(--ob-color-action-strong)]"
+        >
+          <Calculator size={18} />
+        </button>
         <button
           type="button"
           onClick={toggleHideMoney}
@@ -111,6 +123,15 @@ function Sidebar() {
         <div className="hidden md:mt-auto md:flex md:flex-col md:gap-[14px]">
           <button
             type="button"
+            onClick={() => setCalcOpen(true)}
+            aria-label="Máy tính"
+            className="flex items-center justify-center gap-[11px] rounded-[var(--ob-radius-md)] px-[14px] py-[11px] text-left text-[length:var(--ob-size-sm)] leading-[var(--ob-lh-normal)] font-medium text-[var(--ob-color-text-muted)] lg:justify-start"
+          >
+            <Calculator size={18} />
+            <span className="hidden whitespace-nowrap lg:inline">Máy tính</span>
+          </button>
+          <button
+            type="button"
             onClick={toggleHideMoney}
             aria-pressed={hideMoney}
             className={cn(
@@ -141,6 +162,7 @@ function Sidebar() {
           </button>
         </div>
       </aside>
+      <CalculatorModal open={calcOpen} onOpenChange={setCalcOpen} />
     </>
   )
 }

@@ -1,5 +1,5 @@
 interface MonkeyProps {
-  pose?: "wave" | "cheer" | "banana" | "book" | "sleep" | "focus"
+  pose?: "wave" | "cheer" | "banana" | "book" | "sleep" | "focus" | "calc"
   size?: number
   dark?: boolean
   className?: string
@@ -64,6 +64,13 @@ function Monkey({ pose = "wave", size = 72, dark = false, className }: MonkeyPro
         <g>
           {arm("M21.6 46C19.6 48.8 19.8 51.4 21.8 52.4")}
           {arm("M42.4 46C44.4 48.8 44.2 51.4 42.2 52.4")}
+        </g>
+      ) : pose === "calc" ? (
+        <g>
+          {arm("M21.6 46C19.2 48.8 19 51.4 20.8 53")}
+          {arm("M42.4 46C44.8 48.8 45 51.4 43.2 53")}
+          {hand(20.6, 54.6)}
+          {hand(43.4, 54.6)}
         </g>
       ) : (
         <g>
@@ -162,6 +169,18 @@ function Monkey({ pose = "wave", size = 72, dark = false, className }: MonkeyPro
           <rect x={46.6} y={19.6} width={9.6} height={13.6} rx={4.8} fill={inkColor} />
           <rect x={10.4} y={23} width={4.4} height={6.8} rx={2.2} fill="var(--ob-cam-500)" />
           <rect x={49.2} y={23} width={4.4} height={6.8} rx={2.2} fill="var(--ob-cam-500)" />
+        </g>
+      ) : null}
+
+      {pose === "calc" ? (
+        <g>
+          <rect x={21} y={44.8} width={22} height={14} rx={3} fill="var(--ob-kem)" />
+          <rect x={23.4} y={47} width={17.2} height={4} rx={1} fill={inkColor} />
+          <circle cx={26} cy={53.2} r={1.2} fill="var(--ob-vo-300)" />
+          <circle cx={31} cy={53.2} r={1.2} fill="var(--ob-vo-300)" />
+          <circle cx={26} cy={56.6} r={1.2} fill="var(--ob-vo-300)" />
+          <circle cx={31} cy={56.6} r={1.2} fill="var(--ob-vo-300)" />
+          <circle cx={37} cy={56.6} r={1.6} fill="var(--ob-color-action)" />
         </g>
       ) : null}
     </svg>

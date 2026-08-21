@@ -3,12 +3,8 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { groupVN } from "@/lib/format"
 import { Input } from "@/components/ui/input"
-
-function groupVN(value: unknown) {
-  const digits = String(value ?? "").replace(/\D/g, "")
-  return digits ? Number(digits).toLocaleString("vi-VN") : ""
-}
 
 interface FieldProps
   extends Omit<React.ComponentProps<"input">, "value" | "prefix" | "suffix"> {
