@@ -4,7 +4,7 @@ import { render } from "@testing-library/react"
 import { Monkey } from "@/components/ob/monkey"
 
 describe("Monkey", () => {
-  it.each(["wave", "cheer", "banana", "book", "sleep", "focus"] as const)(
+  it.each(["wave", "cheer", "banana", "book", "sleep", "focus", "calc"] as const)(
     "renders the %s pose without crashing",
     (pose) => {
       const { container } = render(<Monkey pose={pose} />)

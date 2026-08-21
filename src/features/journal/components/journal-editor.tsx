@@ -64,7 +64,6 @@ function JournalEditor({ selectedMood, onSave }: JournalEditorProps) {
           <button
             key={label}
             type="button"
-            title={label}
             aria-label={label}
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => runCommand(command, value)}

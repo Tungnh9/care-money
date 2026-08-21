@@ -36,4 +36,13 @@ describe("Sidebar", () => {
     )
     expect(window.localStorage.getItem("hide-money")).toBe("1")
   })
+
+  it("opens the calculator modal when Máy tính is clicked", async () => {
+    render(<Sidebar />)
+
+    const [calcButton] = screen.getAllByLabelText("Máy tính")
+    fireEvent.click(calcButton)
+
+    await waitFor(() => expect(screen.getByTestId("calculator-result")).toHaveTextContent("0"))
+  })
 })

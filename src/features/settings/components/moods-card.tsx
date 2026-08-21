@@ -43,7 +43,6 @@ function MoodsCard({ moods, onToggle, onRemove, onAdd }: MoodsCardProps) {
             <button
               type="button"
               aria-label={"Xoá " + m.label}
-              title={"Xoá " + m.label}
               onClick={() => onRemove(i)}
               className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
             >
