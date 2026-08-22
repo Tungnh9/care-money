@@ -72,10 +72,12 @@ describe("FinanceView", () => {
     fireEvent.click(screen.getByRole("button", { name: "Thêm" }))
 
     // vốn 10 phân * 800.000 = 8.000.000, giá trị 10 phân * 900.000 = 9.000.000 => lãi 1.000.000
-    // Con số này hiện ở khối lãi/lỗ tổng, ở dòng giao dịch trong bảng và ở card giao dịch tương ứng
-    // (bảng + card cùng render song song, chỉ ẩn/hiện qua CSS theo breakpoint — cả hai đều có mặt
-    // trong DOM khi test, nên số lần xuất hiện là 3, không phải 2).
-    expect(screen.getAllByText(`+ ${formatMoney(1_000_000)}`)).toHaveLength(3)
+    // "+ 1.000.000" chỉ còn hiện ở khối lãi/lỗ tổng (hero) — nơi duy nhất chưa đổi sang icon.
+    // Khối tổng lãi trong Card "Các lần mua vàng", badge trong bảng desktop và box Lãi lỗ ở card
+    // mobile đều đã đổi dấu +/− thành icon mũi tên, nên "1.000.000" không dấu khớp cả 3 nơi này
+    // (bảng + card mobile cùng render song song, chỉ ẩn/hiện qua CSS theo breakpoint).
+    expect(screen.getAllByText(`+ ${formatMoney(1_000_000)}`)).toHaveLength(1)
+    expect(screen.getAllByText(formatMoney(1_000_000))).toHaveLength(3)
     expect(
       screen.getByText(`Bạn đang lãi ${formatMoney(1_000_000)} so với giá vốn nhờ giá vàng tăng.`)
     ).toBeInTheDocument()

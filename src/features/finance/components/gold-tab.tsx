@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { TrendingDown, TrendingUp } from "lucide-react"
 
 import { AlertDialog } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
@@ -10,7 +11,13 @@ import { Figure } from "@/components/ob/figure"
 import { Progress } from "@/components/ui/progress"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
-import { parseGoldPrice, pct1, phanToChi, type FinanceSummary } from "../finance-calculations"
+import {
+  goldPurchasePL,
+  parseGoldPrice,
+  pct1,
+  phanToChi,
+  type FinanceSummary,
+} from "../finance-calculations"
 import type { GoldPurchase } from "../types"
 import { AddGoldForm } from "./add-gold-form"
 import { GoldTransactionsCards } from "./gold-transactions-cards"
@@ -45,6 +52,11 @@ function GoldTab({
   const maxBar = Math.max(goldCost, goldValue, 1)
   const avgCost = goldPhan > 0 ? goldCost / goldPhan : 0
   const marketPrice = parseGoldPrice(goldPrice)
+  const purchasePLs = gold.map((p) => goldPurchasePL(p, marketPrice))
+  const winCount = purchasePLs.filter((pl) => pl >= 0).length
+  const lossCount = purchasePLs.filter((pl) => pl < 0).length
+  const totalWin = purchasePLs.filter((pl) => pl >= 0).reduce((sum, pl) => sum + pl, 0)
+  const totalLoss = purchasePLs.filter((pl) => pl < 0).reduce((sum, pl) => sum + pl, 0)
 
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editDate, setEditDate] = useState("")
@@ -203,7 +215,29 @@ function GoldTab({
         </Card>
       ) : null}
 
-      <Card label={`Các lần mua vàng${gold.length ? ` · ${gold.length}` : ""}`}>
+      <Card label={`Các lần mua vàng${gold.length ? ` · ${gold.length} lần` : ""}`}>
+        {gold.length ? (
+          <div className="mb-4 grid grid-cols-2 gap-3">
+            <div className="rounded-[var(--ob-radius-md)] border border-[var(--ob-color-income)] bg-[var(--ob-color-income-soft)] px-3 py-[10px]">
+              <div className="mb-1 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
+                {winCount} lần lãi
+              </div>
+              <div className="flex items-center gap-1 text-[15px] font-semibold [font-family:var(--ob-font-num)] tabular-nums text-[var(--ob-color-income)]">
+                <TrendingUp size={14} />
+                {formatMoney(totalWin, hidden)}
+              </div>
+            </div>
+            <div className="rounded-[var(--ob-radius-md)] border border-[var(--ob-color-expense)] bg-[var(--ob-color-expense-soft)] px-3 py-[10px]">
+              <div className="mb-1 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
+                {lossCount} lần lỗ
+              </div>
+              <div className="flex items-center gap-1 text-[15px] font-semibold [font-family:var(--ob-font-num)] tabular-nums text-[var(--ob-color-expense)]">
+                <TrendingDown size={14} />
+                {formatMoney(Math.abs(totalLoss), hidden)}
+              </div>
+            </div>
+          </div>
+        ) : null}
         <div className="hidden lg:block">
           <GoldTransactionsTable
             gold={gold}
