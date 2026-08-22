@@ -89,7 +89,7 @@ function CreditCardsTab({
             return (
               <Card key={card.name} label={card.name} className="min-w-0 flex-[1_1_300px]">
                 <Figure value={formatMoney(card.balance, hidden)} />
-                <div className="my-4 grid grid-cols-3 gap-3 text-center">
+                <div className="my-4 flex flex-col divide-y divide-[var(--ob-color-border)]">
                   {(
                     [
                       ["Hạn thanh toán", card.due],
@@ -97,17 +97,22 @@ function CreditCardsTab({
                       ["Hạn mức", formatMoney(card.limit, hidden)],
                     ] as const
                   ).map(([k, v]) => (
-                    <div key={k}>
-                      <div className="mb-1 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
+                    <div
+                      key={k}
+                      className="flex items-center justify-between gap-3 py-[9px] first:pt-0 last:pb-0"
+                    >
+                      <span className="[font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
                         {k}
-                      </div>
-                      <div className="text-[13.5px] [font-family:var(--ob-font-num)] tabular-nums">{v}</div>
+                      </span>
+                      <span className="text-[13.5px] [font-family:var(--ob-font-num)] tabular-nums">
+                        {v}
+                      </span>
                     </div>
                   ))}
                 </div>
                 <Progress
                   value={Math.min(limitPct, 100)}
-                  tone="action"
+                  tone={limitPct > 100 ? "expense" : "action"}
                   hint={`${Math.round(limitPct)}% hạn mức`}
                 />
                 <div className="mt-4 flex flex-wrap items-center gap-[10px]">
