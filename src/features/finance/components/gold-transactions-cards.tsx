@@ -104,7 +104,13 @@ function GoldTransactionsCards({
                 </div>
               </div>
             </div>
-            <div className="mt-3 border-t border-[var(--ob-color-border)] pt-3">
+            <div
+              className="mt-3 rounded-[var(--ob-radius-sm)] border px-3 py-[10px]"
+              style={{
+                backgroundColor: pl >= 0 ? "var(--ob-color-income-soft)" : "var(--ob-color-expense-soft)",
+                borderColor: pl >= 0 ? "var(--ob-color-income)" : "var(--ob-color-expense)",
+              }}
+            >
               <div className="mb-1 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
                 Lãi lỗ
               </div>

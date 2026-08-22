@@ -43,8 +43,10 @@
   --ob-vo-900: #241a12;
 
   /* ---- Lá & ý nghĩa ---- */
+  --ob-la-50: #e6f7ef;
   --ob-la-300: #4cd69b;
   --ob-la-500: #16a06a;
+  --ob-do-50: #fdecec;
   --ob-do-300: #ff8a8e;
   --ob-do-500: #e5484d;
   --ob-xanh-500: #4a7cf7;
@@ -90,7 +92,9 @@
   --ob-color-reward-text: var(--ob-chuoi-700);
 
   --ob-color-income: var(--ob-la-500);
+  --ob-color-income-soft: var(--ob-la-50);
   --ob-color-expense: var(--ob-do-500);
+  --ob-color-expense-soft: var(--ob-do-50);
   --ob-color-info: var(--ob-xanh-500);
 
   /* ---- Map cho component shadcn/ui — trỏ vào token --ob-* phía trên, không dùng OKLCH mặc định ---- */

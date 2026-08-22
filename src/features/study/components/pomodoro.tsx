@@ -95,7 +95,7 @@ function Pomodoro() {
             </span>
           </div>
         </div>
-        <div className="min-w-0 flex-1">
+        <div className="flex-1">
           <div className="mb-[14px] flex flex-wrap gap-[10px]">
             <Button variant="primary" size="sm" type="button" onClick={handleToggleRunning}>
               {running ? "Tạm dừng" : left < total ? "Tiếp tục" : "Bắt đầu"}
