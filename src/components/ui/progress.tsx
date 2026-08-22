@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 
 interface ProgressProps extends Omit<ProgressPrimitive.Root.Props, "children"> {
   track?: string
-  tone?: "reward" | "action"
+  tone?: "reward" | "action" | "expense"
   label?: React.ReactNode
   hint?: React.ReactNode
 }
@@ -40,7 +40,9 @@ function Progress({
             "h-full [transition:width_var(--ob-dur-slow)_var(--ob-ease-out)]",
             tone === "reward"
               ? "bg-[var(--ob-color-reward)]"
-              : "bg-[var(--ob-color-action)]"
+              : tone === "expense"
+                ? "bg-[var(--ob-color-expense)]"
+                : "bg-[var(--ob-color-action)]"
           )}
         />
       </ProgressPrimitive.Track>

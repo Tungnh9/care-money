@@ -50,6 +50,52 @@ describe("CreditCardsTab", () => {
     expect(screen.getByText(formatMoney(CARD.limit))).toBeInTheDocument()
   })
 
+  it("shows a warning-tone progress bar when the balance exceeds the limit", () => {
+    const overLimitCard: CreditCard = {
+      name: "Vietcombank Visa",
+      balance: 40_000_000,
+      min: 1_000_000,
+      limit: 15_000_000,
+      due: "10 hàng tháng",
+    }
+    const { container } = render(
+      <CreditCardsTab
+        cards={[overLimitCard]}
+        onAddCard={vi.fn()}
+        onPayCard={vi.fn()}
+        onUpdateCard={vi.fn()}
+        onRemoveCard={vi.fn()}
+      />
+    )
+
+    const indicator = container.querySelector('[data-slot="progress-indicator"]')
+    expect(indicator).toHaveClass("bg-[var(--ob-color-expense)]")
+    expect(indicator).not.toHaveClass("bg-[var(--ob-color-action)]")
+  })
+
+  it("shows the normal-tone progress bar when the balance is within the limit", () => {
+    const withinLimitCard: CreditCard = {
+      name: "Sacombank Visa",
+      balance: 7_500_000,
+      min: 500_000,
+      limit: 15_000_000,
+      due: "10 hàng tháng",
+    }
+    const { container } = render(
+      <CreditCardsTab
+        cards={[withinLimitCard]}
+        onAddCard={vi.fn()}
+        onPayCard={vi.fn()}
+        onUpdateCard={vi.fn()}
+        onRemoveCard={vi.fn()}
+      />
+    )
+
+    const indicator = container.querySelector('[data-slot="progress-indicator"]')
+    expect(indicator).toHaveClass("bg-[var(--ob-color-action)]")
+    expect(indicator).not.toHaveClass("bg-[var(--ob-color-expense)]")
+  })
+
   it("records a one-off payment via the Ghi một lần trả form", () => {
     const onPayCard = vi.fn()
     render(
