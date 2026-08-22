@@ -17,7 +17,7 @@ function GoalsSummarySection({ goals, savings }: GoalsSummarySectionProps) {
   return (
     <div className="ob-card-grid flex flex-wrap gap-5">
       <Card label={`${goals.length} mục tiêu đang chạy`} className="min-w-0 flex-[2_1_460px]">
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-x-6 gap-y-[18px]">
+        <div className="grid grid-cols-1 gap-x-6 gap-y-[18px] md:grid-cols-[repeat(auto-fit,minmax(150px,1fr))]">
           {goals.map((goal) => (
             <div key={goal.name}>
               <div className="mb-2 flex flex-wrap items-center gap-[9px]">

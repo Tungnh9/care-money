@@ -32,6 +32,7 @@ describe("OverallProgressCard", () => {
     const { container } = render(<OverallProgressCard goals={GOALS} avg={35} />)
 
     const grid = container.querySelector(".grid")
-    expect(grid).toHaveClass("grid-cols-[repeat(auto-fit,minmax(150px,1fr))]")
+    expect(grid).toHaveClass("grid-cols-1")
+    expect(grid).toHaveClass("md:grid-cols-[repeat(auto-fit,minmax(150px,1fr))]")
   })
 })

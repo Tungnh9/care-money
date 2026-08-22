@@ -31,7 +31,8 @@ describe("GoalsSummarySection", () => {
     const { container } = render(<GoalsSummarySection goals={GOALS} savings={[]} />)
 
     const grid = container.querySelector(".grid")
-    expect(grid).toHaveClass("grid-cols-[repeat(auto-fit,minmax(150px,1fr))]")
+    expect(grid).toHaveClass("grid-cols-1")
+    expect(grid).toHaveClass("md:grid-cols-[repeat(auto-fit,minmax(150px,1fr))]")
   })
 
   it("shows the empty-state message when there are no savings funds", () => {
