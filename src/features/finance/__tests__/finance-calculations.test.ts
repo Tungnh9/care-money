@@ -1,6 +1,12 @@
 import { describe, it, expect } from "vitest"
 
-import { phanToChi, pct1, parseGoldPrice, summarizeFinance } from "../finance-calculations"
+import {
+  phanToChi,
+  pct1,
+  parseGoldPrice,
+  summarizeFinance,
+  goldPurchasePL,
+} from "../finance-calculations"
 import { DEFAULT_FINANCE_STATE, type FinanceState } from "../finance-storage"
 
 describe("phanToChi", () => {
@@ -117,5 +123,29 @@ describe("summarizeFinance", () => {
     expect(summary.netPct).toBeCloseTo(
       ((summary.goldPL + summary.investPL) / (summary.goldCost + summary.investCost)) * 100
     )
+  })
+})
+
+describe("goldPurchasePL", () => {
+  it("returns a positive number equal to phan*(price-buy) when the market price is above buy price", () => {
+    const purchase = { id: 1, date: "01/01/2026", phan: 10, buy: 900_000 }
+    const pl = goldPurchasePL(purchase, 950_000)
+
+    expect(pl).toBe(10 * (950_000 - 900_000))
+    expect(pl).toBeGreaterThan(0)
+  })
+
+  it("returns a negative number when the market price is below buy price", () => {
+    const purchase = { id: 2, date: "02/01/2026", phan: 10, buy: 950_000 }
+    const pl = goldPurchasePL(purchase, 900_000)
+
+    expect(pl).toBe(10 * (900_000 - 950_000))
+    expect(pl).toBeLessThan(0)
+  })
+
+  it("returns exactly 0 when the market price equals the buy price", () => {
+    const purchase = { id: 3, date: "03/01/2026", phan: 10, buy: 900_000 }
+
+    expect(goldPurchasePL(purchase, 900_000)).toBe(0)
   })
 })

@@ -1,4 +1,5 @@
 import type { FinanceState } from "./finance-storage"
+import type { GoldPurchase } from "./types"
 
 function phanToChi(phan: number): string {
   const chi = Math.floor(phan / 10)
@@ -16,6 +17,10 @@ function pct1(n: number): string {
 function parseGoldPrice(str: string): number {
   const digits = str.replace(/[^\d]/g, "")
   return digits ? Number(digits) : 0
+}
+
+function goldPurchasePL(purchase: GoldPurchase, price: number): number {
+  return purchase.phan * price - purchase.phan * purchase.buy
 }
 
 interface FinanceSummary {
@@ -70,4 +75,11 @@ function summarizeFinance(state: FinanceState): FinanceSummary {
   }
 }
 
-export { phanToChi, pct1, parseGoldPrice, summarizeFinance, type FinanceSummary }
+export {
+  phanToChi,
+  pct1,
+  parseGoldPrice,
+  summarizeFinance,
+  goldPurchasePL,
+  type FinanceSummary,
+}

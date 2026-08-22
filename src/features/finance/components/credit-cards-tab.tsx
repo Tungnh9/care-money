@@ -45,6 +45,7 @@ function CreditCardsTab({
   const [editMin, setEditMin] = useState("")
   const [editLimit, setEditLimit] = useState("")
   const [editDue, setEditDue] = useState("")
+  const [editColor, setEditColor] = useState("")
   const [deletingCard, setDeletingCard] = useState("")
 
   const payingCard = cards.find((card) => card.name === payCard)
@@ -62,6 +63,7 @@ function CreditCardsTab({
     setEditMin("")
     setEditLimit("")
     setEditDue("")
+    setEditColor("")
   }
 
   function startEdit(card: CreditCard) {
@@ -72,6 +74,7 @@ function CreditCardsTab({
     setEditMin(String(card.min))
     setEditLimit(String(card.limit))
     setEditDue(card.due)
+    setEditColor(card.color ?? "")
   }
 
   function startPay(name: string) {
@@ -87,7 +90,13 @@ function CreditCardsTab({
           cards.map((card) => {
             const limitPct = card.limit ? (card.balance / card.limit) * 100 : 0
             return (
-              <Card key={card.name} label={card.name} className="min-w-0 flex-[1_1_300px]">
+              <Card
+                key={card.name}
+                label={
+                  <span style={card.color ? { color: card.color } : undefined}>{card.name}</span>
+                }
+                className="min-w-0 flex-[1_1_300px]"
+              >
                 <Figure value={formatMoney(card.balance, hidden)} />
                 <div className="my-4 flex flex-col divide-y divide-[var(--ob-color-border)]">
                   {(
@@ -195,9 +204,18 @@ function CreditCardsTab({
               <Field
                 className="min-w-0 flex-[1_1_220px]"
                 label="Tên thẻ"
-                placeholder="vd: Techcombank Visa"
+                placeholder="Nhập tên thẻ"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
+                prefix={
+                  <input
+                    type="color"
+                    aria-label="Chọn màu cho thẻ"
+                    value={editColor || "#f26311"}
+                    onChange={(e) => setEditColor(e.target.value)}
+                    className="size-6 cursor-pointer rounded-[var(--ob-radius-sm)] border border-[var(--ob-color-border)] bg-transparent p-0 [&::-webkit-color-swatch]:rounded-[var(--ob-radius-sm)] [&::-webkit-color-swatch]:border-none [&::-webkit-color-swatch-wrapper]:rounded-[var(--ob-radius-sm)] [&::-webkit-color-swatch-wrapper]:p-0"
+                  />
+                }
               />
               <Field
                 className="min-w-0 flex-[1_1_220px]"
@@ -232,7 +250,7 @@ function CreditCardsTab({
               <Field
                 className="min-w-0 flex-[1_1_220px]"
                 label="Ngày đến hạn"
-                placeholder="vd: 15 hàng tháng"
+                placeholder="Nhập ngày đến hạn"
                 value={editDue}
                 onChange={(e) => setEditDue(e.target.value)}
               />
@@ -250,6 +268,7 @@ function CreditCardsTab({
                     min: Number(editMin) || 0,
                     limit: Number(editLimit) || 0,
                     due: editDue.trim(),
+                    color: editColor || undefined,
                   })
                   resetEdit()
                 }}

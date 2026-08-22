@@ -11,6 +11,7 @@ interface CreditCard {
   min: number
   limit: number
   due: string
+  color?: string
 }
 
 interface GoldPurchase {

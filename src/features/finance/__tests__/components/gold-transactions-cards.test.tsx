@@ -44,14 +44,14 @@ describe("GoldTransactionsCards", () => {
     expect(screen.getAllByText(formatMoney(800_000)).length).toBeGreaterThan(0)
     expect(screen.getByText(formatMoney(8_000_000))).toBeInTheDocument()
     expect(screen.getByText(formatMoney(8_500_000))).toBeInTheDocument()
-    expect(screen.getByText("+ " + formatMoney(500_000))).toBeInTheDocument()
+    expect(screen.getByText(formatMoney(500_000))).toBeInTheDocument()
 
     // Purchase B: 5 phân @ 900.000 -> cost 4.500.000, value 5*850.000 = 4.250.000, pl -250.000 (losing)
     expect(screen.getByText("05/08/2026")).toBeInTheDocument()
     expect(screen.getByText(phanToChi(5))).toBeInTheDocument()
     expect(screen.getByText(formatMoney(4_500_000))).toBeInTheDocument()
     expect(screen.getByText(formatMoney(4_250_000))).toBeInTheDocument()
-    expect(screen.getByText("− " + formatMoney(250_000))).toBeInTheDocument()
+    expect(screen.getByText(formatMoney(250_000))).toBeInTheDocument()
   })
 
   it("highlights a winning Lãi lỗ figure with an income-tinted background and border", () => {
@@ -68,6 +68,8 @@ describe("GoldTransactionsCards", () => {
     const plBox = plLabel.parentElement as HTMLElement
     expect(plBox.style.backgroundColor).toBe("var(--ob-color-income-soft)")
     expect(plBox.style.borderColor).toBe("var(--ob-color-income)")
+    expect(screen.getByText(formatMoney(500_000))).toBeInTheDocument()
+    expect(plBox.querySelector("svg")).not.toBeNull()
   })
 
   it("highlights a losing Lãi lỗ figure with an expense-tinted background and border", () => {
@@ -84,6 +86,8 @@ describe("GoldTransactionsCards", () => {
     const plBox = plLabel.parentElement as HTMLElement
     expect(plBox.style.backgroundColor).toBe("var(--ob-color-expense-soft)")
     expect(plBox.style.borderColor).toBe("var(--ob-color-expense)")
+    expect(screen.getByText(formatMoney(250_000))).toBeInTheDocument()
+    expect(plBox.querySelector("svg")).not.toBeNull()
   })
 
   it("calls onRemove with the matching purchase id when its delete button is clicked", () => {

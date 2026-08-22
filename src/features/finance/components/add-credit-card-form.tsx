@@ -17,6 +17,7 @@ function AddCreditCardForm({ onAdd }: AddCreditCardFormProps) {
   const [min, setMin] = useState("")
   const [limit, setLimit] = useState("")
   const [due, setDue] = useState("")
+  const [color, setColor] = useState("")
 
   function reset() {
     setName("")
@@ -24,6 +25,7 @@ function AddCreditCardForm({ onAdd }: AddCreditCardFormProps) {
     setMin("")
     setLimit("")
     setDue("")
+    setColor("")
     setOpen(false)
   }
 
@@ -46,9 +48,18 @@ function AddCreditCardForm({ onAdd }: AddCreditCardFormProps) {
         <Field
           className="min-w-0 flex-[1_1_220px]"
           label="Tên thẻ"
-          placeholder="vd: Techcombank Visa"
+          placeholder="Nhập tên thẻ"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          prefix={
+            <input
+              type="color"
+              aria-label="Chọn màu cho thẻ"
+              value={color || "#f26311"}
+              onChange={(e) => setColor(e.target.value)}
+              className="size-6 cursor-pointer rounded-[var(--ob-radius-sm)] border border-[var(--ob-color-border)] bg-transparent p-0 [&::-webkit-color-swatch]:rounded-[var(--ob-radius-sm)] [&::-webkit-color-swatch]:border-none [&::-webkit-color-swatch-wrapper]:rounded-[var(--ob-radius-sm)] [&::-webkit-color-swatch-wrapper]:p-0"
+            />
+          }
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"
@@ -83,7 +94,7 @@ function AddCreditCardForm({ onAdd }: AddCreditCardFormProps) {
         <Field
           className="min-w-0 flex-[1_1_220px]"
           label="Ngày đến hạn"
-          placeholder="vd: 15 hàng tháng"
+          placeholder="Nhập ngày đến hạn"
           value={due}
           onChange={(e) => setDue(e.target.value)}
         />
@@ -101,6 +112,7 @@ function AddCreditCardForm({ onAdd }: AddCreditCardFormProps) {
               min: Number(min) || 0,
               limit: Number(limit) || 0,
               due: due.trim(),
+              color: color || undefined,
             })
             reset()
           }}
