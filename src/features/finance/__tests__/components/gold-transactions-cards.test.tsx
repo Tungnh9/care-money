@@ -54,6 +54,38 @@ describe("GoldTransactionsCards", () => {
     expect(screen.getByText("− " + formatMoney(250_000))).toBeInTheDocument()
   })
 
+  it("highlights a winning Lãi lỗ figure with an income-tinted background and border", () => {
+    render(
+      <GoldTransactionsCards
+        gold={[PURCHASES[0]]}
+        goldPrice={GOLD_PRICE}
+        onRemove={vi.fn()}
+        onEdit={vi.fn()}
+      />
+    )
+
+    const plLabel = screen.getByText("Lãi lỗ")
+    const plBox = plLabel.parentElement as HTMLElement
+    expect(plBox.style.backgroundColor).toBe("var(--ob-color-income-soft)")
+    expect(plBox.style.borderColor).toBe("var(--ob-color-income)")
+  })
+
+  it("highlights a losing Lãi lỗ figure with an expense-tinted background and border", () => {
+    render(
+      <GoldTransactionsCards
+        gold={[PURCHASES[1]]}
+        goldPrice={GOLD_PRICE}
+        onRemove={vi.fn()}
+        onEdit={vi.fn()}
+      />
+    )
+
+    const plLabel = screen.getByText("Lãi lỗ")
+    const plBox = plLabel.parentElement as HTMLElement
+    expect(plBox.style.backgroundColor).toBe("var(--ob-color-expense-soft)")
+    expect(plBox.style.borderColor).toBe("var(--ob-color-expense)")
+  })
+
   it("calls onRemove with the matching purchase id when its delete button is clicked", () => {
     const onRemove = vi.fn()
     render(
