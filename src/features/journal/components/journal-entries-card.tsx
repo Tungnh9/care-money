@@ -32,7 +32,7 @@ function JournalEntriesCard({ entries, onDelete }: JournalEntriesCardProps) {
               {entry.mood?.emoji ?? "📝"}
             </span>
             <div className="min-w-0 flex-1">
-              <div className="mb-1 flex items-center gap-[10px]">
+              <div className="mb-1 flex flex-wrap items-center gap-x-[10px] gap-y-1">
                 <span className="[font-family:var(--ob-font-num)] text-[12px] text-[var(--ob-color-text-subtle)]">
                   {entry.date} · {entry.time}
                 </span>
