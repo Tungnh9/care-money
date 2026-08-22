@@ -296,6 +296,65 @@ describe("CreditCardsTab", () => {
     expect(screen.queryByLabelText("Tên thẻ", { exact: false })).not.toBeInTheDocument()
     expect(screen.getByLabelText("Số tiền trả", { exact: false })).toBeInTheDocument()
   })
+
+  it("renders a card's name in its set color", () => {
+    const coloredCard: CreditCard = { ...CARD, color: "#7c3aed" }
+    render(
+      <CreditCardsTab
+        cards={[coloredCard]}
+        onAddCard={vi.fn()}
+        onPayCard={vi.fn()}
+        onUpdateCard={vi.fn()}
+        onRemoveCard={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText(CARD.name)).toHaveStyle({ color: "#7c3aed" })
+  })
+
+  it("renders a card's name with no inline color when none is set", () => {
+    render(
+      <CreditCardsTab
+        cards={[CARD]}
+        onAddCard={vi.fn()}
+        onPayCard={vi.fn()}
+        onUpdateCard={vi.fn()}
+        onRemoveCard={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText(CARD.name).style.color).toBeFalsy()
+  })
+
+  it("prefills the edit form's color input and includes the color when Lưu is clicked", () => {
+    const onUpdateCard = vi.fn()
+    const coloredCard: CreditCard = { ...CARD, color: "#7c3aed" }
+    render(
+      <CreditCardsTab
+        cards={[coloredCard]}
+        onAddCard={vi.fn()}
+        onPayCard={vi.fn()}
+        onUpdateCard={onUpdateCard}
+        onRemoveCard={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: `Sửa thẻ ${CARD.name}` }))
+
+    expect(screen.getByLabelText("Chọn màu cho thẻ")).toHaveValue("#7c3aed")
+
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
+
+    expect(onUpdateCard).toHaveBeenCalledWith(CARD.name, {
+      name: CARD.name,
+      balance: CARD.balance,
+      min: CARD.min,
+      limit: CARD.limit,
+      due: CARD.due,
+      color: "#7c3aed",
+    })
+  })
+
 })
 
 describe("AddCreditCardForm", () => {
@@ -353,5 +412,39 @@ describe("AddCreditCardForm", () => {
       target: { value: "20 hàng tháng" },
     })
     expect(screen.getByRole("button", { name: "Thêm" })).not.toBeDisabled()
+  })
+
+  it("includes the chosen color when the color swatch is changed before submitting", () => {
+    const onAdd = vi.fn()
+    render(<AddCreditCardForm onAdd={onAdd} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Thêm thẻ tín dụng" }))
+
+    fireEvent.change(screen.getByLabelText("Tên thẻ", { exact: false }), {
+      target: { value: "VPBank Mastercard" },
+    })
+    fireEvent.change(screen.getByLabelText("Dư nợ hiện tại", { exact: false }), {
+      target: { value: "2000000" },
+    })
+    fireEvent.change(screen.getByLabelText("Hạn mức", { exact: false }), {
+      target: { value: "15000000" },
+    })
+    fireEvent.change(screen.getByLabelText("Ngày đến hạn", { exact: false }), {
+      target: { value: "20 hàng tháng" },
+    })
+    fireEvent.change(screen.getByLabelText("Chọn màu cho thẻ"), {
+      target: { value: "#7c3aed" },
+    })
+
+    fireEvent.click(screen.getByRole("button", { name: "Thêm" }))
+
+    expect(onAdd).toHaveBeenCalledWith({
+      name: "VPBank Mastercard",
+      balance: 2_000_000,
+      min: 0,
+      limit: 15_000_000,
+      due: "20 hàng tháng",
+      color: "#7c3aed",
+    })
   })
 })
