@@ -1,6 +1,6 @@
 "use client"
 
-import { Pencil, Trash2 } from "lucide-react"
+import { Pencil, Trash2, TrendingDown, TrendingUp } from "lucide-react"
 
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
@@ -12,10 +12,6 @@ interface GoldTransactionsCardsProps {
   goldPrice: string
   onRemove: (id: number) => void
   onEdit: (purchase: GoldPurchase) => void
-}
-
-function signedMoney(n: number, hidden: boolean): string {
-  return (n >= 0 ? "+ " : "− ") + formatMoney(Math.abs(n), hidden)
 }
 
 function GoldTransactionsCards({
@@ -115,10 +111,11 @@ function GoldTransactionsCards({
                 Lãi lỗ
               </div>
               <div
-                className="text-[13px] font-semibold [font-family:var(--ob-font-num)] tabular-nums"
+                className="flex items-center gap-1 text-[13px] font-semibold [font-family:var(--ob-font-num)] tabular-nums"
                 style={{ color: pl >= 0 ? "var(--ob-color-income)" : "var(--ob-color-expense)" }}
               >
-                {signedMoney(pl, hidden)}
+                {pl >= 0 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
+                {formatMoney(Math.abs(pl), hidden)}
               </div>
             </div>
           </div>

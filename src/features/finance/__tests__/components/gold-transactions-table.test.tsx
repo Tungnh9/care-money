@@ -44,14 +44,14 @@ describe("GoldTransactionsTable", () => {
     expect(screen.getAllByText(formatMoney(800_000)).length).toBeGreaterThan(0)
     expect(screen.getByText(formatMoney(8_000_000))).toBeInTheDocument()
     expect(screen.getByText(formatMoney(8_500_000))).toBeInTheDocument()
-    expect(screen.getByText("+ " + formatMoney(500_000))).toBeInTheDocument()
+    expect(screen.getByText(formatMoney(500_000))).toBeInTheDocument()
 
     // Purchase B: 5 phân @ 900.000 -> cost 4.500.000, value 5*850.000 = 4.250.000, pl -250.000 (losing)
     expect(screen.getByText("05/08/2026")).toBeInTheDocument()
     expect(screen.getByText(phanToChi(5))).toBeInTheDocument()
     expect(screen.getByText(formatMoney(4_500_000))).toBeInTheDocument()
     expect(screen.getByText(formatMoney(4_250_000))).toBeInTheDocument()
-    expect(screen.getByText("− " + formatMoney(250_000))).toBeInTheDocument()
+    expect(screen.getByText(formatMoney(250_000))).toBeInTheDocument()
   })
 
   it("calls onRemove with the matching purchase id when its delete button is clicked", () => {
@@ -102,13 +102,13 @@ describe("GoldTransactionsTable", () => {
       />,
     )
 
-    const winningBadge = screen.getByText("+ " + formatMoney(500_000))
+    const winningBadge = screen.getByText(formatMoney(500_000))
     expect(winningBadge).toHaveClass("bg-[var(--ob-color-income)]/10", "text-[var(--ob-color-income)]")
     const winningRow = winningBadge.closest("tr") as HTMLTableRowElement
     const winningFirstCell = winningRow.querySelector("td") as HTMLTableCellElement
     expect(winningFirstCell).toHaveClass("border-l-[var(--ob-color-income)]")
 
-    const losingBadge = screen.getByText("− " + formatMoney(250_000))
+    const losingBadge = screen.getByText(formatMoney(250_000))
     expect(losingBadge).toHaveClass("bg-[var(--ob-color-expense)]/10", "text-[var(--ob-color-expense)]")
     const losingRow = losingBadge.closest("tr") as HTMLTableRowElement
     const losingFirstCell = losingRow.querySelector("td") as HTMLTableCellElement

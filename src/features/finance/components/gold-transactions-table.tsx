@@ -15,10 +15,6 @@ interface GoldTransactionsTableProps {
   onEdit: (purchase: GoldPurchase) => void
 }
 
-function signedMoney(n: number, hidden: boolean): string {
-  return (n >= 0 ? "+ " : "− ") + formatMoney(Math.abs(n), hidden)
-}
-
 const HEADERS = [
   "Ngày mua",
   "Khối lượng",
@@ -108,7 +104,7 @@ function GoldTransactionsTable({ gold, goldPrice, onRemove, onEdit }: GoldTransa
                     )}
                   >
                     {positive ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
-                    {signedMoney(pl, hidden)}
+                    {formatMoney(Math.abs(pl), hidden)}
                   </span>
                 </td>
                 <td className="py-[10px] px-[12px] text-center">

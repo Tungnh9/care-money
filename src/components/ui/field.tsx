@@ -55,22 +55,24 @@ function Field({
             : "border-[var(--ob-color-border)] focus-within:border-[var(--ob-color-focus)]"
         )}
       >
-        {prefix ? (
-          <span className="text-sm text-[var(--ob-color-text-subtle)]">{prefix}</span>
-        ) : null}
         <Input
           value={shown}
           onChange={handleChange}
           inputMode={numeric ? "numeric" : undefined}
           aria-invalid={invalid || undefined}
           className={cn(
-            "flex-1 py-[11px]",
+            "order-none flex-1 py-[11px]",
             numeric
               ? "[font:var(--ob-text-num)] text-[18px] tabular-nums"
               : "[font:var(--ob-text-body)] text-[15px]"
           )}
           {...props}
         />
+        {prefix ? (
+          <span className="order-first flex items-center self-stretch text-sm text-[var(--ob-color-text-subtle)]">
+            {prefix}
+          </span>
+        ) : null}
         {suffix ? (
           <span className="text-sm text-[var(--ob-color-text-subtle)]">{suffix}</span>
         ) : null}

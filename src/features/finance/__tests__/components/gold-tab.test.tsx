@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest"
-import { render, screen, fireEvent } from "@testing-library/react"
+import { render, screen, fireEvent, within } from "@testing-library/react"
 
 import { formatMoney } from "@/lib/format"
 import { phanToChi, pct1, type FinanceSummary } from "../../finance-calculations"
@@ -247,6 +247,55 @@ describe("GoldTab", () => {
 
     expect(onRemoveGold).toHaveBeenCalledTimes(1)
     expect(onRemoveGold).toHaveBeenCalledWith(1)
+  })
+
+  it("shows a win/loss summary and pluralized count in the transactions Card label when there are purchases", () => {
+    // 2 lần lãi: (950.000-900.000)*10 = 500.000 ; (950.000-920.000)*5 = 150.000 → tổng lãi 650.000
+    // 1 lần lỗ: (950.000-980.000)*8 = -240.000 → tổng lỗ -240.000
+    const purchases = [
+      { id: 1, date: "01/01/2026", phan: 10, buy: 900_000 },
+      { id: 2, date: "02/01/2026", phan: 5, buy: 920_000 },
+      { id: 3, date: "03/01/2026", phan: 8, buy: 980_000 },
+    ]
+    render(
+      <GoldTab
+        summary={ZERO_SUMMARY}
+        goldPrice="950.000"
+        onSetGoldPrice={vi.fn()}
+        gold={purchases}
+        onAddGold={vi.fn()}
+        onRemoveGold={vi.fn()}
+        onUpdateGold={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText("Các lần mua vàng · 3 lần")).toBeInTheDocument()
+
+    const winBox = screen.getByText("2 lần lãi").parentElement as HTMLElement
+    expect(within(winBox).getByText(formatMoney(650_000))).toBeInTheDocument()
+    expect(winBox.querySelector("svg")).not.toBeNull()
+
+    const lossBox = screen.getByText("1 lần lỗ").parentElement as HTMLElement
+    expect(within(lossBox).getByText(formatMoney(240_000))).toBeInTheDocument()
+    expect(lossBox.querySelector("svg")).not.toBeNull()
+  })
+
+  it("omits the count suffix and the win/loss summary when there are no purchases", () => {
+    render(
+      <GoldTab
+        summary={ZERO_SUMMARY}
+        goldPrice=""
+        onSetGoldPrice={vi.fn()}
+        gold={[]}
+        onAddGold={vi.fn()}
+        onRemoveGold={vi.fn()}
+        onUpdateGold={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText("Các lần mua vàng")).toBeInTheDocument()
+    expect(screen.queryByText(/lần lãi/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/lần lỗ/)).not.toBeInTheDocument()
   })
 
   it("closes the confirmation dialog without removing the purchase when Huỷ is clicked", () => {
