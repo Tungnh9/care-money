@@ -207,6 +207,72 @@ describe("SavingsTab", () => {
     expect(screen.queryByText("Xoá quỹ tiết kiệm?")).not.toBeInTheDocument()
   })
 
+  it("shows an adjust button per fund and opens the quick add/subtract modal on click", () => {
+    render(
+      <SavingsTab
+        savings={[
+          { name: "Quỹ khẩn cấp", amount: 5_000_000, target: 20_000_000 },
+          { name: "Quỹ du lịch", amount: 2_000_000, target: 10_000_000 },
+        ]}
+        onAddSavingsFund={vi.fn()}
+        onUpdateSavingsFund={vi.fn()}
+        onRemoveSavingsFund={vi.fn()}
+      />
+    )
+
+    expect(screen.getByRole("button", { name: "Điều chỉnh số dư Quỹ khẩn cấp" })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole("button", { name: "Điều chỉnh số dư Quỹ du lịch" }))
+
+    expect(screen.getByText('Điều chỉnh số tiền quỹ "Quỹ du lịch"')).toBeInTheDocument()
+  })
+
+  it("confirming the quick adjust modal reports the fund's name and updated amount", () => {
+    const onUpdateSavingsFund = vi.fn()
+    render(
+      <SavingsTab
+        savings={[{ name: "Quỹ khẩn cấp", amount: 5_000_000, target: 20_000_000 }]}
+        onAddSavingsFund={vi.fn()}
+        onUpdateSavingsFund={onUpdateSavingsFund}
+        onRemoveSavingsFund={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Điều chỉnh số dư Quỹ khẩn cấp" }))
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "1000000" } })
+    fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }))
+
+    expect(onUpdateSavingsFund).toHaveBeenCalledWith("Quỹ khẩn cấp", {
+      name: "Quỹ khẩn cấp",
+      amount: 6_000_000,
+      target: 20_000_000,
+    })
+    expect(screen.queryByText(/Điều chỉnh số tiền quỹ/)).not.toBeInTheDocument()
+  })
+
+  it("opening the adjust modal for a different fund does not carry over previously entered amount/direction", () => {
+    render(
+      <SavingsTab
+        savings={[
+          { name: "Quỹ khẩn cấp", amount: 5_000_000, target: 20_000_000 },
+          { name: "Quỹ du lịch", amount: 2_000_000, target: 10_000_000 },
+        ]}
+        onAddSavingsFund={vi.fn()}
+        onUpdateSavingsFund={vi.fn()}
+        onRemoveSavingsFund={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Điều chỉnh số dư Quỹ khẩn cấp" }))
+    fireEvent.click(screen.getByRole("button", { name: "Trừ tiền" }))
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "500000" } })
+    fireEvent.click(screen.getByRole("button", { name: "Huỷ" }))
+
+    fireEvent.click(screen.getByRole("button", { name: "Điều chỉnh số dư Quỹ du lịch" }))
+
+    expect(screen.getByRole("textbox")).toHaveValue("")
+    expect(screen.getByRole("button", { name: "Cộng tiền" })).toHaveClass("border-[var(--ob-color-income)]")
+  })
+
   it("opening Sửa on a different fund closes the previously open edit form", () => {
     render(
       <SavingsTab
