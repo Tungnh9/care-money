@@ -19,7 +19,9 @@ describe("AdjustSavingsFundModal", () => {
   it("renders the fund name, current amount and both direction buttons when open", () => {
     render(<AdjustSavingsFundModal open fund={FUND} onOpenChange={vi.fn()} onConfirm={vi.fn()} />)
 
-    expect(screen.getByText('Điều chỉnh số tiền quỹ "Quỹ khẩn cấp"')).toBeInTheDocument()
+    expect(document.getElementById("adjust-savings-fund-title")).toHaveTextContent(
+      'Điều chỉnh số tiền quỹ "Quỹ khẩn cấp"'
+    )
     expect(screen.getByText(`Hiện có: ${formatMoney(5_000_000)}`)).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Cộng tiền" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Trừ tiền" })).toBeInTheDocument()
