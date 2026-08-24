@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
-import { ArrowDown, ArrowUp } from "lucide-react"
+import { TrendingDown, TrendingUp } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Field } from "@/components/ui/field"
@@ -78,7 +78,7 @@ function AdjustSavingsFundModal({ open, fund, onOpenChange, onConfirm }: AdjustS
                 : "border-[var(--ob-color-border)] bg-transparent text-[var(--ob-color-text-muted)]"
             )}
           >
-            <ArrowUp size={16} />
+            <TrendingUp size={16} />
             Cộng tiền
           </button>
           <button
@@ -92,7 +92,7 @@ function AdjustSavingsFundModal({ open, fund, onOpenChange, onConfirm }: AdjustS
                 : "border-[var(--ob-color-border)] bg-transparent text-[var(--ob-color-text-muted)]"
             )}
           >
-            <ArrowDown size={16} />
+            <TrendingDown size={16} />
             Trừ tiền
           </button>
         </div>
