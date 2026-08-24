@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Pencil, Trash2 } from "lucide-react"
+import { Calculator, Pencil, Trash2 } from "lucide-react"
 
 import { AlertDialog } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
@@ -12,6 +12,7 @@ import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import type { SavingsFund } from "../types"
 import { AddSavingsFundForm } from "./add-savings-fund-form"
+import { AdjustSavingsFundModal } from "./adjust-savings-fund-modal"
 
 interface SavingsTabProps {
   savings: SavingsFund[]
@@ -105,6 +106,7 @@ function SavingsTab({
   const { hidden } = useMoneyVisibility()
   const [editingName, setEditingName] = useState<string | null>(null)
   const [deletingName, setDeletingName] = useState<string | null>(null)
+  const [adjustingName, setAdjustingName] = useState<string | null>(null)
   const savingsTotal = savings.reduce((sum, fund) => sum + fund.amount, 0)
 
   return (
@@ -118,6 +120,14 @@ function SavingsTab({
             <div className="mb-2 flex items-center justify-between gap-3">
               <div className="text-[14px] font-bold">{fund.name}</div>
               <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  aria-label={`Điều chỉnh số dư ${fund.name}`}
+                  onClick={() => setAdjustingName(fund.name)}
+                  className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-action-strong)]"
+                >
+                  <Calculator size={17} />
+                </button>
                 <button
                   type="button"
                   aria-label={`Sửa ${fund.name}`}
@@ -168,6 +178,13 @@ function SavingsTab({
         </p>
       )}
       <AddSavingsFundForm onAdd={onAddSavingsFund} />
+      <AdjustSavingsFundModal
+        key={adjustingName}
+        open={!!adjustingName}
+        fund={savings.find((f) => f.name === adjustingName) ?? null}
+        onOpenChange={(open) => !open && setAdjustingName(null)}
+        onConfirm={(updated) => onUpdateSavingsFund(updated.name, updated)}
+      />
       <AlertDialog
         open={!!deletingName}
         onOpenChange={(open) => !open && setDeletingName(null)}
