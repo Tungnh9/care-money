@@ -223,7 +223,9 @@ describe("SavingsTab", () => {
     expect(screen.getByRole("button", { name: "Điều chỉnh số dư Quỹ khẩn cấp" })).toBeInTheDocument()
     fireEvent.click(screen.getByRole("button", { name: "Điều chỉnh số dư Quỹ du lịch" }))
 
-    expect(screen.getByText('Điều chỉnh số tiền quỹ "Quỹ du lịch"')).toBeInTheDocument()
+    expect(document.getElementById("adjust-savings-fund-title")).toHaveTextContent(
+      'Điều chỉnh số tiền quỹ "Quỹ du lịch"'
+    )
   })
 
   it("confirming the quick adjust modal reports the fund's name and updated amount", () => {

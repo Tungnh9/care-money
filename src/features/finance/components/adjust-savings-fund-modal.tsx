@@ -60,7 +60,9 @@ function AdjustSavingsFundModal({ open, fund, onOpenChange, onConfirm }: AdjustS
         className="relative w-full max-w-[400px] rounded-[var(--ob-radius-lg)] border-[1.5px] border-[var(--ob-color-border)] bg-[var(--ob-color-surface)] p-6 shadow-[var(--ob-shadow-md)]"
       >
         <div id="adjust-savings-fund-title" className="mb-1 text-[17px] font-bold">
-          Điều chỉnh số tiền quỹ &quot;{fund.name}&quot;
+          Điều chỉnh số tiền quỹ &quot;
+          <span className="text-[var(--ob-color-action-strong)]">{fund.name}</span>
+          &quot;
         </div>
         <p className="mb-4 text-sm text-[var(--ob-color-text-muted)]">
           Hiện có: {formatMoney(fund.amount, hidden)}
