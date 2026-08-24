@@ -44,7 +44,7 @@ function AlertDialog({
       <div
         data-testid="alert-dialog-backdrop"
         aria-hidden="true"
-        className="absolute inset-0 bg-[var(--ob-vo-900)]/40"
+        className="absolute inset-0 bg-[var(--ob-vo-900)]/40 backdrop-blur-[7px] backdrop-saturate-[0.9]"
         onClick={() => onOpenChange(false)}
       />
       <div
