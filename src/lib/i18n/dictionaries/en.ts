@@ -5,6 +5,14 @@ const en: Dictionary = {
     appName: "Orange Banana",
     appDescription: "Your finances, journal, and study — all in one place.",
     switchLanguage: "Switch language",
+    loading: "Loading",
+  },
+  netWorth: {
+    title: "Net worth",
+    savings: "Savings",
+    gold: "Gold",
+    invest: "Investments",
+    debt: "Card debt",
   },
   nav: {
     overview: "Overview",

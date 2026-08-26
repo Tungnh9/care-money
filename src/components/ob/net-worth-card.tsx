@@ -1,3 +1,6 @@
+"use client"
+
+import { useT } from "@/components/locale-provider"
 import { CountMoney } from "@/components/ob/count-money"
 import { Card } from "@/components/ui/card"
 import { pct1, type FinanceSummary } from "@/features/finance/finance-calculations"
@@ -14,21 +17,22 @@ interface Segment {
 }
 
 function NetWorthCard({ summary }: NetWorthCardProps) {
+  const t = useT()
   const { savingsTotal, goldValue, investValue, debtTotal, net, netPct } = summary
 
   const segments: Segment[] = [
-    { key: "savings", label: "Tiết kiệm", value: savingsTotal, color: "var(--ob-la-300)" },
-    { key: "gold", label: "Vàng", value: goldValue, color: "var(--ob-color-reward)" },
+    { key: "savings", label: t("netWorth.savings"), value: savingsTotal, color: "var(--ob-la-300)" },
+    { key: "gold", label: t("netWorth.gold"), value: goldValue, color: "var(--ob-color-reward)" },
     ...(investValue > 0
-      ? [{ key: "invest", label: "Đầu tư", value: investValue, color: "var(--ob-xanh-500)" }]
+      ? [{ key: "invest", label: t("netWorth.invest"), value: investValue, color: "var(--ob-xanh-500)" }]
       : []),
-    { key: "debt", label: "Nợ thẻ", value: debtTotal, color: "var(--ob-do-300)" },
+    { key: "debt", label: t("netWorth.debt"), value: debtTotal, color: "var(--ob-do-300)" },
   ]
 
   const total = savingsTotal + goldValue + investValue + debtTotal
 
   return (
-    <Card tone="invert" label="Tài sản ròng" className="min-w-0 w-full">
+    <Card tone="invert" label={t("netWorth.title")} className="min-w-0 w-full">
       <CountMoney value={net} delta={pct1(netPct)} direction={netPct >= 0 ? "up" : "down"} />
       <div className="mt-5 flex h-2 gap-1.5 overflow-hidden rounded-[var(--ob-radius-pill)]">
         {total > 0 ? (

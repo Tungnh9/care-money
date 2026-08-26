@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
 
 import { getStoredUser } from "@/lib/auth"
+import { useT } from "@/components/locale-provider"
 
 const PUBLIC_PATHS = ["/login"]
 
@@ -14,6 +15,7 @@ interface AuthGuardProps {
 function AuthGuard({ children }: AuthGuardProps) {
   const pathname = usePathname()
   const router = useRouter()
+  const t = useT()
   const [checked, setChecked] = useState(false)
 
   useEffect(() => {
@@ -40,7 +42,7 @@ function AuthGuard({ children }: AuthGuardProps) {
       <div className="flex min-h-svh items-center justify-center bg-[var(--ob-color-bg)]">
         <div
           role="status"
-          aria-label="Đang tải"
+          aria-label={t("common.loading")}
           className="size-8 animate-spin rounded-full border-[3px] border-[var(--ob-color-border)] border-t-[var(--ob-color-action)]"
         />
       </div>

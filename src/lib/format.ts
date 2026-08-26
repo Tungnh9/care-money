@@ -1,10 +1,17 @@
-function formatMoney(n: number, hidden = false): string {
-  return hidden ? "•••••••• ₫" : n.toLocaleString("vi-VN") + " ₫"
+import { DEFAULT_LOCALE } from "@/lib/i18n"
+import type { Locale } from "@/lib/i18n"
+
+function localeTag(locale: Locale): string {
+  return locale === "en" ? "en-US" : "vi-VN"
 }
 
-function groupVN(value: unknown) {
+function formatMoney(n: number, hidden = false, locale: Locale = DEFAULT_LOCALE): string {
+  return hidden ? "•••••••• ₫" : n.toLocaleString(localeTag(locale)) + " ₫"
+}
+
+function groupVN(value: unknown, locale: Locale = DEFAULT_LOCALE) {
   const digits = String(value ?? "").replace(/\D/g, "")
-  return digits ? Number(digits).toLocaleString("vi-VN") : ""
+  return digits ? Number(digits).toLocaleString(localeTag(locale)) : ""
 }
 
 export { formatMoney, groupVN }

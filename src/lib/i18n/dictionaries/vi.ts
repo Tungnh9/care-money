@@ -3,6 +3,14 @@ const vi = {
     appName: "Orange Banana",
     appDescription: "Tài chính, nhật ký và việc học của bạn — một nơi duy nhất.",
     switchLanguage: "Chuyển ngôn ngữ",
+    loading: "Đang tải",
+  },
+  netWorth: {
+    title: "Tài sản ròng",
+    savings: "Tiết kiệm",
+    gold: "Vàng",
+    invest: "Đầu tư",
+    debt: "Nợ thẻ",
   },
   nav: {
     overview: "Tổng quan",
