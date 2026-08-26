@@ -3,6 +3,9 @@ import { Be_Vietnam_Pro, Bricolage_Grotesque, JetBrains_Mono } from "next/font/g
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { AuthGuard } from "@/components/auth-guard";
+import { LocaleProvider } from "@/components/locale-provider";
+import { getDictionary } from "@/lib/i18n";
+import { getServerLocale } from "@/lib/i18n/get-server-locale";
 
 const obDisplay = Bricolage_Grotesque({
   variable: "--font-ob-display",
@@ -22,19 +25,26 @@ const obNum = JetBrains_Mono({
   weight: ["500", "700"],
 });
 
-export const metadata: Metadata = {
-  title: "Orange Banana",
-  description: "Tài chính, nhật ký và việc học của bạn — một nơi duy nhất.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = getDictionary(await getServerLocale());
+  return {
+    title: dict.common.appName,
+    description: dict.common.appDescription,
+  };
+}
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const locale = await getServerLocale();
+
   return (
     <html
-      lang="vi"
+      lang={locale}
       className={cn("h-full", "antialiased", obDisplay.variable, obText.variable, obNum.variable)}
     >
       <body className="min-h-full flex flex-col">
-        <AuthGuard>{children}</AuthGuard>
+        <LocaleProvider initialLocale={locale}>
+          <AuthGuard>{children}</AuthGuard>
+        </LocaleProvider>
       </body>
     </html>
   );

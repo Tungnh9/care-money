@@ -5,6 +5,7 @@ import { useJournal } from "@/features/journal/hooks/use-journal"
 import { useStudy } from "@/features/study/hooks/use-study"
 import { splitGreeting } from "@/features/overview/overview-calculations"
 import { ProfileCard } from "./profile-card"
+import { LanguageCard } from "./language-card"
 import { ModulesCard } from "./modules-card"
 import { MoodsCard } from "./moods-card"
 import { DataCard } from "./data-card"
@@ -58,6 +59,7 @@ function SettingsView() {
       </p>
       <div className="ob-card-grid flex flex-wrap gap-5">
         <ProfileCard displayName={settings.profile.displayName} onSave={handleSaveDisplayName} />
+        <LanguageCard />
         <MoodsCard moods={settings.moods} onToggle={toggleMood} onRemove={removeMood} onAdd={addMood} />
         <ModulesCard modules={settings.modules} onToggle={toggleModule} />
         <DataCard

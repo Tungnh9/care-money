@@ -1,9 +1,10 @@
 import type { Metadata } from "next"
 
 import { SettingsView } from "@/features/settings"
+import { generatePageMetadata } from "@/lib/i18n/page-metadata"
 
-export const metadata: Metadata = {
-  title: "Cài đặt – Orange Banana",
+export function generateMetadata(): Promise<Metadata> {
+  return generatePageMetadata("settings")
 }
 
 export default function SettingsPage() {
