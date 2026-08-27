@@ -5,6 +5,7 @@ import type { ReactNode } from "react"
 import { Button } from "./button"
 import { Modal } from "./modal"
 import { cn } from "@/lib/utils"
+import { useT } from "@/components/locale-provider"
 
 interface AlertDialogProps {
   open: boolean
@@ -22,11 +23,13 @@ function AlertDialog({
   onOpenChange,
   title,
   description,
-  confirmLabel = "Xác nhận",
-  cancelLabel = "Huỷ",
+  confirmLabel,
+  cancelLabel,
   onConfirm,
   destructive,
 }: AlertDialogProps) {
+  const t = useT()
+
   return (
     <Modal
       open={open}
@@ -46,7 +49,7 @@ function AlertDialog({
       ) : null}
       <div className="flex justify-end gap-[10px]">
         <Button variant="ghost" size="sm" type="button" onClick={() => onOpenChange(false)}>
-          {cancelLabel}
+          {cancelLabel ?? t("common.cancel")}
         </Button>
         <Button
           variant="ghost"
@@ -61,7 +64,7 @@ function AlertDialog({
             onOpenChange(false)
           }}
         >
-          {confirmLabel}
+          {confirmLabel ?? t("common.confirm")}
         </Button>
       </div>
     </Modal>

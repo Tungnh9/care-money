@@ -4,6 +4,7 @@ import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Field } from "@/components/ui/field"
+import { useT } from "@/components/locale-provider"
 import type { GoldPurchase } from "../types"
 
 interface AddGoldFormProps {
@@ -11,6 +12,7 @@ interface AddGoldFormProps {
 }
 
 function AddGoldForm({ onAdd }: AddGoldFormProps) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [date, setDate] = useState("")
   const [phan, setPhan] = useState("")
@@ -27,7 +29,7 @@ function AddGoldForm({ onAdd }: AddGoldFormProps) {
     return (
       <div className="mt-[18px]">
         <Button variant="secondary" size="sm" type="button" onClick={() => setOpen(true)}>
-          Thêm lần mua vàng
+          {t("finance.gold.addOpen")}
         </Button>
       </div>
     )
@@ -36,28 +38,28 @@ function AddGoldForm({ onAdd }: AddGoldFormProps) {
   return (
     <div className="mt-[18px] border-t border-[var(--ob-color-border)] pt-[18px]">
       <div className="mb-3 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
-        Lần mua vàng mới
+        {t("finance.gold.newPurchase")}
       </div>
       <div className="flex flex-wrap gap-3">
         <Field
           className="min-w-0 flex-[1_1_220px]"
-          label="Ngày mua"
-          placeholder="vd: 10/08/2026"
+          label={t("finance.gold.purchaseDate")}
+          placeholder={t("finance.gold.purchaseDatePlaceholder")}
           value={date}
           onChange={(e) => setDate(e.target.value)}
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"
-          label="Khối lượng (phân)"
+          label={t("finance.gold.quantity")}
           numeric
           placeholder="0"
           value={phan}
           onChange={(e) => setPhan(e.target.value)}
-          hint="10 phân = 1 chỉ"
+          hint={t("finance.gold.quantityHint")}
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"
-          label="Giá mua (mỗi phân)"
+          label={t("finance.gold.buyPrice")}
           numeric
           group
           suffix="đ"
@@ -81,10 +83,10 @@ function AddGoldForm({ onAdd }: AddGoldFormProps) {
             reset()
           }}
         >
-          Thêm
+          {t("common.add")}
         </Button>
         <Button variant="ghost" size="sm" type="button" onClick={reset}>
-          Huỷ
+          {t("common.cancel")}
         </Button>
       </div>
     </div>

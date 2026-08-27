@@ -9,9 +9,11 @@ import {
   type FinanceState,
 } from "../finance-storage"
 import type { CreditCard, GoldPurchase, Investment, SavingsFund } from "../types"
+import { useT } from "@/components/locale-provider"
 import { toast } from "sonner"
 
 function useFinance() {
+  const t = useT()
   const [state, setState] = useState<FinanceState>(DEFAULT_FINANCE_STATE)
 
   useEffect(() => {
@@ -29,12 +31,12 @@ function useFinance() {
     (fund: SavingsFund) => {
       try {
         persist({ ...state, savings: [...state.savings, fund] })
-        toast.success(`Đã thêm quỹ tiết kiệm "${fund.name}"`)
+        toast.success(t("finance.toast.savingsAdded", { name: fund.name }))
       } catch {
-        toast.error(`Không thể thêm quỹ tiết kiệm "${fund.name}". Vui lòng thử lại.`)
+        toast.error(t("finance.toast.savingsAddFailed", { name: fund.name }))
       }
     },
-    [state, persist]
+    [state, persist, t]
   )
 
   const updateSavingsFund = useCallback(
@@ -51,24 +53,24 @@ function useFinance() {
     (name: string) => {
       try {
         persist({ ...state, savings: state.savings.filter((f) => f.name !== name) })
-        toast.success(`Đã xoá quỹ tiết kiệm "${name}"`)
+        toast.success(t("finance.toast.savingsRemoved", { name }))
       } catch {
-        toast.error(`Không thể xoá quỹ tiết kiệm "${name}". Vui lòng thử lại.`)
+        toast.error(t("finance.toast.savingsRemoveFailed", { name }))
       }
     },
-    [state, persist]
+    [state, persist, t]
   )
 
   const addCard = useCallback(
     (card: CreditCard) => {
       try {
         persist({ ...state, cards: [...state.cards, card] })
-        toast.success(`Đã thêm thẻ tín dụng "${card.name}"`)
+        toast.success(t("finance.toast.cardAdded", { name: card.name }))
       } catch {
-        toast.error(`Không thể thêm thẻ tín dụng "${card.name}". Vui lòng thử lại.`)
+        toast.error(t("finance.toast.cardAddFailed", { name: card.name }))
       }
     },
-    [state, persist]
+    [state, persist, t]
   )
 
   const payCard = useCallback(
@@ -97,12 +99,12 @@ function useFinance() {
     (name: string) => {
       try {
         persist({ ...state, cards: state.cards.filter((c) => c.name !== name) })
-        toast.success(`Đã xoá thẻ tín dụng "${name}"`)
+        toast.success(t("finance.toast.cardRemoved", { name }))
       } catch {
-        toast.error(`Không thể xoá thẻ tín dụng "${name}". Vui lòng thử lại.`)
+        toast.error(t("finance.toast.cardRemoveFailed", { name }))
       }
     },
-    [state, persist]
+    [state, persist, t]
   )
 
   const setGoldPrice = useCallback(
@@ -116,12 +118,12 @@ function useFinance() {
     (purchase: Omit<GoldPurchase, "id">) => {
       try {
         persist({ ...state, gold: [{ ...purchase, id: Date.now() }, ...state.gold] })
-        toast.success(`Đã thêm lần mua vàng ngày ${purchase.date}`)
+        toast.success(t("finance.toast.goldAdded", { date: purchase.date }))
       } catch {
-        toast.error("Không thể thêm lần mua vàng. Vui lòng thử lại.")
+        toast.error(t("finance.toast.goldAddFailed"))
       }
     },
-    [state, persist]
+    [state, persist, t]
   )
 
   const updateGold = useCallback(
@@ -139,24 +141,26 @@ function useFinance() {
       const date = state.gold.find((purchase) => purchase.id === id)?.date
       try {
         persist({ ...state, gold: state.gold.filter((purchase) => purchase.id !== id) })
-        toast.success(date ? `Đã xoá giao dịch vàng ngày ${date}` : "Đã xoá giao dịch vàng")
+        toast.success(
+          date ? t("finance.toast.goldRemoved", { date }) : t("finance.toast.goldRemovedGeneric")
+        )
       } catch {
-        toast.error("Không thể xoá giao dịch vàng. Vui lòng thử lại.")
+        toast.error(t("finance.toast.goldRemoveFailed"))
       }
     },
-    [state, persist]
+    [state, persist, t]
   )
 
   const addInvest = useCallback(
     (invest: Omit<Investment, "id">) => {
       try {
         persist({ ...state, invests: [...state.invests, { ...invest, id: Date.now() }] })
-        toast.success(`Đã thêm khoản đầu tư "${invest.name}"`)
+        toast.success(t("finance.toast.investAdded", { name: invest.name }))
       } catch {
-        toast.error("Không thể thêm khoản đầu tư. Vui lòng thử lại.")
+        toast.error(t("finance.toast.investAddFailed"))
       }
     },
-    [state, persist]
+    [state, persist, t]
   )
 
   return {

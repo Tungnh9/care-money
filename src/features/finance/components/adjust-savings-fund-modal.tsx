@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Field } from "@/components/ui/field"
 import { Modal } from "@/components/ui/modal"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
+import { useT, useLocale } from "@/components/locale-provider"
 import { cn } from "@/lib/utils"
 import { formatMoney } from "@/lib/format"
 import type { SavingsFund } from "../types"
@@ -21,6 +22,8 @@ interface AdjustSavingsFundModalProps {
 }
 
 function AdjustSavingsFundModal({ open, fund, onOpenChange, onConfirm }: AdjustSavingsFundModalProps) {
+  const t = useT()
+  const { locale } = useLocale()
   const { hidden } = useMoneyVisibility()
   const [direction, setDirection] = useState<AdjustDirection>("add")
   const [amount, setAmount] = useState("")
@@ -44,12 +47,12 @@ function AdjustSavingsFundModal({ open, fund, onOpenChange, onConfirm }: AdjustS
       backdropTestId="adjust-savings-fund-backdrop"
     >
       <div id="adjust-savings-fund-title" className="mb-1 text-[17px] font-bold">
-        Điều chỉnh số tiền quỹ &quot;
+        {t("finance.savings.adjustTitlePrefix")}
         <span className="text-[var(--ob-color-action-strong)]">{fund.name}</span>
-        &quot;
+        {t("finance.savings.adjustTitleSuffix")}
       </div>
       <p className="mb-4 text-sm text-[var(--ob-color-text-muted)]">
-        Hiện có: {formatMoney(fund.amount, hidden)}
+        {t("finance.savings.currentAmountLine", { amount: formatMoney(fund.amount, hidden, locale) })}
       </p>
 
       <div className="mb-4 grid grid-cols-2 gap-[10px]">
@@ -65,7 +68,7 @@ function AdjustSavingsFundModal({ open, fund, onOpenChange, onConfirm }: AdjustS
           )}
         >
           <TrendingUp size={16} />
-          Cộng tiền
+          {t("finance.savings.add")}
         </button>
         <button
           type="button"
@@ -79,12 +82,12 @@ function AdjustSavingsFundModal({ open, fund, onOpenChange, onConfirm }: AdjustS
           )}
         >
           <TrendingDown size={16} />
-          Trừ tiền
+          {t("finance.savings.subtract")}
         </button>
       </div>
 
       <Field
-        label="Số tiền"
+        label={t("finance.savings.amount")}
         numeric
         group
         suffix="đ"
@@ -95,15 +98,18 @@ function AdjustSavingsFundModal({ open, fund, onOpenChange, onConfirm }: AdjustS
       />
 
       <p className="mt-3 text-sm text-[var(--ob-color-text-muted)]">
-        Số dư mới: <span className="font-semibold text-[var(--ob-color-text)]">{formatMoney(previewAmount, hidden)}</span>
+        {t("finance.savings.newBalancePrefix")}
+        <span className="font-semibold text-[var(--ob-color-text)]">
+          {formatMoney(previewAmount, hidden, locale)}
+        </span>
       </p>
 
       <div className="mt-5 flex justify-end gap-[10px]">
         <Button variant="ghost" size="sm" type="button" onClick={() => onOpenChange(false)}>
-          Huỷ
+          {t("common.cancel")}
         </Button>
         <Button variant="primary" size="sm" type="button" disabled={!delta} onClick={handleConfirm}>
-          Xác nhận
+          {t("common.confirm")}
         </Button>
       </div>
     </Modal>

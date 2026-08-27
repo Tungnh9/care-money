@@ -3,6 +3,7 @@
 import { Pencil, Trash2, TrendingDown, TrendingUp } from "lucide-react"
 
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
+import { useT, useLocale } from "@/components/locale-provider"
 import { formatMoney } from "@/lib/format"
 import { parseGoldPrice, phanToChi } from "../finance-calculations"
 import type { GoldPurchase } from "../types"
@@ -20,12 +21,14 @@ function GoldTransactionsCards({
   onRemove,
   onEdit,
 }: GoldTransactionsCardsProps) {
+  const t = useT()
+  const { locale } = useLocale()
   const { hidden } = useMoneyVisibility()
 
   if (!gold.length) {
     return (
       <p className="text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)]">
-        Chưa có giao dịch vàng nào. Thêm lần mua đầu tiên để bắt đầu theo dõi lãi/lỗ.
+        {t("finance.gold.empty")}
       </p>
     )
   }
@@ -50,7 +53,7 @@ function GoldTransactionsCards({
               <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  aria-label={`Sửa giao dịch vàng ${purchase.date}`}
+                  aria-label={t("finance.gold.editAria", { date: purchase.date })}
                   onClick={() => onEdit(purchase)}
                   className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-info)]"
                 >
@@ -58,7 +61,7 @@ function GoldTransactionsCards({
                 </button>
                 <button
                   type="button"
-                  aria-label="Xoá giao dịch vàng"
+                  aria-label={t("finance.gold.deleteAria")}
                   onClick={() => onRemove(purchase.id)}
                   className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
                 >
@@ -69,34 +72,34 @@ function GoldTransactionsCards({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <div className="mb-1 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
-                  Khối lượng
+                  {t("finance.gold.columnQuantity")}
                 </div>
                 <div className="text-[13px] [font-family:var(--ob-font-num)] tabular-nums">
-                  {phanToChi(purchase.phan)}
+                  {phanToChi(purchase.phan, t)}
                 </div>
               </div>
               <div>
                 <div className="mb-1 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
-                  Giá mua
+                  {t("finance.gold.columnBuyPrice")}
                 </div>
                 <div className="text-[13px] [font-family:var(--ob-font-num)] tabular-nums">
-                  {formatMoney(purchase.buy, hidden)}
+                  {formatMoney(purchase.buy, hidden, locale)}
                 </div>
               </div>
               <div>
                 <div className="mb-1 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
-                  Giá vốn
+                  {t("finance.gold.columnCostBasis")}
                 </div>
                 <div className="text-[13px] [font-family:var(--ob-font-num)] tabular-nums text-[var(--ob-color-text-subtle)]">
-                  {formatMoney(cost, hidden)}
+                  {formatMoney(cost, hidden, locale)}
                 </div>
               </div>
               <div>
                 <div className="mb-1 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
-                  Giá trị nay
+                  {t("finance.gold.columnCurrentValue")}
                 </div>
                 <div className="text-[13px] [font-family:var(--ob-font-num)] tabular-nums">
-                  {formatMoney(value, hidden)}
+                  {formatMoney(value, hidden, locale)}
                 </div>
               </div>
             </div>
@@ -108,14 +111,14 @@ function GoldTransactionsCards({
               }}
             >
               <div className="mb-1 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
-                Lãi lỗ
+                {t("finance.gold.columnPL")}
               </div>
               <div
                 className="flex items-center gap-1 text-[13px] font-semibold [font-family:var(--ob-font-num)] tabular-nums"
                 style={{ color: pl >= 0 ? "var(--ob-color-income)" : "var(--ob-color-expense)" }}
               >
                 {pl >= 0 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
-                {formatMoney(Math.abs(pl), hidden)}
+                {formatMoney(Math.abs(pl), hidden, locale)}
               </div>
             </div>
           </div>

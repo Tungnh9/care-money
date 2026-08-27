@@ -45,7 +45,7 @@ function FinanceSummarySection({ savings, cards, invests, summary }: FinanceSumm
             hint={
               summary.goldPhan ? (
                 <>
-                  {summary.goldPhan} {t("overview.goldUnit")} ·{" "}
+                  {summary.goldPhan} {t("common.goldUnit")} ·{" "}
                   <span
                     className="font-bold"
                     style={{

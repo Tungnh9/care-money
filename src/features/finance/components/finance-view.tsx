@@ -5,6 +5,7 @@ import { useState } from "react"
 import { Tabs } from "@/components/ob/tabs"
 import { NetWorthCard } from "@/components/ob/net-worth-card"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
+import { useT, useLocale } from "@/components/locale-provider"
 import { longDate } from "@/lib/date"
 import { formatMoney } from "@/lib/format"
 import { pct1, summarizeFinance } from "../finance-calculations"
@@ -15,11 +16,20 @@ import { InvestmentsTab } from "./investments-tab"
 import { PillarCard } from "./pillar-card"
 import { SavingsTab } from "./savings-tab"
 
-const TABS = ["Tiết kiệm", "Nợ thẻ tín dụng", "Tích lũy vàng", "Đầu tư"]
+const TAB_KEYS = ["savings", "debt", "gold", "invest"] as const
+type TabKey = (typeof TAB_KEYS)[number]
 
 function FinanceView() {
+  const t = useT()
+  const { locale } = useLocale()
   const { hidden } = useMoneyVisibility()
-  const [tab, setTab] = useState(TABS[0])
+  const [tabKey, setTabKey] = useState<TabKey>("savings")
+  const tabLabel: Record<TabKey, string> = {
+    savings: t("finance.tabs.savings"),
+    debt: t("finance.tabs.debt"),
+    gold: t("finance.tabs.gold"),
+    invest: t("finance.tabs.invest"),
+  }
   const {
     savings,
     cards,
@@ -45,63 +55,84 @@ function FinanceView() {
   return (
     <div>
       <h1 className="mb-1 [font:var(--ob-text-h2)] tracking-[var(--ob-track-heading)]">
-        Tài chính
+        {t("nav.finance")}
       </h1>
       <p className="mb-5 text-sm text-[var(--ob-color-text-subtle)]">
-        Tài sản ròng {formatMoney(summary.net, hidden)} · cập nhật {longDate()}
+        {t("finance.netWorthUpdated", {
+          amount: formatMoney(summary.net, hidden, locale),
+          date: longDate(new Date(), locale),
+        })}
       </p>
 
       <div className="ob-card-grid mb-6 flex flex-wrap gap-4">
         <NetWorthCard summary={summary} />
         <PillarCard
           icon="pig"
-          label="Tiết kiệm"
+          label={t("finance.tabs.savings")}
           amount={summary.savingsTotal}
           tone="income"
-          hint={savings.length ? `${savings.length} quỹ đang chạy` : "Chưa có quỹ nào"}
+          hint={
+            savings.length
+              ? t("finance.savingsHint", { count: savings.length })
+              : t("finance.noSavingsPillar")
+          }
           className="min-w-0 flex-[1_1_260px]"
         />
         <PillarCard
           icon="card"
-          label="Nợ thẻ tín dụng"
+          label={t("finance.tabs.debt")}
           amount={summary.debtTotal}
           tone="expense"
           hint={
-            cards.length ? `${cards.length} thẻ · hạn gần nhất ${cards[0].due}` : "Chưa có thẻ nào"
+            cards.length
+              ? t("finance.debtHint", { count: cards.length, date: cards[0].due })
+              : t("finance.noDebtPillar")
           }
           className="min-w-0 flex-[1_1_260px]"
         />
         <PillarCard
           icon="gold"
-          label="Tích lũy vàng"
+          label={t("finance.tabs.gold")}
           amount={summary.goldValue}
           tone={summary.goldPL >= 0 ? "income" : "expense"}
-          hint={`${summary.goldPhan} phân · ${pct1(summary.goldPct)}`}
+          hint={t("finance.goldPillarHint", {
+            count: summary.goldPhan,
+            pct: pct1(summary.goldPct, locale),
+          })}
           className="min-w-0 flex-[1_1_260px]"
         />
         <PillarCard
           icon="chart"
-          label="Đầu tư"
+          label={t("finance.tabs.invest")}
           amount={summary.investValue}
           tone={invests.length ? (summary.investPL >= 0 ? "income" : "expense") : undefined}
           hint={
-            invests.length ? `${invests.length} khoản · ${pct1(summary.investPct)}` : "Chưa có khoản nào"
+            invests.length
+              ? t("finance.investHint", { count: invests.length, pct: pct1(summary.investPct, locale) })
+              : t("finance.noInvestPillar")
           }
           className="min-w-0 flex-[1_1_260px]"
         />
       </div>
 
-      <Tabs tabs={TABS} active={tab} onChange={setTab} />
+      <Tabs
+        tabs={TAB_KEYS.map((key) => tabLabel[key])}
+        active={tabLabel[tabKey]}
+        onChange={(label) => {
+          const nextKey = TAB_KEYS.find((key) => tabLabel[key] === label)
+          if (nextKey) setTabKey(nextKey)
+        }}
+      />
 
       <div className="ob-card-grid">
-        {tab === "Tiết kiệm" ? (
+        {tabKey === "savings" ? (
           <SavingsTab
             savings={savings}
             onAddSavingsFund={addSavingsFund}
             onUpdateSavingsFund={updateSavingsFund}
             onRemoveSavingsFund={removeSavingsFund}
           />
-        ) : tab === "Nợ thẻ tín dụng" ? (
+        ) : tabKey === "debt" ? (
           <CreditCardsTab
             cards={cards}
             onAddCard={addCard}
@@ -109,7 +140,7 @@ function FinanceView() {
             onUpdateCard={updateCard}
             onRemoveCard={removeCard}
           />
-        ) : tab === "Tích lũy vàng" ? (
+        ) : tabKey === "gold" ? (
           <GoldTab
             summary={summary}
             goldPrice={goldPrice}

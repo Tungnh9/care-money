@@ -1,16 +1,21 @@
+import { DEFAULT_LOCALE, translateDefault } from "@/lib/i18n"
+import type { Locale, TranslationFn } from "@/lib/i18n"
 import type { FinanceState } from "./finance-storage"
 import type { GoldPurchase } from "./types"
 
-function phanToChi(phan: number): string {
+function phanToChi(phan: number, t: TranslationFn = translateDefault): string {
   const chi = Math.floor(phan / 10)
   const rest = phan % 10
-  if (chi === 0) return `${rest} phân`
-  return `${chi} chỉ${rest ? ` ${rest} phân` : ""}`
+  if (chi === 0) return t("finance.phanValue", { count: rest })
+  return rest
+    ? t("finance.chiAndPhanValue", { chi, phan: rest })
+    : t("finance.chiValue", { count: chi })
 }
 
-function pct1(n: number): string {
+function pct1(n: number, locale: Locale = DEFAULT_LOCALE): string {
   const sign = n < 0 ? "−" : "+"
-  const value = Math.abs(n).toFixed(1).replace(".", ",")
+  const abs = Math.abs(n).toFixed(1)
+  const value = locale === "en" ? abs : abs.replace(".", ",")
   return `${sign}${value}%`
 }
 

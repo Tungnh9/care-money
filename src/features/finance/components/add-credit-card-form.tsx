@@ -4,6 +4,7 @@ import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Field } from "@/components/ui/field"
+import { useT } from "@/components/locale-provider"
 import type { CreditCard } from "../types"
 
 interface AddCreditCardFormProps {
@@ -11,6 +12,7 @@ interface AddCreditCardFormProps {
 }
 
 function AddCreditCardForm({ onAdd }: AddCreditCardFormProps) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState("")
   const [balance, setBalance] = useState("")
@@ -33,7 +35,7 @@ function AddCreditCardForm({ onAdd }: AddCreditCardFormProps) {
     return (
       <div className="mt-[18px]">
         <Button variant="secondary" size="sm" type="button" onClick={() => setOpen(true)}>
-          Thêm thẻ tín dụng
+          {t("finance.card.addOpen")}
         </Button>
       </div>
     )
@@ -42,19 +44,19 @@ function AddCreditCardForm({ onAdd }: AddCreditCardFormProps) {
   return (
     <div className="mt-[18px] border-t border-[var(--ob-color-border)] pt-[18px]">
       <div className="mb-3 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
-        Thẻ tín dụng mới
+        {t("finance.card.newCard")}
       </div>
       <div className="flex flex-wrap gap-3">
         <Field
           className="min-w-0 flex-[1_1_220px]"
-          label="Tên thẻ"
-          placeholder="Nhập tên thẻ"
+          label={t("finance.card.name")}
+          placeholder={t("finance.card.namePlaceholder")}
           value={name}
           onChange={(e) => setName(e.target.value)}
           prefix={
             <input
               type="color"
-              aria-label="Chọn màu cho thẻ"
+              aria-label={t("finance.card.colorLabel")}
               value={color || "#f26311"}
               onChange={(e) => setColor(e.target.value)}
               className="size-6 cursor-pointer rounded-[var(--ob-radius-sm)] border border-[var(--ob-color-border)] bg-transparent p-0 [&::-webkit-color-swatch]:rounded-[var(--ob-radius-sm)] [&::-webkit-color-swatch]:border-none [&::-webkit-color-swatch-wrapper]:rounded-[var(--ob-radius-sm)] [&::-webkit-color-swatch-wrapper]:p-0"
@@ -63,7 +65,7 @@ function AddCreditCardForm({ onAdd }: AddCreditCardFormProps) {
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"
-          label="Dư nợ hiện tại"
+          label={t("finance.card.balance")}
           numeric
           group
           suffix="đ"
@@ -73,7 +75,7 @@ function AddCreditCardForm({ onAdd }: AddCreditCardFormProps) {
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"
-          label="Số tiền tối thiểu"
+          label={t("finance.card.minPayment")}
           numeric
           group
           suffix="đ"
@@ -83,7 +85,7 @@ function AddCreditCardForm({ onAdd }: AddCreditCardFormProps) {
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"
-          label="Hạn mức"
+          label={t("finance.card.limit")}
           numeric
           group
           suffix="đ"
@@ -93,8 +95,8 @@ function AddCreditCardForm({ onAdd }: AddCreditCardFormProps) {
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"
-          label="Ngày đến hạn"
-          placeholder="Nhập ngày đến hạn"
+          label={t("finance.card.dueDate")}
+          placeholder={t("finance.card.dueDatePlaceholder")}
           value={due}
           onChange={(e) => setDue(e.target.value)}
         />
@@ -117,10 +119,10 @@ function AddCreditCardForm({ onAdd }: AddCreditCardFormProps) {
             reset()
           }}
         >
-          Thêm
+          {t("common.add")}
         </Button>
         <Button variant="ghost" size="sm" type="button" onClick={reset}>
-          Huỷ
+          {t("common.cancel")}
         </Button>
       </div>
     </div>

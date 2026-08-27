@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card"
 import { Field } from "@/components/ui/field"
 import { Progress } from "@/components/ui/progress"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
+import { useT, useLocale } from "@/components/locale-provider"
 import { formatMoney } from "@/lib/format"
 import type { SavingsFund } from "../types"
 import { AddSavingsFundForm } from "./add-savings-fund-form"
@@ -28,6 +29,7 @@ interface EditSavingsFundFormProps {
 }
 
 function EditSavingsFundForm({ fund, onSave, onCancel }: EditSavingsFundFormProps) {
+  const t = useT()
   const [name, setName] = useState(fund.name)
   const [amount, setAmount] = useState(String(fund.amount))
   const [target, setTarget] = useState(String(fund.target))
@@ -38,14 +40,14 @@ function EditSavingsFundForm({ fund, onSave, onCancel }: EditSavingsFundFormProp
       <div className="flex flex-wrap gap-3">
         <Field
           className="min-w-0 flex-[1_1_220px]"
-          label="Tên quỹ"
-          placeholder="vd: Quỹ khẩn cấp"
+          label={t("finance.savings.name")}
+          placeholder={t("finance.savings.namePlaceholder")}
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"
-          label="Số tiền hiện có"
+          label={t("finance.savings.currentAmount")}
           numeric
           group
           suffix="đ"
@@ -55,7 +57,7 @@ function EditSavingsFundForm({ fund, onSave, onCancel }: EditSavingsFundFormProp
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"
-          label="Mục tiêu"
+          label={t("finance.savings.target")}
           numeric
           group
           suffix="đ"
@@ -65,8 +67,8 @@ function EditSavingsFundForm({ fund, onSave, onCancel }: EditSavingsFundFormProp
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"
-          label="Ghi chú"
-          placeholder="vd: Duy trì 3-6 tháng chi tiêu"
+          label={t("finance.savings.note")}
+          placeholder={t("finance.savings.notePlaceholder")}
           value={note}
           onChange={(e) => setNote(e.target.value)}
         />
@@ -87,10 +89,10 @@ function EditSavingsFundForm({ fund, onSave, onCancel }: EditSavingsFundFormProp
             onSave(updated)
           }}
         >
-          Lưu
+          {t("common.save")}
         </Button>
         <Button variant="ghost" size="sm" type="button" onClick={onCancel}>
-          Huỷ
+          {t("common.cancel")}
         </Button>
       </div>
     </div>
@@ -103,6 +105,8 @@ function SavingsTab({
   onUpdateSavingsFund,
   onRemoveSavingsFund,
 }: SavingsTabProps) {
+  const t = useT()
+  const { locale } = useLocale()
   const { hidden } = useMoneyVisibility()
   const [editingName, setEditingName] = useState<string | null>(null)
   const [deletingName, setDeletingName] = useState<string | null>(null)
@@ -110,7 +114,7 @@ function SavingsTab({
   const savingsTotal = savings.reduce((sum, fund) => sum + fund.amount, 0)
 
   return (
-    <Card label={`Tiết kiệm · ${formatMoney(savingsTotal, hidden)}`}>
+    <Card label={t("finance.savings.title", { amount: formatMoney(savingsTotal, hidden, locale) })}>
       {savings.length ? (
         savings.map((fund) => (
           <div
@@ -122,7 +126,7 @@ function SavingsTab({
               <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  aria-label={`Điều chỉnh số dư ${fund.name}`}
+                  aria-label={t("finance.savings.adjustAria", { name: fund.name })}
                   onClick={() => setAdjustingName(fund.name)}
                   className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-action-strong)]"
                 >
@@ -130,7 +134,7 @@ function SavingsTab({
                 </button>
                 <button
                   type="button"
-                  aria-label={`Sửa ${fund.name}`}
+                  aria-label={t("finance.savings.editAria", { name: fund.name })}
                   onClick={() => setEditingName(fund.name)}
                   className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-info)]"
                 >
@@ -138,7 +142,7 @@ function SavingsTab({
                 </button>
                 <button
                   type="button"
-                  aria-label={`Xoá ${fund.name}`}
+                  aria-label={t("finance.savings.deleteAria", { name: fund.name })}
                   onClick={() => setDeletingName(fund.name)}
                   className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
                 >
@@ -160,8 +164,8 @@ function SavingsTab({
                 <Progress
                   value={Math.min((fund.amount / fund.target) * 100, 100)}
                   tone="action"
-                  label={formatMoney(fund.amount, hidden)}
-                  hint={`trên ${formatMoney(fund.target, hidden)}`}
+                  label={formatMoney(fund.amount, hidden, locale)}
+                  hint={t("finance.savings.ofTarget", { amount: formatMoney(fund.target, hidden, locale) })}
                 />
                 {fund.note ? (
                   <div className="mt-2 text-[12.5px] text-[var(--ob-color-text-subtle)]">
@@ -174,7 +178,7 @@ function SavingsTab({
         ))
       ) : (
         <p className="text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)]">
-          Chưa có quỹ tiết kiệm nào. Thêm quỹ đầu tiên để bắt đầu theo dõi mục tiêu.
+          {t("finance.savings.empty")}
         </p>
       )}
       <AddSavingsFundForm onAdd={onAddSavingsFund} />
@@ -188,13 +192,15 @@ function SavingsTab({
       <AlertDialog
         open={!!deletingName}
         onOpenChange={(open) => !open && setDeletingName(null)}
-        title="Xoá quỹ tiết kiệm?"
+        title={t("finance.savings.deleteTitle")}
         description={
           <>
-            Xoá &quot;<strong>{deletingName}</strong>&quot; sẽ không thể hoàn tác.
+            {t("finance.savings.deleteDescPrefix")}
+            <strong>{deletingName}</strong>
+            {t("finance.savings.deleteDescSuffix")}
           </>
         }
-        confirmLabel="Xoá"
+        confirmLabel={t("common.delete")}
         destructive
         onConfirm={() => {
           if (deletingName) onRemoveSavingsFund(deletingName)

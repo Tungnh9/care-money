@@ -10,6 +10,7 @@ import { Field } from "@/components/ui/field"
 import { Figure } from "@/components/ob/figure"
 import { Progress } from "@/components/ui/progress"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
+import { useT, useLocale } from "@/components/locale-provider"
 import { formatMoney } from "@/lib/format"
 import { AddCreditCardForm } from "./add-credit-card-form"
 import type { CreditCard } from "../types"
@@ -36,6 +37,8 @@ function CreditCardsTab({
   onUpdateCard,
   onRemoveCard,
 }: CreditCardsTabProps) {
+  const t = useT()
+  const { locale } = useLocale()
   const { hidden } = useMoneyVisibility()
   const [payCard, setPayCard] = useState("")
   const [payAmount, setPayAmount] = useState("")
@@ -97,13 +100,13 @@ function CreditCardsTab({
                 }
                 className="min-w-0 flex-[1_1_300px]"
               >
-                <Figure value={formatMoney(card.balance, hidden)} />
+                <Figure value={formatMoney(card.balance, hidden, locale)} />
                 <div className="my-4 flex flex-col divide-y divide-[var(--ob-color-border)]">
                   {(
                     [
-                      ["Hạn thanh toán", card.due],
-                      ["Trả tối thiểu", formatMoney(card.min, hidden)],
-                      ["Hạn mức", formatMoney(card.limit, hidden)],
+                      [t("finance.card.dueDateStat"), card.due],
+                      [t("finance.card.minPaymentStat"), formatMoney(card.min, hidden, locale)],
+                      [t("finance.card.limit"), formatMoney(card.limit, hidden, locale)],
                     ] as const
                   ).map(([k, v]) => (
                     <div
@@ -122,7 +125,7 @@ function CreditCardsTab({
                 <Progress
                   value={Math.min(limitPct, 100)}
                   tone={limitPct > 100 ? "expense" : "action"}
-                  hint={`${Math.round(limitPct)}% hạn mức`}
+                  hint={t("finance.card.limitPct", { pct: Math.round(limitPct) })}
                 />
                 <div className="mt-4 flex flex-wrap items-center gap-[10px]">
                   <Button
@@ -131,11 +134,11 @@ function CreditCardsTab({
                     type="button"
                     onClick={() => startPay(card.name)}
                   >
-                    Ghi một lần trả
+                    {t("finance.card.recordPayment")}
                   </Button>
                   <button
                     type="button"
-                    aria-label={`Sửa thẻ ${card.name}`}
+                    aria-label={t("finance.card.editAria", { name: card.name })}
                     onClick={() => startEdit(card)}
                     className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-info)]"
                   >
@@ -143,7 +146,7 @@ function CreditCardsTab({
                   </button>
                   <button
                     type="button"
-                    aria-label={`Xoá thẻ ${card.name}`}
+                    aria-label={t("finance.card.deleteAria", { name: card.name })}
                     onClick={() => setDeletingCard(card.name)}
                     className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
                   >
@@ -154,30 +157,32 @@ function CreditCardsTab({
             )
           })
         ) : (
-          <Card label="Nợ thẻ tín dụng" className="min-w-0 flex-[1_1_300px]">
+          <Card label={t("finance.tabs.debt")} className="min-w-0 flex-[1_1_300px]">
             <p className="text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)]">
-              Chưa có thẻ tín dụng nào. Thêm thẻ đầu tiên để theo dõi dư nợ và hạn trả.
+              {t("finance.card.empty")}
             </p>
           </Card>
         )}
 
         {payingCard ? (
           <Card
-            label={`Ghi một lần trả · ${payingCard.name}`}
+            label={t("finance.card.recordPaymentTitle", { name: payingCard.name })}
             className="min-w-0 flex-[1_1_300px]"
           >
             <Field
-              label="Số tiền trả"
+              label={t("finance.card.paymentAmount")}
               numeric
               group
               suffix="đ"
               placeholder="0"
               value={payAmount}
               onChange={(e) => setPayAmount(e.target.value)}
-              hint={`Dư nợ hiện tại ${formatMoney(payingCard.balance, hidden)}`}
+              hint={t("finance.card.currentBalanceHint", {
+                amount: formatMoney(payingCard.balance, hidden, locale),
+              })}
             />
             <div className="h-[14px]" />
-            <Field label="Ngày trả" placeholder={todayLabel()} />
+            <Field label={t("finance.card.paymentDate")} placeholder={todayLabel()} />
             <div className="mt-4 flex flex-wrap gap-[10px]">
               <Button
                 variant="primary"
@@ -189,28 +194,31 @@ function CreditCardsTab({
                   resetPay()
                 }}
               >
-                Lưu
+                {t("common.save")}
               </Button>
               <Button variant="ghost" size="sm" type="button" onClick={resetPay}>
-                Huỷ
+                {t("common.cancel")}
               </Button>
             </div>
           </Card>
         ) : null}
 
         {cardBeingEdited ? (
-          <Card label={`Sửa thẻ · ${cardBeingEdited.name}`} className="min-w-0 flex-[1_1_300px]">
+          <Card
+            label={t("finance.card.editTitle", { name: cardBeingEdited.name })}
+            className="min-w-0 flex-[1_1_300px]"
+          >
             <div className="flex flex-wrap gap-3">
               <Field
                 className="min-w-0 flex-[1_1_220px]"
-                label="Tên thẻ"
-                placeholder="Nhập tên thẻ"
+                label={t("finance.card.name")}
+                placeholder={t("finance.card.namePlaceholder")}
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
                 prefix={
                   <input
                     type="color"
-                    aria-label="Chọn màu cho thẻ"
+                    aria-label={t("finance.card.colorLabel")}
                     value={editColor || "#f26311"}
                     onChange={(e) => setEditColor(e.target.value)}
                     className="size-6 cursor-pointer rounded-[var(--ob-radius-sm)] border border-[var(--ob-color-border)] bg-transparent p-0 [&::-webkit-color-swatch]:rounded-[var(--ob-radius-sm)] [&::-webkit-color-swatch]:border-none [&::-webkit-color-swatch-wrapper]:rounded-[var(--ob-radius-sm)] [&::-webkit-color-swatch-wrapper]:p-0"
@@ -219,7 +227,7 @@ function CreditCardsTab({
               />
               <Field
                 className="min-w-0 flex-[1_1_220px]"
-                label="Dư nợ hiện tại"
+                label={t("finance.card.balance")}
                 numeric
                 group
                 suffix="đ"
@@ -229,7 +237,7 @@ function CreditCardsTab({
               />
               <Field
                 className="min-w-0 flex-[1_1_220px]"
-                label="Số tiền tối thiểu"
+                label={t("finance.card.minPayment")}
                 numeric
                 group
                 suffix="đ"
@@ -239,7 +247,7 @@ function CreditCardsTab({
               />
               <Field
                 className="min-w-0 flex-[1_1_220px]"
-                label="Hạn mức"
+                label={t("finance.card.limit")}
                 numeric
                 group
                 suffix="đ"
@@ -249,8 +257,8 @@ function CreditCardsTab({
               />
               <Field
                 className="min-w-0 flex-[1_1_220px]"
-                label="Ngày đến hạn"
-                placeholder="Nhập ngày đến hạn"
+                label={t("finance.card.dueDate")}
+                placeholder={t("finance.card.dueDatePlaceholder")}
                 value={editDue}
                 onChange={(e) => setEditDue(e.target.value)}
               />
@@ -273,18 +281,18 @@ function CreditCardsTab({
                   resetEdit()
                 }}
               >
-                Lưu
+                {t("common.save")}
               </Button>
               <Button variant="ghost" size="sm" type="button" onClick={resetEdit}>
-                Huỷ
+                {t("common.cancel")}
               </Button>
             </div>
           </Card>
         ) : null}
 
-        <Card tone="soft" label="Nhắc trả nợ" className="min-w-0 flex-[1_1_300px]">
+        <Card tone="soft" label={t("finance.card.reminder")} className="min-w-0 flex-[1_1_300px]">
           <p className="text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)]">
-            Trả đủ và đúng hạn để tránh mất lãi phát sinh trên dư nợ thẻ tín dụng.
+            {t("finance.card.reminderHint")}
           </p>
         </Card>
       </div>
@@ -292,13 +300,15 @@ function CreditCardsTab({
       <AlertDialog
         open={!!deletingCard}
         onOpenChange={(open) => !open && setDeletingCard("")}
-        title="Xoá thẻ tín dụng?"
+        title={t("finance.card.deleteTitle")}
         description={
           <>
-            Xoá thẻ &quot;<strong>{deletingCard}</strong>&quot; sẽ không thể hoàn tác.
+            {t("finance.card.deleteDescPrefix")}
+            <strong>{deletingCard}</strong>
+            {t("finance.card.deleteDescSuffix")}
           </>
         }
-        confirmLabel="Xoá"
+        confirmLabel={t("common.delete")}
         destructive
         onConfirm={() => {
           if (deletingCard) onRemoveCard(deletingCard)

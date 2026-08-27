@@ -4,6 +4,7 @@ import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Field } from "@/components/ui/field"
+import { useT } from "@/components/locale-provider"
 import type { SavingsFund } from "../types"
 
 interface AddSavingsFundFormProps {
@@ -11,6 +12,7 @@ interface AddSavingsFundFormProps {
 }
 
 function AddSavingsFundForm({ onAdd }: AddSavingsFundFormProps) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState("")
   const [amount, setAmount] = useState("")
@@ -29,7 +31,7 @@ function AddSavingsFundForm({ onAdd }: AddSavingsFundFormProps) {
     return (
       <div className="mt-[18px]">
         <Button variant="secondary" size="sm" type="button" onClick={() => setOpen(true)}>
-          Thêm quỹ tiết kiệm
+          {t("finance.savings.addOpen")}
         </Button>
       </div>
     )
@@ -38,19 +40,19 @@ function AddSavingsFundForm({ onAdd }: AddSavingsFundFormProps) {
   return (
     <div className="mt-[18px] border-t border-[var(--ob-color-border)] pt-[18px]">
       <div className="mb-3 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
-        Quỹ tiết kiệm mới
+        {t("finance.savings.newFund")}
       </div>
       <div className="flex flex-wrap gap-3">
         <Field
           className="min-w-0 flex-[1_1_220px]"
-          label="Tên quỹ"
-          placeholder="vd: Quỹ khẩn cấp"
+          label={t("finance.savings.name")}
+          placeholder={t("finance.savings.namePlaceholder")}
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"
-          label="Số tiền hiện có"
+          label={t("finance.savings.currentAmount")}
           numeric
           group
           suffix="đ"
@@ -60,7 +62,7 @@ function AddSavingsFundForm({ onAdd }: AddSavingsFundFormProps) {
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"
-          label="Mục tiêu"
+          label={t("finance.savings.target")}
           numeric
           group
           suffix="đ"
@@ -70,8 +72,8 @@ function AddSavingsFundForm({ onAdd }: AddSavingsFundFormProps) {
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"
-          label="Ghi chú"
-          placeholder="vd: Duy trì 3-6 tháng chi tiêu"
+          label={t("finance.savings.note")}
+          placeholder={t("finance.savings.notePlaceholder")}
           value={note}
           onChange={(e) => setNote(e.target.value)}
         />
@@ -93,10 +95,10 @@ function AddSavingsFundForm({ onAdd }: AddSavingsFundFormProps) {
             reset()
           }}
         >
-          Thêm
+          {t("common.add")}
         </Button>
         <Button variant="ghost" size="sm" type="button" onClick={reset}>
-          Huỷ
+          {t("common.cancel")}
         </Button>
       </div>
     </div>
