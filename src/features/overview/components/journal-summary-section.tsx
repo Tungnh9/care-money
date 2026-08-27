@@ -1,20 +1,24 @@
+"use client"
+
 import Link from "next/link"
 
 import type { JournalEntry } from "@/features/journal/types"
 import { Card } from "@/components/ui/card"
 import { buttonVariants } from "@/components/ui/button"
 import { Empty } from "@/components/ob/empty"
+import { useT } from "@/components/locale-provider"
 
 interface JournalSummarySectionProps {
   entries: JournalEntry[]
 }
 
 function JournalSummarySection({ entries }: JournalSummarySectionProps) {
+  const t = useT()
   const recent = entries.slice(0, 3)
 
   return (
     <div className="ob-card-grid flex flex-wrap gap-5">
-      <Card label="Bài gần đây" className="min-w-0 flex-[1_1_100%]">
+      <Card label={t("overview.journal.recentTitle")} className="min-w-0 flex-[1_1_100%]">
         {recent.length ? (
           <div>
             {recent.map((entry) => (
@@ -27,7 +31,7 @@ function JournalSummarySection({ entries }: JournalSummarySectionProps) {
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="mb-[3px] [font-family:var(--ob-font-num)] text-[11.5px] text-[var(--ob-color-text-subtle)]">
-                    {entry.date} · {entry.time} · {entry.words} từ
+                    {entry.date} · {entry.time} · {t("overview.journal.wordCount", { count: entry.words })}
                   </div>
                   <p className="m-0 overflow-hidden text-[13.5px] leading-[1.55] text-ellipsis whitespace-nowrap text-[var(--ob-color-text-muted)]">
                     {entry.text}
@@ -36,13 +40,18 @@ function JournalSummarySection({ entries }: JournalSummarySectionProps) {
               </div>
             ))}
             <Link href="/journal" className={buttonVariants({ variant: "secondary", size: "sm", className: "mt-4" })}>
-              Viết thêm một bài
+              {t("overview.journal.writeMore")}
             </Link>
           </div>
         ) : (
-          <Empty pose="book" size={78} title="Chưa có bài nào cho hôm nay" hint="Ba câu là đủ để tuần sau nhìn lại.">
+          <Empty
+            pose="book"
+            size={78}
+            title={t("overview.journal.emptyTitle")}
+            hint={t("overview.journal.emptyHint")}
+          >
             <Link href="/journal" className={buttonVariants({ variant: "primary", size: "sm" })}>
-              Viết nhật ký hôm nay
+              {t("overview.journal.writeToday")}
             </Link>
           </Empty>
         )}

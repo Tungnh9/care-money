@@ -1,3 +1,5 @@
+"use client"
+
 import { Check, Circle } from "lucide-react"
 
 import { pickDaily } from "@/features/study/daily-pick"
@@ -6,6 +8,7 @@ import type { GrammarEntry, Task, VocabEntry } from "@/features/study/types"
 import { Card } from "@/components/ui/card"
 import { Figure } from "@/components/ob/figure"
 import { TaskItem } from "@/components/ob/task-item"
+import { useT } from "@/components/locale-provider"
 import { dayKey } from "@/lib/date"
 import { cn } from "@/lib/utils"
 
@@ -44,6 +47,7 @@ function VocabTeaserRow({ entry, learned }: { entry: VocabEntry; learned: boolea
 }
 
 function StudySummarySection({ vocab, grammar, tasks, onToggleTask, learned }: StudySummarySectionProps) {
+  const t = useT()
   const key = dayKey()
   const daily = pickDaily(vocab, 5, key, "vocab")
   const dailyGrammar = pickDaily(grammar, 1, key, "grammar")[0]
@@ -51,7 +55,7 @@ function StudySummarySection({ vocab, grammar, tasks, onToggleTask, learned }: S
 
   return (
     <div className="ob-card-grid flex flex-wrap gap-5">
-      <Card label="Nhiệm vụ hôm nay" className="min-w-0 flex-[1_1_280px]">
+      <Card label={t("overview.study.tasksTitle")} className="min-w-0 flex-[1_1_280px]">
         <Figure value={String(doneTasks)} unit={`/${tasks.length}`} size="sm" className="mb-[14px]" />
         <div className="flex flex-col gap-[6px]">
           {tasks.map((task, i) => (
@@ -60,7 +64,7 @@ function StudySummarySection({ vocab, grammar, tasks, onToggleTask, learned }: S
         </div>
       </Card>
 
-      <Card label="5 từ hôm nay" className="min-w-0 flex-[1_1_280px]">
+      <Card label={t("overview.study.wordsTitle")} className="min-w-0 flex-[1_1_280px]">
         <div className="flex flex-col gap-[9px]">
           {daily.map((entry) => (
             <VocabTeaserRow key={entry.id} entry={entry} learned={learned.includes(entry.id)} />

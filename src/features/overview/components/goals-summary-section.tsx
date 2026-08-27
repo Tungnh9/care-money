@@ -1,9 +1,12 @@
+"use client"
+
 import Image from "next/image"
 
 import type { SavingsFund } from "@/features/finance/types"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
+import { useT, useLocale } from "@/components/locale-provider"
 import { formatMoney } from "@/lib/format"
 import type { MiniGoal } from "../overview-calculations"
 
@@ -13,10 +16,15 @@ interface GoalsSummarySectionProps {
 }
 
 function GoalsSummarySection({ goals, savings }: GoalsSummarySectionProps) {
+  const t = useT()
+  const { locale } = useLocale()
   const { hidden } = useMoneyVisibility()
   return (
     <div className="ob-card-grid flex flex-wrap gap-5">
-      <Card label={`${goals.length} mục tiêu đang chạy`} className="min-w-0 flex-[2_1_460px]">
+      <Card
+        label={t("overview.goals.runningCount", { count: goals.length })}
+        className="min-w-0 flex-[2_1_460px]"
+      >
         <div className="grid grid-cols-1 gap-x-6 gap-y-[18px] md:grid-cols-[repeat(auto-fit,minmax(150px,1fr))]">
           {goals.map((goal) => (
             <div key={goal.name}>
@@ -37,7 +45,7 @@ function GoalsSummarySection({ goals, savings }: GoalsSummarySectionProps) {
           ))}
         </div>
       </Card>
-      <Card label="Quỹ tiết kiệm" className="min-w-0 flex-[1_1_280px]">
+      <Card label={t("overview.goals.savingsFunds")} className="min-w-0 flex-[1_1_280px]">
         {savings.length ? (
           <div className="flex flex-col gap-4">
             {savings.map((fund) => (
@@ -45,7 +53,7 @@ function GoalsSummarySection({ goals, savings }: GoalsSummarySectionProps) {
                 <div className="mb-[7px] flex flex-wrap justify-between gap-3 text-[13.5px] font-semibold">
                   <span>{fund.name}</span>
                   <span className="[font-family:var(--ob-font-num)] text-[12.5px] text-[var(--ob-color-text-subtle)]">
-                    {formatMoney(fund.amount, hidden)} / {formatMoney(fund.target, hidden)}
+                    {formatMoney(fund.amount, hidden, locale)} / {formatMoney(fund.target, hidden, locale)}
                   </span>
                 </div>
                 <Progress value={Math.round((fund.amount / fund.target) * 100)} tone="action" />
@@ -54,7 +62,7 @@ function GoalsSummarySection({ goals, savings }: GoalsSummarySectionProps) {
           </div>
         ) : (
           <p className="text-sm leading-[1.6] text-[var(--ob-color-text-muted)]">
-            Chưa có quỹ tiết kiệm nào. Thêm ở màn Tài chính.
+            {t("overview.goals.noFunds")}
           </p>
         )}
       </Card>

@@ -1,6 +1,10 @@
+"use client"
+
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
+
+import { useT } from "@/components/locale-provider"
 
 interface SectionHeadProps {
   icon: string
@@ -10,6 +14,8 @@ interface SectionHeadProps {
 }
 
 function SectionHead({ icon, title, hint, href }: SectionHeadProps) {
+  const t = useT()
+
   return (
     <div className="mt-8 mb-4 flex flex-wrap items-center gap-3">
       <span className="flex size-[34px] flex-none items-center justify-center rounded-[var(--ob-radius-md)] bg-[var(--ob-color-action-soft)]">
@@ -22,7 +28,7 @@ function SectionHead({ icon, title, hint, href }: SectionHeadProps) {
         href={href}
         className="flex flex-none items-center gap-[6px] rounded-[var(--ob-radius-pill)] px-[13px] py-2 text-[length:var(--ob-size-sm)] font-bold text-[var(--ob-color-action-strong)] whitespace-nowrap"
       >
-        Mở
+        {t("overview.open")}
         <ArrowRight size={15} />
       </Link>
     </div>

@@ -1,3 +1,6 @@
+import { translateDefault } from "@/lib/i18n"
+import type { TranslationFn } from "@/lib/i18n"
+
 function monthLabel(d: Date = new Date()): string {
   return `tháng ${d.getMonth() + 1}`
 }
@@ -26,11 +29,22 @@ interface MiniGoal {
   percent: number
 }
 
-function getMiniGoals({ savingsTotal, goldPhan }: MiniGoalsInput): MiniGoal[] {
+function getMiniGoals(
+  { savingsTotal, goldPhan }: MiniGoalsInput,
+  t: TranslationFn = translateDefault
+): MiniGoal[] {
   return [
-    { name: "Tiết kiệm 100 triệu", icon: "pig", percent: Math.min(Math.round((savingsTotal / 100_000_000) * 100), 100) },
-    { name: "10 chỉ vàng", icon: "gold", percent: Math.min(Math.round((goldPhan / 100) * 100), 100) },
-    { name: "Mua xe ô tô", icon: "car", percent: 0 },
+    {
+      name: t("overview.goals.mini.savings100m"),
+      icon: "pig",
+      percent: Math.min(Math.round((savingsTotal / 100_000_000) * 100), 100),
+    },
+    {
+      name: t("overview.goals.mini.gold10chi"),
+      icon: "gold",
+      percent: Math.min(Math.round((goldPhan / 100) * 100), 100),
+    },
+    { name: t("overview.goals.mini.buyCar"), icon: "car", percent: 0 },
   ]
 }
 

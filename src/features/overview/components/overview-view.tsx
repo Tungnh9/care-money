@@ -9,6 +9,7 @@ import type { GrammarEntry, VocabEntry } from "@/features/study/types"
 import { useSettings } from "@/features/settings/hooks/use-settings"
 import { Monkey } from "@/components/ob/monkey"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
+import { useT, useLocale } from "@/components/locale-provider"
 import { dayKey, longDate } from "@/lib/date"
 import { formatMoney } from "@/lib/format"
 import { getMiniGoals, splitGreeting } from "../overview-calculations"
@@ -24,6 +25,8 @@ interface OverviewViewProps {
 }
 
 function OverviewView({ vocab, grammar }: OverviewViewProps) {
+  const t = useT()
+  const { locale } = useLocale()
   const { hidden } = useMoneyVisibility()
   const { settings } = useSettings()
   const { savings, cards, gold, goldPrice, invests } = useFinance()
@@ -39,10 +42,13 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
   const daily = pickDaily(vocab, 5, dayKey(), "vocab")
   const learnedToday = daily.filter((entry) => learned.includes(entry.id)).length
 
-  const miniGoals = getMiniGoals({
-    savingsTotal: summary.savingsTotal,
-    goldPhan: summary.goldPhan,
-  })
+  const miniGoals = getMiniGoals(
+    {
+      savingsTotal: summary.savingsTotal,
+      goldPhan: summary.goldPhan,
+    },
+    t
+  )
   const avgGoal = Math.round(miniGoals.reduce((sum, g) => sum + g.percent, 0) / miniGoals.length)
   const greeting = splitGreeting(settings.profile.greeting, settings.profile.displayName)
 
@@ -59,7 +65,7 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
               </>
             ) : null}
           </h1>
-          <p className="text-sm text-[var(--ob-color-text-subtle)]">{longDate()}</p>
+          <p className="text-sm text-[var(--ob-color-text-subtle)]">{longDate(new Date(), locale)}</p>
         </div>
       </div>
 
@@ -67,8 +73,8 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
         <>
           <SectionHead
             icon="wallet"
-            title="Tài chính"
-            hint={`tài sản ròng ${formatMoney(summary.net, hidden)}`}
+            title={t("overview.finance.title")}
+            hint={t("overview.finance.netWorth", { amount: formatMoney(summary.net, hidden, locale) })}
             href="/finance"
           />
           <FinanceSummarySection savings={savings} cards={cards} invests={invests} summary={summary} />
@@ -79,8 +85,12 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
         <>
           <SectionHead
             icon="book"
-            title="Nhật ký"
-            hint={entries.length ? `${entries.length} bài đã viết` : "chưa có bài nào"}
+            title={t("overview.journal.title")}
+            hint={
+              entries.length
+                ? t("overview.journal.postsWritten", { count: entries.length })
+                : t("overview.journal.noneYet")
+            }
             href="/journal"
           />
           <JournalSummarySection entries={entries} />
@@ -89,7 +99,12 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
 
       {enabled("hoctap") ? (
         <>
-          <SectionHead icon="cap" title="Học tập" hint={`${learnedToday}/5 từ hôm nay`} href="/study" />
+          <SectionHead
+            icon="cap"
+            title={t("overview.study.title")}
+            hint={t("overview.study.wordsToday", { learned: learnedToday })}
+            href="/study"
+          />
           <StudySummarySection
             vocab={vocab}
             grammar={grammar}
@@ -102,7 +117,12 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
 
       {enabled("muctieu") ? (
         <>
-          <SectionHead icon="target" title="Mục tiêu" hint={`trung bình ${avgGoal}%`} href="/goals" />
+          <SectionHead
+            icon="target"
+            title={t("overview.goals.title")}
+            hint={t("overview.goals.average", { percent: avgGoal })}
+            href="/goals"
+          />
           <GoalsSummarySection goals={miniGoals} savings={savings} />
         </>
       ) : null}
