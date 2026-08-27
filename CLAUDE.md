@@ -32,7 +32,7 @@ src/
 ## 3. Feature Rules (feature-sliced)
 
 - Mỗi feature = 1 folder trong `src/features/[feature-name]/`, tên khớp route segment gọi nó (`src/features/login/` ↔ `src/app/login/`).
-- **Tên folder/file/component trong code luôn tiếng Anh** — kể cả route segment trong `src/app/` (URL tiếng Anh, vd. `/login`, không phải `/dang-nhap`). Nội dung hiển thị cho người dùng (label, message lỗi, `metadata.title`, copy...) vẫn viết tiếng Việt bình thường — quy tắc này chỉ áp dụng cho tên định danh, không áp dụng cho text.
+- **Tên folder/file/component trong code luôn tiếng Anh** — kể cả route segment trong `src/app/` (URL tiếng Anh, vd. `/login`, không phải `/dang-nhap`). Quy tắc này chỉ áp dụng cho tên định danh, không áp dụng cho text. Nội dung hiển thị cho người dùng (label, message lỗi, `metadata.title`, copy...) đi qua hệ thống dịch đa ngôn ngữ — xem mục 7, không hardcode string trong JSX.
 - `src/app/[route]/page.tsx` **chỉ là shell mỏng**: import component từ `src/features/[feature-name]/` (qua barrel `index.ts`) và render, cộng metadata/layout tĩnh riêng của route đó. Không viết business logic (state, validate, gọi API) trực tiếp trong `page.tsx`.
 - Khung file chuẩn trong 1 feature — **chỉ tạo file nào thực sự cần**, không tạo file rỗng cho đủ bộ:
   ```
@@ -99,3 +99,15 @@ docs: update tech stack section
 - Test nằm trong `__tests__/` con của feature, mirror cấu trúc bên trong (`src/features/[ten]/__tests__/components/[ten]-form.test.tsx`) — xem mục 3.
 - **Quy trình trước khi commit**: viết test cho phần vừa thêm/sửa → chạy test → tự review lại diff → commit.
 - **Trước khi push**: chạy lại toàn bộ test suite. Chưa có hook `pre-push` (Husky) tự chạy `npm run test` — cân nhắc thêm khi test suite đủ lớn để đáng chặn push.
+
+## 7. Đa ngôn ngữ (i18n)
+
+App hỗ trợ tiếng Việt (mặc định) và tiếng Anh, không dùng route theo locale (`/en/...`) — ngôn ngữ lưu trong cookie `app-locale`, đọc được cả ở server lẫn client.
+
+- Toàn bộ text hiển thị cho người dùng lấy từ dictionary tại `src/lib/i18n/dictionaries/{vi,en}.ts` — không hardcode string trong JSX. `vi.ts` là nguồn gốc (source of truth, không dùng `as const`): thêm key mới ở `vi.ts` trước, TypeScript tự báo lỗi nếu `en.ts` thiếu key hoặc lệch cấu trúc.
+- Trong Client Component: `const t = useT()` (từ `@/components/locale-provider`), gọi `t("namespace.key")` hoặc `t("namespace.key", { param: value })` cho chuỗi có tham số (cú pháp `{param}` trong giá trị dictionary). Cần đọc/đổi locale hiện tại thì dùng `useLocale()`.
+- Trong hàm thuần ngoài React (vd. `finance-calculations.ts`, `get-goals.ts`, `data-transfer.ts`) — thêm tham số `t: TranslationFn = translateDefault` (và `locale: Locale = DEFAULT_LOCALE` nếu cần định dạng số/ngày) ở cuối, mặc định về tiếng Việt để nơi gọi cũ và test hiện có không cần sửa.
+- `formatMoney`/`groupVN`/`longDate`/`pct1` (trong `src/lib/format.ts`, `src/lib/date.ts`, `finance-calculations.ts`) đều nhận `locale` tùy chọn — luôn truyền `locale` từ `useLocale()` khi gọi trong component để số/ngày hiển thị đúng định dạng.
+- `page.tsx` lấy `metadata.title` theo ngôn ngữ qua `generatePageMetadata(key)` (từ `src/lib/i18n/page-metadata.ts`) thay vì `export const metadata` tĩnh.
+- Component dùng `src/components/ob/tabs.tsx` để chuyển tab phải lưu state bằng key ổn định (không lưu trực tiếp nhãn đã dịch) rồi tra bảng nhãn theo `locale` hiện tại — tránh vỡ khi đổi ngôn ngữ giữa chừng (xem mẫu ở `finance-view.tsx`/`study-view.tsx`).
+- **Không dịch**: nội dung người dùng tự nhập/chỉnh sửa (tên quỹ, tâm trạng tự thêm, ghi chú...), dữ liệu content tải từ `content/` (từ vựng, ngữ pháp), code comment, và các trang dev-only như `/sandbox`. Ký hiệu ₫ và đơn vị vàng Việt Nam ("phân", "chỉ") giữ nguyên ở cả hai ngôn ngữ.
