@@ -1,15 +1,18 @@
 import { z } from "zod"
 
-export const EMPTY_CREDENTIALS_MESSAGE = "Nhập email và mật khẩu để vào."
-export const INVALID_EMAIL_MESSAGE = "Email chưa đúng định dạng."
+import type { TranslationFn } from "@/lib/i18n"
 
-export const loginSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .min(1, EMPTY_CREDENTIALS_MESSAGE)
-    .pipe(z.email(INVALID_EMAIL_MESSAGE)),
-  password: z.string().min(1, EMPTY_CREDENTIALS_MESSAGE),
-})
+function createLoginSchema(t: TranslationFn) {
+  return z.object({
+    email: z
+      .string()
+      .trim()
+      .min(1, t("login.emptyCredentials"))
+      .pipe(z.email(t("login.invalidEmail"))),
+    password: z.string().min(1, t("login.emptyCredentials")),
+  })
+}
 
-export type LoginFormValues = z.infer<typeof loginSchema>
+type LoginFormValues = z.infer<ReturnType<typeof createLoginSchema>>
+
+export { createLoginSchema, type LoginFormValues }

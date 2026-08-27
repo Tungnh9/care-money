@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Controller, useForm } from "react-hook-form"
@@ -11,21 +11,24 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Field } from "@/components/ui/field"
 import { setStoredUser } from "@/lib/auth"
+import { useT } from "@/components/locale-provider"
 import { login } from "../api"
 import { useLoginLockout, MAX_ATTEMPTS, LOCKOUT_MINUTES } from "../hooks/use-login-lockout"
-import { loginSchema, type LoginFormValues } from "../schemas"
+import { createLoginSchema, type LoginFormValues } from "../schemas"
 
 function LoginForm() {
   const router = useRouter()
+  const t = useT()
   const [showPassword, setShowPassword] = useState(false)
   const [credentialsInvalid, setCredentialsInvalid] = useState(false)
   const { isLocked, remainingAttempts, registerFailure, registerSuccess } = useLoginLockout()
+  const schema = useMemo(() => createLoginSchema(t), [t])
   const {
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(schema),
     defaultValues: { email: "", password: "" },
   })
 
@@ -46,9 +49,9 @@ function LoginForm() {
     errors.email?.message ??
     errors.password?.message ??
     (isLocked
-      ? `Bạn đã nhập sai quá ${MAX_ATTEMPTS} lần. Vui lòng thử lại sau ${LOCKOUT_MINUTES} phút.`
+      ? t("login.lockedOut", { maxAttempts: MAX_ATTEMPTS, minutes: LOCKOUT_MINUTES })
       : credentialsInvalid
-        ? `Đăng nhập không thành công. Còn ${remainingAttempts} lần thử.`
+        ? t("login.failedAttempt", { remaining: remainingAttempts })
         : null)
 
   return (
@@ -67,10 +70,8 @@ function LoginForm() {
         </div>
 
         <div>
-          <h2 className="mb-1 [font:var(--ob-text-h2)]">Đăng nhập</h2>
-          <p className="text-sm text-[var(--ob-color-text-muted)]">
-            Nhập email và mật khẩu của bạn.
-          </p>
+          <h2 className="mb-1 [font:var(--ob-text-h2)]">{t("login.title")}</h2>
+          <p className="text-sm text-[var(--ob-color-text-muted)]">{t("login.subtitle")}</p>
         </div>
 
         <Controller
@@ -78,9 +79,9 @@ function LoginForm() {
           control={control}
           render={({ field }) => (
             <Field
-              label="Email"
+              label={t("login.email")}
               type="email"
-              placeholder="ban@email.com"
+              placeholder={t("login.emailPlaceholder")}
               autoFocus
               invalid={!!errors.email}
               hint={errors.email?.message}
@@ -97,7 +98,7 @@ function LoginForm() {
           control={control}
           render={({ field }) => (
             <Field
-              label="Mật khẩu"
+              label={t("login.password")}
               type={showPassword ? "text" : "password"}
               placeholder="••••••••"
               invalid={!!errors.password}
@@ -106,7 +107,7 @@ function LoginForm() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                  aria-label={showPassword ? t("login.hidePassword") : t("login.showPassword")}
                   className="flex items-center justify-center"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -130,12 +131,12 @@ function LoginForm() {
         ) : null}
 
         <Button type="submit" size="lg" fullWidth disabled={isSubmitting || isLocked}>
-          {isSubmitting ? "Đang vào…" : "Đăng nhập"}
+          {isSubmitting ? t("login.submitting") : t("login.title")}
         </Button>
 
         <div className="flex items-center justify-center gap-[var(--ob-space-2)] text-[12.5px] text-[var(--ob-color-text-subtle)] min-[900px]:hidden">
           <Lock size={14} />
-          Mặc định lưu trên máy bạn. Đồng bộ giữa thiết bị là tuỳ chọn, chỉ bạn giữ secret.
+          {t("login.storageNote")}
         </div>
       </form>
     </Card>

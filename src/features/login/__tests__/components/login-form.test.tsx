@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { fireEvent, render, screen } from "@testing-library/react"
 
 import { LoginForm } from "../../components/login-form"
-import { EMPTY_CREDENTIALS_MESSAGE } from "../../schemas"
+import viDict from "@/lib/i18n/dictionaries/vi"
 import { MAX_ATTEMPTS, LOCKOUT_MINUTES } from "../../hooks/use-login-lockout"
 import { MOCK_ACCOUNT } from "../../mock-data"
 import { getStoredUser } from "@/lib/auth"
@@ -33,7 +33,7 @@ describe("LoginForm", () => {
     fireEvent.click(screen.getByRole("button", { name: /đăng nhập/i }))
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      EMPTY_CREDENTIALS_MESSAGE
+      viDict.login.emptyCredentials
     )
   })
 

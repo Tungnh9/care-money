@@ -1,9 +1,15 @@
+"use client"
+
 import Image from "next/image"
 import { Lock } from "lucide-react"
+
+import { useT } from "@/components/locale-provider"
 
 const BRAND_ICONS = ["pig", "book", "cap", "gold"]
 
 function LoginAside() {
+  const t = useT()
+
   return (
     <aside className="hidden flex-col overflow-hidden bg-[var(--ob-color-surface-invert)] p-[var(--ob-space-8)] text-[var(--ob-color-text-invert)] min-[900px]:flex">
       <div className="flex items-center gap-3">
@@ -16,13 +22,12 @@ function LoginAside() {
 
       <div className="my-auto">
         <h1 className="mb-[var(--ob-space-4)] [font:var(--ob-text-display)] tracking-[var(--ob-track-display)]">
-          Giữ nhịp
+          {t("login.heroLine1")}
           <br />
-          mỗi ngày.
+          {t("login.heroLine2")}
         </h1>
         <p className="max-w-[34ch] text-[17px] leading-relaxed text-[var(--ob-vo-300)]">
-          Tiền bạc, nhật ký và việc học của bạn — một nơi duy nhất, chỉ bạn
-          nhìn thấy.
+          {t("login.heroSubtitle")}
         </p>
         <div className="mt-[var(--ob-space-7)] flex gap-[var(--ob-space-2)]">
           {BRAND_ICONS.map((icon) => (
@@ -43,7 +48,7 @@ function LoginAside() {
 
       <div className="flex items-center gap-[var(--ob-space-2)] text-[13px] text-[var(--ob-vo-300)]">
         <Lock size={16} />
-        Mặc định lưu trên máy bạn. Đồng bộ giữa thiết bị là tuỳ chọn, chỉ bạn giữ secret.
+        {t("login.storageNote")}
       </div>
     </aside>
   )
