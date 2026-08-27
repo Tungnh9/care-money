@@ -83,7 +83,7 @@ function Sidebar() {
         >
           {hideMoney ? <EyeOff size={18} /> : <Eye size={18} />}
         </button>
-        <LocaleSwitch className="min-h-0 border-transparent px-0" />
+        <LocaleSwitch variant="icon" />
         <button
           type="button"
           onClick={handleLogout}
@@ -151,7 +151,7 @@ function Sidebar() {
               {hideMoney ? t("common.showMoney") : t("common.hideMoney")}
             </span>
           </button>
-          <LocaleSwitch className="mx-[14px] lg:mx-0" />
+          <LocaleSwitch variant="row" />
           <div className="flex items-center justify-center gap-[10px] rounded-[var(--ob-radius-md)] px-0 py-2 lg:justify-start lg:bg-[var(--ob-vo-100)] lg:px-[10px]">
             <Image src="/assets/avatar-clover.svg" width={32} height={32} alt="" className="flex-none" />
             <span className="hidden overflow-hidden bg-gradient-to-r from-[var(--ob-color-action)] to-[var(--ob-color-reward)] bg-clip-text text-[13.5px] font-bold text-ellipsis whitespace-nowrap text-transparent lg:inline">
