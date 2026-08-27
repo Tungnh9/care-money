@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useMemo, useState } from "react
 import type { ReactNode } from "react"
 import { useRouter } from "next/navigation"
 
-import { DEFAULT_LOCALE, LOCALE_COOKIE_NAME, getDictionary, translate } from "@/lib/i18n"
+import { DEFAULT_LOCALE, LOCALE_COOKIE_NAME, getDictionary, translate, translateDefault } from "@/lib/i18n"
 import type { Locale, TranslationFn } from "@/lib/i18n"
 
 interface LocaleContextValue {
@@ -15,7 +15,7 @@ interface LocaleContextValue {
 
 const LocaleContext = createContext<LocaleContextValue>({
   locale: DEFAULT_LOCALE,
-  t: (key, params) => translate(getDictionary(DEFAULT_LOCALE), key, params),
+  t: translateDefault,
   setLocale: () => {},
 })
 

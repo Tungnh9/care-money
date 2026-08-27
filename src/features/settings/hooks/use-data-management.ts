@@ -6,6 +6,7 @@ import { getStoredFinance, type FinanceState } from "@/features/finance/finance-
 import { DEFAULT_JOURNAL_STATE, getStoredJournal, type JournalState } from "@/features/journal/journal-storage"
 import { DEFAULT_STUDY_STATE, getStoredStudy, type StudyState } from "@/features/study/study-storage"
 import { getStoredSettings, type AppSettings } from "@/lib/settings-storage"
+import { useT, useLocale } from "@/components/locale-provider"
 import { pushSnapshot, pullSnapshot } from "../api"
 import { buildExportPayload, exportFileName, parseImportPayload } from "../data-transfer"
 
@@ -31,31 +32,36 @@ function useDataManagement({
   onReplaceStudy,
   onReplaceSettings,
 }: UseDataManagementOptions) {
+  const t = useT()
+  const { locale } = useLocale()
   const [exported, setExported] = useState<ExportedInfo | null>(null)
   const [imported, setImported] = useState<ImportedInfo | null>(null)
   const [syncing, setSyncing] = useState(false)
   const [syncResult, setSyncResult] = useState<SyncResult | null>(null)
 
-  const pushToCloud = useCallback(async (secret: string) => {
-    setSyncing(true)
-    const payload = buildExportPayload(
-      {
-        journal: getStoredJournal(),
-        finance: getStoredFinance(),
-        study: getStoredStudy(),
-        settings: getStoredSettings(),
-      },
-      new Date().toISOString()
-    )
-    const result = await pushSnapshot(secret, payload)
-    setSyncResult(result)
-    setSyncing(false)
-  }, [])
+  const pushToCloud = useCallback(
+    async (secret: string) => {
+      setSyncing(true)
+      const payload = buildExportPayload(
+        {
+          journal: getStoredJournal(),
+          finance: getStoredFinance(),
+          study: getStoredStudy(),
+          settings: getStoredSettings(),
+        },
+        new Date().toISOString()
+      )
+      const result = await pushSnapshot(secret, payload, t)
+      setSyncResult(result)
+      setSyncing(false)
+    },
+    [t]
+  )
 
   const pullFromCloud = useCallback(
     async (secret: string) => {
       setSyncing(true)
-      const result = await pullSnapshot(secret)
+      const result = await pullSnapshot(secret, t)
       if (result.ok) {
         onReplaceJournal(result.data.journal)
         onReplaceFinance(result.data.finance)
@@ -67,7 +73,7 @@ function useDataManagement({
       }
       setSyncing(false)
     },
-    [onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceSettings]
+    [onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceSettings, t]
   )
 
   const exportData = useCallback(() => {
@@ -90,17 +96,21 @@ function useDataManagement({
     link.click()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
 
+    const sizeKb = (blob.size / 1024).toFixed(1)
     setExported({
       file: name,
-      size: `${(blob.size / 1024).toFixed(1).replace(".", ",")} KB`,
-      time: now.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
+      size: `${locale === "en" ? sizeKb : sizeKb.replace(".", ",")} KB`,
+      time: now.toLocaleTimeString(locale === "en" ? "en-US" : "vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
     })
     setImported(null)
-  }, [])
+  }, [locale])
 
   const importData = useCallback(
     async (file: File) => {
-      const result = parseImportPayload(await file.text())
+      const result = parseImportPayload(await file.text(), t)
 
       if (result.ok) {
         onReplaceJournal(result.data.journal)
@@ -113,7 +123,7 @@ function useDataManagement({
       }
       setExported(null)
     },
-    [onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceSettings]
+    [onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceSettings, t]
   )
 
   const wipeData = useCallback(() => {

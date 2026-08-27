@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button"
 import { Field } from "@/components/ui/field"
 import { cn } from "@/lib/utils"
 import { EMOJI_PICKER, type Mood } from "@/lib/settings-storage"
+import { useT } from "@/components/locale-provider"
 
 interface AddMoodFormProps {
   onAdd: (mood: Omit<Mood, "tint" | "on">) => void
 }
 
 function AddMoodForm({ onAdd }: AddMoodFormProps) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [emoji, setEmoji] = useState("🙂")
   const [label, setLabel] = useState("")
@@ -27,7 +29,7 @@ function AddMoodForm({ onAdd }: AddMoodFormProps) {
     return (
       <div className="mt-[18px]">
         <Button variant="secondary" size="sm" type="button" onClick={() => setOpen(true)}>
-          Thêm tâm trạng
+          {t("settings.moods.addButton")}
         </Button>
       </div>
     )
@@ -36,7 +38,7 @@ function AddMoodForm({ onAdd }: AddMoodFormProps) {
   return (
     <div className="mt-[18px] border-t border-[var(--ob-color-border)] pt-[18px]">
       <div className="mb-3 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
-        Tâm trạng mới
+        {t("settings.moods.addNew")}
       </div>
       <div className="mb-4 flex flex-wrap gap-[6px]">
         {EMOJI_PICKER.map((e) => (
@@ -58,15 +60,15 @@ function AddMoodForm({ onAdd }: AddMoodFormProps) {
       <div className="flex flex-wrap gap-3">
         <Field
           className="min-w-0 flex-[1_1_220px]"
-          label="Tên"
-          placeholder="vd: Hào hứng"
+          label={t("settings.moods.name")}
+          placeholder={t("settings.moods.namePlaceholder")}
           value={label}
           onChange={(e) => setLabel(e.target.value)}
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"
-          label="Mô tả ngắn"
-          placeholder="vd: Có việc đang mong chờ"
+          label={t("settings.moods.description")}
+          placeholder={t("settings.moods.descriptionPlaceholder")}
           value={desc}
           onChange={(e) => setDesc(e.target.value)}
         />
@@ -78,14 +80,14 @@ function AddMoodForm({ onAdd }: AddMoodFormProps) {
           type="button"
           disabled={!label.trim()}
           onClick={() => {
-            onAdd({ label: label.trim(), desc: desc.trim() || "Tâm trạng của riêng bạn", emoji })
+            onAdd({ label: label.trim(), desc: desc.trim() || t("settings.moods.defaultDescription"), emoji })
             reset()
           }}
         >
-          Thêm
+          {t("settings.moods.add")}
         </Button>
         <Button variant="ghost" size="sm" type="button" onClick={reset}>
-          Huỷ
+          {t("common.cancel")}
         </Button>
       </div>
     </div>

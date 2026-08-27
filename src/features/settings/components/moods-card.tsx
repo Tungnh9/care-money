@@ -4,6 +4,7 @@ import { Trash2 } from "lucide-react"
 
 import { Card } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
+import { useT } from "@/components/locale-provider"
 import { AddMoodForm } from "./add-mood-form"
 import type { Mood } from "@/lib/settings-storage"
 
@@ -15,10 +16,12 @@ interface MoodsCardProps {
 }
 
 function MoodsCard({ moods, onToggle, onRemove, onAdd }: MoodsCardProps) {
+  const t = useT()
+
   return (
-    <Card label="Tâm trạng dùng trong nhật ký" className="min-w-0 w-full">
+    <Card label={t("settings.moods.title")} className="min-w-0 w-full">
       <p className="mb-[14px] text-[13.5px] leading-[1.55] text-[var(--ob-color-text-muted)]">
-        Bật những trạng thái bạn hay dùng, thêm mới hoặc xoá bớt. Cái nào đang bật sẽ thành chip ở màn Nhật ký.
+        {t("settings.moods.hint")}
       </p>
       <div>
         {moods.map((m, i) => (
@@ -42,7 +45,7 @@ function MoodsCard({ moods, onToggle, onRemove, onAdd }: MoodsCardProps) {
             <Switch checked={m.on} onCheckedChange={() => onToggle(i)} className="flex-none" />
             <button
               type="button"
-              aria-label={"Xoá " + m.label}
+              aria-label={t("settings.moods.remove", { label: m.label })}
               onClick={() => onRemove(i)}
               className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
             >
@@ -51,7 +54,7 @@ function MoodsCard({ moods, onToggle, onRemove, onAdd }: MoodsCardProps) {
           </div>
         ))}
         {!moods.length ? (
-          <p className="text-[13.5px] text-[var(--ob-color-text-subtle)]">Chưa có tâm trạng nào.</p>
+          <p className="text-[13.5px] text-[var(--ob-color-text-subtle)]">{t("settings.moods.empty")}</p>
         ) : null}
       </div>
       <AddMoodForm onAdd={onAdd} />

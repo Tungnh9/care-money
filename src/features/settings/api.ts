@@ -1,14 +1,20 @@
 import { parseImportPayload, type ExportPayload, type ImportResult } from "./data-transfer"
+import { translateDefault } from "@/lib/i18n"
+import type { TranslationFn } from "@/lib/i18n"
 
 type PushResult = { ok: true; summary: string } | { ok: false; error: string }
 
-function mapErrorStatus(status: number, serverError?: string): string {
-  if (status === 401) return "Sai secret đồng bộ."
-  if (status === 404) return "Chưa có bản đồng bộ nào trên máy khác."
-  return serverError ?? "Đồng bộ không thành công."
+function mapErrorStatus(status: number, serverError: string | undefined, t: TranslationFn): string {
+  if (status === 401) return t("settings.data.wrongSecret")
+  if (status === 404) return t("settings.data.noRemoteBackup")
+  return serverError ?? t("settings.data.syncFailedMessage")
 }
 
-async function pushSnapshot(secret: string, payload: ExportPayload): Promise<PushResult> {
+async function pushSnapshot(
+  secret: string,
+  payload: ExportPayload,
+  t: TranslationFn = translateDefault
+): Promise<PushResult> {
   try {
     const response = await fetch("/api/sync", {
       method: "POST",
@@ -18,15 +24,15 @@ async function pushSnapshot(secret: string, payload: ExportPayload): Promise<Pus
     const json = await response.json().catch(() => ({}))
 
     if (!response.ok) {
-      return { ok: false, error: mapErrorStatus(response.status, json.error) }
+      return { ok: false, error: mapErrorStatus(response.status, json.error, t) }
     }
     return { ok: true, summary: json.summary }
   } catch {
-    return { ok: false, error: "Không kết nối được máy chủ đồng bộ." }
+    return { ok: false, error: t("settings.data.connectionFailed") }
   }
 }
 
-async function pullSnapshot(secret: string): Promise<ImportResult> {
+async function pullSnapshot(secret: string, t: TranslationFn = translateDefault): Promise<ImportResult> {
   try {
     const response = await fetch("/api/sync", {
       method: "GET",
@@ -35,11 +41,11 @@ async function pullSnapshot(secret: string): Promise<ImportResult> {
 
     if (!response.ok) {
       const json = await response.json().catch(() => ({}))
-      return { ok: false, error: mapErrorStatus(response.status, json.error) }
+      return { ok: false, error: mapErrorStatus(response.status, json.error, t) }
     }
-    return parseImportPayload(await response.text())
+    return parseImportPayload(await response.text(), t)
   } catch {
-    return { ok: false, error: "Không kết nối được máy chủ đồng bộ." }
+    return { ok: false, error: t("settings.data.connectionFailed") }
   }
 }
 

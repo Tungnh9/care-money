@@ -4,6 +4,7 @@ import { useFinance } from "@/features/finance/hooks/use-finance"
 import { useJournal } from "@/features/journal/hooks/use-journal"
 import { useStudy } from "@/features/study/hooks/use-study"
 import { splitGreeting } from "@/features/overview/overview-calculations"
+import { useT } from "@/components/locale-provider"
 import { ProfileCard } from "./profile-card"
 import { LanguageCard } from "./language-card"
 import { ModulesCard } from "./modules-card"
@@ -14,6 +15,7 @@ import { useDataManagement } from "../hooks/use-data-management"
 import { useSettings } from "../hooks/use-settings"
 
 function SettingsView() {
+  const t = useT()
   const { settings, updateProfile, toggleModule, toggleMood, removeMood, addMood, replaceSettings } =
     useSettings()
   const { entries, replaceJournal } = useJournal()
@@ -37,13 +39,13 @@ function SettingsView() {
   })
 
   const counts = [
-    entries.length ? `${entries.length} bài nhật ký` : null,
-    gold.length ? `${gold.length} lần mua vàng` : null,
-    invests.length ? `${invests.length} khoản đầu tư` : null,
-    savings.length ? `${savings.length} quỹ tiết kiệm` : null,
-    cards.length ? `${cards.length} thẻ tín dụng` : null,
-    tasks.some((task) => task.done) ? "nhiệm vụ đã tick" : null,
-    learned.length ? `${learned.length} từ đã học` : null,
+    entries.length ? t("settings.counts.journal", { count: entries.length }) : null,
+    gold.length ? t("settings.counts.gold", { count: gold.length }) : null,
+    invests.length ? t("settings.counts.invest", { count: invests.length }) : null,
+    savings.length ? t("settings.counts.savings", { count: savings.length }) : null,
+    cards.length ? t("settings.counts.cards", { count: cards.length }) : null,
+    tasks.some((task) => task.done) ? t("settings.counts.tasksTicked") : null,
+    learned.length ? t("settings.counts.wordsLearned", { count: learned.length }) : null,
   ].filter((count): count is string => count !== null)
 
   function handleSaveDisplayName(name: string) {
@@ -53,10 +55,10 @@ function SettingsView() {
 
   return (
     <div>
-      <h1 className="mb-1 [font:var(--ob-text-h2)] tracking-[var(--ob-track-heading)]">Cài đặt</h1>
-      <p className="mb-5 text-sm text-[var(--ob-color-text-subtle)]">
-        Chỉ mình bạn dùng · mặc định lưu trên máy bạn, đồng bộ giữa thiết bị là tuỳ chọn
-      </p>
+      <h1 className="mb-1 [font:var(--ob-text-h2)] tracking-[var(--ob-track-heading)]">
+        {t("nav.settings")}
+      </h1>
+      <p className="mb-5 text-sm text-[var(--ob-color-text-subtle)]">{t("settings.subtitle")}</p>
       <div className="ob-card-grid flex flex-wrap gap-5">
         <ProfileCard displayName={settings.profile.displayName} onSave={handleSaveDisplayName} />
         <LanguageCard />

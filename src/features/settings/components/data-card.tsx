@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Field } from "@/components/ui/field"
 import { getSyncSecret, setSyncSecret } from "@/lib/sync-secret-storage"
+import { useT } from "@/components/locale-provider"
 import type { ExportedInfo, ImportedInfo, SyncResult } from "../hooks/use-data-management"
 
 interface DataCardProps {
@@ -30,6 +31,7 @@ function DataCard({
   onPushToCloud,
   onPullFromCloud,
 }: DataCardProps) {
+  const t = useT()
   const fileRef = useRef<HTMLInputElement>(null)
   const [secret, setSecret] = useState("")
   const [copied, setCopied] = useState(false)
@@ -59,30 +61,30 @@ function DataCard({
   }
 
   return (
-    <Card label="Dữ liệu" className="min-w-0 flex-[1_1_300px]">
+    <Card label={t("settings.data.title")} className="min-w-0 flex-[1_1_300px]">
       <div>
         <span className="mb-1 block [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
-          Sao lưu file
+          {t("settings.data.fileBackup")}
         </span>
         <p className="mb-[14px] text-[13.5px] leading-[1.55] text-[var(--ob-color-text-muted)]">
-          Không cần mạng hay tài khoản — luôn hoạt động, kể cả khi mất kết nối.
+          {t("settings.data.fileBackupHint")}
         </p>
         {exported ? (
           <div className="mb-[14px] flex items-start gap-[11px] rounded-[var(--ob-radius-md)] bg-[#E7F6EF] px-[15px] py-[13px] text-[#0E7A50]">
             <Check size={18} className="mt-[1px] flex-none" />
             <div className="text-[13.5px] leading-[1.5]">
-              <strong className="font-bold">Đã tải {exported.file}</strong>
+              <strong className="font-bold">{t("settings.data.downloaded", { file: exported.file })}</strong>
               <br />
-              {exported.size} · {exported.time} · kiểm tra thư mục Tải xuống
+              {exported.size} · {exported.time} · {t("settings.data.checkDownloads")}
             </div>
           </div>
         ) : null}
         <div className="flex flex-wrap gap-[10px]">
           <Button variant="secondary" size="sm" type="button" onClick={onExport}>
-            Xuất file JSON
+            {t("settings.data.exportJson")}
           </Button>
           <Button variant="ghost" size="sm" type="button" onClick={() => fileRef.current?.click()}>
-            Nhập từ file
+            {t("settings.data.importFromFile")}
           </Button>
         </div>
         <input
@@ -108,13 +110,13 @@ function DataCard({
             <div>
               {imported.ok ? (
                 <>
-                  <strong className="font-bold">Đã nạp {imported.file}</strong>
+                  <strong className="font-bold">{t("settings.data.imported", { file: imported.file })}</strong>
                   <br />
                   {imported.summary}
                 </>
               ) : (
                 <>
-                  <strong className="font-bold">Không đọc được file</strong>
+                  <strong className="font-bold">{t("settings.data.importFailed")}</strong>
                   <br />
                   {imported.error}
                 </>
@@ -126,15 +128,15 @@ function DataCard({
 
       <div className="mt-5 border-t border-[var(--ob-color-border)] pt-4">
         <span className="mb-1 block [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
-          Đồng bộ đám mây
+          {t("settings.data.cloudSync")}
         </span>
         <p className="mb-[14px] text-[13.5px] leading-[1.55] text-[var(--ob-color-text-muted)]">
-          Tuỳ chọn — đồng bộ dữ liệu giữa các thiết bị của bạn. Chỉ bạn giữ secret bên dưới.
+          {t("settings.data.cloudSyncHint")}
         </p>
         <Field
-          label="Secret đồng bộ"
+          label={t("settings.data.syncSecret")}
           type="password"
-          placeholder="Nhập secret để đồng bộ giữa các thiết bị"
+          placeholder={t("settings.data.syncSecretPlaceholder")}
           value={secret}
           onChange={(e) => handleSecretChange(e.target.value)}
           suffix={
@@ -142,7 +144,7 @@ function DataCard({
               type="button"
               onClick={handleCopySecret}
               disabled={!secret}
-              aria-label={copied ? "Đã copy" : "Copy secret"}
+              aria-label={copied ? t("settings.data.copied") : t("settings.data.copySecret")}
               className="flex items-center justify-center disabled:opacity-40"
             >
               {copied ? <Check size={16} /> : <Copy size={16} />}
@@ -157,7 +159,7 @@ function DataCard({
             disabled={!secret || syncing}
             onClick={() => onPushToCloud(secret)}
           >
-            {syncing ? "Đang đồng bộ…" : "Tải lên"}
+            {syncing ? t("settings.data.syncing") : t("settings.data.upload")}
           </Button>
           <Button
             variant="ghost"
@@ -166,7 +168,7 @@ function DataCard({
             disabled={!secret || syncing}
             onClick={() => onPullFromCloud(secret)}
           >
-            {syncing ? "Đang đồng bộ…" : "Tải xuống"}
+            {syncing ? t("settings.data.syncing") : t("settings.data.download")}
           </Button>
         </div>
         {syncResult ? (
@@ -185,13 +187,13 @@ function DataCard({
             <div>
               {syncResult.ok ? (
                 <>
-                  <strong className="font-bold">Đã đồng bộ</strong>
+                  <strong className="font-bold">{t("settings.data.synced")}</strong>
                   <br />
                   {syncResult.summary}
                 </>
               ) : (
                 <>
-                  <strong className="font-bold">Đồng bộ không thành công</strong>
+                  <strong className="font-bold">{t("settings.data.syncFailedTitle")}</strong>
                   <br />
                   {syncResult.error}
                 </>

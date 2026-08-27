@@ -12,6 +12,7 @@ import {
   type Mood,
   type Profile,
 } from "@/lib/settings-storage"
+import { useT } from "@/components/locale-provider"
 import { toast } from "sonner"
 
 interface SettingsStore {
@@ -28,6 +29,7 @@ const useSettingsStore = create<SettingsStore>((set) => ({
 }))
 
 function useSettings() {
+  const t = useT()
   const settings = useSettingsStore((s) => s.settings)
   const setSettings = useSettingsStore((s) => s.setSettings)
 
@@ -72,12 +74,16 @@ function useSettings() {
       const label = settings.moods[index]?.label
       try {
         persist({ ...settings, moods: settings.moods.filter((_, i) => i !== index) })
-        toast.success(label ? `Đã xoá tâm trạng "${label}"` : "Đã xoá tâm trạng")
+        toast.success(
+          label
+            ? t("settings.moods.toastRemoved", { label })
+            : t("settings.moods.toastRemovedGeneric")
+        )
       } catch {
-        toast.error("Không thể xoá tâm trạng. Vui lòng thử lại.")
+        toast.error(t("settings.moods.toastRemoveFailed"))
       }
     },
-    [settings, persist]
+    [settings, persist, t]
   )
 
   const addMood = useCallback(
@@ -85,12 +91,12 @@ function useSettings() {
       try {
         const tint = TINT_PALETTE[settings.moods.length % TINT_PALETTE.length]
         persist({ ...settings, moods: [...settings.moods, { ...mood, tint, on: true }] })
-        toast.success(`Đã thêm tâm trạng "${mood.label}"`)
+        toast.success(t("settings.moods.toastAdded", { label: mood.label }))
       } catch {
-        toast.error(`Không thể thêm tâm trạng "${mood.label}". Vui lòng thử lại.`)
+        toast.error(t("settings.moods.toastAddFailed", { label: mood.label }))
       }
     },
-    [settings, persist]
+    [settings, persist, t]
   )
 
   return {

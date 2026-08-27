@@ -130,7 +130,8 @@ describe("useDataManagement", () => {
         finance: DEFAULT_FINANCE_STATE,
         study: DEFAULT_STUDY_STATE,
         settings: DEFAULT_SETTINGS,
-      })
+      }),
+      expect.any(Function)
     )
     expect(result.current.syncResult).toEqual({ ok: true, summary: "Đã tải lên" })
     expect(result.current.syncing).toBe(false)
@@ -153,7 +154,7 @@ describe("useDataManagement", () => {
       await result.current.pullFromCloud("my-secret")
     })
 
-    expect(pullSnapshot).toHaveBeenCalledWith("my-secret")
+    expect(pullSnapshot).toHaveBeenCalledWith("my-secret", expect.any(Function))
     expect(onReplaceJournal).toHaveBeenCalledWith(journal)
     expect(onReplaceFinance).toHaveBeenCalledWith(DEFAULT_FINANCE_STATE)
     expect(onReplaceStudy).toHaveBeenCalledWith(DEFAULT_STUDY_STATE)

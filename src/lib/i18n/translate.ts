@@ -1,5 +1,7 @@
 import type { Dictionary } from "./dictionaries/vi"
-import type { TranslationKey } from "./types"
+import type { TranslationFn, TranslationKey } from "./types"
+import { DEFAULT_LOCALE } from "./locale-cookie"
+import { getDictionary } from "./get-dictionary"
 
 function translate(
   dict: Dictionary,
@@ -30,4 +32,6 @@ function translate(
   )
 }
 
-export { translate }
+const translateDefault: TranslationFn = (key, params) => translate(getDictionary(DEFAULT_LOCALE), key, params)
+
+export { translate, translateDefault }

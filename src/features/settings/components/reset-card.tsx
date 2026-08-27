@@ -6,6 +6,7 @@ import { AlertTriangle } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { useT } from "@/components/locale-provider"
 
 interface ResetCardProps {
   counts: string[]
@@ -14,20 +15,22 @@ interface ResetCardProps {
 }
 
 function ResetCard({ counts, onWipe, onExport }: ResetCardProps) {
+  const t = useT()
   const [step, setStep] = useState<0 | 1 | 2>(0)
 
   if (step === 2) {
     return (
-      <Card label="Bắt đầu lại" className="min-w-0 flex-[1_1_300px]">
+      <Card label={t("settings.reset.title")} className="min-w-0 flex-[1_1_300px]">
         <div className="flex items-start gap-[11px]">
           <span className="flex size-[38px] flex-none items-center justify-center">
             <Image src="/assets/icons/check.svg" width={36} height={36} alt="" />
           </span>
           <div className="text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)]">
-            <strong className="font-bold text-[var(--ob-color-text)]">Đã xoá sạch.</strong>
+            <strong className="font-bold text-[var(--ob-color-text)]">
+              {t("settings.reset.wipedTitle")}
+            </strong>
             <br />
-            Nhật ký, vàng, đầu tư, tiết kiệm, nợ thẻ, chuỗi ngày và số đã học đều về 0 — bắt đầu lại từ
-            Tổng quan.
+            {t("settings.reset.wipedBody")}
           </div>
         </div>
       </Card>
@@ -36,17 +39,18 @@ function ResetCard({ counts, onWipe, onExport }: ResetCardProps) {
 
   if (step === 1) {
     return (
-      <Card label="Bắt đầu lại" className="min-w-0 flex-[1_1_300px]">
+      <Card label={t("settings.reset.title")} className="min-w-0 flex-[1_1_300px]">
         <div className="mb-4 flex items-start gap-[11px] rounded-[var(--ob-radius-md)] bg-[#FDEBF2] px-[15px] py-[13px] text-[#B92E63]">
           <AlertTriangle size={18} className="mt-[1px] flex-none" />
           <div className="text-[13.5px] leading-[1.5]">
             {counts.length ? (
               <>
-                Sẽ xoá <strong className="font-bold">{counts.join(", ")}</strong>. Không khôi phục được — nên
-                xuất một bản sao trước.
+                {t("settings.reset.confirmPrefix")}
+                <strong className="font-bold">{counts.join(", ")}</strong>
+                {t("settings.reset.confirmSuffix")}
               </>
             ) : (
-              "Không còn gì để xoá."
+              t("settings.reset.confirmEmpty")
             )}
           </div>
         </div>
@@ -61,7 +65,7 @@ function ResetCard({ counts, onWipe, onExport }: ResetCardProps) {
               setStep(2)
             }}
           >
-            Xoá vĩnh viễn
+            {t("settings.reset.deleteForever")}
           </Button>
           <Button
             variant="secondary"
@@ -72,10 +76,10 @@ function ResetCard({ counts, onWipe, onExport }: ResetCardProps) {
               onExport()
             }}
           >
-            Xuất bản sao trước
+            {t("settings.reset.exportFirst")}
           </Button>
           <Button variant="ghost" size="sm" type="button" onClick={() => setStep(0)}>
-            Huỷ
+            {t("common.cancel")}
           </Button>
         </div>
       </Card>
@@ -83,9 +87,9 @@ function ResetCard({ counts, onWipe, onExport }: ResetCardProps) {
   }
 
   return (
-    <Card label="Bắt đầu lại" className="min-w-0 flex-[1_1_300px]">
+    <Card label={t("settings.reset.title")} className="min-w-0 flex-[1_1_300px]">
       <p className="mb-[14px] text-[13.5px] leading-[1.55] text-[var(--ob-color-text-muted)]">
-        Xoá sạch chi tiêu, nhật ký và chuỗi ngày. Không khôi phục được.
+        {t("settings.reset.hint")}
       </p>
       <Button
         variant="ghost"
@@ -94,7 +98,7 @@ function ResetCard({ counts, onWipe, onExport }: ResetCardProps) {
         className="!border-[var(--ob-color-expense)] !text-[var(--ob-color-expense)]"
         onClick={() => setStep(1)}
       >
-        Xoá toàn bộ dữ liệu
+        {t("settings.reset.deleteAll")}
       </Button>
     </Card>
   )

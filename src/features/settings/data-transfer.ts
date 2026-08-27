@@ -2,6 +2,8 @@ import { DEFAULT_FINANCE_STATE, type FinanceState } from "@/features/finance/fin
 import { DEFAULT_JOURNAL_STATE, type JournalState } from "@/features/journal/journal-storage"
 import { DEFAULT_STUDY_STATE, type StudyState } from "@/features/study/study-storage"
 import { DEFAULT_SETTINGS, type AppSettings } from "@/lib/settings-storage"
+import { translateDefault } from "@/lib/i18n"
+import type { TranslationFn } from "@/lib/i18n"
 
 const EXPORT_VERSION = 1
 
@@ -37,16 +39,16 @@ function ensureArray<T>(value: unknown, fallback: T[]): T[] {
   return Array.isArray(value) ? (value as T[]) : fallback
 }
 
-function parseImportPayload(raw: string): ImportResult {
+function parseImportPayload(raw: string, t: TranslationFn = translateDefault): ImportResult {
   let parsed: unknown
   try {
     parsed = JSON.parse(raw)
   } catch {
-    return { ok: false, error: "File không phải JSON hợp lệ." }
+    return { ok: false, error: t("settings.data.invalidJson") }
   }
 
   if (!isObject(parsed) || parsed.version !== EXPORT_VERSION) {
-    return { ok: false, error: "Không phải bản sao Orange Banana (thiếu version 1)." }
+    return { ok: false, error: t("settings.data.invalidBackup") }
   }
 
   const journalOverride = isObject(parsed.journal) ? parsed.journal : {}
@@ -84,7 +86,10 @@ function parseImportPayload(raw: string): ImportResult {
     modules: ensureArray(settingsOverride.modules, DEFAULT_SETTINGS.modules),
   }
 
-  const summary = `${journal.entries.length} bài nhật ký · ${finance.gold.length} lần mua vàng · đã khôi phục tiết kiệm, nợ thẻ, mục tiêu`
+  const summary = t("settings.data.importSummary", {
+    journalCount: journal.entries.length,
+    goldCount: finance.gold.length,
+  })
 
   return { ok: true, data: { journal, finance, study, settings }, summary }
 }
