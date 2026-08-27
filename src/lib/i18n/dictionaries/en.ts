@@ -6,6 +6,10 @@ const en: Dictionary = {
     appDescription: "Your finances, journal, and study — all in one place.",
     switchLanguage: "Switch language",
     loading: "Loading",
+    calculator: "Calculator",
+    showMoney: "Show amount",
+    hideMoney: "Hide amount",
+    logout: "Log out",
   },
   netWorth: {
     title: "Net worth",
@@ -27,6 +31,17 @@ const en: Dictionary = {
       title: "Language",
       hint: "Choose the app's display language",
     },
+  },
+  login: {
+    title: "Login",
+  },
+  calc: {
+    hint: "You can also type · Esc to close",
+    close: "Close",
+    clear: "Clear all",
+    backspace: "Delete one character",
+    invalidSyntax: "Invalid syntax",
+    restoreHistory: "Reload {expr} as {result}",
   },
 }
 

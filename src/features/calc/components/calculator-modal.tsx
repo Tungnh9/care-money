@@ -5,8 +5,10 @@ import { createPortal } from "react-dom"
 import { cva } from "class-variance-authority"
 import { Delete, Eraser, X, type LucideIcon } from "lucide-react"
 
+import { useT } from "@/components/locale-provider"
 import { Monkey } from "@/components/ob/monkey"
 import { cn } from "@/lib/utils"
+import type { TranslationKey } from "@/lib/i18n"
 import { useCalculator, type HistoryItem } from "../hooks/use-calculator"
 
 interface CalculatorModalProps {
@@ -20,12 +22,12 @@ interface CalcKey {
   key: string
   kind: KeyKind
   icon?: LucideIcon
-  label?: string
+  labelKey?: TranslationKey
 }
 
 // Đúng thứ tự bàn phím trong file thiết kế tham khảo: 5 hàng x 4 cột.
 const KEYS: CalcKey[] = [
-  { key: "C", kind: "fn", icon: Eraser, label: "Xoá hết" },
+  { key: "C", kind: "fn", icon: Eraser, labelKey: "calc.clear" },
   { key: "( )", kind: "fn" },
   { key: "%", kind: "fn" },
   { key: "÷", kind: "op" },
@@ -43,7 +45,7 @@ const KEYS: CalcKey[] = [
   { key: "+", kind: "op" },
   { key: "0", kind: "n" },
   { key: ",", kind: "n" },
-  { key: "⌫", kind: "fn", icon: Delete, label: "Xoá một kí tự" },
+  { key: "⌫", kind: "fn", icon: Delete, labelKey: "calc.backspace" },
   { key: "=", kind: "eq" },
 ]
 
@@ -68,6 +70,7 @@ const calcKeyVariants = cva(
 )
 
 function CalculatorModal({ open, onOpenChange }: CalculatorModalProps) {
+  const t = useT()
   const boxRef = useRef<HTMLDivElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
   const previouslyFocusedRef = useRef<HTMLElement | null>(null)
@@ -187,7 +190,7 @@ function CalculatorModal({ open, onOpenChange }: CalculatorModalProps) {
       className="ob-calc-veil"
       role="dialog"
       aria-modal="true"
-      aria-label="Máy tính"
+      aria-label={t("common.calculator")}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onOpenChange(false)
       }}
@@ -196,15 +199,15 @@ function CalculatorModal({ open, onOpenChange }: CalculatorModalProps) {
         <div className="ob-calc-head mb-[14px] flex items-center gap-[11px]">
           <Monkey pose="calc" size={46} />
           <div>
-            <div className="text-[15px] font-bold text-[var(--ob-color-text)]">Máy tính</div>
-            <div className="text-[12px] text-[var(--ob-color-text-muted)]">
-              Gõ bàn phím cũng được · Esc để đóng
+            <div className="text-[15px] font-bold text-[var(--ob-color-text)]">
+              {t("common.calculator")}
             </div>
+            <div className="text-[12px] text-[var(--ob-color-text-muted)]">{t("calc.hint")}</div>
           </div>
           <button
             type="button"
             ref={closeRef}
-            aria-label="Đóng"
+            aria-label={t("calc.close")}
             onClick={() => onOpenChange(false)}
             className="ml-auto inline-flex h-9 w-9 flex-none items-center justify-center rounded-[var(--ob-radius-pill)] text-[var(--ob-color-text-muted)] outline-none [transition:background_var(--ob-dur-fast)_var(--ob-ease-out)] hover:bg-[var(--ob-color-surface-sunken)] focus-visible:ring-3 focus-visible:ring-ring/50"
           >
@@ -219,7 +222,7 @@ function CalculatorModal({ open, onOpenChange }: CalculatorModalProps) {
                 key={`${item.m}-${index}`}
                 type="button"
                 data-testid="calculator-history-item"
-                aria-label={`Nạp lại ${item.q} bằng ${item.a}`}
+                aria-label={t("calc.restoreHistory", { expr: item.q, result: item.a })}
                 onClick={() => handleRestore(item)}
                 className="flex items-center gap-2 rounded-[var(--ob-radius-md)] px-[10px] py-[6px] text-left outline-none hover:bg-[var(--ob-color-surface-sunken)] focus-visible:ring-3 focus-visible:ring-ring/50"
               >
@@ -258,18 +261,18 @@ function CalculatorModal({ open, onOpenChange }: CalculatorModalProps) {
             )}
           >
             <span dir="ltr" data-testid="calculator-result">
-              {error ? "Sai cú pháp" : out}
+              {error ? t("calc.invalidSyntax") : out}
             </span>
           </div>
         </div>
 
         <div className="grid grid-cols-4 gap-2">
-          {KEYS.map(({ key, kind, icon: Icon, label }) => (
+          {KEYS.map(({ key, kind, icon: Icon, labelKey }) => (
             <button
               key={key}
               type="button"
               onClick={() => hit(key)}
-              aria-label={label}
+              aria-label={labelKey ? t(labelKey) : undefined}
               className={calcKeyVariants({ kind })}
             >
               {Icon ? <Icon className="h-5 w-5" aria-hidden="true" /> : key}

@@ -1,12 +1,13 @@
 import type { Metadata } from "next"
 
-import type { Dictionary } from "./dictionaries/vi"
+import type { TranslationKey } from "./types"
 import { getDictionary } from "./get-dictionary"
 import { getServerLocale } from "./get-server-locale"
+import { translate } from "./translate"
 
-async function generatePageMetadata(navKey: keyof Dictionary["nav"]): Promise<Metadata> {
+async function generatePageMetadata(titleKey: TranslationKey): Promise<Metadata> {
   const dict = getDictionary(await getServerLocale())
-  return { title: `${dict.nav[navKey]} – ${dict.common.appName}` }
+  return { title: `${translate(dict, titleKey)} – ${dict.common.appName}` }
 }
 
 export { generatePageMetadata }

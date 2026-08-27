@@ -2,9 +2,10 @@ import type { Metadata } from "next"
 
 import { getGrammar, getVocab } from "@/features/study/content-loader"
 import { OverviewView } from "@/features/overview"
+import { generatePageMetadata } from "@/lib/i18n/page-metadata"
 
-export const metadata: Metadata = {
-  title: "Tổng quan – Orange Banana",
+export function generateMetadata(): Promise<Metadata> {
+  return generatePageMetadata("nav.overview")
 }
 
 export default function OverviewPage() {

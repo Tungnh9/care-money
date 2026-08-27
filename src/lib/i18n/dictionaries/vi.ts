@@ -4,6 +4,10 @@ const vi = {
     appDescription: "Tài chính, nhật ký và việc học của bạn — một nơi duy nhất.",
     switchLanguage: "Chuyển ngôn ngữ",
     loading: "Đang tải",
+    calculator: "Máy tính",
+    showMoney: "Hiện số tiền",
+    hideMoney: "Ẩn số tiền",
+    logout: "Đăng xuất",
   },
   netWorth: {
     title: "Tài sản ròng",
@@ -25,6 +29,17 @@ const vi = {
       title: "Ngôn ngữ",
       hint: "Chọn ngôn ngữ hiển thị cho ứng dụng",
     },
+  },
+  login: {
+    title: "Đăng nhập",
+  },
+  calc: {
+    hint: "Gõ bàn phím cũng được · Esc để đóng",
+    close: "Đóng",
+    clear: "Xoá hết",
+    backspace: "Xoá một kí tự",
+    invalidSyntax: "Sai cú pháp",
+    restoreHistory: "Nạp lại {expr} bằng {result}",
   },
 }
 

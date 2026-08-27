@@ -1,9 +1,10 @@
 import type { Metadata } from "next"
 
 import { LoginAside, LoginForm } from "@/features/login"
+import { generatePageMetadata } from "@/lib/i18n/page-metadata"
 
-export const metadata: Metadata = {
-  title: "Đăng nhập – Orange Banana",
+export function generateMetadata(): Promise<Metadata> {
+  return generatePageMetadata("login.title")
 }
 
 export default function LoginPage() {

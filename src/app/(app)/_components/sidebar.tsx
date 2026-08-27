@@ -20,22 +20,24 @@ import {
 import { cn } from "@/lib/utils"
 import { clearStoredUser } from "@/lib/auth"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
+import { useT } from "@/components/locale-provider"
 import { LocaleSwitch } from "@/components/ob/locale-switch"
 import { useSettings } from "@/features/settings/hooks/use-settings"
 import { CalculatorModal } from "@/features/calc"
 
 const NAV = [
-  { label: "Tổng quan", href: "/overview", icon: LayoutDashboard, moduleKey: null },
-  { label: "Tài chính", href: "/finance", icon: Wallet, moduleKey: "taichinh" },
-  { label: "Nhật ký", href: "/journal", icon: BookOpen, moduleKey: "nhatky" },
-  { label: "Học tập", href: "/study", icon: GraduationCap, moduleKey: "hoctap" },
-  { label: "Mục tiêu", href: "/goals", icon: Target, moduleKey: "muctieu" },
-  { label: "Cài đặt", href: "/settings", icon: Settings, moduleKey: null },
+  { key: "overview", href: "/overview", icon: LayoutDashboard, moduleKey: null },
+  { key: "finance", href: "/finance", icon: Wallet, moduleKey: "taichinh" },
+  { key: "journal", href: "/journal", icon: BookOpen, moduleKey: "nhatky" },
+  { key: "study", href: "/study", icon: GraduationCap, moduleKey: "hoctap" },
+  { key: "goals", href: "/goals", icon: Target, moduleKey: "muctieu" },
+  { key: "settings", href: "/settings", icon: Settings, moduleKey: null },
 ] as const
 
 function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const t = useT()
   const { settings } = useSettings()
   const { hidden: hideMoney, toggle: toggleHideMoney } = useMoneyVisibility()
   const [calcOpen, setCalcOpen] = useState(false)
@@ -62,7 +64,7 @@ function Sidebar() {
         <button
           type="button"
           onClick={() => setCalcOpen(true)}
-          aria-label="Máy tính"
+          aria-label={t("common.calculator")}
           className="flex items-center justify-center text-[var(--ob-color-text-muted)] transition-colors duration-[var(--ob-dur-fast)] hover:text-[var(--ob-color-action-strong)]"
         >
           <Calculator size={18} />
@@ -70,7 +72,7 @@ function Sidebar() {
         <button
           type="button"
           onClick={toggleHideMoney}
-          aria-label={hideMoney ? "Hiện số tiền" : "Ẩn số tiền"}
+          aria-label={hideMoney ? t("common.showMoney") : t("common.hideMoney")}
           aria-pressed={hideMoney}
           className={cn(
             "flex items-center justify-center rounded-[var(--ob-radius-sm)] transition-colors duration-[var(--ob-dur-fast)]",
@@ -85,7 +87,7 @@ function Sidebar() {
         <button
           type="button"
           onClick={handleLogout}
-          aria-label="Đăng xuất"
+          aria-label={t("common.logout")}
           className="flex items-center justify-center text-[var(--ob-color-text-muted)] transition-colors duration-[var(--ob-dur-fast)] hover:text-[var(--ob-color-expense)]"
         >
           <LogOut size={18} />
@@ -102,11 +104,12 @@ function Sidebar() {
         </div>
 
         <nav className="flex flex-1 items-center justify-around gap-1 md:flex-none md:flex-col md:items-stretch md:justify-start">
-          {nav.map(({ label, href, icon: ItemIcon }) => {
+          {nav.map(({ key, href, icon: ItemIcon }) => {
             const active = pathname === href
+            const label = t(`nav.${key}`)
             return (
               <Link
-                key={label}
+                key={key}
                 href={href}
                 className={cn(
                   "flex min-h-[var(--ob-hit-min)] flex-col items-center justify-center gap-0.5 rounded-[var(--ob-radius-md)] px-2 py-1.5 text-center text-[10.5px] leading-[var(--ob-lh-normal)] no-underline transition-[background-color,color] duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] md:flex-row md:justify-center md:gap-[11px] md:px-[14px] md:py-[11px] md:text-left md:text-[length:var(--ob-size-sm)] lg:justify-start",
@@ -126,11 +129,11 @@ function Sidebar() {
           <button
             type="button"
             onClick={() => setCalcOpen(true)}
-            aria-label="Máy tính"
+            aria-label={t("common.calculator")}
             className="flex items-center justify-center gap-[11px] rounded-[var(--ob-radius-md)] px-[14px] py-[11px] text-left text-[length:var(--ob-size-sm)] leading-[var(--ob-lh-normal)] font-medium text-[var(--ob-color-text-muted)] lg:justify-start"
           >
             <Calculator size={18} />
-            <span className="hidden whitespace-nowrap lg:inline">Máy tính</span>
+            <span className="hidden whitespace-nowrap lg:inline">{t("common.calculator")}</span>
           </button>
           <button
             type="button"
@@ -145,7 +148,7 @@ function Sidebar() {
           >
             {hideMoney ? <EyeOff size={18} /> : <Eye size={18} />}
             <span className="hidden whitespace-nowrap lg:inline">
-              {hideMoney ? "Hiện số tiền" : "Ẩn số tiền"}
+              {hideMoney ? t("common.showMoney") : t("common.hideMoney")}
             </span>
           </button>
           <LocaleSwitch className="mx-[14px] lg:mx-0" />
@@ -161,7 +164,7 @@ function Sidebar() {
             className="flex items-center justify-center gap-[11px] rounded-[var(--ob-radius-md)] px-[14px] py-[11px] text-left text-[length:var(--ob-size-sm)] leading-[var(--ob-lh-normal)] font-medium text-[var(--ob-color-text-muted)] transition-colors duration-[var(--ob-dur-fast)] hover:text-[var(--ob-color-expense)] lg:justify-start"
           >
             <LogOut size={18} />
-            <span className="hidden whitespace-nowrap lg:inline">Đăng xuất</span>
+            <span className="hidden whitespace-nowrap lg:inline">{t("common.logout")}</span>
           </button>
         </div>
       </aside>
