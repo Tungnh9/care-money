@@ -6,6 +6,7 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Monkey } from "@/components/ob/monkey"
+import { useT } from "@/components/locale-provider"
 
 const WORK_SECONDS = 25 * 60
 const BREAK_SECONDS = 5 * 60
@@ -15,6 +16,7 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 type Mode = "work" | "break"
 
 function Pomodoro() {
+  const t = useT()
   const [mode, setMode] = useState<Mode>("work")
   const [left, setLeft] = useState(WORK_SECONDS)
   const [running, setRunning] = useState(false)
@@ -63,7 +65,10 @@ function Pomodoro() {
   }
 
   return (
-    <Card tone={isWork ? "plain" : "reward"} label={isWork ? "Pomodoro · tập trung" : "Pomodoro · nghỉ ngắn"}>
+    <Card
+      tone={isWork ? "plain" : "reward"}
+      label={isWork ? t("study.pomodoroFocus") : t("study.pomodoroBreak")}
+    >
       <div className="flex flex-wrap items-center gap-6">
         <Monkey size={72} pose={!isWork ? "banana" : running ? "focus" : "sleep"} />
         <div className="relative size-[132px] flex-none">
@@ -98,13 +103,13 @@ function Pomodoro() {
         <div className="flex-1">
           <div className="mb-[14px] flex flex-wrap gap-[10px]">
             <Button variant="primary" size="sm" type="button" onClick={handleToggleRunning}>
-              {running ? "Tạm dừng" : left < total ? "Tiếp tục" : "Bắt đầu"}
+              {running ? t("study.pause") : left < total ? t("study.resume") : t("study.start")}
             </Button>
             <Button variant="ghost" size="sm" type="button" onClick={handleReset}>
-              Đặt lại
+              {t("study.reset")}
             </Button>
             <Button variant="ghost" size="sm" type="button" onClick={handleSwitchMode}>
-              {isWork ? "Sang nghỉ 5 phút" : "Sang học 25 phút"}
+              {isWork ? t("study.switchToBreak") : t("study.switchToWork")}
             </Button>
           </div>
           <div
@@ -112,7 +117,7 @@ function Pomodoro() {
             style={{ color: isWork ? "var(--ob-color-text-muted)" : "#5C4200" }}
           >
             <Image src="/assets/icons/timer.svg" width={19} height={19} alt="" />
-            {rounds ? `Đã xong ${rounds} phiên hôm nay` : "Chưa có phiên nào hôm nay"}
+            {rounds ? t("study.sessionsToday", { count: rounds }) : t("study.noSessionsToday")}
           </div>
         </div>
       </div>

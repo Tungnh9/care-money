@@ -2,6 +2,7 @@
 
 import { Check, Plus } from "lucide-react"
 
+import { useT } from "@/components/locale-provider"
 import { cn } from "@/lib/utils"
 import type { VocabEntry } from "../types"
 
@@ -12,6 +13,8 @@ interface VocabWordRowProps {
 }
 
 function VocabWordRow({ entry, learned, onToggleLearned }: VocabWordRowProps) {
+  const t = useT()
+
   return (
     <div className="flex flex-wrap items-start gap-[14px] border-t border-[var(--ob-color-border)] py-[14px]">
       <div className="min-w-0 flex-[1_1_220px]">
@@ -38,7 +41,7 @@ function VocabWordRow({ entry, learned, onToggleLearned }: VocabWordRowProps) {
       <button
         type="button"
         onClick={() => onToggleLearned(entry.id)}
-        aria-label={learned ? "Bỏ đánh dấu đã học" : "Đánh dấu đã học"}
+        aria-label={learned ? t("study.unmarkLearned") : t("study.markLearned")}
         className={cn(
           "flex min-h-[var(--ob-hit-min)] flex-none items-center gap-2 rounded-[var(--ob-radius-pill)] border-[1.5px] px-[14px] py-[9px] text-[13px] font-bold",
           learned
@@ -47,7 +50,7 @@ function VocabWordRow({ entry, learned, onToggleLearned }: VocabWordRowProps) {
         )}
       >
         {learned ? <Check size={16} /> : <Plus size={16} />}
-        {learned ? "Đã học" : "Đánh dấu"}
+        {learned ? t("study.learned") : t("study.mark")}
       </button>
     </div>
   )

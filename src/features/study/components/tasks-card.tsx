@@ -2,6 +2,7 @@
 
 import { Card } from "@/components/ui/card"
 import { TaskItem } from "@/components/ob/task-item"
+import { useT } from "@/components/locale-provider"
 import type { Task } from "../types"
 
 interface TasksCardProps {
@@ -11,8 +12,10 @@ interface TasksCardProps {
 }
 
 function TasksCard({ tasks, onToggle, className }: TasksCardProps) {
+  const t = useT()
+
   return (
-    <Card label="Nhiệm vụ hôm nay" className={className}>
+    <Card label={t("overview.study.tasksTitle")} className={className}>
       <div className="flex flex-col gap-[10px]">
         {tasks.map((task, i) => (
           <TaskItem key={task.label} label={task.label} done={task.done} onToggle={() => onToggle(i)} />

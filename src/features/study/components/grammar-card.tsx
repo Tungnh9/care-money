@@ -1,4 +1,7 @@
+"use client"
+
 import { Card } from "@/components/ui/card"
+import { useT } from "@/components/locale-provider"
 import type { GrammarEntry } from "../types"
 
 function ExampleList({ examples }: { examples?: string[] }) {
@@ -28,8 +31,10 @@ interface GrammarHighlightCardProps {
 }
 
 function GrammarHighlightCard({ entry }: GrammarHighlightCardProps) {
+  const t = useT()
+
   return (
-    <Card tone="reward" label="Ngữ pháp hôm nay" className="min-w-0 flex-[1_1_100%]">
+    <Card tone="reward" label={t("study.grammarHighlightTitle")} className="min-w-0 flex-[1_1_100%]">
       <div className="mb-3 flex flex-wrap items-center gap-[9px] text-[19px] font-bold">
         {entry.title}
         <StructureBadge structure={entry.structure} />
@@ -45,8 +50,10 @@ interface GrammarListCardProps {
 }
 
 function GrammarListCard({ entries }: GrammarListCardProps) {
+  const t = useT()
+
   return (
-    <Card label={`Ngữ pháp tiếng Anh · ${entries.length} mục`}>
+    <Card label={t("study.grammarListTitle", { count: entries.length })}>
       {entries.map((entry) => (
         <div key={entry.id} className="border-t border-[var(--ob-color-border)] py-4">
           <div className="mb-2 flex flex-wrap items-center gap-[9px] text-[15px] font-bold">
