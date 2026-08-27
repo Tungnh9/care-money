@@ -1,6 +1,7 @@
 "use client"
 
 import { Card } from "@/components/ui/card"
+import { useT } from "@/components/locale-provider"
 import { cn } from "@/lib/utils"
 import type { Mood } from "@/lib/settings-storage"
 
@@ -11,10 +12,11 @@ interface MoodPickerCardProps {
 }
 
 function MoodPickerCard({ moods, selected, onSelect }: MoodPickerCardProps) {
+  const t = useT()
   const activeMoods = moods.filter((m) => m.on)
 
   return (
-    <Card label="Tâm trạng hôm nay">
+    <Card label={t("journal.moodToday")}>
       <div className="flex flex-wrap gap-2">
         {activeMoods.map((m) => {
           const active = m.label === selected
@@ -37,7 +39,7 @@ function MoodPickerCard({ moods, selected, onSelect }: MoodPickerCardProps) {
         })}
         {!activeMoods.length ? (
           <span className="text-[13.5px] text-[var(--ob-color-text-subtle)]">
-            Chưa bật tâm trạng nào — mở Cài đặt để chọn.
+            {t("journal.noMoodsEnabled")}
           </span>
         ) : null}
       </div>

@@ -4,6 +4,7 @@ import { Trash2 } from "lucide-react"
 
 import { Card } from "@/components/ui/card"
 import { Empty } from "@/components/ob/empty"
+import { useT } from "@/components/locale-provider"
 import { cn } from "@/lib/utils"
 import type { JournalEntry } from "../types"
 
@@ -13,10 +14,16 @@ interface JournalEntriesCardProps {
 }
 
 function JournalEntriesCard({ entries, onDelete }: JournalEntriesCardProps) {
+  const t = useT()
+
   return (
     <Card
       id="ds-entries"
-      label={`Nhật ký đã viết${entries.length ? ` · ${entries.length}` : ""}`}
+      label={
+        entries.length
+          ? t("journal.entriesTitleCount", { count: entries.length })
+          : t("journal.entriesTitle")
+      }
       className={cn(entries.length && "col-span-full")}
     >
       {entries.length ? (
@@ -42,7 +49,7 @@ function JournalEntriesCard({ entries, onDelete }: JournalEntriesCardProps) {
                   </span>
                 ) : null}
                 <span className="ml-auto [font-family:var(--ob-font-num)] text-[12px] text-[var(--ob-color-text-subtle)]">
-                  {entry.words} từ
+                  {t("overview.journal.wordCount", { count: entry.words })}
                 </span>
               </div>
               <p className="text-sm leading-[1.6] text-[var(--ob-color-text-muted)]">
@@ -51,7 +58,7 @@ function JournalEntriesCard({ entries, onDelete }: JournalEntriesCardProps) {
             </div>
             <button
               type="button"
-              aria-label="Xoá bài"
+              aria-label={t("journal.deleteEntryAria")}
               onClick={() => onDelete(entry.id)}
               className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)]"
             >
@@ -60,7 +67,7 @@ function JournalEntriesCard({ entries, onDelete }: JournalEntriesCardProps) {
           </div>
         ))
       ) : (
-        <Empty pose="book" title="Chưa có bài nào" hint="Bài đầu tiên bạn lưu sẽ hiện ở đây." />
+        <Empty pose="book" title={t("journal.emptyTitle")} hint={t("journal.emptyHint")} />
       )}
     </Card>
   )

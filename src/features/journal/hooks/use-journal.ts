@@ -10,6 +10,7 @@ import {
   type JournalState,
 } from "../journal-storage"
 import type { JournalEntry, MoodSnapshot } from "../types"
+import { useT, useLocale } from "@/components/locale-provider"
 
 interface SaveEntryInput {
   text: string
@@ -18,6 +19,8 @@ interface SaveEntryInput {
 }
 
 function useJournal() {
+  const t = useT()
+  const { locale } = useLocale()
   const [state, setState] = useState<JournalState>(DEFAULT_JOURNAL_STATE)
 
   useEffect(() => {
@@ -37,7 +40,10 @@ function useJournal() {
       const entry: JournalEntry = {
         id: now.getTime(),
         text: input.text,
-        time: now.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
+        time: now.toLocaleTimeString(locale === "en" ? "en-US" : "vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
         date: `${String(now.getDate()).padStart(2, "0")}/${String(now.getMonth() + 1).padStart(2, "0")}`,
         words: input.words,
         mood: input.mood,
@@ -47,23 +53,23 @@ function useJournal() {
         persist({ entries: [entry, ...state.entries] })
         return entry
       } catch {
-        toast.error("Không thể lưu bài viết. Vui lòng thử lại.")
+        toast.error(t("journal.saveFailed"))
         return null
       }
     },
-    [state, persist]
+    [state, persist, locale, t]
   )
 
   const deleteEntry = useCallback(
     (id: number) => {
       try {
         persist({ ...state, entries: state.entries.filter((entry) => entry.id !== id) })
-        toast.success("Đã xoá bài viết")
+        toast.success(t("journal.deleted"))
       } catch {
-        toast.error("Không thể xoá bài viết. Vui lòng thử lại.")
+        toast.error(t("journal.deleteFailed"))
       }
     },
-    [state, persist]
+    [state, persist, t]
   )
 
   return {

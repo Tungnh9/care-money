@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 
+import { useT, useLocale } from "@/components/locale-provider"
 import { longDate } from "@/lib/date"
 import { cn } from "@/lib/utils"
 import { useSettings } from "@/features/settings/hooks/use-settings"
@@ -13,6 +14,8 @@ import { MoodPickerCard } from "./mood-picker-card"
 import type { JournalEntry } from "../types"
 
 function JournalView() {
+  const t = useT()
+  const { locale } = useLocale()
   const { settings } = useSettings()
   const { entries, saveEntry, deleteEntry } = useJournal()
   const [mood, setMood] = useState("")
@@ -39,9 +42,11 @@ function JournalView() {
 
   return (
     <div>
-      <h1 className="mb-1 [font:var(--ob-text-h2)] tracking-[var(--ob-track-heading)]">Nhật ký</h1>
+      <h1 className="mb-1 [font:var(--ob-text-h2)] tracking-[var(--ob-track-heading)]">
+        {t("nav.journal")}
+      </h1>
       <p className="mb-5 text-sm text-[var(--ob-color-text-subtle)]">
-        {longDate()} · viết bao nhiêu cũng được
+        {t("journal.subtitle", { date: longDate(new Date(), locale) })}
       </p>
       <div className="ob-card-grid flex flex-wrap gap-5">
         <div className="min-w-0 flex-[1_1_100%]">

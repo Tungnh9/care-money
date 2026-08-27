@@ -5,24 +5,26 @@ import { Bold, Italic, List, ListOrdered, Quote, Underline, Heading2 } from "luc
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { useT } from "@/components/locale-provider"
 import { cn } from "@/lib/utils"
+import type { TranslationKey } from "@/lib/i18n"
 import type { MoodSnapshot } from "../types"
 
 interface Tool {
   icon: typeof Bold
   command: string
   value?: string
-  label: string
+  labelKey: TranslationKey
 }
 
 const TOOLS: Tool[] = [
-  { icon: Bold, command: "bold", label: "Đậm" },
-  { icon: Italic, command: "italic", label: "Nghiêng" },
-  { icon: Underline, command: "underline", label: "Gạch chân" },
-  { icon: Heading2, command: "formatBlock", value: "h3", label: "Tiêu đề" },
-  { icon: List, command: "insertUnorderedList", label: "Danh sách" },
-  { icon: ListOrdered, command: "insertOrderedList", label: "Danh sách đánh số" },
-  { icon: Quote, command: "formatBlock", value: "blockquote", label: "Trích dẫn" },
+  { icon: Bold, command: "bold", labelKey: "journal.toolbar.bold" },
+  { icon: Italic, command: "italic", labelKey: "journal.toolbar.italic" },
+  { icon: Underline, command: "underline", labelKey: "journal.toolbar.underline" },
+  { icon: Heading2, command: "formatBlock", value: "h3", labelKey: "journal.toolbar.heading" },
+  { icon: List, command: "insertUnorderedList", labelKey: "journal.toolbar.bulletList" },
+  { icon: ListOrdered, command: "insertOrderedList", labelKey: "journal.toolbar.numberedList" },
+  { icon: Quote, command: "formatBlock", value: "blockquote", labelKey: "journal.toolbar.quote" },
 ]
 
 interface JournalEditorProps {
@@ -31,6 +33,7 @@ interface JournalEditorProps {
 }
 
 function JournalEditor({ selectedMood, onSave }: JournalEditorProps) {
+  const t = useT()
   const ref = useRef<HTMLDivElement>(null)
   const [words, setWords] = useState(0)
 
@@ -60,11 +63,11 @@ function JournalEditor({ selectedMood, onSave }: JournalEditorProps) {
   return (
     <Card className="col-span-full">
       <div className="mb-[14px] flex flex-wrap gap-0.5 border-b border-[var(--ob-color-border)] pb-[10px]">
-        {TOOLS.map(({ icon: ToolIcon, command, value, label }) => (
+        {TOOLS.map(({ icon: ToolIcon, command, value, labelKey }) => (
           <button
-            key={label}
+            key={labelKey}
             type="button"
-            aria-label={label}
+            aria-label={t(labelKey)}
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => runCommand(command, value)}
             className="flex size-11 items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-muted)] transition-[background-color,color] duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:bg-[var(--ob-color-action-soft)] hover:text-[var(--ob-color-action-strong)]"
@@ -79,9 +82,9 @@ function JournalEditor({ selectedMood, onSave }: JournalEditorProps) {
         suppressContentEditableWarning
         role="textbox"
         aria-multiline="true"
-        aria-label="Nội dung nhật ký"
+        aria-label={t("journal.contentAria")}
         onInput={handleInput}
-        data-placeholder="Hôm nay của bạn thế nào?"
+        data-placeholder={t("journal.placeholder")}
         className={cn(
           "min-h-[220px] text-[var(--ob-color-text)] outline-none md:min-h-[300px]",
           "[font:var(--ob-text-body)]",
@@ -95,14 +98,14 @@ function JournalEditor({ selectedMood, onSave }: JournalEditorProps) {
       />
       <div className="mt-[18px] flex flex-wrap items-center gap-[14px] border-t border-[var(--ob-color-border)] pt-4">
         <span className="[font-family:var(--ob-font-num)] text-[12.5px] text-[var(--ob-color-text-subtle)]">
-          {words} từ
+          {t("overview.journal.wordCount", { count: words })}
         </span>
         <div className="ml-auto flex gap-[10px]">
           <Button variant="ghost" size="sm" type="button" onClick={handleClear}>
-            Xoá nháp
+            {t("journal.clearDraft")}
           </Button>
           <Button variant="primary" size="sm" type="button" disabled={!words} onClick={handleSave}>
-            Lưu vào nhật ký
+            {t("journal.saveEntry")}
           </Button>
         </div>
       </div>
