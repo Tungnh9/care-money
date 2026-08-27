@@ -3,6 +3,7 @@
 import { Card } from "@/components/ui/card"
 import { TaskItem } from "@/components/ob/task-item"
 import { useT } from "@/components/locale-provider"
+import { translateTaskLabel } from "@/features/study/study-storage"
 import type { Task } from "../types"
 
 interface TasksCardProps {
@@ -18,7 +19,12 @@ function TasksCard({ tasks, onToggle, className }: TasksCardProps) {
     <Card label={t("overview.study.tasksTitle")} className={className}>
       <div className="flex flex-col gap-[10px]">
         {tasks.map((task, i) => (
-          <TaskItem key={task.label} label={task.label} done={task.done} onToggle={() => onToggle(i)} />
+          <TaskItem
+            key={task.label}
+            label={translateTaskLabel(task.label, t)}
+            done={task.done}
+            onToggle={() => onToggle(i)}
+          />
         ))}
       </div>
     </Card>

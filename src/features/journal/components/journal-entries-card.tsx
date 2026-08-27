@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card"
 import { Empty } from "@/components/ob/empty"
 import { useT } from "@/components/locale-provider"
 import { cn } from "@/lib/utils"
+import { translateMoodLabel } from "@/lib/settings-storage"
 import type { JournalEntry } from "../types"
 
 interface JournalEntriesCardProps {
@@ -45,7 +46,7 @@ function JournalEntriesCard({ entries, onDelete }: JournalEntriesCardProps) {
                 </span>
                 {entry.mood ? (
                   <span className="text-[12.5px] font-semibold text-[var(--ob-color-text-muted)]">
-                    {entry.mood.label}
+                    {translateMoodLabel(entry.mood.label, t)}
                   </span>
                 ) : null}
                 <span className="ml-auto [font-family:var(--ob-font-num)] text-[12px] text-[var(--ob-color-text-subtle)]">

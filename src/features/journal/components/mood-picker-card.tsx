@@ -3,7 +3,7 @@
 import { Card } from "@/components/ui/card"
 import { useT } from "@/components/locale-provider"
 import { cn } from "@/lib/utils"
-import type { Mood } from "@/lib/settings-storage"
+import { translateMoodLabel, type Mood } from "@/lib/settings-storage"
 
 interface MoodPickerCardProps {
   moods: Mood[]
@@ -33,7 +33,7 @@ function MoodPickerCard({ moods, selected, onSelect }: MoodPickerCardProps) {
               )}
             >
               <span className="text-base leading-none">{m.emoji}</span>
-              {m.label}
+              {translateMoodLabel(m.label, t)}
             </button>
           )
         })}

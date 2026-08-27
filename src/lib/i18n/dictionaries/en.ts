@@ -36,6 +36,7 @@ const en: Dictionary = {
     language: {
       title: "Language",
       hint: "Choose the app's display language",
+      switchTo: "Tap to switch to {name}",
     },
     subtitle: "Just for you · saved on your device by default, syncing across devices is optional",
     counts: {
@@ -83,6 +84,16 @@ const en: Dictionary = {
       toastRemoveFailed: "Couldn't remove the mood. Please try again.",
       toastAdded: 'Added "{label}"',
       toastAddFailed: 'Couldn\'t add "{label}". Please try again.',
+      defaults: {
+        amazing: { label: "Amazing", desc: "Everything's flowing smoothly" },
+        happy: { label: "Happy", desc: "Good mood, feeling light" },
+        peaceful: { label: "Peaceful", desc: "Relaxed, nothing weighing on me" },
+        neutral: { label: "Neutral", desc: "Neither happy nor sad" },
+        tired: { label: "Tired", desc: "Need rest, low energy" },
+        anxious: { label: "Anxious", desc: "Something's on my mind" },
+        sad: { label: "Sad", desc: "Feeling a bit low today" },
+        stressed: { label: "Stressed", desc: "Under pressure, overwhelmed" },
+      },
     },
     data: {
       title: "Data",
@@ -402,6 +413,11 @@ const en: Dictionary = {
     unmarkLearned: "Unmark as learned",
     markLearned: "Mark as learned",
     mark: "Mark",
+    defaultTasks: {
+      vocab: "Review 20 vocab words",
+      reading: "Read 10 pages",
+      listening: "Do 1 listening exercise",
+    },
   },
   calc: {
     hint: "You can also type · Esc to close",

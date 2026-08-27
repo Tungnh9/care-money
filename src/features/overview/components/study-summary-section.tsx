@@ -4,6 +4,7 @@ import { Check, Circle } from "lucide-react"
 
 import { pickDaily } from "@/features/study/daily-pick"
 import { GrammarHighlightCard } from "@/features/study/components/grammar-card"
+import { translateTaskLabel } from "@/features/study/study-storage"
 import type { GrammarEntry, Task, VocabEntry } from "@/features/study/types"
 import { Card } from "@/components/ui/card"
 import { Figure } from "@/components/ob/figure"
@@ -59,7 +60,12 @@ function StudySummarySection({ vocab, grammar, tasks, onToggleTask, learned }: S
         <Figure value={String(doneTasks)} unit={`/${tasks.length}`} size="sm" className="mb-[14px]" />
         <div className="flex flex-col gap-[6px]">
           {tasks.map((task, i) => (
-            <TaskItem key={task.label} label={task.label} done={task.done} onToggle={() => onToggleTask(i)} />
+            <TaskItem
+              key={task.label}
+              label={translateTaskLabel(task.label, t)}
+              done={task.done}
+              onToggle={() => onToggleTask(i)}
+            />
           ))}
         </div>
       </Card>

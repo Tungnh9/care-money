@@ -12,7 +12,7 @@ function LanguageCard() {
       <p className="mb-[14px] text-[13.5px] leading-[1.55] text-[var(--ob-color-text-muted)]">
         {t("settings.language.hint")}
       </p>
-      <LocaleSwitch />
+      <LocaleSwitch variant="block" />
     </Card>
   )
 }

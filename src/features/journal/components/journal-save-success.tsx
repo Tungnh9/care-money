@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card"
 import { Confetti } from "@/components/ob/confetti"
 import { Monkey } from "@/components/ob/monkey"
 import { useT } from "@/components/locale-provider"
+import { translateMoodLabel } from "@/lib/settings-storage"
 import type { JournalEntry } from "../types"
 
 interface JournalSaveSuccessProps {
@@ -25,7 +26,7 @@ function JournalSaveSuccess({ entry, onWriteMore, onViewEntries }: JournalSaveSu
           <div className="[font:var(--ob-text-h3)]">{t("journal.savedTitle")}</div>
           <div className="mt-[3px] text-[13.5px] text-[var(--ob-color-text-muted)]">
             {entry.time} · {t("overview.journal.wordCount", { count: entry.words })}
-            {entry.mood ? ` · ${entry.mood.emoji} ${entry.mood.label}` : ""}
+            {entry.mood ? ` · ${entry.mood.emoji} ${translateMoodLabel(entry.mood.label, t)}` : ""}
           </div>
         </div>
       </div>

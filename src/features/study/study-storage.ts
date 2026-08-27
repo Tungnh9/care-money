@@ -1,3 +1,5 @@
+import { translateDefault } from "@/lib/i18n"
+import type { TranslationFn } from "@/lib/i18n"
 import type { Task } from "./types"
 
 interface StudyState {
@@ -18,6 +20,22 @@ const DEFAULT_STUDY_STATE: StudyState = {
   learned: [],
 }
 
+type DefaultTaskKey = "vocab" | "reading" | "listening"
+
+// Nhãn gốc tiếng Việt của DEFAULT_TASKS là định danh duy nhất còn lại trong
+// localStorage cũ (không có key) — không có UI sửa nhãn nhiệm vụ nên map này
+// luôn khớp đúng dữ liệu đã lưu, kể cả từ trước khi có i18n.
+const DEFAULT_TASK_I18N: Record<string, DefaultTaskKey> = {
+  "Ôn 20 từ vựng": "vocab",
+  "Đọc 10 trang": "reading",
+  "Làm 1 đề nghe": "listening",
+}
+
+function translateTaskLabel(label: string, t: TranslationFn = translateDefault): string {
+  const key = DEFAULT_TASK_I18N[label]
+  return key ? t(`study.defaultTasks.${key}`) : label
+}
+
 function getStoredStudy(): StudyState {
   try {
     const raw = window.localStorage.getItem(STUDY_STORAGE_KEY)
@@ -32,4 +50,11 @@ function setStoredStudy(state: StudyState) {
   window.localStorage.setItem(STUDY_STORAGE_KEY, JSON.stringify(state))
 }
 
-export { STUDY_STORAGE_KEY, DEFAULT_STUDY_STATE, getStoredStudy, setStoredStudy, type StudyState }
+export {
+  STUDY_STORAGE_KEY,
+  DEFAULT_STUDY_STATE,
+  getStoredStudy,
+  setStoredStudy,
+  translateTaskLabel,
+  type StudyState,
+}

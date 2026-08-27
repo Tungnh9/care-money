@@ -34,6 +34,7 @@ const vi = {
     language: {
       title: "Ngôn ngữ",
       hint: "Chọn ngôn ngữ hiển thị cho ứng dụng",
+      switchTo: "Nhấn để đổi sang {name}",
     },
     subtitle: "Chỉ mình bạn dùng · mặc định lưu trên máy bạn, đồng bộ giữa thiết bị là tuỳ chọn",
     counts: {
@@ -81,6 +82,16 @@ const vi = {
       toastRemoveFailed: "Không thể xoá tâm trạng. Vui lòng thử lại.",
       toastAdded: 'Đã thêm tâm trạng "{label}"',
       toastAddFailed: 'Không thể thêm tâm trạng "{label}". Vui lòng thử lại.',
+      defaults: {
+        amazing: { label: "Tuyệt vời", desc: "Mọi thứ đều trôi chảy" },
+        happy: { label: "Vui", desc: "Tâm trạng tốt, nhẹ người" },
+        peaceful: { label: "Bình yên", desc: "Thư thái, không vướng bận" },
+        neutral: { label: "Bình thường", desc: "Không vui cũng không buồn" },
+        tired: { label: "Mệt", desc: "Cần nghỉ, thiếu năng lượng" },
+        anxious: { label: "Lo lắng", desc: "Có chuyện đang nghĩ" },
+        sad: { label: "Buồn", desc: "Hôm nay hơi trũng" },
+        stressed: { label: "Căng thẳng", desc: "Áp lực, quá tải" },
+      },
     },
     data: {
       title: "Dữ liệu",
@@ -400,6 +411,11 @@ const vi = {
     unmarkLearned: "Bỏ đánh dấu đã học",
     markLearned: "Đánh dấu đã học",
     mark: "Đánh dấu",
+    defaultTasks: {
+      vocab: "Ôn 20 từ vựng",
+      reading: "Đọc 10 trang",
+      listening: "Làm 1 đề nghe",
+    },
   },
   calc: {
     hint: "Gõ bàn phím cũng được · Esc để đóng",

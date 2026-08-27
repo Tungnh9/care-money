@@ -1,3 +1,6 @@
+import { translateDefault } from "@/lib/i18n"
+import type { TranslationFn } from "@/lib/i18n"
+
 interface Profile {
   displayName: string
   greeting: string
@@ -69,6 +72,40 @@ const TINT_PALETTE = [
 
 const EMOJI_PICKER = ["😄", "🙂", "😌", "😐", "😴", "😟", "😔", "😣", "🥳", "🤯", "🤒", "😍"]
 
+type DefaultMoodKey =
+  | "amazing"
+  | "happy"
+  | "peaceful"
+  | "neutral"
+  | "tired"
+  | "anxious"
+  | "sad"
+  | "stressed"
+
+// Nhãn gốc tiếng Việt của DEFAULT_MOODS là định danh duy nhất còn lại trong
+// localStorage cũ (không có key) — không có UI sửa nhãn mood mặc định nên map này
+// luôn khớp đúng dữ liệu đã lưu, kể cả từ trước khi có i18n.
+const DEFAULT_MOOD_I18N: Record<string, DefaultMoodKey> = {
+  "Tuyệt vời": "amazing",
+  Vui: "happy",
+  "Bình yên": "peaceful",
+  "Bình thường": "neutral",
+  Mệt: "tired",
+  "Lo lắng": "anxious",
+  Buồn: "sad",
+  "Căng thẳng": "stressed",
+}
+
+function translateMoodLabel(label: string, t: TranslationFn = translateDefault): string {
+  const key = DEFAULT_MOOD_I18N[label]
+  return key ? t(`settings.moods.defaults.${key}.label`) : label
+}
+
+function translateMoodDesc(mood: Pick<Mood, "label" | "desc">, t: TranslationFn = translateDefault): string {
+  const key = DEFAULT_MOOD_I18N[mood.label]
+  return key ? t(`settings.moods.defaults.${key}.desc`) : mood.desc
+}
+
 function mergeModules(stored: ModuleToggle[] | undefined): ModuleToggle[] {
   // label/hint luôn lấy từ DEFAULT_MODULES (nguồn) — chỉ "on" lấy từ storage.
   // Nếu lưu cả object storage sẽ giữ nguyên bản cũ mãi mãi mỗi khi thêm/sửa module mới,
@@ -109,6 +146,8 @@ export {
   EMOJI_PICKER,
   getStoredSettings,
   setStoredSettings,
+  translateMoodLabel,
+  translateMoodDesc,
   type AppSettings,
   type Profile,
   type Mood,
