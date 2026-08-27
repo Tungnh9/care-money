@@ -1,6 +1,7 @@
 "use client"
 
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
+import { useT, useLocale } from "@/components/locale-provider"
 import { parseGoldPrice, summarizeFinance } from "@/features/finance/finance-calculations"
 import { useFinance } from "@/features/finance/hooks/use-finance"
 import { useCarGoalFund } from "../hooks/use-car-goal-fund"
@@ -9,6 +10,8 @@ import { GoalCard } from "./goal-card"
 import { OverallProgressCard } from "./overall-progress-card"
 
 function GoalsView() {
+  const t = useT()
+  const { locale } = useLocale()
   const { hidden } = useMoneyVisibility()
   const { savings, cards, gold, goldPrice, invests } = useFinance()
   const { fundName, selectFund } = useCarGoalFund()
@@ -21,14 +24,18 @@ function GoalsView() {
       savings,
       carFundName: fundName,
     },
-    hidden
+    hidden,
+    t,
+    locale
   )
 
   return (
     <div>
-      <h1 className="mb-1 [font:var(--ob-text-h2)] tracking-[var(--ob-track-heading)]">Mục tiêu</h1>
+      <h1 className="mb-1 [font:var(--ob-text-h2)] tracking-[var(--ob-track-heading)]">
+        {t("nav.goals")}
+      </h1>
       <p className="mb-5 text-sm text-[var(--ob-color-text-subtle)]">
-        {goals.length} mục tiêu đang chạy · hoàn thành trung bình {avg}%
+        {t("goals.subtitle", { count: goals.length, avg })}
       </p>
       <div className="ob-card-grid flex flex-wrap gap-5">
         <OverallProgressCard goals={goals} avg={avg} className="min-w-0 basis-full" />

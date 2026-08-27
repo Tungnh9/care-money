@@ -2,6 +2,7 @@ import Image from "next/image"
 
 import { Figure } from "@/components/ob/figure"
 import { Card } from "@/components/ui/card"
+import { useT } from "@/components/locale-provider"
 import { cn } from "@/lib/utils"
 import type { Goal } from "../types"
 
@@ -12,9 +13,14 @@ interface OverallProgressCardProps {
 }
 
 function OverallProgressCard({ goals, avg, className }: OverallProgressCardProps) {
+  const t = useT()
+
   return (
-    <Card tone="invert" label="Tiến độ chung" className={cn(className)}>
-      <Figure value={`${avg}%`} caption={`trung bình ${goals.length} mục tiêu`} />
+    <Card tone="invert" label={t("goals.overallProgress")} className={cn(className)}>
+      <Figure
+        value={`${avg}%`}
+        caption={t("goals.overallCaption", { count: goals.length })}
+      />
       <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-[18px] border-t border-[var(--ob-vo-700)] pt-5 md:grid-cols-[repeat(auto-fit,minmax(150px,1fr))]">
         {goals.map((goal) => (
           <div key={goal.key}>

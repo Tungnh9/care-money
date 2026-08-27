@@ -1,5 +1,6 @@
 "use client"
 
+import { useT } from "@/components/locale-provider"
 import { cn } from "@/lib/utils"
 import type { SavingsFund } from "@/features/finance/types"
 
@@ -10,10 +11,12 @@ interface CarFundPickerProps {
 }
 
 function CarFundPicker({ savings, selected, onSelect }: CarFundPickerProps) {
+  const t = useT()
+
   if (!savings.length) {
     return (
       <p className="mt-3 text-[12.5px] text-[var(--ob-color-text-subtle)]">
-        Chưa có quỹ tiết kiệm nào. Tạo 1 quỹ ở màn Tài chính để gắn vào đây.
+        {t("goals.noFundsYet")}
       </p>
     )
   }

@@ -1,18 +1,36 @@
 import { formatMoney } from "@/lib/format"
+import { DEFAULT_LOCALE, translateDefault } from "@/lib/i18n"
+import type { Locale, TranslationFn } from "@/lib/i18n"
 
 import type { Goal, GoalsInput } from "./types"
 
-function formatChi(phan: number): string {
+function formatChi(phan: number, t: TranslationFn = translateDefault): string {
   const chi = Math.floor(phan / 10)
   const rest = phan % 10
-  return `${chi} chỉ${rest ? ` ${rest} phân` : ""}`
+  return rest
+    ? t("finance.chiAndPhanValue", { chi, phan: rest })
+    : t("finance.chiValue", { count: chi })
 }
 
-function goldRemainingNote(goldPhan: number, goldPricePerPhan: number, hidden: boolean): string {
+function goldRemainingNote(
+  goldPhan: number,
+  goldPricePerPhan: number,
+  hidden: boolean,
+  t: TranslationFn = translateDefault,
+  locale: Locale = DEFAULT_LOCALE
+): string {
   const remaining = 100 - goldPhan
+  const remainingChiValue = (remaining / 10).toFixed(1)
   const remainingChi =
-    remaining % 10 === 0 ? String(remaining / 10) : (remaining / 10).toFixed(1).replace(".", ",")
-  return `Còn ${remainingChi} chỉ · tương đương ${formatMoney(remaining * goldPricePerPhan, hidden)}`
+    remaining % 10 === 0
+      ? String(remaining / 10)
+      : locale === "en"
+        ? remainingChiValue
+        : remainingChiValue.replace(".", ",")
+  return t("goals.goldRemaining", {
+    chi: remainingChi,
+    amount: formatMoney(remaining * goldPricePerPhan, hidden, locale),
+  })
 }
 
 function withPercent(now: number, target: number) {
@@ -20,7 +38,12 @@ function withPercent(now: number, target: number) {
   return { percent, done: now >= target }
 }
 
-function getGoals(data: GoalsInput, hidden = false): { goals: Goal[]; avg: number } {
+function getGoals(
+  data: GoalsInput,
+  hidden = false,
+  t: TranslationFn = translateDefault,
+  locale: Locale = DEFAULT_LOCALE
+): { goals: Goal[]; avg: number } {
   const { savingsTotal, goldPhan, goldPricePerPhan } = data
 
   const carFund = data.carFundName
@@ -30,36 +53,36 @@ function getGoals(data: GoalsInput, hidden = false): { goals: Goal[]; avg: numbe
   const defs = [
     {
       key: "savings",
-      name: "Tiết kiệm 100 triệu",
+      name: t("overview.goals.mini.savings100m"),
       icon: "pig",
       now: savingsTotal,
       target: 100_000_000,
-      format: (n: number) => formatMoney(n, hidden),
-      note: "Tổng các quỹ tiết kiệm ở màn Tài chính",
+      format: (n: number) => formatMoney(n, hidden, locale),
+      note: t("goals.savingsGoalNote"),
       tone: "action" as const,
       linked: true,
     },
     {
       key: "gold",
-      name: "Tích lũy 10 chỉ vàng",
+      name: t("goals.goldGoalName"),
       icon: "gold",
       now: goldPhan,
       target: 100,
-      format: formatChi,
-      note: goldRemainingNote(goldPhan, goldPricePerPhan, hidden),
+      format: (n: number) => formatChi(n, t),
+      note: goldRemainingNote(goldPhan, goldPricePerPhan, hidden, t, locale),
       tone: "reward" as const,
       linked: true,
     },
     {
       key: "car",
-      name: "Mua xe ô tô",
+      name: t("overview.goals.mini.buyCar"),
       icon: "car",
       now: carFund ? carFund.amount : 0,
       target: carFund ? carFund.target : 1,
-      format: (n: number) => formatMoney(n, hidden),
+      format: (n: number) => formatMoney(n, hidden, locale),
       note: carFund
-        ? `Đang gắn với quỹ "${carFund.name}" ở màn Tài chính`
-        : "Chưa gắn quỹ tiết kiệm nào. Chọn 1 quỹ bên dưới để bắt đầu theo dõi.",
+        ? t("goals.carGoalLinkedNote", { name: carFund.name })
+        : t("goals.carGoalUnlinkedNote"),
       tone: "action" as const,
       linked: !!carFund,
     },

@@ -3,6 +3,7 @@ import Image from "next/image"
 import { Confetti } from "@/components/ob/confetti"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { useT } from "@/components/locale-provider"
 import { cn } from "@/lib/utils"
 import type { SavingsFund } from "@/features/finance/types"
 import type { Goal } from "../types"
@@ -17,6 +18,7 @@ interface GoalCardProps {
 }
 
 function GoalCard({ goal, className, savings, selectedFundName, onSelectFund }: GoalCardProps) {
+  const t = useT()
   const isCar = goal.key === "car"
   const unlinked = !goal.linked
   const iconName = goal.done ? "check" : goal.icon
@@ -51,7 +53,9 @@ function GoalCard({ goal, className, savings, selectedFundName, onSelectFund }: 
           </span>
         )}
         <div className="col-start-2 min-w-0 mt-1.5 text-[12.5px] text-[var(--ob-color-text-subtle)]">
-          {unlinked ? "Đã trích được" : `trên ${goal.format(goal.target)}`}
+          {unlinked
+            ? t("goals.unlinkedProgress")
+            : t("goals.ofTarget", { amount: goal.format(goal.target) })}
         </div>
       </div>
       <Progress value={goal.percent} tone={goal.tone} />
