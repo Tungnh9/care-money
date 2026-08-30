@@ -165,14 +165,14 @@ describe("parseGoldDate", () => {
 })
 
 describe("sortGoldByDate", () => {
-  it("sorts purchases from the earliest date to the latest, regardless of input order", () => {
+  it("sorts purchases from the latest date to the earliest, regardless of input order", () => {
     const gold = [
       { id: 1, date: "03/06/2026", phan: 5, buy: 1_436_000 },
       { id: 2, date: "05/05/2026", phan: 2, buy: 1_649_000 },
       { id: 3, date: "28/07/2026", phan: 5, buy: 1_420_000 },
     ]
 
-    expect(sortGoldByDate(gold).map((p) => p.id)).toEqual([2, 1, 3])
+    expect(sortGoldByDate(gold).map((p) => p.id)).toEqual([3, 1, 2])
   })
 
   it("does not mutate the original array", () => {

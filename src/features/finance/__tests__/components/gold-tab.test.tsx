@@ -280,7 +280,7 @@ describe("GoldTab", () => {
     expect(lossBox.querySelector("svg")).not.toBeNull()
   })
 
-  it("renders gold purchases sorted from oldest to newest date, regardless of the input array's order", () => {
+  it("renders gold purchases sorted from newest to oldest date, regardless of the input array's order", () => {
     const purchases = [
       { id: 1, date: "28/07/2026", phan: 5, buy: 1_420_000 },
       { id: 2, date: "05/05/2026", phan: 2, buy: 1_649_000 },
@@ -303,7 +303,7 @@ describe("GoldTab", () => {
       (row) => row.querySelector("td")?.textContent
     )
 
-    expect(dates).toEqual(["05/05/2026", "03/06/2026", "28/07/2026"])
+    expect(dates).toEqual(["28/07/2026", "03/06/2026", "05/05/2026"])
   })
 
   it("omits the count suffix and the win/loss summary when there are no purchases", () => {

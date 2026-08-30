@@ -30,7 +30,7 @@ function parseGoldDate(date: string): number {
 }
 
 function sortGoldByDate(gold: GoldPurchase[]): GoldPurchase[] {
-  return [...gold].sort((a, b) => parseGoldDate(a.date) - parseGoldDate(b.date))
+  return [...gold].sort((a, b) => parseGoldDate(b.date) - parseGoldDate(a.date))
 }
 
 interface FinanceSummary {
