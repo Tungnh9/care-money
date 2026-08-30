@@ -6,6 +6,8 @@ import {
   parseGoldPrice,
   summarizeFinance,
   goldPurchasePL,
+  parseGoldDate,
+  sortGoldByDate,
 } from "../finance-calculations"
 import { DEFAULT_FINANCE_STATE, type FinanceState } from "../finance-storage"
 
@@ -147,5 +149,41 @@ describe("goldPurchasePL", () => {
     const purchase = { id: 3, date: "03/01/2026", phan: 10, buy: 900_000 }
 
     expect(goldPurchasePL(purchase, 900_000)).toBe(0)
+  })
+})
+
+describe("parseGoldDate", () => {
+  it("parses a dd/mm/yyyy string into an ascending-comparable timestamp", () => {
+    expect(parseGoldDate("10/08/2026")).toBeLessThan(parseGoldDate("11/08/2026"))
+    expect(parseGoldDate("31/12/2025")).toBeLessThan(parseGoldDate("01/01/2026"))
+  })
+
+  it("falls back to 0 for an empty or malformed date string", () => {
+    expect(parseGoldDate("")).toBe(0)
+    expect(parseGoldDate("not-a-date")).toBe(0)
+  })
+})
+
+describe("sortGoldByDate", () => {
+  it("sorts purchases from the latest date to the earliest, regardless of input order", () => {
+    const gold = [
+      { id: 1, date: "03/06/2026", phan: 5, buy: 1_436_000 },
+      { id: 2, date: "05/05/2026", phan: 2, buy: 1_649_000 },
+      { id: 3, date: "28/07/2026", phan: 5, buy: 1_420_000 },
+    ]
+
+    expect(sortGoldByDate(gold).map((p) => p.id)).toEqual([3, 1, 2])
+  })
+
+  it("does not mutate the original array", () => {
+    const gold = [
+      { id: 1, date: "28/07/2026", phan: 5, buy: 1_420_000 },
+      { id: 2, date: "05/05/2026", phan: 2, buy: 1_649_000 },
+    ]
+    const original = [...gold]
+
+    sortGoldByDate(gold)
+
+    expect(gold).toEqual(original)
   })
 })
