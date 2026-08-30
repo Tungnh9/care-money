@@ -16,6 +16,7 @@ import {
   parseGoldPrice,
   pct1,
   phanToChi,
+  sortGoldByDate,
   type FinanceSummary,
 } from "../finance-calculations"
 import type { GoldPurchase } from "../types"
@@ -52,6 +53,7 @@ function GoldTab({
   const maxBar = Math.max(goldCost, goldValue, 1)
   const avgCost = goldPhan > 0 ? goldCost / goldPhan : 0
   const marketPrice = parseGoldPrice(goldPrice)
+  const sortedGold = sortGoldByDate(gold)
   const purchasePLs = gold.map((p) => goldPurchasePL(p, marketPrice))
   const winCount = purchasePLs.filter((pl) => pl >= 0).length
   const lossCount = purchasePLs.filter((pl) => pl < 0).length
@@ -240,7 +242,7 @@ function GoldTab({
         ) : null}
         <div className="hidden lg:block">
           <GoldTransactionsTable
-            gold={gold}
+            gold={sortedGold}
             goldPrice={goldPrice}
             onRemove={setDeletingId}
             onEdit={startEdit}
@@ -248,7 +250,7 @@ function GoldTab({
         </div>
         <div className="lg:hidden">
           <GoldTransactionsCards
-            gold={gold}
+            gold={sortedGold}
             goldPrice={goldPrice}
             onRemove={setDeletingId}
             onEdit={startEdit}
