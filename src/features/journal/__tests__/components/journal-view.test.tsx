@@ -1,11 +1,10 @@
-import { describe, it, expect, beforeEach } from "vitest"
-import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 
 import { JournalView } from "../../components/journal-view"
 
 function typeInto(editor: HTMLElement, text: string) {
-  editor.innerText = text
-  fireEvent.input(editor)
+  fireEvent.change(editor, { target: { value: text } })
 }
 
 describe("JournalView", () => {
@@ -77,5 +76,89 @@ describe("JournalView", () => {
     const entriesWrapper = entriesCard?.parentElement
     expect(entriesWrapper).toHaveClass("flex-[2_1_360px]")
     expect(entriesWrapper).toHaveClass("[&>*]:h-full")
+  })
+
+  it("clicking Sửa on an entry prefills the editor and updates it instead of creating a new one", async () => {
+    render(<JournalView />)
+
+    const editor = await screen.findByRole("textbox")
+    typeInto(editor, "Bài gốc")
+    fireEvent.click(screen.getByRole("button", { name: "Lưu vào nhật ký" }))
+    fireEvent.click(await screen.findByRole("button", { name: "Viết thêm một bài" }))
+
+    await waitFor(() => expect(screen.getByText("Bài gốc")).toBeInTheDocument())
+    fireEvent.click(screen.getByRole("button", { name: /Sửa bài/ }))
+
+    expect(screen.getByRole("textbox")).toHaveValue("Bài gốc")
+    expect(screen.getByRole("button", { name: "Cập nhật bài viết" })).toBeInTheDocument()
+
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "Bài đã sửa" } })
+    fireEvent.click(screen.getByRole("button", { name: "Cập nhật bài viết" }))
+
+    await waitFor(() => expect(screen.getByText("Bài đã sửa")).toBeInTheDocument())
+    expect(screen.queryByText("Bài gốc")).not.toBeInTheDocument()
+    expect(screen.getByText("Nhật ký đã viết · 1")).toBeInTheDocument()
+  })
+
+  it("Huỷ sửa cancels editing without changing the entry", async () => {
+    render(<JournalView />)
+
+    const editor = await screen.findByRole("textbox")
+    typeInto(editor, "Bài gốc")
+    fireEvent.click(screen.getByRole("button", { name: "Lưu vào nhật ký" }))
+    fireEvent.click(await screen.findByRole("button", { name: "Viết thêm một bài" }))
+
+    await waitFor(() => expect(screen.getByText("Bài gốc")).toBeInTheDocument())
+    fireEvent.click(screen.getByRole("button", { name: /Sửa bài/ }))
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "Nội dung nháp bỏ đi" } })
+    fireEvent.click(screen.getByRole("button", { name: "Huỷ sửa" }))
+
+    expect(screen.getByText("Bài gốc")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Lưu vào nhật ký" })).toBeInTheDocument()
+    expect(screen.getByRole("textbox")).toHaveValue("")
+  })
+})
+
+describe("JournalView on-this-day card", () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it("shows the on-this-day card when an entry exists from exactly 1 year ago", async () => {
+    vi.setSystemTime(new Date(2025, 7, 10, 9, 0))
+    window.localStorage.setItem(
+      "journal-entries",
+      JSON.stringify({
+        entries: [
+          { id: new Date(2025, 7, 10, 9, 0).getTime(), text: "Bài năm ngoái", time: "09:00", date: "10/08", words: 2, mood: null },
+        ],
+      })
+    )
+    vi.setSystemTime(new Date(2026, 7, 10, 9, 0))
+
+    render(<JournalView />)
+
+    const onThisDayLabel = await screen.findByText("1 năm trước, bạn đã viết")
+    expect(onThisDayLabel).toBeInTheDocument()
+    const onThisDayCard = onThisDayLabel.closest("section") as HTMLElement
+    expect(within(onThisDayCard).getByText("Bài năm ngoái")).toBeInTheDocument()
+
+    // Bài này vẫn xuất hiện thêm 1 lần nữa ở danh sách đầy đủ bên dưới — thẻ "gợi lại
+    // quá khứ" chỉ là 1 điểm nhấn, không thay thế/ẩn bài đó khỏi danh sách chính.
+    expect(screen.getAllByText("Bài năm ngoái")).toHaveLength(2)
+  })
+
+  it("does not show the on-this-day card when there is no matching entry", async () => {
+    vi.setSystemTime(new Date(2026, 7, 10, 9, 0))
+
+    render(<JournalView />)
+
+    await screen.findByText("Chưa có bài nào")
+    expect(screen.queryByText(/bạn đã viết/)).not.toBeInTheDocument()
   })
 })
