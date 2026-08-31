@@ -1,6 +1,7 @@
 import Link from "next/link"
 
 import type { JournalEntry } from "@/features/journal/types"
+import { stripHtmlToPlainText } from "@/features/journal/journal-html"
 import { Card } from "@/components/ui/card"
 import { buttonVariants } from "@/components/ui/button"
 import { Empty } from "@/components/ob/empty"
@@ -30,7 +31,7 @@ function JournalSummarySection({ entries }: JournalSummarySectionProps) {
                     {entry.date} · {entry.time} · {entry.words} từ
                   </div>
                   <p className="m-0 overflow-hidden text-[13.5px] leading-[1.55] text-ellipsis whitespace-nowrap text-[var(--ob-color-text-muted)]">
-                    {entry.text}
+                    {stripHtmlToPlainText(entry.text)}
                   </p>
                 </div>
               </div>
