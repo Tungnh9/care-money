@@ -6,6 +6,7 @@ import { Pencil, Trash2 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Empty } from "@/components/ob/empty"
 import { cn } from "@/lib/utils"
+import { sanitizeJournalHtml, stripHtmlToPlainText } from "../journal-html"
 import type { JournalEntry } from "../types"
 
 interface JournalEntriesCardProps {
@@ -36,10 +37,9 @@ function JournalEntriesCard({ entries, onDelete, onEdit }: JournalEntriesCardPro
     >
       {entries.length ? (
         entries.map((entry) => {
-          const isTruncated = entry.text.length > TRUNCATE_LENGTH
+          const plainText = stripHtmlToPlainText(entry.text)
+          const isTruncated = plainText.length > TRUNCATE_LENGTH
           const isExpanded = expandedIds.has(entry.id)
-          const shownText =
-            isTruncated && !isExpanded ? `${entry.text.slice(0, TRUNCATE_LENGTH)}…` : entry.text
 
           return (
             <div
@@ -66,9 +66,16 @@ function JournalEntriesCard({ entries, onDelete, onEdit }: JournalEntriesCardPro
                     {entry.words} từ
                   </span>
                 </div>
-                <p className="whitespace-pre-wrap text-sm leading-[1.6] text-[var(--ob-color-text-muted)]">
-                  {shownText}
-                </p>
+                {isTruncated && !isExpanded ? (
+                  <p className="whitespace-pre-wrap text-sm leading-[1.6] text-[var(--ob-color-text-muted)]">
+                    {`${plainText.slice(0, TRUNCATE_LENGTH)}…`}
+                  </p>
+                ) : (
+                  <div
+                    className="[&_blockquote]:my-[10px] [&_blockquote]:border-l-[3px] [&_blockquote]:border-[var(--ob-color-reward)] [&_blockquote]:pl-3 [&_h3]:mt-[10px] [&_h3]:mb-1 [&_h3]:font-bold [&_li]:my-0.5 [&_ol]:list-decimal [&_ol]:pl-[20px] [&_ul]:list-disc [&_ul]:pl-[20px] text-sm leading-[1.6] text-[var(--ob-color-text-muted)]"
+                    dangerouslySetInnerHTML={{ __html: sanitizeJournalHtml(entry.text) }}
+                  />
+                )}
                 {isTruncated ? (
                   <button
                     type="button"

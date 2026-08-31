@@ -3,8 +3,12 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 
 import { JournalView } from "../../components/journal-view"
 
+// jsdom không đồng bộ innerText <-> innerHTML như trình duyệt thật (set cái này không
+// cập nhật cái kia), nên set cả 2 để mô phỏng đúng trạng thái 1 trình duyệt thật sẽ có.
 function typeInto(editor: HTMLElement, text: string) {
-  fireEvent.change(editor, { target: { value: text } })
+  editor.innerHTML = text
+  editor.innerText = text
+  fireEvent.input(editor)
 }
 
 describe("JournalView", () => {
@@ -89,10 +93,10 @@ describe("JournalView", () => {
     await waitFor(() => expect(screen.getByText("Bài gốc")).toBeInTheDocument())
     fireEvent.click(screen.getByRole("button", { name: /Sửa bài/ }))
 
-    expect(screen.getByRole("textbox")).toHaveValue("Bài gốc")
+    expect(screen.getByRole("textbox")).toHaveTextContent("Bài gốc")
     expect(screen.getByRole("button", { name: "Cập nhật bài viết" })).toBeInTheDocument()
 
-    fireEvent.change(screen.getByRole("textbox"), { target: { value: "Bài đã sửa" } })
+    typeInto(screen.getByRole("textbox"), "Bài đã sửa")
     fireEvent.click(screen.getByRole("button", { name: "Cập nhật bài viết" }))
 
     await waitFor(() => expect(screen.getByText("Bài đã sửa")).toBeInTheDocument())
@@ -110,12 +114,12 @@ describe("JournalView", () => {
 
     await waitFor(() => expect(screen.getByText("Bài gốc")).toBeInTheDocument())
     fireEvent.click(screen.getByRole("button", { name: /Sửa bài/ }))
-    fireEvent.change(screen.getByRole("textbox"), { target: { value: "Nội dung nháp bỏ đi" } })
+    typeInto(screen.getByRole("textbox"), "Nội dung nháp bỏ đi")
     fireEvent.click(screen.getByRole("button", { name: "Huỷ sửa" }))
 
     expect(screen.getByText("Bài gốc")).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Lưu vào nhật ký" })).toBeInTheDocument()
-    expect(screen.getByRole("textbox")).toHaveValue("")
+    expect(screen.getByRole("textbox")).toBeEmptyDOMElement()
   })
 })
 
