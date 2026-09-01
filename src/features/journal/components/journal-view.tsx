@@ -51,11 +51,8 @@ function JournalView() {
   }
 
   function handleViewEntries() {
-    setJustSaved(null)
-    setTimeout(() => {
-      const el = document.getElementById("ds-entries")
-      if (el) window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 20)
-    }, 60)
+    const el = document.getElementById("ds-entries")
+    if (el) window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 20)
   }
 
   return (
