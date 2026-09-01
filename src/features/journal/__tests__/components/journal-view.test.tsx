@@ -58,6 +58,20 @@ describe("JournalView", () => {
     expect(successCard?.querySelectorAll(".ob-firework-spark").length).toBeGreaterThan(0)
   })
 
+  it("clicking Xem lại bài vừa viết keeps the success card, not a blank new-entry form", async () => {
+    render(<JournalView />)
+
+    const editor = await screen.findByRole("textbox")
+    typeInto(editor, "Hôm nay mình đã đi bộ")
+    fireEvent.click(screen.getByRole("button", { name: "Lưu vào nhật ký" }))
+
+    expect(await screen.findByText("Đã lưu vào nhật ký")).toBeInTheDocument()
+    fireEvent.click(screen.getByRole("button", { name: "Xem lại bài vừa viết" }))
+
+    expect(screen.getByText("Đã lưu vào nhật ký")).toBeInTheDocument()
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument()
+  })
+
   it("wraps the sections in the ob-card-grid entrance-animation class", async () => {
     render(<JournalView />)
 
