@@ -58,7 +58,7 @@ describe("JournalView", () => {
     expect(successCard?.querySelectorAll(".ob-firework-spark").length).toBeGreaterThan(0)
   })
 
-  it("clicking Xem lại bài vừa viết keeps the success card, not a blank new-entry form", async () => {
+  it("clicking Xem lại bài vừa viết keeps the success card and highlights the entry in the list", async () => {
     render(<JournalView />)
 
     const editor = await screen.findByRole("textbox")
@@ -70,6 +70,9 @@ describe("JournalView", () => {
 
     expect(screen.getByText("Đã lưu vào nhật ký")).toBeInTheDocument()
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument()
+
+    const entryRow = screen.getByText("Hôm nay mình đã đi bộ").closest("[id^='journal-entry-']")
+    expect(entryRow).toHaveClass("ob-highlight-flash")
   })
 
   it("wraps the sections in the ob-card-grid entrance-animation class", async () => {

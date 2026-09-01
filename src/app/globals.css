@@ -316,6 +316,14 @@ body {
     opacity: 0;
   }
 }
+@keyframes ob-highlight-flash {
+  0% {
+    background-color: var(--ob-color-reward-soft);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
 @keyframes ob-wavearm {
   0%,
   100% {
@@ -415,6 +423,9 @@ body {
 .ob-firework-spark {
   position: absolute;
   animation: ob-firework-spark 0.72s var(--ob-ease-out) both;
+}
+.ob-highlight-flash {
+  animation: ob-highlight-flash 1.6s var(--ob-ease-out) both;
 }
 .ob-hi {
   display: inline-block;

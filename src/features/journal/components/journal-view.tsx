@@ -20,6 +20,7 @@ function JournalView() {
   const [mood, setMood] = useState("")
   const [justSaved, setJustSaved] = useState<JournalEntry | null>(null)
   const [editingEntry, setEditingEntry] = useState<JournalEntry | null>(null)
+  const [highlight, setHighlight] = useState<{ id: number; nonce: number } | null>(null)
 
   const moodEnabled = settings.modules.find((m) => m.key === "tamtrang")?.on ?? true
   const selectedMood = settings.moods.find((m) => m.label === mood)
@@ -51,8 +52,12 @@ function JournalView() {
   }
 
   function handleViewEntries() {
-    const el = document.getElementById("ds-entries")
-    if (el) window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 20)
+    if (!justSaved) return
+    // nonce buộc React remount đúng dòng đó để phát lại hiệu ứng nhấp nháy, kể cả khi
+    // bấm liên tiếp nhiều lần vào cùng 1 bài (setState cùng id sẽ không tự re-render).
+    setHighlight({ id: justSaved.id, nonce: Date.now() })
+    const el = document.getElementById(`journal-entry-${justSaved.id}`) ?? document.getElementById("ds-entries")
+    el?.scrollIntoView({ behavior: "smooth", block: "center" })
   }
 
   return (
@@ -95,7 +100,13 @@ function JournalView() {
             entries.length ? "flex-[1_1_100%]" : "flex-[2_1_360px]"
           )}
         >
-          <JournalEntriesCard entries={entries} onDelete={deleteEntry} onEdit={handleEdit} />
+          <JournalEntriesCard
+            entries={entries}
+            onDelete={deleteEntry}
+            onEdit={handleEdit}
+            highlightEntryId={highlight?.id ?? null}
+            highlightNonce={highlight?.nonce}
+          />
         </div>
       </div>
     </div>

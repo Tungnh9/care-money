@@ -85,4 +85,20 @@ describe("JournalEntriesCard", () => {
 
     expect(onDelete).toHaveBeenCalledWith(1)
   })
+
+  it("flashes only the entry matching highlightEntryId, not other entries", () => {
+    const other: JournalEntry = { ...SHORT_ENTRY, id: 4, date: "12/08" }
+    render(
+      <JournalEntriesCard
+        entries={[SHORT_ENTRY, other]}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        highlightEntryId={1}
+        highlightNonce={1}
+      />
+    )
+
+    expect(document.getElementById("journal-entry-1")).toHaveClass("ob-highlight-flash")
+    expect(document.getElementById("journal-entry-4")).not.toHaveClass("ob-highlight-flash")
+  })
 })
