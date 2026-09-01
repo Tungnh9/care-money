@@ -45,7 +45,7 @@ describe("JournalView", () => {
     expect(screen.getByText("Bài đầu tiên bạn lưu sẽ hiện ở đây.")).toBeInTheDocument()
   })
 
-  it("celebrates a saved entry with the mascot and a tada card", async () => {
+  it("celebrates a saved entry with the mascot and a firework effect", async () => {
     render(<JournalView />)
 
     const editor = await screen.findByRole("textbox")
@@ -53,8 +53,9 @@ describe("JournalView", () => {
     fireEvent.click(screen.getByRole("button", { name: "Lưu vào nhật ký" }))
 
     const successCard = (await screen.findByText("Đã lưu vào nhật ký")).closest("section")
-    expect(successCard).toHaveClass("ob-tada")
+    expect(successCard).not.toHaveClass("ob-tada")
     expect(successCard?.querySelector("svg")).toBeInTheDocument()
+    expect(successCard?.querySelectorAll(".ob-firework-spark").length).toBeGreaterThan(0)
   })
 
   it("wraps the sections in the ob-card-grid entrance-animation class", async () => {
