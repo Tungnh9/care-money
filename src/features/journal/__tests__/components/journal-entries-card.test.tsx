@@ -34,8 +34,7 @@ describe("JournalEntriesCard", () => {
   it("renders each entry's date/time, word count and full text when short enough", () => {
     render(<JournalEntriesCard entries={[SHORT_ENTRY]} onDelete={vi.fn()} onEdit={vi.fn()} />)
 
-    expect(screen.getByText("10/08 · 09:00")).toBeInTheDocument()
-    expect(screen.getByText("3 từ")).toBeInTheDocument()
+    expect(screen.getByText("10/08 · 09:00 · 3 từ")).toBeInTheDocument()
     expect(screen.getByText("Một ngày bình thường.")).toBeInTheDocument()
     expect(screen.queryByText("Xem thêm")).not.toBeInTheDocument()
   })

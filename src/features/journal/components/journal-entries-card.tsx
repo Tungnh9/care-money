@@ -55,16 +55,13 @@ function JournalEntriesCard({ entries, onDelete, onEdit }: JournalEntriesCardPro
               <div className="min-w-0 flex-1">
                 <div className="mb-1 flex flex-wrap items-center gap-x-[10px] gap-y-1">
                   <span className="[font-family:var(--ob-font-num)] text-[12px] text-[var(--ob-color-text-subtle)]">
-                    {entry.date} · {entry.time}
+                    {entry.date} · {entry.time} · {entry.words} từ
                   </span>
                   {entry.mood ? (
                     <span className="text-[12.5px] font-semibold text-[var(--ob-color-text-muted)]">
                       {entry.mood.label}
                     </span>
                   ) : null}
-                  <span className="ml-auto [font-family:var(--ob-font-num)] text-[12px] text-[var(--ob-color-text-subtle)]">
-                    {entry.words} từ
-                  </span>
                 </div>
                 {isTruncated && !isExpanded ? (
                   <p className="whitespace-pre-wrap text-sm leading-[1.6] text-[var(--ob-color-text-muted)]">

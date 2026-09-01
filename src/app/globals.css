@@ -303,6 +303,19 @@ body {
     opacity: 0;
   }
 }
+@keyframes ob-firework-spark {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  65% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--ob-fw-dx), var(--ob-fw-dy)) scale(0.2);
+    opacity: 0;
+  }
+}
 @keyframes ob-wavearm {
   0%,
   100% {
@@ -398,6 +411,10 @@ body {
 }
 .ob-tada {
   animation: ob-tada 0.62s var(--ob-ease-pop) both;
+}
+.ob-firework-spark {
+  position: absolute;
+  animation: ob-firework-spark 0.72s var(--ob-ease-out) both;
 }
 .ob-hi {
   display: inline-block;
