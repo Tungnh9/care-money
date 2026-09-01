@@ -13,11 +13,19 @@ interface JournalEntriesCardProps {
   entries: JournalEntry[]
   onDelete: (id: number) => void
   onEdit: (entry: JournalEntry) => void
+  highlightEntryId?: number | null
+  highlightNonce?: number
 }
 
 const TRUNCATE_LENGTH = 180
 
-function JournalEntriesCard({ entries, onDelete, onEdit }: JournalEntriesCardProps) {
+function JournalEntriesCard({
+  entries,
+  onDelete,
+  onEdit,
+  highlightEntryId = null,
+  highlightNonce,
+}: JournalEntriesCardProps) {
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set())
 
   function toggleExpanded(id: number) {
@@ -40,11 +48,16 @@ function JournalEntriesCard({ entries, onDelete, onEdit }: JournalEntriesCardPro
           const plainText = stripHtmlToPlainText(entry.text)
           const isTruncated = plainText.length > TRUNCATE_LENGTH
           const isExpanded = expandedIds.has(entry.id)
+          const isHighlighted = entry.id === highlightEntryId
 
           return (
             <div
-              key={entry.id}
-              className="flex gap-[14px] border-b border-[var(--ob-color-border)] py-[14px]"
+              key={isHighlighted ? `${entry.id}-${highlightNonce}` : entry.id}
+              id={`journal-entry-${entry.id}`}
+              className={cn(
+                "flex gap-[14px] border-b border-[var(--ob-color-border)] py-[14px]",
+                isHighlighted && "ob-highlight-flash"
+              )}
             >
               <span
                 className="flex size-[38px] flex-none items-center justify-center rounded-full text-[19px] leading-none"
