@@ -37,4 +37,15 @@ describe("JournalSummarySection", () => {
     expect(screen.queryByText("Bài thứ tư — không nên hiện")).not.toBeInTheDocument()
     expect(screen.getByRole("link", { name: "Viết thêm một bài" })).toHaveAttribute("href", "/journal")
   })
+
+  it("strips formatting HTML from the preview, showing clean text instead of raw markup", () => {
+    render(
+      <JournalSummarySection
+        entries={[{ ...ENTRY, text: "<b>Hôm nay</b> mình đã <i>đi bộ</i>" }]}
+      />
+    )
+
+    expect(screen.getByText("Hôm nay mình đã đi bộ")).toBeInTheDocument()
+    expect(screen.queryByText(/<b>/)).not.toBeInTheDocument()
+  })
 })

@@ -15,6 +15,16 @@ if (typeof Blob !== "undefined" && !Blob.prototype.text) {
   }
 }
 
+// jsdom không cài đặt window.scrollTo/Element.scrollIntoView (chỉ log "Not implemented"),
+// trong khi vài component gọi thật khi cuộn tới 1 phần tử (vd. JournalView) — stub thành
+// no-op để test sạch log.
+if (typeof window !== "undefined") {
+  window.scrollTo = () => {}
+}
+if (typeof Element !== "undefined") {
+  Element.prototype.scrollIntoView = () => {}
+}
+
 afterEach(() => {
   cleanup()
 })

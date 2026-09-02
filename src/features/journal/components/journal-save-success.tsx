@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Confetti } from "@/components/ob/confetti"
+import { Fireworks } from "@/components/ob/fireworks"
 import { Monkey } from "@/components/ob/monkey"
 import type { JournalEntry } from "../types"
 
@@ -12,8 +12,8 @@ interface JournalSaveSuccessProps {
 
 function JournalSaveSuccess({ entry, onWriteMore, onViewEntries }: JournalSaveSuccessProps) {
   return (
-    <Card tone="soft" className="ob-tada relative col-span-full">
-      <Confetti />
+    <Card tone="soft" className="relative col-span-full">
+      <Fireworks />
       <div className="mb-4 flex items-center gap-[14px]">
         <Monkey pose="cheer" size={62} />
         <div>

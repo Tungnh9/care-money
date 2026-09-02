@@ -54,6 +54,25 @@ function useJournal() {
     [state, persist]
   )
 
+  const updateEntry = useCallback(
+    (id: number, input: SaveEntryInput) => {
+      try {
+        persist({
+          ...state,
+          entries: state.entries.map((entry) =>
+            entry.id === id
+              ? { ...entry, text: input.text, words: input.words, mood: input.mood }
+              : entry
+          ),
+        })
+        toast.success("Đã cập nhật bài viết")
+      } catch {
+        toast.error("Không thể cập nhật bài viết. Vui lòng thử lại.")
+      }
+    },
+    [state, persist]
+  )
+
   const deleteEntry = useCallback(
     (id: number) => {
       try {
@@ -69,6 +88,7 @@ function useJournal() {
   return {
     entries: state.entries,
     saveEntry,
+    updateEntry,
     deleteEntry,
     replaceJournal: persist,
   }
