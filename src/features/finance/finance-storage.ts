@@ -1,3 +1,4 @@
+import { notifyDataChanged } from "@/lib/data-change-bus"
 import type { CreditCard, GoldPurchase, Investment, SavingsFund } from "./types"
 
 interface FinanceState {
@@ -30,6 +31,7 @@ function getStoredFinance(): FinanceState {
 
 function setStoredFinance(state: FinanceState) {
   window.localStorage.setItem(FINANCE_STORAGE_KEY, JSON.stringify(state))
+  notifyDataChanged()
 }
 
 export {
