@@ -7,7 +7,15 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Field } from "@/components/ui/field"
 import { getSyncSecret, setSyncSecret } from "@/lib/sync-secret-storage"
+import { getAutoBackupStatus, type AutoBackupStatus } from "../auto-backup-storage"
 import type { ExportedInfo, ImportedInfo, SyncResult } from "../hooks/use-data-management"
+
+function formatAutoBackupTime(iso: string): string {
+  const d = new Date(iso)
+  const time = d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
+  const date = `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`
+  return `${time} ngày ${date}`
+}
 
 interface DataCardProps {
   exported: ExportedInfo | null
@@ -33,11 +41,13 @@ function DataCard({
   const fileRef = useRef<HTMLInputElement>(null)
   const [secret, setSecret] = useState("")
   const [copied, setCopied] = useState(false)
+  const [autoBackup, setAutoBackup] = useState<AutoBackupStatus | null>(null)
 
   useEffect(() => {
     // localStorage không có lúc SSR, chỉ đọc được thật sau khi mount trên client.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSecret(getSyncSecret())
+    setAutoBackup(getAutoBackupStatus())
   }, [])
 
   function handleSecretChange(value: string) {
@@ -131,6 +141,27 @@ function DataCard({
         <p className="mb-[14px] text-[13.5px] leading-[1.55] text-[var(--ob-color-text-muted)]">
           Tuỳ chọn — đồng bộ dữ liệu giữa các thiết bị của bạn. Chỉ bạn giữ secret bên dưới.
         </p>
+        {autoBackup ? (
+          <p className="mb-[14px] text-[13px] leading-[1.5] text-[var(--ob-color-text-subtle)]">
+            {secret ? (
+              <>
+                Tự động sao lưu: <strong className="font-semibold text-[var(--ob-color-text-muted)]">bật</strong> ·{" "}
+                {autoBackup.lastSyncedAt
+                  ? `lần cuối ${formatAutoBackupTime(autoBackup.lastSyncedAt)}`
+                  : "chưa có lần nào"}
+                {autoBackup.lastError ? (
+                  <span className="mt-1 block text-[var(--ob-color-expense)]">
+                    Lần gần nhất lỗi: {autoBackup.lastError}
+                  </span>
+                ) : null}
+              </>
+            ) : (
+              <>
+                Tự động sao lưu: <strong className="font-semibold">tắt</strong> — nhập secret bên dưới để bật
+              </>
+            )}
+          </p>
+        ) : null}
         <Field
           label="Secret đồng bộ"
           type="password"

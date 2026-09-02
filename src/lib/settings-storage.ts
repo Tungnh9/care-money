@@ -1,3 +1,5 @@
+import { notifyDataChanged } from "./data-change-bus"
+
 interface Profile {
   displayName: string
   greeting: string
@@ -99,6 +101,7 @@ function getStoredSettings(): AppSettings {
 
 function setStoredSettings(settings: AppSettings) {
   window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings))
+  notifyDataChanged()
 }
 
 export {
