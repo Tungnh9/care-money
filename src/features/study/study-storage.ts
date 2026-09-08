@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+import { notifyDataChanged } from "@/lib/data-change-bus"
 import type { Task } from "./types"
 
 interface StudyState {
@@ -56,6 +57,7 @@ function getStoredStudy(): StudyState {
 
 function setStoredStudy(state: StudyState) {
   window.localStorage.setItem(STUDY_STORAGE_KEY, JSON.stringify(state))
+  notifyDataChanged()
 }
 
 export {

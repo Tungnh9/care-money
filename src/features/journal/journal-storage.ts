@@ -1,3 +1,4 @@
+import { notifyDataChanged } from "@/lib/data-change-bus"
 import type { JournalEntry } from "./types"
 
 interface JournalState {
@@ -22,6 +23,7 @@ function getStoredJournal(): JournalState {
 
 function setStoredJournal(state: JournalState) {
   window.localStorage.setItem(JOURNAL_STORAGE_KEY, JSON.stringify(state))
+  notifyDataChanged()
 }
 
 export { JOURNAL_STORAGE_KEY, DEFAULT_JOURNAL_STATE, getStoredJournal, setStoredJournal, type JournalState }

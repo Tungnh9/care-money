@@ -23,6 +23,16 @@ function goldPurchasePL(purchase: GoldPurchase, price: number): number {
   return purchase.phan * price - purchase.phan * purchase.buy
 }
 
+function parseGoldDate(date: string): number {
+  const [day, month, year] = date.split("/").map(Number)
+  if (!day || !month || !year) return 0
+  return new Date(year, month - 1, day).getTime()
+}
+
+function sortGoldByDate(gold: GoldPurchase[]): GoldPurchase[] {
+  return [...gold].sort((a, b) => parseGoldDate(b.date) - parseGoldDate(a.date))
+}
+
 interface FinanceSummary {
   savingsTotal: number
   debtTotal: number
@@ -81,5 +91,7 @@ export {
   parseGoldPrice,
   summarizeFinance,
   goldPurchasePL,
+  parseGoldDate,
+  sortGoldByDate,
   type FinanceSummary,
 }

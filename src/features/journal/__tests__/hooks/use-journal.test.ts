@@ -68,6 +68,91 @@ describe("useJournal", () => {
     expect(result.current.entries[0].text).toBe("Bài 2")
   })
 
+  it("updateEntry replaces the matching entry's text, words and mood, keeping its id/date/time", async () => {
+    vi.setSystemTime(new Date(2026, 7, 10, 9, 0))
+    const { result } = renderHook(() => useJournal())
+    await waitFor(() => expect(result.current.entries).toEqual([]))
+
+    let entry!: JournalEntry
+    act(() => {
+      entry = result.current.saveEntry({ text: "Bài gốc", words: 2, mood: null })!
+    })
+
+    const mood = { emoji: "🙂", label: "Vui", tint: "#FFE0C7" }
+    act(() => {
+      result.current.updateEntry(entry.id, { text: "Bài đã sửa", words: 3, mood })
+    })
+
+    expect(result.current.entries).toHaveLength(1)
+    expect(result.current.entries[0]).toEqual({
+      ...entry,
+      text: "Bài đã sửa",
+      words: 3,
+      mood,
+    })
+    expect(getStoredJournal().entries[0].text).toBe("Bài đã sửa")
+  })
+
+  it("updateEntry only touches the matching entry, leaving others untouched", async () => {
+    vi.setSystemTime(new Date(2026, 7, 10, 9, 0))
+    const { result } = renderHook(() => useJournal())
+    await waitFor(() => expect(result.current.entries).toEqual([]))
+
+    let first!: JournalEntry
+    act(() => {
+      first = result.current.saveEntry({ text: "Bài 1", words: 2, mood: null })!
+    })
+    vi.setSystemTime(new Date(2026, 7, 10, 9, 5))
+    act(() => {
+      result.current.saveEntry({ text: "Bài 2", words: 2, mood: null })
+    })
+
+    act(() => {
+      result.current.updateEntry(first.id, { text: "Bài 1 sửa", words: 3, mood: null })
+    })
+
+    expect(result.current.entries).toHaveLength(2)
+    expect(result.current.entries.find((e) => e.id === first.id)?.text).toBe("Bài 1 sửa")
+    expect(result.current.entries.find((e) => e.id !== first.id)?.text).toBe("Bài 2")
+  })
+
+  it("updateEntry shows a success toast when the write succeeds", async () => {
+    const { result } = renderHook(() => useJournal())
+    await waitFor(() => expect(result.current.entries).toEqual([]))
+
+    let entry!: JournalEntry
+    act(() => {
+      entry = result.current.saveEntry({ text: "Bài gốc", words: 2, mood: null })!
+    })
+    act(() => {
+      result.current.updateEntry(entry.id, { text: "Bài sửa", words: 2, mood: null })
+    })
+
+    expect(toast.success).toHaveBeenCalledWith("Đã cập nhật bài viết")
+  })
+
+  it("updateEntry shows an error toast and does not change state when storage write fails", async () => {
+    const { result } = renderHook(() => useJournal())
+    await waitFor(() => expect(result.current.entries).toEqual([]))
+
+    let entry!: JournalEntry
+    act(() => {
+      entry = result.current.saveEntry({ text: "Bài gốc", words: 2, mood: null })!
+    })
+
+    const setItemSpy = vi.spyOn(Storage.prototype, "setItem").mockImplementationOnce(() => {
+      throw new Error("quota exceeded")
+    })
+
+    act(() => {
+      result.current.updateEntry(entry.id, { text: "Sẽ lỗi", words: 2, mood: null })
+    })
+    setItemSpy.mockRestore()
+
+    expect(result.current.entries[0].text).toBe("Bài gốc")
+    expect(toast.error).toHaveBeenCalledWith("Không thể cập nhật bài viết. Vui lòng thử lại.")
+  })
+
   it("replaceJournal overwrites the whole state and persists it, e.g. after restoring a backup", async () => {
     const { result } = renderHook(() => useJournal())
     await waitFor(() => expect(result.current.entries).toEqual([]))
