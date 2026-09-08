@@ -8,7 +8,7 @@ import {
   setStoredFinance,
   type FinanceState,
 } from "../finance-storage"
-import type { CreditCard, GoldPurchase, Investment, SavingsFund } from "../types"
+import type { CreditCard, GoldPurchase, GoldStore, Investment, SavingsFund } from "../types"
 import { toast } from "sonner"
 import { getCarGoalFundName, setCarGoalFundName } from "@/features/goals/car-goal-storage"
 
@@ -131,14 +131,72 @@ function useFinance() {
     [state, persist]
   )
 
-  const setGoldPrice = useCallback(
-    (goldPrice: string) => {
+  const addGoldStore = useCallback(
+    (store: GoldStore) => {
+      if (state.goldStores.some((s) => s.name === store.name)) {
+        toast.error(`Đã có cửa hàng tên "${store.name}". Vui lòng chọn tên khác.`)
+        return
+      }
+      try {
+        persist({ ...state, goldStores: [...state.goldStores, store] })
+        toast.success(`Đã thêm cửa hàng "${store.name}"`)
+      } catch {
+        toast.error(`Không thể thêm cửa hàng "${store.name}". Vui lòng thử lại.`)
+      }
+    },
+    [state, persist]
+  )
+
+  const setGoldStorePrice = useCallback(
+    (name: string, price: string) => {
       // Gõ trực tiếp từng phím, không phải submit 1 lần — không toast để tránh spam,
       // chỉ chặn throw khi ghi storage lỗi (khác payCard/updateCard là hành động rời rạc).
       try {
-        persist({ ...state, goldPrice })
+        persist({
+          ...state,
+          goldStores: state.goldStores.map((s) => (s.name === name ? { ...s, price } : s)),
+        })
       } catch {
         // im lặng bỏ qua, giữ nguyên giá trị hiển thị cũ
+      }
+    },
+    [state, persist]
+  )
+
+  const updateGoldStore = useCallback(
+    (originalName: string, store: GoldStore) => {
+      try {
+        persist({
+          ...state,
+          goldStores: state.goldStores.map((s) => (s.name === originalName ? store : s)),
+          // Purchase tham chiếu cửa hàng theo tên (sống, không snapshot) — đổi tên phải
+          // cascade luôn, nếu không sẽ mồ côi giống bug car-goal-fund đã fix trước đó.
+          gold:
+            store.name !== originalName
+              ? state.gold.map((p) => (p.store === originalName ? { ...p, store: store.name } : p))
+              : state.gold,
+        })
+        toast.success(`Đã cập nhật cửa hàng "${store.name}"`)
+      } catch {
+        toast.error(`Không thể cập nhật cửa hàng "${store.name}". Vui lòng thử lại.`)
+      }
+    },
+    [state, persist]
+  )
+
+  const removeGoldStore = useCallback(
+    (name: string) => {
+      // Chặn xoá khi còn purchase tham chiếu — không cascade-xoá purchase hay âm thầm
+      // gán lại cửa hàng khác, tránh lặp lại lớp bug "orphan reference" theo hướng ngược.
+      if (state.gold.some((p) => p.store === name)) {
+        toast.error(`Không thể xoá "${name}" vì vẫn còn giao dịch mua vàng gắn với cửa hàng này.`)
+        return
+      }
+      try {
+        persist({ ...state, goldStores: state.goldStores.filter((s) => s.name !== name) })
+        toast.success(`Đã xoá cửa hàng "${name}"`)
+      } catch {
+        toast.error(`Không thể xoá cửa hàng "${name}". Vui lòng thử lại.`)
       }
     },
     [state, persist]
@@ -200,7 +258,7 @@ function useFinance() {
     savings: state.savings,
     cards: state.cards,
     gold: state.gold,
-    goldPrice: state.goldPrice,
+    goldStores: state.goldStores,
     invests: state.invests,
     addSavingsFund,
     updateSavingsFund,
@@ -209,7 +267,10 @@ function useFinance() {
     updateCard,
     removeCard,
     payCard,
-    setGoldPrice,
+    addGoldStore,
+    updateGoldStore,
+    removeGoldStore,
+    setGoldStorePrice,
     addGold,
     updateGold,
     removeGold,

@@ -1,6 +1,6 @@
 "use client"
 
-import { parseGoldPrice, summarizeFinance } from "@/features/finance/finance-calculations"
+import { summarizeFinance } from "@/features/finance/finance-calculations"
 import { useFinance } from "@/features/finance/hooks/use-finance"
 import { getGoals, useCarGoalFund } from "@/features/goals"
 import { useJournal } from "@/features/journal/hooks/use-journal"
@@ -27,7 +27,7 @@ interface OverviewViewProps {
 function OverviewView({ vocab, grammar }: OverviewViewProps) {
   const { hidden } = useMoneyVisibility()
   const { settings } = useSettings()
-  const { savings, cards, gold, goldPrice, invests } = useFinance()
+  const { savings, cards, gold, goldStores, invests } = useFinance()
   const { entries } = useJournal()
   const { tasks, toggleTask, learned } = useStudy()
   const { fundName } = useCarGoalFund()
@@ -36,16 +36,19 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
     return settings.modules.find((m) => m.key === key)?.on ?? true
   }
 
-  const summary = summarizeFinance({ savings, cards, gold, goldPrice, invests })
+  const summary = summarizeFinance({ savings, cards, gold, goldStores, invests })
 
   const daily = pickDaily(vocab, 5, dayKey(), "vocab")
   const learnedToday = daily.filter((entry) => learned.includes(entry.id)).length
 
+  // Nhiều cửa hàng nay có nhiều giá khác nhau — dùng giá bình quân theo tỷ trọng vàng
+  // đang giữ (goldValue/goldPhan) làm đại diện, thay vì 1 giá chung duy nhất như trước.
+  const goldPricePerPhan = summary.goldPhan > 0 ? summary.goldValue / summary.goldPhan : 0
   const { goals, avg: avgGoal } = getGoals(
     {
       savingsTotal: summary.savingsTotal,
       goldPhan: summary.goldPhan,
-      goldPricePerPhan: parseGoldPrice(goldPrice),
+      goldPricePerPhan,
       savings,
       carFundName: fundName,
     },

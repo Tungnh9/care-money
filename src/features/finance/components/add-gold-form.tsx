@@ -4,22 +4,26 @@ import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Field } from "@/components/ui/field"
-import type { GoldPurchase } from "../types"
+import type { GoldPurchase, GoldStore } from "../types"
+import { GoldStorePicker } from "./gold-store-picker"
 
 interface AddGoldFormProps {
+  stores: GoldStore[]
   onAdd: (purchase: Omit<GoldPurchase, "id">) => void
 }
 
-function AddGoldForm({ onAdd }: AddGoldFormProps) {
+function AddGoldForm({ stores, onAdd }: AddGoldFormProps) {
   const [open, setOpen] = useState(false)
   const [date, setDate] = useState("")
   const [phan, setPhan] = useState("")
   const [buy, setBuy] = useState("")
+  const [store, setStore] = useState("")
 
   function reset() {
     setDate("")
     setPhan("")
     setBuy("")
+    setStore("")
     setOpen(false)
   }
 
@@ -66,17 +70,21 @@ function AddGoldForm({ onAdd }: AddGoldFormProps) {
           onChange={(e) => setBuy(e.target.value)}
         />
       </div>
+      <div className="mt-3">
+        <GoldStorePicker stores={stores} selected={store} onSelect={setStore} />
+      </div>
       <div className="mt-4 flex gap-[10px]">
         <Button
           variant="primary"
           size="sm"
           type="button"
-          disabled={!date.trim() || !phan.trim() || !buy.trim()}
+          disabled={!date.trim() || !phan.trim() || !buy.trim() || !store}
           onClick={() => {
             onAdd({
               date: date.trim(),
               phan: Number(phan) || 0,
               buy: Number(buy) || 0,
+              store,
             })
             reset()
           }}

@@ -92,8 +92,8 @@ describe("useDataManagement", () => {
     expect(onReplaceSettings).not.toHaveBeenCalled()
   })
 
-  it("wipeData replaces journal/finance/study with empty defaults but keeps the gold price", () => {
-    setStoredFinance({ ...DEFAULT_FINANCE_STATE, goldPrice: "935.000" })
+  it("wipeData replaces journal/finance/study with empty defaults but keeps the gold stores", () => {
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, goldStores: [{ name: "SJC", price: "935.000" }] })
     const { result, onReplaceJournal, onReplaceFinance, onReplaceStudy } = renderDataManagement()
 
     act(() => {
@@ -106,7 +106,7 @@ describe("useDataManagement", () => {
       cards: [],
       gold: [],
       invests: [],
-      goldPrice: "935.000",
+      goldStores: [{ name: "SJC", price: "935.000" }],
     })
     expect(onReplaceStudy).toHaveBeenCalledWith(DEFAULT_STUDY_STATE)
   })

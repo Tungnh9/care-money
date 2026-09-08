@@ -117,9 +117,9 @@ function useDataManagement({
   )
 
   const wipeData = useCallback(() => {
-    const { goldPrice } = getStoredFinance()
+    const { goldStores } = getStoredFinance()
     onReplaceJournal(DEFAULT_JOURNAL_STATE)
-    onReplaceFinance({ savings: [], cards: [], gold: [], invests: [], goldPrice })
+    onReplaceFinance({ savings: [], cards: [], gold: [], invests: [], goldStores })
     onReplaceStudy(DEFAULT_STUDY_STATE)
     setExported(null)
     setImported(null)

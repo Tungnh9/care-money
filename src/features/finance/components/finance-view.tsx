@@ -24,7 +24,7 @@ function FinanceView() {
     savings,
     cards,
     gold,
-    goldPrice,
+    goldStores,
     invests,
     addSavingsFund,
     updateSavingsFund,
@@ -33,14 +33,17 @@ function FinanceView() {
     updateCard,
     removeCard,
     payCard,
-    setGoldPrice,
+    addGoldStore,
+    updateGoldStore,
+    removeGoldStore,
+    setGoldStorePrice,
     addGold,
     updateGold,
     removeGold,
     addInvest,
   } = useFinance()
 
-  const summary = summarizeFinance({ savings, cards, gold, goldPrice, invests })
+  const summary = summarizeFinance({ savings, cards, gold, goldStores, invests })
 
   return (
     <div>
@@ -112,8 +115,11 @@ function FinanceView() {
         ) : tab === "Tích lũy vàng" ? (
           <GoldTab
             summary={summary}
-            goldPrice={goldPrice}
-            onSetGoldPrice={setGoldPrice}
+            stores={goldStores}
+            onAddGoldStore={addGoldStore}
+            onUpdateGoldStore={updateGoldStore}
+            onRemoveGoldStore={removeGoldStore}
+            onSetGoldStorePrice={setGoldStorePrice}
             gold={gold}
             onAddGold={addGold}
             onUpdateGold={updateGold}

@@ -50,16 +50,22 @@ describe("FinanceView", () => {
     expect(within(pillarSection).getByText("1 quỹ đang chạy")).toBeInTheDocument()
   })
 
-  it("setting the gold price and adding a purchase produces the correct P&L figure on the Tích lũy vàng tab", () => {
+  it("setting up a gold store and adding a purchase produces the correct P&L figure on the Tích lũy vàng tab", () => {
     render(<FinanceView />)
 
     fireEvent.click(screen.getByRole("button", { name: "Tích lũy vàng" }))
 
-    fireEvent.change(screen.getByLabelText("Giá vàng hôm nay (mỗi phân)", { exact: false }), {
+    fireEvent.click(screen.getByRole("button", { name: "Thêm cửa hàng" }))
+    fireEvent.change(screen.getByLabelText("Tên cửa hàng", { exact: false }), {
+      target: { value: "SJC" },
+    })
+    fireEvent.change(screen.getByLabelText("Giá hôm nay", { exact: false }), {
       target: { value: "900000" },
     })
+    fireEvent.click(screen.getByRole("button", { name: "Thêm" }))
 
     fireEvent.click(screen.getByRole("button", { name: "Thêm lần mua vàng" }))
+    fireEvent.click(screen.getByRole("button", { name: "SJC" }))
     fireEvent.change(screen.getByLabelText("Ngày mua", { exact: false }), {
       target: { value: "10/08/2026" },
     })

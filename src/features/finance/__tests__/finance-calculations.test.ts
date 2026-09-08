@@ -6,6 +6,7 @@ import {
   parseGoldPrice,
   summarizeFinance,
   goldPurchasePL,
+  goldStorePrice,
   parseGoldDate,
   sortGoldByDate,
 } from "../finance-calculations"
@@ -86,14 +87,14 @@ describe("summarizeFinance", () => {
     expect(summary.net).toBe(5_500_000)
   })
 
-  it("computes gold P&L from cost basis vs. current market price", () => {
+  it("computes gold P&L from cost basis vs. each purchase's own store price", () => {
     const state: FinanceState = {
       ...DEFAULT_FINANCE_STATE,
       gold: [
-        { id: 1, date: "01/01/2026", phan: 20, buy: 900_000 },
-        { id: 2, date: "02/01/2026", phan: 10, buy: 950_000 },
+        { id: 1, date: "01/01/2026", phan: 20, buy: 900_000, store: "SJC" },
+        { id: 2, date: "02/01/2026", phan: 10, buy: 950_000, store: "SJC" },
       ],
-      goldPrice: "1.000.000",
+      goldStores: [{ name: "SJC", price: "1.000.000" }],
     }
 
     const summary = summarizeFinance(state)
@@ -104,13 +105,34 @@ describe("summarizeFinance", () => {
     expect(summary.goldPct).toBeCloseTo((summary.goldPL / summary.goldCost) * 100)
   })
 
+  it("values each purchase against its OWN store's price, not one price for everyone", () => {
+    const state: FinanceState = {
+      ...DEFAULT_FINANCE_STATE,
+      gold: [
+        { id: 1, date: "01/01/2026", phan: 10, buy: 900_000, store: "SJC" },
+        { id: 2, date: "02/01/2026", phan: 10, buy: 900_000, store: "PNJ" },
+      ],
+      goldStores: [
+        { name: "SJC", price: "1.000.000" },
+        { name: "PNJ", price: "800.000" },
+      ],
+    }
+
+    const summary = summarizeFinance(state)
+    // SJC: 10*1.000.000 = 10.000.000 | PNJ: 10*800.000 = 8.000.000 -> tổng 18.000.000,
+    // KHÔNG PHẢI 20 phân * 1 giá chung nào cả.
+    expect(summary.goldValue).toBe(10_000_000 + 8_000_000)
+    expect(summary.goldCost).toBe(9_000_000 + 9_000_000)
+    expect(summary.goldPL).toBe(18_000_000 - 18_000_000)
+  })
+
   it("computes investment P&L and rolls everything into net worth", () => {
     const state: FinanceState = {
       ...DEFAULT_FINANCE_STATE,
       savings: [{ name: "Quỹ dự phòng", amount: 5_000_000, target: 20_000_000 }],
       cards: [{ name: "Thẻ A", balance: 1_000_000, min: 100_000, limit: 5_000_000, due: "10" }],
-      gold: [{ id: 1, date: "01/01/2026", phan: 10, buy: 900_000 }],
-      goldPrice: "950.000",
+      gold: [{ id: 1, date: "01/01/2026", phan: 10, buy: 900_000, store: "SJC" }],
+      goldStores: [{ name: "SJC", price: "950.000" }],
       invests: [{ id: 1, name: "Quỹ cổ phiếu", cost: 10_000_000, value: 12_000_000 }],
     }
 
@@ -128,9 +150,23 @@ describe("summarizeFinance", () => {
   })
 })
 
+describe("goldStorePrice", () => {
+  it("returns the parsed price of the matching store", () => {
+    const stores = [
+      { name: "SJC", price: "1.000.000" },
+      { name: "PNJ", price: "800.000" },
+    ]
+    expect(goldStorePrice(stores, "PNJ")).toBe(800_000)
+  })
+
+  it("returns 0 when no store matches the given name", () => {
+    expect(goldStorePrice([{ name: "SJC", price: "1.000.000" }], "DOJI")).toBe(0)
+  })
+})
+
 describe("goldPurchasePL", () => {
   it("returns a positive number equal to phan*(price-buy) when the market price is above buy price", () => {
-    const purchase = { id: 1, date: "01/01/2026", phan: 10, buy: 900_000 }
+    const purchase = { id: 1, date: "01/01/2026", phan: 10, buy: 900_000, store: "SJC" }
     const pl = goldPurchasePL(purchase, 950_000)
 
     expect(pl).toBe(10 * (950_000 - 900_000))
@@ -138,7 +174,7 @@ describe("goldPurchasePL", () => {
   })
 
   it("returns a negative number when the market price is below buy price", () => {
-    const purchase = { id: 2, date: "02/01/2026", phan: 10, buy: 950_000 }
+    const purchase = { id: 2, date: "02/01/2026", phan: 10, buy: 950_000, store: "SJC" }
     const pl = goldPurchasePL(purchase, 900_000)
 
     expect(pl).toBe(10 * (900_000 - 950_000))
@@ -146,7 +182,7 @@ describe("goldPurchasePL", () => {
   })
 
   it("returns exactly 0 when the market price equals the buy price", () => {
-    const purchase = { id: 3, date: "03/01/2026", phan: 10, buy: 900_000 }
+    const purchase = { id: 3, date: "03/01/2026", phan: 10, buy: 900_000, store: "SJC" }
 
     expect(goldPurchasePL(purchase, 900_000)).toBe(0)
   })
@@ -167,9 +203,9 @@ describe("parseGoldDate", () => {
 describe("sortGoldByDate", () => {
   it("sorts purchases from the latest date to the earliest, regardless of input order", () => {
     const gold = [
-      { id: 1, date: "03/06/2026", phan: 5, buy: 1_436_000 },
-      { id: 2, date: "05/05/2026", phan: 2, buy: 1_649_000 },
-      { id: 3, date: "28/07/2026", phan: 5, buy: 1_420_000 },
+      { id: 1, date: "03/06/2026", phan: 5, buy: 1_436_000, store: "SJC" },
+      { id: 2, date: "05/05/2026", phan: 2, buy: 1_649_000, store: "SJC" },
+      { id: 3, date: "28/07/2026", phan: 5, buy: 1_420_000, store: "SJC" },
     ]
 
     expect(sortGoldByDate(gold).map((p) => p.id)).toEqual([3, 1, 2])
@@ -177,8 +213,8 @@ describe("sortGoldByDate", () => {
 
   it("does not mutate the original array", () => {
     const gold = [
-      { id: 1, date: "28/07/2026", phan: 5, buy: 1_420_000 },
-      { id: 2, date: "05/05/2026", phan: 2, buy: 1_649_000 },
+      { id: 1, date: "28/07/2026", phan: 5, buy: 1_420_000, store: "SJC" },
+      { id: 2, date: "05/05/2026", phan: 2, buy: 1_649_000, store: "SJC" },
     ]
     const original = [...gold]
 
