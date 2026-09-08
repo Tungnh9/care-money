@@ -24,7 +24,7 @@ describe("useFinance", () => {
     await waitFor(() => expect(result.current.savings).toEqual(DEFAULT_FINANCE_STATE.savings))
     expect(result.current.cards).toEqual([])
     expect(result.current.gold).toEqual([])
-    expect(result.current.goldPrice).toBe("")
+    expect(result.current.goldStores).toEqual([])
     expect(result.current.invests).toEqual([])
   })
 
@@ -197,16 +197,130 @@ describe("useFinance", () => {
     expect(result.current.cards[0].name).toBe("Thẻ B")
   })
 
-  it("setGoldPrice updates and persists the raw string", async () => {
+  it("addGoldStore appends a store and persists it", async () => {
     const { result } = renderHook(() => useFinance())
-    await waitFor(() => expect(result.current.goldPrice).toBe(""))
+    await waitFor(() => expect(result.current.goldStores).toEqual([]))
 
     act(() => {
-      result.current.setGoldPrice("935.000")
+      result.current.addGoldStore({ name: "SJC", price: "935.000" })
     })
 
-    expect(result.current.goldPrice).toBe("935.000")
-    expect(getStoredFinance().goldPrice).toBe("935.000")
+    expect(result.current.goldStores).toEqual([{ name: "SJC", price: "935.000" }])
+    expect(getStoredFinance().goldStores).toEqual([{ name: "SJC", price: "935.000" }])
+  })
+
+  it("addGoldStore refuses to add a store whose name already exists", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.goldStores).toEqual([]))
+
+    act(() => {
+      result.current.addGoldStore({ name: "SJC", price: "935.000" })
+    })
+    act(() => {
+      result.current.addGoldStore({ name: "SJC", price: "800.000" })
+    })
+
+    expect(result.current.goldStores).toEqual([{ name: "SJC", price: "935.000" }])
+  })
+
+  it("setGoldStorePrice updates and persists just that store's price", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.goldStores).toEqual([]))
+
+    act(() => {
+      result.current.addGoldStore({ name: "SJC", price: "935.000" })
+    })
+    act(() => {
+      result.current.setGoldStorePrice("SJC", "950.000")
+    })
+
+    expect(result.current.goldStores).toEqual([{ name: "SJC", price: "950.000" }])
+    expect(getStoredFinance().goldStores).toEqual([{ name: "SJC", price: "950.000" }])
+  })
+
+  it("updateGoldStore renames a store, keyed by its original name", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.goldStores).toEqual([]))
+
+    act(() => {
+      result.current.addGoldStore({ name: "SJC", price: "935.000" })
+    })
+    act(() => {
+      result.current.updateGoldStore("SJC", { name: "SJC 9999", price: "940.000" })
+    })
+
+    expect(result.current.goldStores).toEqual([{ name: "SJC 9999", price: "940.000" }])
+  })
+
+  it("updateGoldStore cascades the new name to every purchase referencing the old store", async () => {
+    vi.setSystemTime(new Date(2026, 7, 10, 9, 0))
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.goldStores).toEqual([]))
+
+    act(() => {
+      result.current.addGoldStore({ name: "SJC", price: "935.000" })
+    })
+    act(() => {
+      result.current.addGold({ date: "10/08/2026", phan: 20, buy: 900_000, store: "SJC" })
+    })
+    act(() => {
+      result.current.updateGoldStore("SJC", { name: "SJC 9999", price: "940.000" })
+    })
+
+    expect(result.current.gold[0].store).toBe("SJC 9999")
+  })
+
+  it("updateGoldStore leaves purchases from unrelated stores untouched", async () => {
+    vi.setSystemTime(new Date(2026, 7, 10, 9, 0))
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.goldStores).toEqual([]))
+
+    act(() => {
+      result.current.addGoldStore({ name: "SJC", price: "935.000" })
+    })
+    act(() => {
+      result.current.addGoldStore({ name: "PNJ", price: "800.000" })
+    })
+    act(() => {
+      result.current.addGold({ date: "10/08/2026", phan: 20, buy: 900_000, store: "PNJ" })
+    })
+    act(() => {
+      result.current.updateGoldStore("SJC", { name: "SJC 9999", price: "940.000" })
+    })
+
+    expect(result.current.gold[0].store).toBe("PNJ")
+  })
+
+  it("removeGoldStore deletes a store that has no purchases attached", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.goldStores).toEqual([]))
+
+    act(() => {
+      result.current.addGoldStore({ name: "SJC", price: "935.000" })
+    })
+    act(() => {
+      result.current.removeGoldStore("SJC")
+    })
+
+    expect(result.current.goldStores).toEqual([])
+  })
+
+  it("removeGoldStore refuses to delete a store that still has purchases attached", async () => {
+    vi.setSystemTime(new Date(2026, 7, 10, 9, 0))
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.goldStores).toEqual([]))
+
+    act(() => {
+      result.current.addGoldStore({ name: "SJC", price: "935.000" })
+    })
+    act(() => {
+      result.current.addGold({ date: "10/08/2026", phan: 20, buy: 900_000, store: "SJC" })
+    })
+    act(() => {
+      result.current.removeGoldStore("SJC")
+    })
+
+    expect(result.current.goldStores).toEqual([{ name: "SJC", price: "935.000" }])
   })
 
   it("addGold prepends a purchase with a generated id", async () => {
@@ -215,11 +329,11 @@ describe("useFinance", () => {
     await waitFor(() => expect(result.current.gold).toEqual([]))
 
     act(() => {
-      result.current.addGold({ date: "10/08/2026", phan: 20, buy: 900_000 })
+      result.current.addGold({ date: "10/08/2026", phan: 20, buy: 900_000, store: "SJC" })
     })
 
     expect(result.current.gold).toHaveLength(1)
-    expect(result.current.gold[0]).toMatchObject({ date: "10/08/2026", phan: 20, buy: 900_000 })
+    expect(result.current.gold[0]).toMatchObject({ date: "10/08/2026", phan: 20, buy: 900_000, store: "SJC" })
     expect(typeof result.current.gold[0].id).toBe("number")
   })
 
@@ -228,11 +342,11 @@ describe("useFinance", () => {
     await waitFor(() => expect(result.current.gold).toEqual([]))
 
     act(() => {
-      result.current.addGold({ date: "10/08/2026", phan: 20, buy: 900_000 })
+      result.current.addGold({ date: "10/08/2026", phan: 20, buy: 900_000, store: "SJC" })
     })
     vi.setSystemTime(new Date(2026, 7, 10, 9, 5))
     act(() => {
-      result.current.addGold({ date: "10/08/2026", phan: 10, buy: 910_000 })
+      result.current.addGold({ date: "10/08/2026", phan: 10, buy: 910_000, store: "SJC" })
     })
     expect(result.current.gold).toHaveLength(2)
 
@@ -251,12 +365,12 @@ describe("useFinance", () => {
     await waitFor(() => expect(result.current.gold).toEqual([]))
 
     act(() => {
-      result.current.addGold({ date: "10/08/2026", phan: 20, buy: 900_000 })
+      result.current.addGold({ date: "10/08/2026", phan: 20, buy: 900_000, store: "SJC" })
     })
     const id = result.current.gold[0].id
 
     act(() => {
-      result.current.updateGold(id, { date: "12/08/2026", phan: 25, buy: 950_000 })
+      result.current.updateGold(id, { date: "12/08/2026", phan: 25, buy: 950_000, store: "SJC" })
     })
 
     expect(result.current.gold).toHaveLength(1)
@@ -265,6 +379,7 @@ describe("useFinance", () => {
       date: "12/08/2026",
       phan: 25,
       buy: 950_000,
+      store: "SJC",
     })
     expect(getStoredFinance().gold[0].buy).toBe(950_000)
   })
@@ -276,11 +391,11 @@ describe("useFinance", () => {
 
     vi.setSystemTime(new Date(2026, 7, 10, 9, 0))
     act(() => {
-      result.current.addGold({ date: "10/08/2026", phan: 20, buy: 900_000 })
+      result.current.addGold({ date: "10/08/2026", phan: 20, buy: 900_000, store: "SJC" })
     })
     vi.setSystemTime(new Date(2026, 7, 10, 9, 0))
     act(() => {
-      result.current.addGold({ date: "10/08/2026", phan: 10, buy: 910_000 })
+      result.current.addGold({ date: "10/08/2026", phan: 10, buy: 910_000, store: "SJC" })
     })
 
     expect(result.current.gold).toHaveLength(2)
@@ -325,7 +440,7 @@ describe("useFinance", () => {
       savings: [{ name: "Quỹ mới", amount: 1, target: 2 }],
       cards: [],
       gold: [],
-      goldPrice: "935.000",
+      goldStores: [{ name: "SJC", price: "935.000" }],
       invests: [],
     }
     act(() => {
@@ -333,7 +448,7 @@ describe("useFinance", () => {
     })
 
     expect(result.current.savings).toEqual(restored.savings)
-    expect(getStoredFinance().goldPrice).toBe("935.000")
+    expect(getStoredFinance().goldStores).toEqual([{ name: "SJC", price: "935.000" }])
   })
 
   it("getStoredFinance falls back to defaults when localStorage has corrupted JSON", () => {
@@ -622,7 +737,7 @@ describe("useFinance toast notifications", () => {
     await waitFor(() => expect(result.current.gold).toEqual([]))
 
     act(() => {
-      result.current.addGold({ date: "10/08/2026", phan: 20, buy: 900_000 })
+      result.current.addGold({ date: "10/08/2026", phan: 20, buy: 900_000, store: "SJC" })
     })
 
     expect(toast.success).toHaveBeenCalledWith("Đã thêm lần mua vàng ngày 10/08/2026")
@@ -637,7 +752,7 @@ describe("useFinance toast notifications", () => {
     })
 
     act(() => {
-      result.current.addGold({ date: "10/08/2026", phan: 20, buy: 900_000 })
+      result.current.addGold({ date: "10/08/2026", phan: 20, buy: 900_000, store: "SJC" })
     })
     spy.mockRestore()
 
@@ -650,12 +765,12 @@ describe("useFinance toast notifications", () => {
     await waitFor(() => expect(result.current.gold).toEqual([]))
 
     act(() => {
-      result.current.addGold({ date: "10/08/2026", phan: 20, buy: 900_000 })
+      result.current.addGold({ date: "10/08/2026", phan: 20, buy: 900_000, store: "SJC" })
     })
     const id = result.current.gold[0].id
 
     act(() => {
-      result.current.updateGold(id, { date: "12/08/2026", phan: 25, buy: 950_000 })
+      result.current.updateGold(id, { date: "12/08/2026", phan: 25, buy: 950_000, store: "SJC" })
     })
 
     expect(toast.success).toHaveBeenCalledWith("Đã cập nhật giao dịch vàng ngày 12/08/2026")
@@ -666,7 +781,7 @@ describe("useFinance toast notifications", () => {
     await waitFor(() => expect(result.current.gold).toEqual([]))
 
     act(() => {
-      result.current.addGold({ date: "10/08/2026", phan: 20, buy: 900_000 })
+      result.current.addGold({ date: "10/08/2026", phan: 20, buy: 900_000, store: "SJC" })
     })
     const id = result.current.gold[0].id
 
@@ -675,7 +790,7 @@ describe("useFinance toast notifications", () => {
     })
 
     act(() => {
-      result.current.updateGold(id, { date: "12/08/2026", phan: 25, buy: 950_000 })
+      result.current.updateGold(id, { date: "12/08/2026", phan: 25, buy: 950_000, store: "SJC" })
     })
     spy.mockRestore()
 
@@ -688,7 +803,7 @@ describe("useFinance toast notifications", () => {
     await waitFor(() => expect(result.current.gold).toEqual([]))
 
     act(() => {
-      result.current.addGold({ date: "10/08/2026", phan: 20, buy: 900_000 })
+      result.current.addGold({ date: "10/08/2026", phan: 20, buy: 900_000, store: "SJC" })
     })
     const id = result.current.gold[0].id
 
@@ -704,7 +819,7 @@ describe("useFinance toast notifications", () => {
     await waitFor(() => expect(result.current.gold).toEqual([]))
 
     act(() => {
-      result.current.addGold({ date: "10/08/2026", phan: 20, buy: 900_000 })
+      result.current.addGold({ date: "10/08/2026", phan: 20, buy: 900_000, store: "SJC" })
     })
     const id = result.current.gold[0].id
 
@@ -749,12 +864,12 @@ describe("useFinance toast notifications", () => {
     expect(result.current.invests).toEqual([])
   })
 
-  it("setGoldPrice does not throw and leaves the price unchanged when storage write fails", async () => {
+  it("setGoldStorePrice does not throw and leaves the price unchanged when storage write fails", async () => {
     const { result } = renderHook(() => useFinance())
-    await waitFor(() => expect(result.current.goldPrice).toBe(""))
+    await waitFor(() => expect(result.current.goldStores).toEqual([]))
 
     act(() => {
-      result.current.setGoldPrice("900.000")
+      result.current.addGoldStore({ name: "SJC", price: "900.000" })
     })
 
     const spy = vi.spyOn(Storage.prototype, "setItem").mockImplementationOnce(() => {
@@ -763,11 +878,143 @@ describe("useFinance toast notifications", () => {
 
     expect(() => {
       act(() => {
-        result.current.setGoldPrice("935.000")
+        result.current.setGoldStorePrice("SJC", "935.000")
       })
     }).not.toThrow()
     spy.mockRestore()
 
-    expect(result.current.goldPrice).toBe("900.000")
+    expect(result.current.goldStores).toEqual([{ name: "SJC", price: "900.000" }])
+  })
+
+  it("addGoldStore shows a success toast when the write succeeds", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.goldStores).toEqual([]))
+
+    act(() => {
+      result.current.addGoldStore({ name: "SJC", price: "935.000" })
+    })
+
+    expect(toast.success).toHaveBeenCalledWith('Đã thêm cửa hàng "SJC"')
+  })
+
+  it("addGoldStore shows an error toast and does not update state when storage write fails", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.goldStores).toEqual([]))
+
+    const spy = vi.spyOn(Storage.prototype, "setItem").mockImplementationOnce(() => {
+      throw new Error("QuotaExceededError")
+    })
+
+    act(() => {
+      result.current.addGoldStore({ name: "SJC", price: "935.000" })
+    })
+    spy.mockRestore()
+
+    expect(toast.error).toHaveBeenCalledWith('Không thể thêm cửa hàng "SJC". Vui lòng thử lại.')
+    expect(result.current.goldStores).toEqual([])
+  })
+
+  it("addGoldStore shows an error toast when the name is already taken", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.goldStores).toEqual([]))
+
+    act(() => {
+      result.current.addGoldStore({ name: "SJC", price: "935.000" })
+    })
+    act(() => {
+      result.current.addGoldStore({ name: "SJC", price: "800.000" })
+    })
+
+    expect(toast.error).toHaveBeenCalledWith('Đã có cửa hàng tên "SJC". Vui lòng chọn tên khác.')
+  })
+
+  it("updateGoldStore shows a success toast when the write succeeds", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.goldStores).toEqual([]))
+
+    act(() => {
+      result.current.addGoldStore({ name: "SJC", price: "935.000" })
+    })
+    act(() => {
+      result.current.updateGoldStore("SJC", { name: "SJC 9999", price: "940.000" })
+    })
+
+    expect(toast.success).toHaveBeenCalledWith('Đã cập nhật cửa hàng "SJC 9999"')
+  })
+
+  it("updateGoldStore shows an error toast and does not update state when storage write fails", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.goldStores).toEqual([]))
+
+    act(() => {
+      result.current.addGoldStore({ name: "SJC", price: "935.000" })
+    })
+
+    const spy = vi.spyOn(Storage.prototype, "setItem").mockImplementationOnce(() => {
+      throw new Error("QuotaExceededError")
+    })
+
+    act(() => {
+      result.current.updateGoldStore("SJC", { name: "SJC 9999", price: "940.000" })
+    })
+    spy.mockRestore()
+
+    expect(toast.error).toHaveBeenCalledWith('Không thể cập nhật cửa hàng "SJC 9999". Vui lòng thử lại.')
+    expect(result.current.goldStores).toEqual([{ name: "SJC", price: "935.000" }])
+  })
+
+  it("removeGoldStore shows a success toast when the write succeeds", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.goldStores).toEqual([]))
+
+    act(() => {
+      result.current.addGoldStore({ name: "SJC", price: "935.000" })
+    })
+    act(() => {
+      result.current.removeGoldStore("SJC")
+    })
+
+    expect(toast.success).toHaveBeenCalledWith('Đã xoá cửa hàng "SJC"')
+  })
+
+  it("removeGoldStore shows an error toast and does not update state when storage write fails", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.goldStores).toEqual([]))
+
+    act(() => {
+      result.current.addGoldStore({ name: "SJC", price: "935.000" })
+    })
+
+    const spy = vi.spyOn(Storage.prototype, "setItem").mockImplementationOnce(() => {
+      throw new Error("QuotaExceededError")
+    })
+
+    act(() => {
+      result.current.removeGoldStore("SJC")
+    })
+    spy.mockRestore()
+
+    expect(toast.error).toHaveBeenCalledWith('Không thể xoá cửa hàng "SJC". Vui lòng thử lại.')
+    expect(result.current.goldStores).toEqual([{ name: "SJC", price: "935.000" }])
+  })
+
+  it("removeGoldStore shows an error toast when the store still has purchases attached", async () => {
+    vi.setSystemTime(new Date(2026, 7, 10, 9, 0))
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.goldStores).toEqual([]))
+
+    act(() => {
+      result.current.addGoldStore({ name: "SJC", price: "935.000" })
+    })
+    act(() => {
+      result.current.addGold({ date: "10/08/2026", phan: 20, buy: 900_000, store: "SJC" })
+    })
+    act(() => {
+      result.current.removeGoldStore("SJC")
+    })
+
+    expect(toast.error).toHaveBeenCalledWith(
+      'Không thể xoá "SJC" vì vẫn còn giao dịch mua vàng gắn với cửa hàng này.'
+    )
   })
 })

@@ -5,18 +5,19 @@ import { Pencil, Trash2, TrendingDown, TrendingUp } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
-import { goldPurchasePL, parseGoldPrice, phanToChi } from "../finance-calculations"
-import type { GoldPurchase } from "../types"
+import { goldPurchasePL, goldStorePrice, phanToChi } from "../finance-calculations"
+import type { GoldPurchase, GoldStore } from "../types"
 
 interface GoldTransactionsTableProps {
   gold: GoldPurchase[]
-  goldPrice: string
+  stores: GoldStore[]
   onRemove: (id: number) => void
   onEdit: (purchase: GoldPurchase) => void
 }
 
 const HEADERS = [
   "Ngày mua",
+  "Cửa hàng",
   "Khối lượng",
   "Giá mua",
   "Giá vốn",
@@ -25,7 +26,7 @@ const HEADERS = [
   "",
 ]
 
-function GoldTransactionsTable({ gold, goldPrice, onRemove, onEdit }: GoldTransactionsTableProps) {
+function GoldTransactionsTable({ gold, stores, onRemove, onEdit }: GoldTransactionsTableProps) {
   const { hidden } = useMoneyVisibility()
 
   if (!gold.length) {
@@ -35,8 +36,6 @@ function GoldTransactionsTable({ gold, goldPrice, onRemove, onEdit }: GoldTransa
       </p>
     )
   }
-
-  const price = parseGoldPrice(goldPrice)
 
   return (
     <div className="overflow-x-auto">
@@ -50,9 +49,11 @@ function GoldTransactionsTable({ gold, goldPrice, onRemove, onEdit }: GoldTransa
                   "whitespace-nowrap py-[10px] px-[12px] [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)] " +
                   (index === 0
                     ? "border-l border-l-transparent text-left"
-                    : index === 5 || index === HEADERS.length - 1
-                      ? "text-center"
-                      : "text-right")
+                    : index === 1
+                      ? "text-left"
+                      : index === 6 || index === HEADERS.length - 1
+                        ? "text-center"
+                        : "text-right")
                 }
               >
                 {header}
@@ -62,6 +63,7 @@ function GoldTransactionsTable({ gold, goldPrice, onRemove, onEdit }: GoldTransa
         </thead>
         <tbody>
           {gold.map((purchase, index) => {
+            const price = goldStorePrice(stores, purchase.store)
             const cost = purchase.phan * purchase.buy
             const value = purchase.phan * price
             const pl = goldPurchasePL(purchase, price)
@@ -81,6 +83,9 @@ function GoldTransactionsTable({ gold, goldPrice, onRemove, onEdit }: GoldTransa
                   )}
                 >
                   {purchase.date}
+                </td>
+                <td className="whitespace-nowrap py-[10px] px-[12px] text-left text-[13px]">
+                  {purchase.store}
                 </td>
                 <td className="whitespace-nowrap py-[10px] px-[12px] text-right text-[13px] [font-family:var(--ob-font-num)] tabular-nums">
                   {phanToChi(purchase.phan)}

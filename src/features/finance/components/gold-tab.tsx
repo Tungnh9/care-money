@@ -13,21 +13,26 @@ import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import {
   goldPurchasePL,
-  parseGoldPrice,
+  goldStorePrice,
   pct1,
   phanToChi,
   sortGoldByDate,
   type FinanceSummary,
 } from "../finance-calculations"
-import type { GoldPurchase } from "../types"
+import type { GoldPurchase, GoldStore } from "../types"
 import { AddGoldForm } from "./add-gold-form"
+import { GoldStorePicker } from "./gold-store-picker"
+import { GoldStoresCard } from "./gold-stores-card"
 import { GoldTransactionsCards } from "./gold-transactions-cards"
 import { GoldTransactionsTable } from "./gold-transactions-table"
 
 interface GoldTabProps {
   summary: FinanceSummary
-  goldPrice: string
-  onSetGoldPrice: (price: string) => void
+  stores: GoldStore[]
+  onAddGoldStore: (store: GoldStore) => void
+  onUpdateGoldStore: (originalName: string, store: GoldStore) => void
+  onRemoveGoldStore: (name: string) => void
+  onSetGoldStorePrice: (name: string, price: string) => void
   gold: GoldPurchase[]
   onAddGold: (purchase: Omit<GoldPurchase, "id">) => void
   onUpdateGold: (id: number, purchase: Omit<GoldPurchase, "id">) => void
@@ -40,8 +45,11 @@ function signedMoney(n: number, hidden: boolean): string {
 
 function GoldTab({
   summary,
-  goldPrice,
-  onSetGoldPrice,
+  stores,
+  onAddGoldStore,
+  onUpdateGoldStore,
+  onRemoveGoldStore,
+  onSetGoldStorePrice,
   gold,
   onAddGold,
   onUpdateGold,
@@ -52,9 +60,9 @@ function GoldTab({
   const gain = goldPL >= 0
   const maxBar = Math.max(goldCost, goldValue, 1)
   const avgCost = goldPhan > 0 ? goldCost / goldPhan : 0
-  const marketPrice = parseGoldPrice(goldPrice)
+  const avgValue = goldPhan > 0 ? goldValue / goldPhan : 0
   const sortedGold = sortGoldByDate(gold)
-  const purchasePLs = gold.map((p) => goldPurchasePL(p, marketPrice))
+  const purchasePLs = gold.map((p) => goldPurchasePL(p, goldStorePrice(stores, p.store)))
   const winCount = purchasePLs.filter((pl) => pl >= 0).length
   const lossCount = purchasePLs.filter((pl) => pl < 0).length
   const totalWin = purchasePLs.filter((pl) => pl >= 0).reduce((sum, pl) => sum + pl, 0)
@@ -64,6 +72,7 @@ function GoldTab({
   const [editDate, setEditDate] = useState("")
   const [editPhan, setEditPhan] = useState("")
   const [editBuy, setEditBuy] = useState("")
+  const [editStore, setEditStore] = useState("")
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const deletingPurchase = gold.find((p) => p.id === deletingId) ?? null
 
@@ -72,6 +81,7 @@ function GoldTab({
     setEditDate(purchase.date)
     setEditPhan(String(purchase.phan))
     setEditBuy(String(purchase.buy))
+    setEditStore(purchase.store)
   }
 
   function resetEdit() {
@@ -79,13 +89,14 @@ function GoldTab({
     setEditDate("")
     setEditPhan("")
     setEditBuy("")
+    setEditStore("")
   }
 
   const stats = [
     ["Đang giữ", `${goldPhan} phân`],
     ["Quy đổi", phanToChi(goldPhan)],
     ["Giá vốn bình quân", `${formatMoney(Math.round(avgCost), hidden)} / phân`],
-    ["Giá thị trường", `${formatMoney(marketPrice, hidden)} / phân`],
+    ["Giá trị bình quân", `${formatMoney(Math.round(avgValue), hidden)} / phân`],
   ] as const
 
   return (
@@ -149,19 +160,16 @@ function GoldTab({
         </div>
       </Card>
 
-      <Card label="Giá thị trường hôm nay">
-        <Field
-          label="Giá vàng hôm nay (mỗi phân)"
-          numeric
-          group
-          suffix="đ"
-          value={goldPrice}
-          onChange={(e) => onSetGoldPrice(e.target.value)}
-          hint="10 phân = 1 chỉ. Bạn tự cập nhật giá — app không tự lấy giá từ đâu cả."
-        />
-      </Card>
+      <GoldStoresCard
+        stores={stores}
+        gold={gold}
+        onAdd={onAddGoldStore}
+        onUpdate={onUpdateGoldStore}
+        onRemove={onRemoveGoldStore}
+        onSetPrice={onSetGoldStorePrice}
+      />
 
-      <AddGoldForm onAdd={onAddGold} />
+      <AddGoldForm stores={stores} onAdd={onAddGold} />
 
       {editingId !== null ? (
         <Card label="Sửa lần mua vàng">
@@ -193,17 +201,21 @@ function GoldTab({
               onChange={(e) => setEditBuy(e.target.value)}
             />
           </div>
+          <div className="mt-3">
+            <GoldStorePicker stores={stores} selected={editStore} onSelect={setEditStore} />
+          </div>
           <div className="mt-4 flex gap-[10px]">
             <Button
               variant="primary"
               size="sm"
               type="button"
-              disabled={!editDate.trim() || !editPhan.trim() || !editBuy.trim()}
+              disabled={!editDate.trim() || !editPhan.trim() || !editBuy.trim() || !editStore}
               onClick={() => {
                 onUpdateGold(editingId, {
                   date: editDate.trim(),
                   phan: Number(editPhan) || 0,
                   buy: Number(editBuy) || 0,
+                  store: editStore,
                 })
                 resetEdit()
               }}
@@ -243,7 +255,7 @@ function GoldTab({
         <div className="hidden lg:block">
           <GoldTransactionsTable
             gold={sortedGold}
-            goldPrice={goldPrice}
+            stores={stores}
             onRemove={setDeletingId}
             onEdit={startEdit}
           />
@@ -251,7 +263,7 @@ function GoldTab({
         <div className="lg:hidden">
           <GoldTransactionsCards
             gold={sortedGold}
-            goldPrice={goldPrice}
+            stores={stores}
             onRemove={setDeletingId}
             onEdit={startEdit}
           />

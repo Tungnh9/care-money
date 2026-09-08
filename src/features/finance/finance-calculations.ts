@@ -1,5 +1,5 @@
 import type { FinanceState } from "./finance-storage"
-import type { GoldPurchase } from "./types"
+import type { GoldPurchase, GoldStore } from "./types"
 
 function phanToChi(phan: number): string {
   const chi = Math.floor(phan / 10)
@@ -21,6 +21,11 @@ function parseGoldPrice(str: string): number {
 
 function goldPurchasePL(purchase: GoldPurchase, price: number): number {
   return purchase.phan * price - purchase.phan * purchase.buy
+}
+
+function goldStorePrice(stores: GoldStore[], storeName: string): number {
+  const store = stores.find((s) => s.name === storeName)
+  return store ? parseGoldPrice(store.price) : 0
 }
 
 function parseGoldDate(date: string): number {
@@ -55,7 +60,10 @@ function summarizeFinance(state: FinanceState): FinanceSummary {
 
   const goldPhan = state.gold.reduce((sum, purchase) => sum + purchase.phan, 0)
   const goldCost = state.gold.reduce((sum, purchase) => sum + purchase.phan * purchase.buy, 0)
-  const goldValue = goldPhan * parseGoldPrice(state.goldPrice)
+  const goldValue = state.gold.reduce(
+    (sum, purchase) => sum + purchase.phan * goldStorePrice(state.goldStores, purchase.store),
+    0
+  )
   const goldPL = goldValue - goldCost
   const goldPct = goldCost > 0 ? (goldPL / goldCost) * 100 : 0
 
@@ -91,6 +99,7 @@ export {
   parseGoldPrice,
   summarizeFinance,
   goldPurchasePL,
+  goldStorePrice,
   parseGoldDate,
   sortGoldByDate,
   type FinanceSummary,

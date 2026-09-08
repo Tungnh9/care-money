@@ -43,7 +43,7 @@ describe("AutoBackup", () => {
     vi.mocked(pushSnapshot).mockResolvedValue({ ok: true, summary: "ok" })
     render(<AutoBackup />)
 
-    setStoredFinance({ ...DEFAULT_FINANCE_STATE, goldPrice: "935.000" })
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, goldStores: [{ name: "SJC", price: "935.000" }] })
     await vi.advanceTimersByTimeAsync(DEBOUNCE_MS)
 
     expect(pushSnapshot).toHaveBeenCalledTimes(1)
@@ -52,7 +52,7 @@ describe("AutoBackup", () => {
       expect.objectContaining({
         version: EXPORT_VERSION,
         journal: DEFAULT_JOURNAL_STATE,
-        finance: expect.objectContaining({ goldPrice: "935.000" }),
+        finance: expect.objectContaining({ goldStores: [{ name: "SJC", price: "935.000" }] }),
       })
     )
   })

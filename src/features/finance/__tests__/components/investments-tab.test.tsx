@@ -21,7 +21,7 @@ const LOSING: Investment = {
 }
 
 function summaryFor(invests: Investment[]): FinanceSummary {
-  return summarizeFinance({ savings: [], cards: [], gold: [], goldPrice: "", invests })
+  return summarizeFinance({ savings: [], cards: [], gold: [], goldStores: [], invests })
 }
 
 describe("InvestmentsTab", () => {

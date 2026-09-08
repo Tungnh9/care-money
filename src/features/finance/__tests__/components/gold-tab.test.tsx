@@ -4,6 +4,7 @@ import { render, screen, fireEvent, within } from "@testing-library/react"
 import { formatMoney } from "@/lib/format"
 import { phanToChi, pct1, type FinanceSummary } from "../../finance-calculations"
 import { GoldTab } from "../../components/gold-tab"
+import type { GoldStore } from "../../types"
 
 const ZERO_SUMMARY: FinanceSummary = {
   savingsTotal: 0,
@@ -30,19 +31,21 @@ const HOLDING_SUMMARY: FinanceSummary = {
   goldPct: 10,
 }
 
+const SJC: GoldStore = { name: "SJC", price: "880.000" }
+
+const noopHandlers = {
+  onAddGoldStore: vi.fn(),
+  onUpdateGoldStore: vi.fn(),
+  onRemoveGoldStore: vi.fn(),
+  onSetGoldStorePrice: vi.fn(),
+  onAddGold: vi.fn(),
+  onRemoveGold: vi.fn(),
+  onUpdateGold: vi.fn(),
+}
+
 describe("GoldTab", () => {
   it("shows zeroed-out P&L, stats and the empty transactions state when there is no gold", () => {
-    render(
-      <GoldTab
-        summary={ZERO_SUMMARY}
-        goldPrice=""
-        onSetGoldPrice={vi.fn()}
-        gold={[]}
-        onAddGold={vi.fn()}
-        onRemoveGold={vi.fn()}
-        onUpdateGold={vi.fn()}
-      />
-    )
+    render(<GoldTab summary={ZERO_SUMMARY} stores={[]} gold={[]} {...noopHandlers} />)
 
     // Đang giữ (raw phân) và Quy đổi (phanToChi) đều hiện "0 phân" khi chưa có gì
     expect(screen.getAllByText("0 phân")).toHaveLength(2)
@@ -57,18 +60,8 @@ describe("GoldTab", () => {
     ).toHaveLength(2)
   })
 
-  it("renders the P&L hero, comparison bars and stat grid for a gain", () => {
-    render(
-      <GoldTab
-        summary={HOLDING_SUMMARY}
-        goldPrice="880.000"
-        onSetGoldPrice={vi.fn()}
-        gold={[]}
-        onAddGold={vi.fn()}
-        onRemoveGold={vi.fn()}
-        onUpdateGold={vi.fn()}
-      />
-    )
+  it("renders the P&L hero, comparison bars and stat grid for a gain, with the store-weighted average price", () => {
+    render(<GoldTab summary={HOLDING_SUMMARY} stores={[SJC]} gold={[]} {...noopHandlers} />)
 
     // Đang giữ (raw phân)
     expect(screen.getByText("10 phân")).toBeInTheDocument()
@@ -80,7 +73,8 @@ describe("GoldTab", () => {
     expect(screen.getByText(formatMoney(8_800_000))).toBeInTheDocument()
     // Giá vốn bình quân stat (8.000.000 / 10 phân)
     expect(screen.getByText(`${formatMoney(800_000)} / phân`)).toBeInTheDocument()
-    // Giá thị trường stat
+    // Giá trị bình quân stat (goldValue/goldPhan = 8.800.000/10), thay cho "Giá thị trường" 1 giá chung cũ
+    expect(screen.getByText("Giá trị bình quân")).toBeInTheDocument()
     expect(screen.getByText(`${formatMoney(880_000)} / phân`)).toBeInTheDocument()
     // Signed P&L figure
     expect(screen.getByText(`+ ${formatMoney(800_000)}`)).toBeInTheDocument()
@@ -92,43 +86,37 @@ describe("GoldTab", () => {
     ).toBeInTheDocument()
   })
 
-  it("calls onSetGoldPrice when the market price field changes", () => {
-    const onSetGoldPrice = vi.fn()
-    render(
-      <GoldTab
-        summary={ZERO_SUMMARY}
-        goldPrice=""
-        onSetGoldPrice={onSetGoldPrice}
-        gold={[]}
-        onAddGold={vi.fn()}
-        onRemoveGold={vi.fn()}
-        onUpdateGold={vi.fn()}
-      />
-    )
+  it("shows 0 for the average price when there are stores but no purchases yet", () => {
+    render(<GoldTab summary={ZERO_SUMMARY} stores={[SJC]} gold={[]} {...noopHandlers} />)
 
-    fireEvent.change(screen.getByLabelText("Giá vàng hôm nay (mỗi phân)", { exact: false }), {
-      target: { value: "900000" },
-    })
-
-    expect(onSetGoldPrice).toHaveBeenCalledWith("900000")
+    const statBox = screen.getByText("Giá trị bình quân").parentElement as HTMLElement
+    expect(within(statBox).getByText(`${formatMoney(0)} / phân`)).toBeInTheDocument()
   })
 
-  it("opens AddGoldForm, fills in fields and reports the new purchase on submit", () => {
-    const onAddGold = vi.fn()
+  it("calls onSetGoldStorePrice when a store's price field in GoldStoresCard changes", () => {
+    const onSetGoldStorePrice = vi.fn()
     render(
       <GoldTab
         summary={ZERO_SUMMARY}
-        goldPrice=""
-        onSetGoldPrice={vi.fn()}
+        stores={[SJC]}
         gold={[]}
-        onAddGold={onAddGold}
-        onRemoveGold={vi.fn()}
-        onUpdateGold={vi.fn()}
+        {...noopHandlers}
+        onSetGoldStorePrice={onSetGoldStorePrice}
       />
     )
+
+    fireEvent.change(screen.getByDisplayValue("880.000"), { target: { value: "900000" } })
+
+    expect(onSetGoldStorePrice).toHaveBeenCalledWith("SJC", "900000")
+  })
+
+  it("opens AddGoldForm, fills in fields (incl. picking a store) and reports the new purchase on submit", () => {
+    const onAddGold = vi.fn()
+    render(<GoldTab summary={ZERO_SUMMARY} stores={[SJC]} gold={[]} {...noopHandlers} onAddGold={onAddGold} />)
 
     fireEvent.click(screen.getByRole("button", { name: "Thêm lần mua vàng" }))
 
+    fireEvent.click(screen.getByRole("button", { name: "SJC" }))
     fireEvent.change(screen.getByLabelText("Ngày mua", { exact: false }), {
       target: { value: "10/08/2026" },
     })
@@ -145,21 +133,33 @@ describe("GoldTab", () => {
       date: "10/08/2026",
       phan: 10,
       buy: 900_000,
+      store: "SJC",
     })
   })
 
+  it("keeps the add-purchase Thêm button disabled until a store is picked", () => {
+    render(<GoldTab summary={ZERO_SUMMARY} stores={[SJC]} gold={[]} {...noopHandlers} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Thêm lần mua vàng" }))
+    fireEvent.change(screen.getByLabelText("Ngày mua", { exact: false }), {
+      target: { value: "10/08/2026" },
+    })
+    fireEvent.change(screen.getByLabelText("Khối lượng (phân)", { exact: false }), {
+      target: { value: "10" },
+    })
+    fireEvent.change(screen.getByLabelText("Giá mua (mỗi phân)", { exact: false }), {
+      target: { value: "900000" },
+    })
+
+    expect(screen.getByRole("button", { name: "Thêm" })).toBeDisabled()
+
+    fireEvent.click(screen.getByRole("button", { name: "SJC" }))
+
+    expect(screen.getByRole("button", { name: "Thêm" })).not.toBeDisabled()
+  })
+
   it("stagger-animates its stacked cards in via the shared ob-card-grid wrapper", () => {
-    render(
-      <GoldTab
-        summary={ZERO_SUMMARY}
-        goldPrice=""
-        onSetGoldPrice={vi.fn()}
-        gold={[]}
-        onAddGold={vi.fn()}
-        onRemoveGold={vi.fn()}
-        onUpdateGold={vi.fn()}
-      />
-    )
+    render(<GoldTab summary={ZERO_SUMMARY} stores={[]} gold={[]} {...noopHandlers} />)
 
     const plSection = screen
       .getByText("Lãi / lỗ theo giá thị trường")
@@ -167,17 +167,15 @@ describe("GoldTab", () => {
     expect(plSection.parentElement).toHaveClass("ob-card-grid")
   })
 
-  it("opens a prefilled edit form for a purchase and reports the update on Lưu", () => {
+  it("opens a prefilled edit form (incl. the purchase's current store) and reports the update on Lưu", () => {
     const onUpdateGold = vi.fn()
-    const PURCHASE = { id: 1, date: "10/08/2026", phan: 10, buy: 900_000 }
+    const PURCHASE = { id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" }
     render(
       <GoldTab
         summary={ZERO_SUMMARY}
-        goldPrice=""
-        onSetGoldPrice={vi.fn()}
+        stores={[SJC]}
         gold={[PURCHASE]}
-        onAddGold={vi.fn()}
-        onRemoveGold={vi.fn()}
+        {...noopHandlers}
         onUpdateGold={onUpdateGold}
       />
     )
@@ -195,21 +193,20 @@ describe("GoldTab", () => {
       date: "10/08/2026",
       phan: 10,
       buy: 950_000,
+      store: "SJC",
     })
     expect(screen.queryByText("Sửa lần mua vàng")).not.toBeInTheDocument()
   })
 
   it("closes the edit form without saving when Huỷ is clicked", () => {
     const onUpdateGold = vi.fn()
-    const PURCHASE = { id: 1, date: "10/08/2026", phan: 10, buy: 900_000 }
+    const PURCHASE = { id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" }
     render(
       <GoldTab
         summary={ZERO_SUMMARY}
-        goldPrice=""
-        onSetGoldPrice={vi.fn()}
+        stores={[SJC]}
         gold={[PURCHASE]}
-        onAddGold={vi.fn()}
-        onRemoveGold={vi.fn()}
+        {...noopHandlers}
         onUpdateGold={onUpdateGold}
       />
     )
@@ -225,16 +222,14 @@ describe("GoldTab", () => {
 
   it("asks for confirmation before removing a purchase and removes it on Xoá", () => {
     const onRemoveGold = vi.fn()
-    const PURCHASE = { id: 1, date: "10/08/2026", phan: 10, buy: 900_000 }
+    const PURCHASE = { id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" }
     render(
       <GoldTab
         summary={ZERO_SUMMARY}
-        goldPrice=""
-        onSetGoldPrice={vi.fn()}
+        stores={[SJC]}
         gold={[PURCHASE]}
-        onAddGold={vi.fn()}
+        {...noopHandlers}
         onRemoveGold={onRemoveGold}
-        onUpdateGold={vi.fn()}
       />
     )
 
@@ -253,19 +248,16 @@ describe("GoldTab", () => {
     // 2 lần lãi: (950.000-900.000)*10 = 500.000 ; (950.000-920.000)*5 = 150.000 → tổng lãi 650.000
     // 1 lần lỗ: (950.000-980.000)*8 = -240.000 → tổng lỗ -240.000
     const purchases = [
-      { id: 1, date: "01/01/2026", phan: 10, buy: 900_000 },
-      { id: 2, date: "02/01/2026", phan: 5, buy: 920_000 },
-      { id: 3, date: "03/01/2026", phan: 8, buy: 980_000 },
+      { id: 1, date: "01/01/2026", phan: 10, buy: 900_000, store: "SJC" },
+      { id: 2, date: "02/01/2026", phan: 5, buy: 920_000, store: "SJC" },
+      { id: 3, date: "03/01/2026", phan: 8, buy: 980_000, store: "SJC" },
     ]
     render(
       <GoldTab
         summary={ZERO_SUMMARY}
-        goldPrice="950.000"
-        onSetGoldPrice={vi.fn()}
+        stores={[{ name: "SJC", price: "950.000" }]}
         gold={purchases}
-        onAddGold={vi.fn()}
-        onRemoveGold={vi.fn()}
-        onUpdateGold={vi.fn()}
+        {...noopHandlers}
       />
     )
 
@@ -280,21 +272,44 @@ describe("GoldTab", () => {
     expect(lossBox.querySelector("svg")).not.toBeNull()
   })
 
-  it("renders gold purchases sorted from newest to oldest date, regardless of the input array's order", () => {
+  it("computes win/loss using each purchase's OWN store price, not one price for everyone", () => {
+    // SJC @ 1.000.000: 10*(1.000.000-900.000) = +1.000.000 (lãi)
+    // PNJ @ 800.000: 8*(900.000-800.000) = -800.000 (lỗ)
     const purchases = [
-      { id: 1, date: "28/07/2026", phan: 5, buy: 1_420_000 },
-      { id: 2, date: "05/05/2026", phan: 2, buy: 1_649_000 },
-      { id: 3, date: "03/06/2026", phan: 5, buy: 1_436_000 },
+      { id: 1, date: "01/01/2026", phan: 10, buy: 900_000, store: "SJC" },
+      { id: 2, date: "02/01/2026", phan: 8, buy: 900_000, store: "PNJ" },
     ]
     render(
       <GoldTab
         summary={ZERO_SUMMARY}
-        goldPrice="1.500.000"
-        onSetGoldPrice={vi.fn()}
+        stores={[
+          { name: "SJC", price: "1.000.000" },
+          { name: "PNJ", price: "800.000" },
+        ]}
         gold={purchases}
-        onAddGold={vi.fn()}
-        onRemoveGold={vi.fn()}
-        onUpdateGold={vi.fn()}
+        {...noopHandlers}
+      />
+    )
+
+    const winBox = screen.getByText("1 lần lãi").parentElement as HTMLElement
+    expect(within(winBox).getByText(formatMoney(1_000_000))).toBeInTheDocument()
+
+    const lossBox = screen.getByText("1 lần lỗ").parentElement as HTMLElement
+    expect(within(lossBox).getByText(formatMoney(800_000))).toBeInTheDocument()
+  })
+
+  it("renders gold purchases sorted from newest to oldest date, regardless of the input array's order", () => {
+    const purchases = [
+      { id: 1, date: "28/07/2026", phan: 5, buy: 1_420_000, store: "SJC" },
+      { id: 2, date: "05/05/2026", phan: 2, buy: 1_649_000, store: "SJC" },
+      { id: 3, date: "03/06/2026", phan: 5, buy: 1_436_000, store: "SJC" },
+    ]
+    render(
+      <GoldTab
+        summary={ZERO_SUMMARY}
+        stores={[{ name: "SJC", price: "1.500.000" }]}
+        gold={purchases}
+        {...noopHandlers}
       />
     )
 
@@ -307,17 +322,7 @@ describe("GoldTab", () => {
   })
 
   it("omits the count suffix and the win/loss summary when there are no purchases", () => {
-    render(
-      <GoldTab
-        summary={ZERO_SUMMARY}
-        goldPrice=""
-        onSetGoldPrice={vi.fn()}
-        gold={[]}
-        onAddGold={vi.fn()}
-        onRemoveGold={vi.fn()}
-        onUpdateGold={vi.fn()}
-      />
-    )
+    render(<GoldTab summary={ZERO_SUMMARY} stores={[]} gold={[]} {...noopHandlers} />)
 
     expect(screen.getByText("Các lần mua vàng")).toBeInTheDocument()
     expect(screen.queryByText(/lần lãi/)).not.toBeInTheDocument()
@@ -326,16 +331,14 @@ describe("GoldTab", () => {
 
   it("closes the confirmation dialog without removing the purchase when Huỷ is clicked", () => {
     const onRemoveGold = vi.fn()
-    const PURCHASE = { id: 1, date: "10/08/2026", phan: 10, buy: 900_000 }
+    const PURCHASE = { id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" }
     render(
       <GoldTab
         summary={ZERO_SUMMARY}
-        goldPrice=""
-        onSetGoldPrice={vi.fn()}
+        stores={[SJC]}
         gold={[PURCHASE]}
-        onAddGold={vi.fn()}
+        {...noopHandlers}
         onRemoveGold={onRemoveGold}
-        onUpdateGold={vi.fn()}
       />
     )
 

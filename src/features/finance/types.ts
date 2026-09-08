@@ -14,11 +14,17 @@ interface CreditCard {
   color?: string
 }
 
+interface GoldStore {
+  name: string
+  price: string
+}
+
 interface GoldPurchase {
   id: number
   date: string
   phan: number
   buy: number
+  store: string
 }
 
 interface Investment {
@@ -28,4 +34,4 @@ interface Investment {
   value: number
 }
 
-export type { SavingsFund, CreditCard, GoldPurchase, Investment }
+export type { SavingsFund, CreditCard, GoldStore, GoldPurchase, Investment }
