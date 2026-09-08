@@ -2,13 +2,26 @@ import { describe, it, expect } from "vitest"
 import { render, screen } from "@testing-library/react"
 
 import { formatMoney } from "@/lib/format"
-import type { MiniGoal } from "../../overview-calculations"
+import type { Goal } from "@/features/goals"
 import { GoalsSummarySection } from "../../components/goals-summary-section"
 
-const GOALS: MiniGoal[] = [
-  { name: "Tiết kiệm 100 triệu", icon: "pig", percent: 50 },
-  { name: "10 chỉ vàng", icon: "gold", percent: 20 },
-  { name: "Mua xe ô tô", icon: "car", percent: 0 },
+function makeGoal(overrides: Partial<Goal> & Pick<Goal, "key" | "name" | "icon" | "percent">): Goal {
+  return {
+    now: 0,
+    target: 1,
+    done: false,
+    format: (n: number) => String(n),
+    note: "",
+    tone: "action",
+    linked: true,
+    ...overrides,
+  }
+}
+
+const GOALS: Goal[] = [
+  makeGoal({ key: "savings", name: "Tiết kiệm 100 triệu", icon: "pig", percent: 50 }),
+  makeGoal({ key: "gold", name: "10 chỉ vàng", icon: "gold", percent: 20 }),
+  makeGoal({ key: "car", name: "Mua xe ô tô", icon: "car", percent: 0, linked: false }),
 ]
 
 describe("GoalsSummarySection", () => {

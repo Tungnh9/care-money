@@ -5,7 +5,7 @@ import { Pencil, Trash2, TrendingDown, TrendingUp } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
-import { parseGoldPrice, phanToChi } from "../finance-calculations"
+import { goldPurchasePL, parseGoldPrice, phanToChi } from "../finance-calculations"
 import type { GoldPurchase } from "../types"
 
 interface GoldTransactionsTableProps {
@@ -64,7 +64,7 @@ function GoldTransactionsTable({ gold, goldPrice, onRemove, onEdit }: GoldTransa
           {gold.map((purchase, index) => {
             const cost = purchase.phan * purchase.buy
             const value = purchase.phan * price
-            const pl = value - cost
+            const pl = goldPurchasePL(purchase, price)
             const positive = pl >= 0
             return (
               <tr

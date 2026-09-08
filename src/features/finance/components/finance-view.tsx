@@ -120,7 +120,7 @@ function FinanceView() {
             onRemoveGold={removeGold}
           />
         ) : (
-          <InvestmentsTab invests={invests} onAddInvest={addInvest} />
+          <InvestmentsTab invests={invests} summary={summary} onAddInvest={addInvest} />
         )}
       </div>
     </div>

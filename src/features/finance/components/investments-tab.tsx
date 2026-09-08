@@ -4,12 +4,13 @@ import { Card } from "@/components/ui/card"
 import { Figure } from "@/components/ob/figure"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
-import { pct1 } from "../finance-calculations"
+import { pct1, type FinanceSummary } from "../finance-calculations"
 import type { Investment } from "../types"
 import { AddInvestForm } from "./add-invest-form"
 
 interface InvestmentsTabProps {
   invests: Investment[]
+  summary: FinanceSummary
   onAddInvest: (invest: Omit<Investment, "id">) => void
 }
 
@@ -17,12 +18,9 @@ function signedMoney(n: number, hidden: boolean): string {
   return (n >= 0 ? "+ " : "− ") + formatMoney(Math.abs(n), hidden)
 }
 
-function InvestmentsTab({ invests, onAddInvest }: InvestmentsTabProps) {
+function InvestmentsTab({ invests, summary, onAddInvest }: InvestmentsTabProps) {
   const { hidden } = useMoneyVisibility()
-  const investCost = invests.reduce((sum, invest) => sum + invest.cost, 0)
-  const investValue = invests.reduce((sum, invest) => sum + invest.value, 0)
-  const investPL = investValue - investCost
-  const investPct = investCost > 0 ? (investPL / investCost) * 100 : 0
+  const { investValue, investPL, investPct } = summary
   const gain = investPL >= 0
 
   return (

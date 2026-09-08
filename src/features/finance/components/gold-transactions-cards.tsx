@@ -4,7 +4,7 @@ import { Pencil, Trash2, TrendingDown, TrendingUp } from "lucide-react"
 
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
-import { parseGoldPrice, phanToChi } from "../finance-calculations"
+import { goldPurchasePL, parseGoldPrice, phanToChi } from "../finance-calculations"
 import type { GoldPurchase } from "../types"
 
 interface GoldTransactionsCardsProps {
@@ -37,7 +37,7 @@ function GoldTransactionsCards({
       {gold.map((purchase) => {
         const cost = purchase.phan * purchase.buy
         const value = purchase.phan * price
-        const pl = value - cost
+        const pl = goldPurchasePL(purchase, price)
         return (
           <div
             key={purchase.id}

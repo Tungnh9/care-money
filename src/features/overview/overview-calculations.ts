@@ -15,23 +15,4 @@ function splitGreeting(greeting: string, displayName: string): GreetingParts {
   return { prefix: greeting, name: "" }
 }
 
-interface MiniGoalsInput {
-  savingsTotal: number
-  goldPhan: number
-}
-
-interface MiniGoal {
-  name: string
-  icon: string
-  percent: number
-}
-
-function getMiniGoals({ savingsTotal, goldPhan }: MiniGoalsInput): MiniGoal[] {
-  return [
-    { name: "Tiết kiệm 100 triệu", icon: "pig", percent: Math.min(Math.round((savingsTotal / 100_000_000) * 100), 100) },
-    { name: "10 chỉ vàng", icon: "gold", percent: Math.min(Math.round((goldPhan / 100) * 100), 100) },
-    { name: "Mua xe ô tô", icon: "car", percent: 0 },
-  ]
-}
-
-export { monthLabel, splitGreeting, getMiniGoals, type MiniGoal, type GreetingParts }
+export { monthLabel, splitGreeting, type GreetingParts }

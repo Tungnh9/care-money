@@ -10,6 +10,12 @@ import {
 } from "../finance-storage"
 import type { CreditCard, GoldPurchase, Investment, SavingsFund } from "../types"
 import { toast } from "sonner"
+import { getCarGoalFundName, setCarGoalFundName } from "@/features/goals/car-goal-storage"
+
+function nextId(existing: { id: number }[]) {
+  // Date.now() có thể trùng nếu add 2 lần trong cùng 1ms — dùng max(id hiện có)+1 để chắc chắn không đụng.
+  return existing.reduce((max, item) => Math.max(max, item.id), 0) + 1
+}
 
 function useFinance() {
   const [state, setState] = useState<FinanceState>(DEFAULT_FINANCE_STATE)
@@ -39,10 +45,20 @@ function useFinance() {
 
   const updateSavingsFund = useCallback(
     (originalName: string, fund: SavingsFund) => {
-      persist({
-        ...state,
-        savings: state.savings.map((f) => (f.name === originalName ? fund : f)),
-      })
+      try {
+        persist({
+          ...state,
+          savings: state.savings.map((f) => (f.name === originalName ? fund : f)),
+        })
+        // Mục tiêu "mua xe" link theo tên quỹ (không có id) — đổi tên quỹ đang link
+        // thì phải đổi luôn tên lưu ở car-goal-storage, nếu không link sẽ bị mồ côi.
+        if (fund.name !== originalName && getCarGoalFundName() === originalName) {
+          setCarGoalFundName(fund.name)
+        }
+        toast.success(`Đã cập nhật quỹ tiết kiệm "${fund.name}"`)
+      } catch {
+        toast.error(`Không thể cập nhật quỹ tiết kiệm "${fund.name}". Vui lòng thử lại.`)
+      }
     },
     [state, persist]
   )
@@ -73,22 +89,32 @@ function useFinance() {
 
   const payCard = useCallback(
     (name: string, amount: number) => {
-      persist({
-        ...state,
-        cards: state.cards.map((card) =>
-          card.name === name ? { ...card, balance: Math.max(card.balance - amount, 0) } : card
-        ),
-      })
+      try {
+        persist({
+          ...state,
+          cards: state.cards.map((card) =>
+            card.name === name ? { ...card, balance: Math.max(card.balance - amount, 0) } : card
+          ),
+        })
+        toast.success(`Đã ghi nhận thanh toán cho thẻ "${name}"`)
+      } catch {
+        toast.error("Không thể ghi nhận thanh toán. Vui lòng thử lại.")
+      }
     },
     [state, persist]
   )
 
   const updateCard = useCallback(
     (originalName: string, card: CreditCard) => {
-      persist({
-        ...state,
-        cards: state.cards.map((c) => (c.name === originalName ? card : c)),
-      })
+      try {
+        persist({
+          ...state,
+          cards: state.cards.map((c) => (c.name === originalName ? card : c)),
+        })
+        toast.success(`Đã cập nhật thẻ tín dụng "${card.name}"`)
+      } catch {
+        toast.error(`Không thể cập nhật thẻ tín dụng "${card.name}". Vui lòng thử lại.`)
+      }
     },
     [state, persist]
   )
@@ -107,7 +133,13 @@ function useFinance() {
 
   const setGoldPrice = useCallback(
     (goldPrice: string) => {
-      persist({ ...state, goldPrice })
+      // Gõ trực tiếp từng phím, không phải submit 1 lần — không toast để tránh spam,
+      // chỉ chặn throw khi ghi storage lỗi (khác payCard/updateCard là hành động rời rạc).
+      try {
+        persist({ ...state, goldPrice })
+      } catch {
+        // im lặng bỏ qua, giữ nguyên giá trị hiển thị cũ
+      }
     },
     [state, persist]
   )
@@ -115,7 +147,7 @@ function useFinance() {
   const addGold = useCallback(
     (purchase: Omit<GoldPurchase, "id">) => {
       try {
-        persist({ ...state, gold: [{ ...purchase, id: Date.now() }, ...state.gold] })
+        persist({ ...state, gold: [{ ...purchase, id: nextId(state.gold) }, ...state.gold] })
         toast.success(`Đã thêm lần mua vàng ngày ${purchase.date}`)
       } catch {
         toast.error("Không thể thêm lần mua vàng. Vui lòng thử lại.")
@@ -126,10 +158,15 @@ function useFinance() {
 
   const updateGold = useCallback(
     (id: number, purchase: Omit<GoldPurchase, "id">) => {
-      persist({
-        ...state,
-        gold: state.gold.map((p) => (p.id === id ? { ...purchase, id } : p)),
-      })
+      try {
+        persist({
+          ...state,
+          gold: state.gold.map((p) => (p.id === id ? { ...purchase, id } : p)),
+        })
+        toast.success(`Đã cập nhật giao dịch vàng ngày ${purchase.date}`)
+      } catch {
+        toast.error("Không thể cập nhật giao dịch vàng. Vui lòng thử lại.")
+      }
     },
     [state, persist]
   )
@@ -150,7 +187,7 @@ function useFinance() {
   const addInvest = useCallback(
     (invest: Omit<Investment, "id">) => {
       try {
-        persist({ ...state, invests: [...state.invests, { ...invest, id: Date.now() }] })
+        persist({ ...state, invests: [...state.invests, { ...invest, id: nextId(state.invests) }] })
         toast.success(`Đã thêm khoản đầu tư "${invest.name}"`)
       } catch {
         toast.error("Không thể thêm khoản đầu tư. Vui lòng thử lại.")
