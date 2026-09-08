@@ -4,19 +4,19 @@ import { Pencil, Trash2, TrendingDown, TrendingUp } from "lucide-react"
 
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
-import { parseGoldPrice, phanToChi } from "../finance-calculations"
-import type { GoldPurchase } from "../types"
+import { goldPurchasePL, goldStorePrice, phanToChi } from "../finance-calculations"
+import type { GoldPurchase, GoldStore } from "../types"
 
 interface GoldTransactionsCardsProps {
   gold: GoldPurchase[]
-  goldPrice: string
+  stores: GoldStore[]
   onRemove: (id: number) => void
   onEdit: (purchase: GoldPurchase) => void
 }
 
 function GoldTransactionsCards({
   gold,
-  goldPrice,
+  stores,
   onRemove,
   onEdit,
 }: GoldTransactionsCardsProps) {
@@ -30,22 +30,24 @@ function GoldTransactionsCards({
     )
   }
 
-  const price = parseGoldPrice(goldPrice)
-
   return (
     <div className="flex flex-col gap-3">
       {gold.map((purchase) => {
+        const price = goldStorePrice(stores, purchase.store)
         const cost = purchase.phan * purchase.buy
         const value = purchase.phan * price
-        const pl = value - cost
+        const pl = goldPurchasePL(purchase, price)
         return (
           <div
             key={purchase.id}
             className="rounded-[var(--ob-radius-md)] border border-[var(--ob-color-border)] p-[14px]"
           >
             <div className="mb-3 flex items-center justify-between gap-3">
-              <span className="text-[13px] [font-family:var(--ob-font-num)] tabular-nums">
+              <span className="flex items-baseline gap-[9px] text-[13px] [font-family:var(--ob-font-num)] tabular-nums">
                 {purchase.date}
+                <span className="[font-family:var(--ob-font-text)] text-[12px] font-semibold text-[var(--ob-color-text-subtle)]">
+                  {purchase.store}
+                </span>
               </span>
               <div className="flex items-center gap-1">
                 <button

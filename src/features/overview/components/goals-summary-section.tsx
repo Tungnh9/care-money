@@ -1,14 +1,14 @@
 import Image from "next/image"
 
 import type { SavingsFund } from "@/features/finance/types"
+import type { Goal } from "@/features/goals"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
-import type { MiniGoal } from "../overview-calculations"
 
 interface GoalsSummarySectionProps {
-  goals: MiniGoal[]
+  goals: Goal[]
   savings: SavingsFund[]
 }
 

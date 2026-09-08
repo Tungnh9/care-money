@@ -72,7 +72,7 @@ describe("parseImportPayload", () => {
     if (result.ok) {
       expect(result.data.journal.entries).toHaveLength(1)
       expect(result.data.finance.savings).toHaveLength(1)
-      expect(result.data.finance.goldPrice).toBe(DEFAULT_FINANCE_STATE.goldPrice)
+      expect(result.data.finance.goldStores).toEqual(DEFAULT_FINANCE_STATE.goldStores)
       expect(result.data.study).toEqual(DEFAULT_STUDY_STATE)
       expect(result.summary).toBe(
         "1 bài nhật ký · 0 lần mua vàng · đã khôi phục tiết kiệm, nợ thẻ, mục tiêu"
@@ -110,6 +110,54 @@ describe("parseImportPayload", () => {
     expect(result.ok).toBe(true)
     if (result.ok) {
       expect(result.data.settings.modules).toEqual(DEFAULT_SETTINGS.modules)
+    }
+  })
+
+  it("migrates a legacy backup file's single goldPrice + storeless purchases into one default store", () => {
+    const raw = JSON.stringify({
+      version: EXPORT_VERSION,
+      finance: {
+        gold: [{ id: 1, date: "10/08/2026", phan: 20, buy: 900_000 }],
+        goldPrice: "935.000",
+      },
+    })
+
+    const result = parseImportPayload(raw)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.finance.goldStores).toEqual([{ name: "Chưa gắn cửa hàng", price: "935.000" }])
+      expect(result.data.finance.gold).toEqual([
+        { id: 1, date: "10/08/2026", phan: 20, buy: 900_000, store: "Chưa gắn cửa hàng" },
+      ])
+    }
+  })
+
+  it("falls back to the default finance array when its elements are missing required fields, not just when the field is wrong-typed", () => {
+    const raw = JSON.stringify({
+      version: EXPORT_VERSION,
+      finance: { cards: [{ name: "Thẻ lỗi" }] },
+    })
+
+    const result = parseImportPayload(raw)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.finance.cards).toEqual(DEFAULT_FINANCE_STATE.cards)
+    }
+  })
+
+  it("falls back to the default study tasks when its elements are missing required fields", () => {
+    const raw = JSON.stringify({
+      version: EXPORT_VERSION,
+      study: { tasks: [{ label: "Thiếu done" }] },
+    })
+
+    const result = parseImportPayload(raw)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.study.tasks).toEqual(DEFAULT_STUDY_STATE.tasks)
     }
   })
 

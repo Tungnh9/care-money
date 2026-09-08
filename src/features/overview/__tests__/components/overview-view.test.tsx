@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 
 import { DEFAULT_SETTINGS, setStoredSettings } from "@/lib/settings-storage"
 import { DEFAULT_FINANCE_STATE, setStoredFinance } from "@/features/finance/finance-storage"
+import { setCarGoalFundName } from "@/features/goals/car-goal-storage"
 import { formatMoney } from "@/lib/format"
 import type { GrammarEntry, VocabEntry } from "@/features/study/types"
 import { OverviewView } from "../../components/overview-view"
@@ -68,5 +69,24 @@ describe("OverviewView", () => {
     expect(screen.getAllByText("Quỹ dự phòng")).toHaveLength(1)
     expect(screen.getByText(`${formatMoney(5_000_000)} / ${formatMoney(20_000_000)}`)).toBeInTheDocument()
     expect(screen.getAllByText(formatMoney(5_000_000)).length).toBeGreaterThan(0)
+  })
+
+  it("shows the real car-goal progress in the Mục tiêu section once a savings fund is linked, matching /goals", async () => {
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      savings: [
+        { name: "Quỹ mua xe", amount: 30_000_000, target: 100_000_000 },
+        { name: "Quỹ khác", amount: 10_000_000, target: 50_000_000 },
+      ],
+    })
+    setCarGoalFundName("Quỹ mua xe")
+
+    render(<OverviewView vocab={VOCAB} grammar={GRAMMAR} />)
+
+    await waitFor(() => expect(screen.getByText("Mua xe ô tô")).toBeInTheDocument())
+    // savingsTotal (40tr/100tr = 40%) khác car-goal (30tr/100tr = 30%) — tránh trùng số ngẫu nhiên.
+    const carRow = screen.getByText("Mua xe ô tô").closest("div")
+    expect(carRow).not.toBeNull()
+    expect(within(carRow as HTMLElement).getByText("30%")).toBeInTheDocument()
   })
 })

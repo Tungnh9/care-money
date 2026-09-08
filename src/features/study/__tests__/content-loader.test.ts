@@ -1,6 +1,23 @@
 import { describe, it, expect } from "vitest"
 
-import { getGrammar, getVocab } from "../content-loader"
+import { getGrammar, getVocab, parseJsonl } from "../content-loader"
+
+describe("parseJsonl", () => {
+  it("parses every valid line into an object", () => {
+    const result = parseJsonl<{ id: string }>('{"id":"a"}\n{"id":"b"}', "test.jsonl")
+    expect(result).toEqual([{ id: "a" }, { id: "b" }])
+  })
+
+  it("skips blank lines", () => {
+    const result = parseJsonl<{ id: string }>('{"id":"a"}\n\n   \n{"id":"b"}', "test.jsonl")
+    expect(result).toEqual([{ id: "a" }, { id: "b" }])
+  })
+
+  it("throws an error naming the file and 1-indexed line number when a line is malformed", () => {
+    const raw = '{"id":"a"}\nNOT JSON\n{"id":"c"}'
+    expect(() => parseJsonl(raw, "vocabulary.jsonl")).toThrow(/vocabulary\.jsonl:2/)
+  })
+})
 
 describe("getVocab", () => {
   it("loads a substantial, growing set of real vocabulary entries", () => {

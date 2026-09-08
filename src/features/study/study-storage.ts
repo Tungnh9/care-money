@@ -1,3 +1,6 @@
+import { z } from "zod"
+
+import { notifyDataChanged } from "@/lib/data-change-bus"
 import type { Task } from "./types"
 
 interface StudyState {
@@ -18,11 +21,35 @@ const DEFAULT_STUDY_STATE: StudyState = {
   learned: [],
 }
 
+const taskSchema: z.ZodType<Task> = z.object({
+  label: z.string(),
+  done: z.boolean(),
+})
+
+const studyStateSchema = z.object({
+  tasks: z.array(taskSchema),
+  learned: z.array(z.string()),
+})
+
+// Field nào sai shape thì rơi về default riêng field đó, không kéo sập cả state.
+function safeField<T>(schema: z.ZodType<T>, value: unknown, fallback: T): T {
+  const result = schema.safeParse(value)
+  return result.success ? result.data : fallback
+}
+
+function parseStudyState(value: unknown): StudyState {
+  const parsed = (value ?? {}) as Partial<StudyState>
+  return {
+    tasks: safeField(z.array(taskSchema), parsed.tasks, DEFAULT_STUDY_STATE.tasks),
+    learned: safeField(z.array(z.string()), parsed.learned, DEFAULT_STUDY_STATE.learned),
+  }
+}
+
 function getStoredStudy(): StudyState {
   try {
     const raw = window.localStorage.getItem(STUDY_STORAGE_KEY)
     if (!raw) return DEFAULT_STUDY_STATE
-    return { ...DEFAULT_STUDY_STATE, ...(JSON.parse(raw) as Partial<StudyState>) }
+    return parseStudyState(JSON.parse(raw))
   } catch {
     return DEFAULT_STUDY_STATE
   }
@@ -30,6 +57,16 @@ function getStoredStudy(): StudyState {
 
 function setStoredStudy(state: StudyState) {
   window.localStorage.setItem(STUDY_STORAGE_KEY, JSON.stringify(state))
+  notifyDataChanged()
 }
 
-export { STUDY_STORAGE_KEY, DEFAULT_STUDY_STATE, getStoredStudy, setStoredStudy, type StudyState }
+export {
+  STUDY_STORAGE_KEY,
+  DEFAULT_STUDY_STATE,
+  getStoredStudy,
+  setStoredStudy,
+  parseStudyState,
+  studyStateSchema,
+  taskSchema,
+  type StudyState,
+}

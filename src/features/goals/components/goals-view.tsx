@@ -1,7 +1,7 @@
 "use client"
 
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
-import { parseGoldPrice, summarizeFinance } from "@/features/finance/finance-calculations"
+import { summarizeFinance } from "@/features/finance/finance-calculations"
 import { useFinance } from "@/features/finance/hooks/use-finance"
 import { useCarGoalFund } from "../hooks/use-car-goal-fund"
 import { getGoals } from "../get-goals"
@@ -10,14 +10,17 @@ import { OverallProgressCard } from "./overall-progress-card"
 
 function GoalsView() {
   const { hidden } = useMoneyVisibility()
-  const { savings, cards, gold, goldPrice, invests } = useFinance()
+  const { savings, cards, gold, goldStores, invests } = useFinance()
   const { fundName, selectFund } = useCarGoalFund()
-  const summary = summarizeFinance({ savings, cards, gold, goldPrice, invests })
+  const summary = summarizeFinance({ savings, cards, gold, goldStores, invests })
+  // Nhiều cửa hàng nay có nhiều giá khác nhau — dùng giá bình quân theo tỷ trọng vàng
+  // đang giữ (goldValue/goldPhan) làm đại diện, thay vì 1 giá chung duy nhất như trước.
+  const goldPricePerPhan = summary.goldPhan > 0 ? summary.goldValue / summary.goldPhan : 0
   const { goals, avg } = getGoals(
     {
       savingsTotal: summary.savingsTotal,
       goldPhan: summary.goldPhan,
-      goldPricePerPhan: parseGoldPrice(goldPrice),
+      goldPricePerPhan,
       savings,
       carFundName: fundName,
     },

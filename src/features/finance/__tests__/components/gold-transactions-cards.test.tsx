@@ -4,13 +4,13 @@ import { render, screen, fireEvent } from "@testing-library/react"
 import { formatMoney } from "@/lib/format"
 import { phanToChi } from "../../finance-calculations"
 import { GoldTransactionsCards } from "../../components/gold-transactions-cards"
-import type { GoldPurchase } from "../../types"
+import type { GoldPurchase, GoldStore } from "../../types"
 
-const GOLD_PRICE = "850.000"
+const STORES: GoldStore[] = [{ name: "SJC", price: "850.000" }]
 
 const PURCHASES: GoldPurchase[] = [
-  { id: 1, date: "01/08/2026", phan: 10, buy: 800_000 },
-  { id: 2, date: "05/08/2026", phan: 5, buy: 900_000 },
+  { id: 1, date: "01/08/2026", phan: 10, buy: 800_000, store: "SJC" },
+  { id: 2, date: "05/08/2026", phan: 5, buy: 900_000, store: "SJC" },
 ]
 
 describe("GoldTransactionsCards", () => {
@@ -18,7 +18,7 @@ describe("GoldTransactionsCards", () => {
     render(
       <GoldTransactionsCards
         gold={[]}
-        goldPrice={GOLD_PRICE}
+        stores={STORES}
         onRemove={vi.fn()}
         onEdit={vi.fn()}
       />
@@ -32,11 +32,13 @@ describe("GoldTransactionsCards", () => {
     render(
       <GoldTransactionsCards
         gold={PURCHASES}
-        goldPrice={GOLD_PRICE}
+        stores={STORES}
         onRemove={vi.fn()}
         onEdit={vi.fn()}
       />
     )
+
+    expect(screen.getAllByText("SJC").length).toBe(2)
 
     // Purchase A: 10 phân @ 800.000 -> cost 8.000.000, value 10*850.000 = 8.500.000, pl +500.000
     expect(screen.getByText("01/08/2026")).toBeInTheDocument()
@@ -58,7 +60,7 @@ describe("GoldTransactionsCards", () => {
     render(
       <GoldTransactionsCards
         gold={[PURCHASES[0]]}
-        goldPrice={GOLD_PRICE}
+        stores={STORES}
         onRemove={vi.fn()}
         onEdit={vi.fn()}
       />
@@ -76,7 +78,7 @@ describe("GoldTransactionsCards", () => {
     render(
       <GoldTransactionsCards
         gold={[PURCHASES[1]]}
-        goldPrice={GOLD_PRICE}
+        stores={STORES}
         onRemove={vi.fn()}
         onEdit={vi.fn()}
       />
@@ -95,7 +97,7 @@ describe("GoldTransactionsCards", () => {
     render(
       <GoldTransactionsCards
         gold={PURCHASES}
-        goldPrice={GOLD_PRICE}
+        stores={STORES}
         onRemove={onRemove}
         onEdit={vi.fn()}
       />
@@ -115,7 +117,7 @@ describe("GoldTransactionsCards", () => {
     render(
       <GoldTransactionsCards
         gold={PURCHASES}
-        goldPrice={GOLD_PRICE}
+        stores={STORES}
         onRemove={vi.fn()}
         onEdit={onEdit}
       />
@@ -128,5 +130,25 @@ describe("GoldTransactionsCards", () => {
 
     expect(onEdit).toHaveBeenCalledWith(PURCHASES[1])
     expect(onEdit).not.toHaveBeenCalledWith(PURCHASES[0])
+  })
+
+  it("values each purchase against its OWN store's price, not one shared price", () => {
+    const purchases: GoldPurchase[] = [
+      { id: 1, date: "01/08/2026", phan: 10, buy: 900_000, store: "SJC" },
+      { id: 2, date: "02/08/2026", phan: 8, buy: 900_000, store: "PNJ" },
+    ]
+    const stores: GoldStore[] = [
+      { name: "SJC", price: "1.000.000" },
+      { name: "PNJ", price: "800.000" },
+    ]
+
+    render(<GoldTransactionsCards gold={purchases} stores={stores} onRemove={vi.fn()} onEdit={vi.fn()} />)
+
+    expect(screen.getByText("SJC")).toBeInTheDocument()
+    expect(screen.getByText("PNJ")).toBeInTheDocument()
+    expect(screen.getByText(formatMoney(10_000_000))).toBeInTheDocument()
+    expect(screen.getByText(formatMoney(1_000_000))).toBeInTheDocument()
+    expect(screen.getByText(formatMoney(6_400_000))).toBeInTheDocument()
+    expect(screen.getByText(formatMoney(800_000))).toBeInTheDocument()
   })
 })

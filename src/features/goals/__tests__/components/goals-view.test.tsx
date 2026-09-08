@@ -21,8 +21,8 @@ describe("GoalsView", () => {
     setStoredFinance({
       ...DEFAULT_FINANCE_STATE,
       savings: [{ name: "Quỹ dự phòng", amount: 50_000_000, target: 100_000_000 }],
-      gold: [{ id: 1, date: "10/08/2026", phan: 30, buy: 900_000 }],
-      goldPrice: "950000",
+      gold: [{ id: 1, date: "10/08/2026", phan: 30, buy: 900_000, store: "SJC" }],
+      goldStores: [{ name: "SJC", price: "950000" }],
     })
 
     render(<GoalsView />)
@@ -51,5 +51,27 @@ describe("GoalsView", () => {
       expect(within(carCard).getByText(formatMoney(30_000_000))).toBeInTheDocument()
     )
     expect(within(carCard).getByText("15%")).toBeInTheDocument()
+  })
+
+  it("estimates the remaining gold value from a holdings-weighted average price across stores", async () => {
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      gold: [
+        { id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" },
+        { id: 2, date: "11/08/2026", phan: 10, buy: 900_000, store: "PNJ" },
+      ],
+      goldStores: [
+        { name: "SJC", price: "1.000.000" },
+        { name: "PNJ", price: "800.000" },
+      ],
+    })
+
+    render(<GoalsView />)
+
+    // goldValue = 10*1.000.000 + 10*800.000 = 18.000.000 -> giá bình quân 900.000/phân
+    // còn 80 phân (8 chỉ) * 900.000 = 72.000.000
+    await waitFor(() =>
+      expect(screen.getByText(`Còn 8 chỉ · tương đương ${formatMoney(72_000_000)}`)).toBeInTheDocument()
+    )
   })
 })

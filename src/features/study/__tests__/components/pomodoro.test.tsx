@@ -5,6 +5,7 @@ import { Pomodoro } from "../../components/pomodoro"
 
 describe("Pomodoro", () => {
   beforeEach(() => {
+    window.localStorage.clear()
     vi.useFakeTimers()
   })
 
@@ -82,6 +83,54 @@ describe("Pomodoro", () => {
     expect(screen.getByText("05:00")).toBeInTheDocument()
     expect(screen.getByText("Đã xong 1 phiên hôm nay")).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Bắt đầu" })).toBeInTheDocument()
+  })
+
+  it("keeps counting down the running timer across a remount, accounting for time elapsed while away", () => {
+    const { unmount } = render(<Pomodoro />)
+
+    fireClickAndAdvance("Bắt đầu", 10_000)
+    expect(screen.getByText("24:50")).toBeInTheDocument()
+
+    unmount()
+    act(() => {
+      vi.advanceTimersByTime(20_000)
+    })
+
+    render(<Pomodoro />)
+
+    expect(screen.getByText("24:30")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Tạm dừng" })).toBeInTheDocument()
+  })
+
+  it("does not advance a paused timer across a remount", () => {
+    const { unmount } = render(<Pomodoro />)
+
+    fireClickAndAdvance("Bắt đầu", 3000)
+    act(() => {
+      screen.getByRole("button", { name: "Tạm dừng" }).click()
+    })
+
+    unmount()
+    act(() => {
+      vi.advanceTimersByTime(60_000)
+    })
+
+    render(<Pomodoro />)
+
+    expect(screen.getByText("24:57")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Tiếp tục" })).toBeInTheDocument()
+  })
+
+  it("carries the session count across a remount", () => {
+    const { unmount } = render(<Pomodoro />)
+
+    fireClickAndAdvance("Bắt đầu", 25 * 60 * 1000)
+    expect(screen.getByText("Đã xong 1 phiên hôm nay")).toBeInTheDocument()
+
+    unmount()
+    render(<Pomodoro />)
+
+    expect(screen.getByText("Đã xong 1 phiên hôm nay")).toBeInTheDocument()
   })
 })
 

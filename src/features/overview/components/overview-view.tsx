@@ -2,6 +2,7 @@
 
 import { summarizeFinance } from "@/features/finance/finance-calculations"
 import { useFinance } from "@/features/finance/hooks/use-finance"
+import { getGoals, useCarGoalFund } from "@/features/goals"
 import { useJournal } from "@/features/journal/hooks/use-journal"
 import { pickDaily } from "@/features/study/daily-pick"
 import { useStudy } from "@/features/study/hooks/use-study"
@@ -11,7 +12,7 @@ import { Monkey } from "@/components/ob/monkey"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { dayKey, longDate } from "@/lib/date"
 import { formatMoney } from "@/lib/format"
-import { getMiniGoals, splitGreeting } from "../overview-calculations"
+import { splitGreeting } from "../overview-calculations"
 import { FinanceSummarySection } from "./finance-summary-section"
 import { GoalsSummarySection } from "./goals-summary-section"
 import { JournalSummarySection } from "./journal-summary-section"
@@ -26,24 +27,33 @@ interface OverviewViewProps {
 function OverviewView({ vocab, grammar }: OverviewViewProps) {
   const { hidden } = useMoneyVisibility()
   const { settings } = useSettings()
-  const { savings, cards, gold, goldPrice, invests } = useFinance()
+  const { savings, cards, gold, goldStores, invests } = useFinance()
   const { entries } = useJournal()
   const { tasks, toggleTask, learned } = useStudy()
+  const { fundName } = useCarGoalFund()
 
   function enabled(key: string): boolean {
     return settings.modules.find((m) => m.key === key)?.on ?? true
   }
 
-  const summary = summarizeFinance({ savings, cards, gold, goldPrice, invests })
+  const summary = summarizeFinance({ savings, cards, gold, goldStores, invests })
 
   const daily = pickDaily(vocab, 5, dayKey(), "vocab")
   const learnedToday = daily.filter((entry) => learned.includes(entry.id)).length
 
-  const miniGoals = getMiniGoals({
-    savingsTotal: summary.savingsTotal,
-    goldPhan: summary.goldPhan,
-  })
-  const avgGoal = Math.round(miniGoals.reduce((sum, g) => sum + g.percent, 0) / miniGoals.length)
+  // Nhiều cửa hàng nay có nhiều giá khác nhau — dùng giá bình quân theo tỷ trọng vàng
+  // đang giữ (goldValue/goldPhan) làm đại diện, thay vì 1 giá chung duy nhất như trước.
+  const goldPricePerPhan = summary.goldPhan > 0 ? summary.goldValue / summary.goldPhan : 0
+  const { goals, avg: avgGoal } = getGoals(
+    {
+      savingsTotal: summary.savingsTotal,
+      goldPhan: summary.goldPhan,
+      goldPricePerPhan,
+      savings,
+      carFundName: fundName,
+    },
+    hidden
+  )
   const greeting = splitGreeting(settings.profile.greeting, settings.profile.displayName)
 
   return (
@@ -103,7 +113,7 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
       {enabled("muctieu") ? (
         <>
           <SectionHead icon="target" title="Mục tiêu" hint={`trung bình ${avgGoal}%`} href="/goals" />
-          <GoalsSummarySection goals={miniGoals} savings={savings} />
+          <GoalsSummarySection goals={goals} savings={savings} />
         </>
       ) : null}
     </div>

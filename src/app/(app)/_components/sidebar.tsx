@@ -23,6 +23,38 @@ import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { useSettings } from "@/features/settings/hooks/use-settings"
 import { CalculatorModal } from "@/features/calc"
 
+interface SidebarActionButtonProps {
+  variant: "icon" | "row"
+  icon: React.ReactNode
+  label: string
+  onClick: () => void
+  ariaPressed?: boolean
+  className?: string
+}
+
+// Dùng chung cho cả top bar mobile (variant="icon") lẫn cột chân sidebar desktop
+// (variant="row") — màu sắc/trạng thái active do nơi gọi tự truyền qua className,
+// component này chỉ lo layout + label ẩn/hiện theo variant.
+function SidebarActionButton({ variant, icon, label, onClick, ariaPressed, className }: SidebarActionButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      aria-pressed={ariaPressed}
+      className={cn(
+        "flex items-center justify-center transition-colors duration-[var(--ob-dur-fast)]",
+        variant === "row" &&
+          "gap-[11px] rounded-[var(--ob-radius-md)] px-[14px] py-[11px] text-left text-[length:var(--ob-size-sm)] leading-[var(--ob-lh-normal)] font-medium lg:justify-start",
+        className
+      )}
+    >
+      {icon}
+      {variant === "row" ? <span className="hidden whitespace-nowrap lg:inline">{label}</span> : null}
+    </button>
+  )
+}
+
 const NAV = [
   { label: "Tổng quan", href: "/overview", icon: LayoutDashboard, moduleKey: null },
   { label: "Tài chính", href: "/finance", icon: Wallet, moduleKey: "taichinh" },
@@ -58,36 +90,33 @@ function Sidebar() {
           <span className="text-[var(--ob-color-action)]">Orange</span>{" "}
           <span className="text-[var(--ob-chuoi-500)]">Banana</span>
         </span>
-        <button
-          type="button"
+        <SidebarActionButton
+          variant="icon"
+          icon={<Calculator size={18} />}
+          label="Máy tính"
           onClick={() => setCalcOpen(true)}
-          aria-label="Máy tính"
-          className="flex items-center justify-center text-[var(--ob-color-text-muted)] transition-colors duration-[var(--ob-dur-fast)] hover:text-[var(--ob-color-action-strong)]"
-        >
-          <Calculator size={18} />
-        </button>
-        <button
-          type="button"
+          className="text-[var(--ob-color-text-muted)] hover:text-[var(--ob-color-action-strong)]"
+        />
+        <SidebarActionButton
+          variant="icon"
+          icon={hideMoney ? <EyeOff size={18} /> : <Eye size={18} />}
+          label={hideMoney ? "Hiện số tiền" : "Ẩn số tiền"}
           onClick={toggleHideMoney}
-          aria-label={hideMoney ? "Hiện số tiền" : "Ẩn số tiền"}
-          aria-pressed={hideMoney}
+          ariaPressed={hideMoney}
           className={cn(
-            "flex items-center justify-center rounded-[var(--ob-radius-sm)] transition-colors duration-[var(--ob-dur-fast)]",
+            "rounded-[var(--ob-radius-sm)]",
             hideMoney
               ? "text-[var(--ob-color-action-strong)]"
               : "text-[var(--ob-color-text-subtle)] hover:text-[var(--ob-color-action-strong)]"
           )}
-        >
-          {hideMoney ? <EyeOff size={18} /> : <Eye size={18} />}
-        </button>
-        <button
-          type="button"
+        />
+        <SidebarActionButton
+          variant="icon"
+          icon={<LogOut size={18} />}
+          label="Đăng xuất"
           onClick={handleLogout}
-          aria-label="Đăng xuất"
-          className="flex items-center justify-center text-[var(--ob-color-text-muted)] transition-colors duration-[var(--ob-dur-fast)] hover:text-[var(--ob-color-expense)]"
-        >
-          <LogOut size={18} />
-        </button>
+          className="text-[var(--ob-color-text-muted)] hover:text-[var(--ob-color-expense)]"
+        />
       </div>
 
       <aside className="fixed inset-x-0 bottom-0 z-10 flex items-center justify-around gap-1 border-t border-[var(--ob-color-border)] bg-[var(--ob-color-bg)] p-[6px_4px] pb-[calc(6px+env(safe-area-inset-bottom))] md:inset-x-auto md:inset-y-0 md:right-auto md:left-0 md:w-[76px] md:flex-col md:items-stretch md:justify-start md:border-t-0 md:border-r md:p-[18px_10px] lg:w-[248px] lg:p-[22px_16px]">
@@ -121,45 +150,38 @@ function Sidebar() {
         </nav>
 
         <div className="hidden md:mt-auto md:flex md:flex-col md:gap-[14px]">
-          <button
-            type="button"
+          <SidebarActionButton
+            variant="row"
+            icon={<Calculator size={18} />}
+            label="Máy tính"
             onClick={() => setCalcOpen(true)}
-            aria-label="Máy tính"
-            className="flex items-center justify-center gap-[11px] rounded-[var(--ob-radius-md)] px-[14px] py-[11px] text-left text-[length:var(--ob-size-sm)] leading-[var(--ob-lh-normal)] font-medium text-[var(--ob-color-text-muted)] lg:justify-start"
-          >
-            <Calculator size={18} />
-            <span className="hidden whitespace-nowrap lg:inline">Máy tính</span>
-          </button>
-          <button
-            type="button"
+            className="text-[var(--ob-color-text-muted)]"
+          />
+          <SidebarActionButton
+            variant="row"
+            icon={hideMoney ? <EyeOff size={18} /> : <Eye size={18} />}
+            label={hideMoney ? "Hiện số tiền" : "Ẩn số tiền"}
             onClick={toggleHideMoney}
-            aria-pressed={hideMoney}
-            className={cn(
-              "flex items-center justify-center gap-[11px] rounded-[var(--ob-radius-md)] px-[14px] py-[11px] text-left text-[length:var(--ob-size-sm)] leading-[var(--ob-lh-normal)] font-medium lg:justify-start",
+            ariaPressed={hideMoney}
+            className={
               hideMoney
                 ? "bg-[var(--ob-color-action-soft)] text-[var(--ob-color-action-strong)]"
                 : "text-[var(--ob-color-text-muted)]"
-            )}
-          >
-            {hideMoney ? <EyeOff size={18} /> : <Eye size={18} />}
-            <span className="hidden whitespace-nowrap lg:inline">
-              {hideMoney ? "Hiện số tiền" : "Ẩn số tiền"}
-            </span>
-          </button>
+            }
+          />
           <div className="flex items-center justify-center gap-[10px] rounded-[var(--ob-radius-md)] px-0 py-2 lg:justify-start lg:bg-[var(--ob-vo-100)] lg:px-[10px]">
             <Image src="/assets/avatar-clover.svg" width={32} height={32} alt="" className="flex-none" />
             <span className="hidden overflow-hidden bg-gradient-to-r from-[var(--ob-color-action)] to-[var(--ob-color-reward)] bg-clip-text text-[13.5px] font-bold text-ellipsis whitespace-nowrap text-transparent lg:inline">
               {settings.profile.displayName}
             </span>
           </div>
-          <button
-            type="button"
+          <SidebarActionButton
+            variant="row"
+            icon={<LogOut size={18} />}
+            label="Đăng xuất"
             onClick={handleLogout}
-            className="flex items-center justify-center gap-[11px] rounded-[var(--ob-radius-md)] px-[14px] py-[11px] text-left text-[length:var(--ob-size-sm)] leading-[var(--ob-lh-normal)] font-medium text-[var(--ob-color-text-muted)] transition-colors duration-[var(--ob-dur-fast)] hover:text-[var(--ob-color-expense)] lg:justify-start"
-          >
-            <LogOut size={18} />
-            <span className="hidden whitespace-nowrap lg:inline">Đăng xuất</span>
-          </button>
+            className="text-[var(--ob-color-text-muted)] hover:text-[var(--ob-color-expense)]"
+          />
         </div>
       </aside>
       <CalculatorModal open={calcOpen} onOpenChange={setCalcOpen} />
