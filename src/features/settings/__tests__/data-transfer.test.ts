@@ -113,6 +113,34 @@ describe("parseImportPayload", () => {
     }
   })
 
+  it("falls back to the default finance array when its elements are missing required fields, not just when the field is wrong-typed", () => {
+    const raw = JSON.stringify({
+      version: EXPORT_VERSION,
+      finance: { cards: [{ name: "Thẻ lỗi" }] },
+    })
+
+    const result = parseImportPayload(raw)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.finance.cards).toEqual(DEFAULT_FINANCE_STATE.cards)
+    }
+  })
+
+  it("falls back to the default study tasks when its elements are missing required fields", () => {
+    const raw = JSON.stringify({
+      version: EXPORT_VERSION,
+      study: { tasks: [{ label: "Thiếu done" }] },
+    })
+
+    const result = parseImportPayload(raw)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.study.tasks).toEqual(DEFAULT_STUDY_STATE.tasks)
+    }
+  })
+
   it("drops legacy settings fields no longer part of AppSettings (e.g. old budget) from an imported backup", () => {
     const raw = JSON.stringify({
       version: EXPORT_VERSION,

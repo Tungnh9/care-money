@@ -1,24 +1,66 @@
 "use client"
 
 import Image from "next/image"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Monkey } from "@/components/ob/monkey"
+import {
+  BREAK_SECONDS,
+  WORK_SECONDS,
+  getStoredPomodoro,
+  setStoredPomodoro,
+  type PomodoroMode,
+  type PomodoroState,
+} from "../pomodoro-storage"
 
-const WORK_SECONDS = 25 * 60
-const BREAK_SECONDS = 5 * 60
 const RADIUS = 54
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 
-type Mode = "work" | "break"
+type Mode = PomodoroMode
+
+// Timer chạy trong lúc rời trang vẫn phải trôi — tính lại left dựa trên thời gian
+// thực đã qua kể từ lần ghi cuối, thay vì cứ đứng yên đến khi quay lại.
+function resolveElapsed(stored: PomodoroState): PomodoroState {
+  if (!stored.running) return stored
+  const elapsed = Math.max(0, Math.floor((Date.now() - stored.updatedAt) / 1000))
+  if (elapsed < stored.left) {
+    return { ...stored, left: stored.left - elapsed }
+  }
+  // Hết giờ trong lúc rời trang — coi như phiên đã kết thúc, giống lúc setInterval tự chạy hết.
+  if (stored.mode === "work") {
+    return { ...stored, mode: "break", left: BREAK_SECONDS, running: false, rounds: stored.rounds + 1 }
+  }
+  return { ...stored, mode: "work", left: WORK_SECONDS, running: false }
+}
 
 function Pomodoro() {
   const [mode, setMode] = useState<Mode>("work")
   const [left, setLeft] = useState(WORK_SECONDS)
   const [running, setRunning] = useState(false)
   const [rounds, setRounds] = useState(0)
+  const skipPersistRef = useRef(true)
+
+  useEffect(() => {
+    // localStorage không có lúc SSR, chỉ đọc được thật sau khi mount trên client.
+    const resolved = resolveElapsed(getStoredPomodoro())
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMode(resolved.mode)
+    setLeft(resolved.left)
+    setRunning(resolved.running)
+    setRounds(resolved.rounds)
+  }, [])
+
+  useEffect(() => {
+    // Bỏ qua lần chạy đầu tiên (render mặc định trước khi effect hydrate ở trên kịp
+    // cập nhật state) — nếu không sẽ ghi đè mất state vừa đọc được từ storage.
+    if (skipPersistRef.current) {
+      skipPersistRef.current = false
+      return
+    }
+    setStoredPomodoro({ mode, left, running, rounds, updatedAt: Date.now() })
+  }, [mode, left, running, rounds])
 
   useEffect(() => {
     if (!running) return
