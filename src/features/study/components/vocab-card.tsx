@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card"
 import { Confetti } from "@/components/ob/confetti"
 import { cn } from "@/lib/utils"
-import { VocabWordRow } from "./vocab-word-row"
+import { VocabWordCard } from "./vocab-word-card"
 import type { VocabEntry } from "../types"
 
 interface VocabCardProps {
@@ -31,14 +31,16 @@ function VocabCard({
       {intro ? (
         <p className="mb-1 text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)]">{intro}</p>
       ) : null}
-      {entries.map((entry) => (
-        <VocabWordRow
-          key={entry.id}
-          entry={entry}
-          learned={learned.includes(entry.id)}
-          onToggleLearned={onToggleLearned}
-        />
-      ))}
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-4">
+        {entries.map((entry) => (
+          <VocabWordCard
+            key={entry.id}
+            entry={entry}
+            learned={learned.includes(entry.id)}
+            onToggleLearned={onToggleLearned}
+          />
+        ))}
+      </div>
     </Card>
   )
 }

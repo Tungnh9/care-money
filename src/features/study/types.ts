@@ -7,6 +7,7 @@ interface VocabEntry {
   topic?: string
   addedAt: string
   example?: string
+  image?: string
 }
 
 interface GrammarEntry {
