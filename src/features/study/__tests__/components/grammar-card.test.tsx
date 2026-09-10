@@ -72,8 +72,8 @@ describe("GrammarListCard", () => {
 
     const rows = container.querySelectorAll("section > div.border-t")
     expect(rows).toHaveLength(3)
-    expect(rows[0]).toHaveClass("bg-[var(--ob-color-reward-soft)]")
-    expect(rows[1]).not.toHaveClass("bg-[var(--ob-color-reward-soft)]")
-    expect(rows[2]).toHaveClass("bg-[var(--ob-color-reward-soft)]")
+    expect(rows[0]).toHaveClass("bg-[var(--ob-color-reward)]")
+    expect(rows[1]).not.toHaveClass("bg-[var(--ob-color-reward)]")
+    expect(rows[2]).toHaveClass("bg-[var(--ob-color-reward)]")
   })
 })

@@ -56,7 +56,7 @@ function GrammarListCard({ entries, vocab }: GrammarListCardProps) {
           key={entry.id}
           className={cn(
             "border-t border-[var(--ob-color-border)] px-3 py-4",
-            i % 2 === 0 && "bg-[var(--ob-color-reward-soft)]"
+            i % 2 === 0 && "bg-[var(--ob-color-reward)]"
           )}
         >
           <div className="mb-2 flex flex-wrap items-center gap-[9px] text-[15px] font-bold">
