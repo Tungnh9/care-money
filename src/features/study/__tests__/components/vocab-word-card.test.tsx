@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest"
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { render, screen, fireEvent } from "@testing-library/react"
 
 import { VocabWordCard } from "../../components/vocab-word-card"
@@ -79,5 +79,57 @@ describe("VocabWordCard", () => {
     fireEvent.click(screen.getByRole("button", { name: "Đánh dấu đã học" }))
 
     expect(onToggleLearned).toHaveBeenCalledWith("v-0010")
+  })
+
+  describe("speak button", () => {
+    let speakSpy: ReturnType<typeof vi.fn>
+    let cancelSpy: ReturnType<typeof vi.fn>
+
+    beforeEach(() => {
+      speakSpy = vi.fn()
+      cancelSpy = vi.fn()
+      vi.stubGlobal("speechSynthesis", { speak: speakSpy, cancel: cancelSpy })
+      vi.stubGlobal(
+        "SpeechSynthesisUtterance",
+        vi.fn().mockImplementation((text: string) => ({ text, lang: "" }))
+      )
+    })
+
+    afterEach(() => {
+      vi.unstubAllGlobals()
+    })
+
+    it("reads the word aloud when the speak button is clicked", () => {
+      render(<VocabWordCard entry={WITH_IMAGE} learned={false} onToggleLearned={vi.fn()} />)
+
+      fireEvent.click(screen.getByRole("button", { name: "Phát âm từ" }))
+
+      expect(cancelSpy).toHaveBeenCalled()
+      expect(speakSpy).toHaveBeenCalledTimes(1)
+      const utterance = speakSpy.mock.calls[0][0]
+      expect(utterance.text).toBe("university")
+      expect(utterance.lang).toBe("en-US")
+    })
+
+    it("cancels any in-progress utterance before speaking again on rapid re-clicks", () => {
+      render(<VocabWordCard entry={WITH_IMAGE} learned={false} onToggleLearned={vi.fn()} />)
+
+      const button = screen.getByRole("button", { name: "Phát âm từ" })
+      fireEvent.click(button)
+      fireEvent.click(button)
+
+      expect(cancelSpy).toHaveBeenCalledTimes(2)
+      expect(speakSpy).toHaveBeenCalledTimes(2)
+    })
+
+    it("does not throw when the browser has no Web Speech API support", () => {
+      vi.unstubAllGlobals()
+
+      render(<VocabWordCard entry={WITH_IMAGE} learned={false} onToggleLearned={vi.fn()} />)
+
+      expect(() =>
+        fireEvent.click(screen.getByRole("button", { name: "Phát âm từ" }))
+      ).not.toThrow()
+    })
   })
 })

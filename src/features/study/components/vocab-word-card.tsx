@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { Check, ImageIcon, Plus } from "lucide-react"
+import { Check, ImageIcon, Plus, Volume2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import type { VocabEntry } from "../types"
@@ -10,6 +10,14 @@ interface VocabWordCardProps {
   entry: VocabEntry
   learned: boolean
   onToggleLearned: (id: string) => void
+}
+
+function speakWord(word: string) {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return
+  window.speechSynthesis.cancel()
+  const utterance = new SpeechSynthesisUtterance(word)
+  utterance.lang = "en-US"
+  window.speechSynthesis.speak(utterance)
 }
 
 function VocabWordCard({ entry, learned, onToggleLearned }: VocabWordCardProps) {
@@ -26,6 +34,14 @@ function VocabWordCard({ entry, learned, onToggleLearned }: VocabWordCardProps) 
             <ImageIcon size={28} strokeWidth={1.5} />
           </div>
         )}
+        <button
+          type="button"
+          onClick={() => speakWord(entry.word)}
+          aria-label="Phát âm từ"
+          className="absolute top-2 left-2 flex size-8 items-center justify-center rounded-full border-[1.5px] border-transparent bg-[var(--ob-color-surface)]/90 text-[var(--ob-color-action)] shadow-sm transition-colors duration-[var(--ob-dur-fast)] hover:text-[var(--ob-color-action-hover)]"
+        >
+          <Volume2 size={16} />
+        </button>
         <button
           type="button"
           onClick={() => onToggleLearned(entry.id)}
