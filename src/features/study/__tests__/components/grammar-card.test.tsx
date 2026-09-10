@@ -64,4 +64,16 @@ describe("GrammarListCard", () => {
 
     expect(screen.getByText("skirt", { selector: "mark" })).toBeInTheDocument()
   })
+
+  it("alternates the 1st, 3rd, 5th... row background from the 2nd, 4th, 6th...", () => {
+    const { container } = render(
+      <GrammarListCard entries={[WITH_STRUCTURE, WITHOUT_STRUCTURE, WITH_EXAMPLE]} vocab={[]} />
+    )
+
+    const rows = container.querySelectorAll("section > div.border-t")
+    expect(rows).toHaveLength(3)
+    expect(rows[0]).toHaveClass("bg-[var(--ob-color-reward-soft)]")
+    expect(rows[1]).not.toHaveClass("bg-[var(--ob-color-reward-soft)]")
+    expect(rows[2]).toHaveClass("bg-[var(--ob-color-reward-soft)]")
+  })
 })

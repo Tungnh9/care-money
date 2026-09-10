@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card"
+import { cn } from "@/lib/utils"
 import { HighlightedSentence } from "./highlighted-sentence"
 import type { GrammarEntry, VocabEntry } from "../types"
 
@@ -50,8 +51,14 @@ interface GrammarListCardProps {
 function GrammarListCard({ entries, vocab }: GrammarListCardProps) {
   return (
     <Card label={`Ngữ pháp tiếng Anh · ${entries.length} mục`}>
-      {entries.map((entry) => (
-        <div key={entry.id} className="border-t border-[var(--ob-color-border)] py-4">
+      {entries.map((entry, i) => (
+        <div
+          key={entry.id}
+          className={cn(
+            "border-t border-[var(--ob-color-border)] px-3 py-4",
+            i % 2 === 0 && "bg-[var(--ob-color-reward-soft)]"
+          )}
+        >
           <div className="mb-2 flex flex-wrap items-center gap-[9px] text-[15px] font-bold">
             {entry.title}
             <StructureBadge structure={entry.structure} />
