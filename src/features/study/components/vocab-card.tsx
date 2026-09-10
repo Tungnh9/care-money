@@ -13,6 +13,7 @@ interface VocabCardProps {
   onToggleLearned: (id: string) => void
   celebrate?: boolean
   className?: string
+  gridClassName?: string
 }
 
 function VocabCard({
@@ -24,6 +25,7 @@ function VocabCard({
   onToggleLearned,
   celebrate = false,
   className,
+  gridClassName = "grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6",
 }: VocabCardProps) {
   return (
     <Card label={label} action={action} className={cn(celebrate && "ob-tada relative", className)}>
@@ -31,7 +33,7 @@ function VocabCard({
       {intro ? (
         <p className="mb-1 text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)]">{intro}</p>
       ) : null}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+      <div className={gridClassName}>
         {entries.map((entry) => (
           <VocabWordCard
             key={entry.id}
