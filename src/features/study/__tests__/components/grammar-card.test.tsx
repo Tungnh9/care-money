@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { render, screen, fireEvent } from "@testing-library/react"
 
 import { GrammarHighlightCard, GrammarListCard } from "../../components/grammar-card"
 import type { GrammarEntry, VocabEntry } from "../../types"
@@ -24,6 +24,15 @@ const WITH_EXAMPLE: GrammarEntry = {
   title: "Countable nouns",
   explanation: "Danh từ đếm được.",
   examples: ["She wants to buy a skirt."],
+  addedAt: "2026-08-14",
+}
+
+const WITH_TRANSLATION: GrammarEntry = {
+  id: "g-0004",
+  title: "Countable nouns",
+  explanation: "Danh từ đếm được.",
+  examples: ["She wants to buy a skirt.", "This song has no title."],
+  translations: ["Cô ấy muốn mua một chiếc váy."],
   addedAt: "2026-08-14",
 }
 
@@ -63,6 +72,33 @@ describe("GrammarListCard", () => {
     render(<GrammarListCard entries={[WITH_EXAMPLE]} vocab={VOCAB} />)
 
     expect(screen.getByText("skirt", { selector: "mark" })).toBeInTheDocument()
+  })
+
+  it("shows the Vietnamese translation only after clicking the translate icon", () => {
+    render(<GrammarListCard entries={[WITH_TRANSLATION]} vocab={[]} />)
+
+    expect(screen.queryByText("Cô ấy muốn mua một chiếc váy.")).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: "Dịch sang tiếng Việt" }))
+
+    expect(screen.getByText("Cô ấy muốn mua một chiếc váy.")).toBeInTheDocument()
+  })
+
+  it("hides the translation again after clicking the icon a second time", () => {
+    render(<GrammarListCard entries={[WITH_TRANSLATION]} vocab={[]} />)
+
+    const button = screen.getByRole("button", { name: "Dịch sang tiếng Việt" })
+    fireEvent.click(button)
+    fireEvent.click(screen.getByRole("button", { name: "Ẩn bản dịch" }))
+
+    expect(screen.queryByText("Cô ấy muốn mua một chiếc váy.")).not.toBeInTheDocument()
+  })
+
+  it("does not show a translate icon for a sentence with no matching translation", () => {
+    render(<GrammarListCard entries={[WITH_TRANSLATION]} vocab={[]} />)
+
+    expect(screen.getByText("This song has no title.")).toBeInTheDocument()
+    expect(screen.getAllByRole("button", { name: "Dịch sang tiếng Việt" })).toHaveLength(1)
   })
 
   it("alternates the 1st, 3rd, 5th... row background from the 2nd, 4th, 6th...", () => {

@@ -15,6 +15,7 @@ interface GrammarEntry {
   title: string
   explanation: string
   examples?: string[]
+  translations?: string[]
   structure?: string
   addedAt: string
 }

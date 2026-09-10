@@ -1,16 +1,53 @@
+"use client"
+
+import { useState } from "react"
+import { Languages } from "lucide-react"
+
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { HighlightedSentence } from "./highlighted-sentence"
 import type { GrammarEntry, VocabEntry } from "../types"
 
-function ExampleList({ examples, vocab }: { examples?: string[]; vocab: VocabEntry[] }) {
+function ExampleSentence({ sentence, translation, vocab }: { sentence: string; translation?: string; vocab: VocabEntry[] }) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <p className="text-sm leading-[1.6] italic">
+      <span className="inline-flex flex-wrap items-baseline gap-[6px]">
+        <HighlightedSentence sentence={sentence} vocab={vocab} />
+        {translation ? (
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            aria-label={open ? "Ẩn bản dịch" : "Dịch sang tiếng Việt"}
+            aria-pressed={open}
+            className="inline-flex size-5 flex-none items-center justify-center rounded-full text-[var(--ob-color-text-subtle)] not-italic transition-colors duration-[var(--ob-dur-fast)] hover:text-[var(--ob-color-action)]"
+          >
+            <Languages size={14} />
+          </button>
+        ) : null}
+      </span>
+      {translation && open ? (
+        <span className="block text-[var(--ob-color-text-subtle)] not-italic">{translation}</span>
+      ) : null}
+    </p>
+  )
+}
+
+function ExampleList({
+  examples,
+  translations,
+  vocab,
+}: {
+  examples?: string[]
+  translations?: string[]
+  vocab: VocabEntry[]
+}) {
   if (!examples?.length) return null
   return (
     <div className="flex flex-col gap-1">
       {examples.map((example, i) => (
-        <p key={i} className="text-sm leading-[1.6] italic">
-          <HighlightedSentence sentence={example} vocab={vocab} />
-        </p>
+        <ExampleSentence key={i} sentence={example} translation={translations?.[i]} vocab={vocab} />
       ))}
     </div>
   )
@@ -38,7 +75,7 @@ function GrammarHighlightCard({ entry, vocab }: GrammarHighlightCardProps) {
         <StructureBadge structure={entry.structure} />
       </div>
       <div className="mb-[10px] text-sm leading-[1.6] text-[#5C4200]">{entry.explanation}</div>
-      <ExampleList examples={entry.examples} vocab={vocab} />
+      <ExampleList examples={entry.examples} translations={entry.translations} vocab={vocab} />
     </Card>
   )
 }
@@ -66,7 +103,7 @@ function GrammarListCard({ entries, vocab }: GrammarListCardProps) {
           <div className="mb-[5px] text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)]">
             {entry.explanation}
           </div>
-          <ExampleList examples={entry.examples} vocab={vocab} />
+          <ExampleList examples={entry.examples} translations={entry.translations} vocab={vocab} />
         </div>
       ))}
     </Card>
