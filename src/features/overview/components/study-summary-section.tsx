@@ -1,14 +1,14 @@
-import Image from "next/image"
-import { Check, ImageIcon, Volume2 } from "lucide-react"
+import { Check } from "lucide-react"
 
 import { pickDaily } from "@/features/study/daily-pick"
 import { GrammarHighlightCard } from "@/features/study/components/grammar-card"
 import type { GrammarEntry, Task, VocabEntry } from "@/features/study/types"
 import { Card } from "@/components/ui/card"
 import { Figure } from "@/components/ob/figure"
+import { ImageWithFallback } from "@/components/ob/image-with-fallback"
+import { SpeakButton } from "@/components/ob/speak-button"
 import { TaskItem } from "@/components/ob/task-item"
 import { dayKey } from "@/lib/date"
-import { speakWord } from "@/lib/speak"
 import { cn } from "@/lib/utils"
 
 interface StudySummarySectionProps {
@@ -22,28 +22,20 @@ interface StudySummarySectionProps {
 function VocabTeaserCard({ entry, learned }: { entry: VocabEntry; learned: boolean }) {
   return (
     <div className="flex flex-col gap-[6px]">
-      <div className="relative aspect-[4/3] overflow-hidden rounded-[var(--ob-radius-sm)] bg-[var(--ob-color-surface-sunken)]">
-        {entry.image ? (
-          <Image src={entry.image} alt={entry.word} fill sizes="120px" className="object-cover" />
-        ) : (
-          <div className="flex size-full items-center justify-center bg-gradient-to-br from-[var(--ob-color-action-soft)] to-[var(--ob-color-surface-sunken)] text-[var(--ob-color-text-subtle)]">
-            <ImageIcon size={18} strokeWidth={1.5} />
-          </div>
-        )}
-        <button
-          type="button"
-          onClick={() => speakWord(entry.word)}
-          aria-label="Phát âm từ"
-          className="absolute top-1 left-1 flex size-6 items-center justify-center rounded-full border-[1.5px] border-transparent bg-[var(--ob-color-surface)]/90 text-[var(--ob-color-action)] shadow-sm transition-colors duration-[var(--ob-dur-fast)] hover:text-[var(--ob-color-action-hover)]"
-        >
-          <Volume2 size={12} />
-        </button>
+      <ImageWithFallback
+        src={entry.image}
+        alt={entry.word}
+        iconSize={18}
+        imageSizes="(max-width: 640px) 20vw, 120px"
+        className="overflow-hidden rounded-[var(--ob-radius-sm)]"
+      >
+        <SpeakButton word={entry.word} size="sm" className="absolute top-1 left-1" />
         {learned ? (
           <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-[var(--ob-color-income)] text-white">
             <Check size={10} />
           </span>
         ) : null}
-      </div>
+      </ImageWithFallback>
       <div className="min-w-0">
         <div
           className={cn(
@@ -67,7 +59,7 @@ function StudySummarySection({ vocab, grammar, tasks, onToggleTask, learned }: S
 
   return (
     <div className="ob-card-grid flex flex-wrap gap-5">
-      <Card label="Nhiệm vụ hôm nay" className="min-w-0 flex-[0_0_280px]">
+      <Card label="Nhiệm vụ hôm nay" className="min-w-0 flex-[0_1_280px]">
         <Figure value={String(doneTasks)} unit={`/${tasks.length}`} size="sm" className="mb-[14px]" />
         <div className="flex flex-col gap-[6px]">
           {tasks.map((task, i) => (

@@ -1,10 +1,10 @@
 "use client"
 
-import Image from "next/image"
-import { Check, ImageIcon, Plus, Volume2 } from "lucide-react"
+import { Check, Plus } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { speakWord } from "@/lib/speak"
+import { ImageWithFallback } from "@/components/ob/image-with-fallback"
+import { SpeakButton } from "@/components/ob/speak-button"
 import type { VocabEntry } from "../types"
 
 interface VocabWordCardProps {
@@ -16,25 +16,8 @@ interface VocabWordCardProps {
 function VocabWordCard({ entry, learned, onToggleLearned }: VocabWordCardProps) {
   return (
     <div className="flex flex-col overflow-hidden rounded-[var(--ob-radius-md)] border border-[var(--ob-color-border)] bg-[var(--ob-color-surface)]">
-      <div className="relative aspect-[4/3] bg-[var(--ob-color-surface-sunken)]">
-        {entry.image ? (
-          <Image src={entry.image} alt={entry.word} fill className="object-cover" />
-        ) : (
-          <div
-            data-testid="vocab-image-placeholder"
-            className="flex size-full items-center justify-center bg-gradient-to-br from-[var(--ob-color-action-soft)] to-[var(--ob-color-surface-sunken)] text-[var(--ob-color-text-subtle)]"
-          >
-            <ImageIcon size={28} strokeWidth={1.5} />
-          </div>
-        )}
-        <button
-          type="button"
-          onClick={() => speakWord(entry.word)}
-          aria-label="Phát âm từ"
-          className="absolute top-2 left-2 flex size-8 items-center justify-center rounded-full border-[1.5px] border-transparent bg-[var(--ob-color-surface)]/90 text-[var(--ob-color-action)] shadow-sm transition-colors duration-[var(--ob-dur-fast)] hover:text-[var(--ob-color-action-hover)]"
-        >
-          <Volume2 size={16} />
-        </button>
+      <ImageWithFallback src={entry.image} alt={entry.word} iconSize={28}>
+        <SpeakButton word={entry.word} size="md" className="absolute top-2 left-2" />
         <button
           type="button"
           onClick={() => onToggleLearned(entry.id)}
@@ -49,7 +32,7 @@ function VocabWordCard({ entry, learned, onToggleLearned }: VocabWordCardProps) 
         >
           {learned ? <Check size={16} /> : <Plus size={16} />}
         </button>
-      </div>
+      </ImageWithFallback>
       <div className="flex flex-1 flex-col gap-1 p-[14px]">
         <div className="flex flex-wrap items-baseline gap-[7px]">
           <span className="text-base font-bold">{entry.word}</span>
