@@ -68,7 +68,7 @@ function StudySummarySection({ vocab, grammar, tasks, onToggleTask, learned }: S
       </Card>
 
       <Card label="5 từ hôm nay" className="min-w-0 flex-[1_1_280px]">
-        <div className="grid grid-cols-3 gap-[10px]">
+        <div className="grid grid-cols-5 gap-[10px]">
           {daily.map((entry) => (
             <VocabTeaserCard key={entry.id} entry={entry} learned={learned.includes(entry.id)} />
           ))}
