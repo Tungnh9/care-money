@@ -4,20 +4,13 @@ import Image from "next/image"
 import { Check, ImageIcon, Plus, Volume2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { speakWord } from "@/lib/speak"
 import type { VocabEntry } from "../types"
 
 interface VocabWordCardProps {
   entry: VocabEntry
   learned: boolean
   onToggleLearned: (id: string) => void
-}
-
-function speakWord(word: string) {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return
-  window.speechSynthesis.cancel()
-  const utterance = new SpeechSynthesisUtterance(word)
-  utterance.lang = "en-US"
-  window.speechSynthesis.speak(utterance)
 }
 
 function VocabWordCard({ entry, learned, onToggleLearned }: VocabWordCardProps) {

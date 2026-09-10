@@ -1,5 +1,5 @@
 import Image from "next/image"
-import { Check, ImageIcon } from "lucide-react"
+import { Check, ImageIcon, Volume2 } from "lucide-react"
 
 import { pickDaily } from "@/features/study/daily-pick"
 import { GrammarHighlightCard } from "@/features/study/components/grammar-card"
@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card"
 import { Figure } from "@/components/ob/figure"
 import { TaskItem } from "@/components/ob/task-item"
 import { dayKey } from "@/lib/date"
+import { speakWord } from "@/lib/speak"
 import { cn } from "@/lib/utils"
 
 interface StudySummarySectionProps {
@@ -29,6 +30,14 @@ function VocabTeaserCard({ entry, learned }: { entry: VocabEntry; learned: boole
             <ImageIcon size={18} strokeWidth={1.5} />
           </div>
         )}
+        <button
+          type="button"
+          onClick={() => speakWord(entry.word)}
+          aria-label="Phát âm từ"
+          className="absolute top-1 left-1 flex size-6 items-center justify-center rounded-full border-[1.5px] border-transparent bg-[var(--ob-color-surface)]/90 text-[var(--ob-color-action)] shadow-sm transition-colors duration-[var(--ob-dur-fast)] hover:text-[var(--ob-color-action-hover)]"
+        >
+          <Volume2 size={12} />
+        </button>
         {learned ? (
           <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-[var(--ob-color-income)] text-white">
             <Check size={10} />
@@ -38,13 +47,13 @@ function VocabTeaserCard({ entry, learned }: { entry: VocabEntry; learned: boole
       <div className="min-w-0">
         <div
           className={cn(
-            "truncate text-[12.5px] font-bold",
+            "text-[12.5px] leading-[1.4] font-bold",
             learned ? "text-[var(--ob-color-text-subtle)] line-through" : "text-[var(--ob-color-text)]"
           )}
         >
           {entry.word}
         </div>
-        <div className="truncate text-[11px] text-[var(--ob-color-text-subtle)]">{entry.meaning}</div>
+        <div className="text-[11px] leading-[1.4] text-[var(--ob-color-text-subtle)]">{entry.meaning}</div>
       </div>
     </div>
   )
@@ -58,7 +67,7 @@ function StudySummarySection({ vocab, grammar, tasks, onToggleTask, learned }: S
 
   return (
     <div className="ob-card-grid flex flex-wrap gap-5">
-      <Card label="Nhiệm vụ hôm nay" className="min-w-0 flex-[1_1_280px]">
+      <Card label="Nhiệm vụ hôm nay" className="min-w-0 flex-[0_0_280px]">
         <Figure value={String(doneTasks)} unit={`/${tasks.length}`} size="sm" className="mb-[14px]" />
         <div className="flex flex-col gap-[6px]">
           {tasks.map((task, i) => (
@@ -67,7 +76,7 @@ function StudySummarySection({ vocab, grammar, tasks, onToggleTask, learned }: S
         </div>
       </Card>
 
-      <Card label="5 từ hôm nay" className="min-w-0 flex-[1_1_280px]">
+      <Card label="5 từ hôm nay" className="min-w-0 flex-[1_1_360px]">
         <div className="grid grid-cols-5 gap-[10px]">
           {daily.map((entry) => (
             <VocabTeaserCard key={entry.id} entry={entry} learned={learned.includes(entry.id)} />
