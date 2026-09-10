@@ -31,7 +31,7 @@ function VocabCard({
       {intro ? (
         <p className="mb-1 text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)]">{intro}</p>
       ) : null}
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
         {entries.map((entry) => (
           <VocabWordCard
             key={entry.id}
