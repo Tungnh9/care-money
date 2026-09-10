@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest"
 import { render, screen } from "@testing-library/react"
 
 import { GrammarHighlightCard, GrammarListCard } from "../../components/grammar-card"
-import type { GrammarEntry } from "../../types"
+import type { GrammarEntry, VocabEntry } from "../../types"
 
 const WITH_STRUCTURE: GrammarEntry = {
   id: "g-0001",
@@ -19,27 +19,49 @@ const WITHOUT_STRUCTURE: GrammarEntry = {
   addedAt: "2026-08-14",
 }
 
+const WITH_EXAMPLE: GrammarEntry = {
+  id: "g-0003",
+  title: "Countable nouns",
+  explanation: "Danh từ đếm được.",
+  examples: ["She wants to buy a skirt."],
+  addedAt: "2026-08-14",
+}
+
+const VOCAB: VocabEntry[] = [{ id: "v-0030", word: "skirt", meaning: "váy", addedAt: "2026-08-11" }]
+
 describe("GrammarHighlightCard", () => {
   it("shows the structure badge next to the title when the entry has one", () => {
-    render(<GrammarHighlightCard entry={WITH_STRUCTURE} />)
+    render(<GrammarHighlightCard entry={WITH_STRUCTURE} vocab={[]} />)
 
     expect(screen.getByText("S + V(s/es)")).toBeInTheDocument()
   })
 
   it("renders fine with no badge when the entry has no structure field", () => {
-    render(<GrammarHighlightCard entry={WITHOUT_STRUCTURE} />)
+    render(<GrammarHighlightCard entry={WITHOUT_STRUCTURE} vocab={[]} />)
 
     expect(screen.getByText(WITHOUT_STRUCTURE.title)).toBeInTheDocument()
     expect(screen.queryByText("S + V(s/es)")).not.toBeInTheDocument()
+  })
+
+  it("highlights a vocab word inside an example sentence", () => {
+    render(<GrammarHighlightCard entry={WITH_EXAMPLE} vocab={VOCAB} />)
+
+    expect(screen.getByText("skirt", { selector: "mark" })).toBeInTheDocument()
   })
 })
 
 describe("GrammarListCard", () => {
   it("shows a structure badge next to each entry that has one, and none for entries without", () => {
-    render(<GrammarListCard entries={[WITH_STRUCTURE, WITHOUT_STRUCTURE]} />)
+    render(<GrammarListCard entries={[WITH_STRUCTURE, WITHOUT_STRUCTURE]} vocab={[]} />)
 
     expect(screen.getByText(WITH_STRUCTURE.title)).toBeInTheDocument()
     expect(screen.getByText("S + V(s/es)")).toBeInTheDocument()
     expect(screen.getByText(WITHOUT_STRUCTURE.title)).toBeInTheDocument()
+  })
+
+  it("highlights a vocab word inside an example sentence", () => {
+    render(<GrammarListCard entries={[WITH_EXAMPLE]} vocab={VOCAB} />)
+
+    expect(screen.getByText("skirt", { selector: "mark" })).toBeInTheDocument()
   })
 })

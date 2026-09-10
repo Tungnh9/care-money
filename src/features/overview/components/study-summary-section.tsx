@@ -76,7 +76,7 @@ function StudySummarySection({ vocab, grammar, tasks, onToggleTask, learned }: S
         </div>
       </Card>
 
-      {dailyGrammar ? <GrammarHighlightCard entry={dailyGrammar} /> : null}
+      {dailyGrammar ? <GrammarHighlightCard entry={dailyGrammar} vocab={vocab} /> : null}
     </div>
   )
 }
