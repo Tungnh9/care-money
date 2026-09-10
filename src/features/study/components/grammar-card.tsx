@@ -21,7 +21,7 @@ function ExampleSentence({ sentence, translation, vocab }: { sentence: string; t
             onClick={() => setOpen((v) => !v)}
             aria-label={open ? "Ẩn bản dịch" : "Dịch sang tiếng Việt"}
             aria-pressed={open}
-            className="inline-flex size-5 flex-none items-center justify-center rounded-full text-[var(--ob-color-text-subtle)] not-italic transition-colors duration-[var(--ob-dur-fast)] hover:text-[var(--ob-color-action)]"
+            className="inline-flex size-6 flex-none items-center justify-center rounded-full bg-[var(--ob-color-action-soft)] text-[var(--ob-color-action-strong)] not-italic shadow-sm transition-colors duration-[var(--ob-dur-fast)] hover:bg-[var(--ob-color-action)] hover:text-white"
           >
             <Languages size={14} />
           </button>
