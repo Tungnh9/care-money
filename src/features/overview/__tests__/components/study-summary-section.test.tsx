@@ -88,4 +88,58 @@ describe("StudySummarySection", () => {
 
     expect(onToggleTask).toHaveBeenCalledWith(1)
   })
+
+  describe("speak buttons on the daily words", () => {
+    let speakSpy: ReturnType<typeof vi.fn>
+    let cancelSpy: ReturnType<typeof vi.fn>
+
+    beforeEach(() => {
+      speakSpy = vi.fn()
+      cancelSpy = vi.fn()
+      vi.stubGlobal("speechSynthesis", { speak: speakSpy, cancel: cancelSpy })
+      vi.stubGlobal(
+        "SpeechSynthesisUtterance",
+        vi.fn().mockImplementation((text: string) => ({ text, lang: "" }))
+      )
+    })
+
+    afterEach(() => {
+      vi.unstubAllGlobals()
+    })
+
+    it("reads a daily word aloud when its speak button is clicked", () => {
+      render(
+        <StudySummarySection
+          vocab={VOCAB}
+          grammar={GRAMMAR}
+          tasks={TASKS}
+          onToggleTask={vi.fn()}
+          learned={[]}
+        />
+      )
+
+      const daily = pickDaily(VOCAB, 5, dayKey(), "vocab")
+      fireEvent.click(screen.getAllByRole("button", { name: "Phát âm từ" })[0])
+
+      expect(cancelSpy).toHaveBeenCalled()
+      expect(speakSpy).toHaveBeenCalledTimes(1)
+      const utterance = speakSpy.mock.calls[0][0]
+      expect(utterance.text).toBe(daily[0].word)
+      expect(utterance.lang).toBe("en-US")
+    })
+
+    it("renders one speak button per daily word", () => {
+      render(
+        <StudySummarySection
+          vocab={VOCAB}
+          grammar={GRAMMAR}
+          tasks={TASKS}
+          onToggleTask={vi.fn()}
+          learned={[]}
+        />
+      )
+
+      expect(screen.getAllByRole("button", { name: "Phát âm từ" })).toHaveLength(5)
+    })
+  })
 })
