@@ -1,4 +1,5 @@
-import { Check, Circle } from "lucide-react"
+import Image from "next/image"
+import { Check, ImageIcon } from "lucide-react"
 
 import { pickDaily } from "@/features/study/daily-pick"
 import { GrammarHighlightCard } from "@/features/study/components/grammar-card"
@@ -17,27 +18,33 @@ interface StudySummarySectionProps {
   learned: string[]
 }
 
-function VocabTeaserRow({ entry, learned }: { entry: VocabEntry; learned: boolean }) {
+function VocabTeaserCard({ entry, learned }: { entry: VocabEntry; learned: boolean }) {
   return (
-    <div className="flex items-start gap-[10px]">
-      <span
-        className={cn(
-          "flex size-4 flex-none items-center justify-center",
-          learned ? "text-[var(--ob-color-income)]" : "text-[var(--ob-color-border-strong)]"
+    <div className="flex flex-col gap-[6px]">
+      <div className="relative aspect-[4/3] overflow-hidden rounded-[var(--ob-radius-sm)] bg-[var(--ob-color-surface-sunken)]">
+        {entry.image ? (
+          <Image src={entry.image} alt={entry.word} fill sizes="120px" className="object-cover" />
+        ) : (
+          <div className="flex size-full items-center justify-center bg-gradient-to-br from-[var(--ob-color-action-soft)] to-[var(--ob-color-surface-sunken)] text-[var(--ob-color-text-subtle)]">
+            <ImageIcon size={18} strokeWidth={1.5} />
+          </div>
         )}
-      >
-        {learned ? <Check size={14} /> : <Circle size={14} />}
-      </span>
-      <div className="min-w-0 flex-1 text-[13px] leading-[1.6] text-[var(--ob-color-text-subtle)]">
-        <span
+        {learned ? (
+          <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-[var(--ob-color-income)] text-white">
+            <Check size={10} />
+          </span>
+        ) : null}
+      </div>
+      <div className="min-w-0">
+        <div
           className={cn(
-            "text-sm font-bold",
+            "truncate text-[12.5px] font-bold",
             learned ? "text-[var(--ob-color-text-subtle)] line-through" : "text-[var(--ob-color-text)]"
           )}
         >
           {entry.word}
-        </span>{" "}
-        – {entry.meaning}
+        </div>
+        <div className="truncate text-[11px] text-[var(--ob-color-text-subtle)]">{entry.meaning}</div>
       </div>
     </div>
   )
@@ -61,9 +68,9 @@ function StudySummarySection({ vocab, grammar, tasks, onToggleTask, learned }: S
       </Card>
 
       <Card label="5 từ hôm nay" className="min-w-0 flex-[1_1_280px]">
-        <div className="flex flex-col gap-[9px]">
+        <div className="grid grid-cols-3 gap-[10px]">
           {daily.map((entry) => (
-            <VocabTeaserRow key={entry.id} entry={entry} learned={learned.includes(entry.id)} />
+            <VocabTeaserCard key={entry.id} entry={entry} learned={learned.includes(entry.id)} />
           ))}
         </div>
       </Card>
