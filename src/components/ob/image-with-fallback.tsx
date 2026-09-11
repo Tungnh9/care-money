@@ -1,3 +1,6 @@
+"use client"
+
+import { useState } from "react"
 import Image from "next/image"
 import { ImageIcon } from "lucide-react"
 
@@ -13,10 +16,19 @@ interface ImageWithFallbackProps {
 }
 
 function ImageWithFallback({ src, alt, iconSize = 28, imageSizes, className, children }: ImageWithFallbackProps) {
+  const [failed, setFailed] = useState(false)
+
   return (
     <div className={cn("relative aspect-[4/3] bg-[var(--ob-color-surface-sunken)]", className)}>
-      {src ? (
-        <Image src={src} alt={alt} fill sizes={imageSizes} className="object-cover" />
+      {src && !failed ? (
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          sizes={imageSizes}
+          className="object-cover"
+          onError={() => setFailed(true)}
+        />
       ) : (
         <div
           data-testid="vocab-image-placeholder"

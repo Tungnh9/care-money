@@ -1,3 +1,5 @@
+"use client"
+
 import { Volume2 } from "lucide-react"
 
 import { speakWord } from "@/lib/speak"
