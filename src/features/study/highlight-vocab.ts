@@ -14,21 +14,23 @@ function stemCandidates(word: string): string[] {
 
   if (lower.endsWith("'s") && lower.length - 2 >= MIN_STEM_LENGTH) {
     candidates.push(lower.slice(0, -2))
-  }
-  if (lower.endsWith("ies") && lower.length - 3 + 1 >= MIN_STEM_LENGTH) {
+  } else if (lower.endsWith("ies") && lower.length - 3 + 1 >= MIN_STEM_LENGTH) {
     candidates.push(lower.slice(0, -3) + "y")
-  }
-  if (lower.endsWith("es") && lower.length - 2 >= MIN_STEM_LENGTH) {
+  } else if (lower.endsWith("es") && lower.length - 2 >= MIN_STEM_LENGTH) {
     candidates.push(lower.slice(0, -2))
-  }
-  if (lower.endsWith("s") && !lower.endsWith("ss") && lower.length - 1 >= MIN_STEM_LENGTH) {
+  } else if (lower.endsWith("s") && !lower.endsWith("ss") && lower.length - 1 >= MIN_STEM_LENGTH) {
     candidates.push(lower.slice(0, -1))
   }
-  if (lower.endsWith("ing") && lower.length - 3 >= MIN_STEM_LENGTH) {
-    candidates.push(lower.slice(0, -3))
-  }
-  if (lower.endsWith("ed") && lower.length - 2 >= MIN_STEM_LENGTH) {
-    candidates.push(lower.slice(0, -2))
+
+  // -ing/-ed: try the plain strip, and also add back a silent "e" (dated -> date, using -> use).
+  if (lower.endsWith("ing")) {
+    const stripped = lower.slice(0, -3)
+    if (stripped.length >= MIN_STEM_LENGTH) candidates.push(stripped)
+    if (stripped.length + 1 >= MIN_STEM_LENGTH) candidates.push(stripped + "e")
+  } else if (lower.endsWith("ed")) {
+    const stripped = lower.slice(0, -2)
+    if (stripped.length >= MIN_STEM_LENGTH) candidates.push(stripped)
+    if (stripped.length + 1 >= MIN_STEM_LENGTH) candidates.push(stripped + "e")
   }
 
   return candidates
@@ -44,9 +46,8 @@ function buildVocabIndex(vocab: VocabEntry[]): Map<string, string> {
   return index
 }
 
-function highlightVocabInSentence(sentence: string, vocab: VocabEntry[]): HighlightSegment[] {
-  const index = buildVocabIndex(vocab)
-  const chunks = sentence.match(/[A-Za-z']+|[^A-Za-z']+/g) ?? []
+function highlightVocabInSentence(sentence: string, index: Map<string, string>): HighlightSegment[] {
+  const chunks = sentence.match(/[A-Za-z'-]+|[^A-Za-z'-]+/g) ?? []
 
   return chunks.map((chunk) => {
     if (!/[A-Za-z]/.test(chunk)) {
@@ -62,4 +63,4 @@ function highlightVocabInSentence(sentence: string, vocab: VocabEntry[]): Highli
   })
 }
 
-export { highlightVocabInSentence, type HighlightSegment }
+export { highlightVocabInSentence, buildVocabIndex, type HighlightSegment }
