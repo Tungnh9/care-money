@@ -61,7 +61,7 @@ function StudyView({ vocab, grammar }: StudyViewProps) {
             className="min-w-0 flex-[1_1_100%]"
             gridClassName="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
           />
-          {dailyGrammar ? <GrammarHighlightCard entry={dailyGrammar} vocab={vocab} /> : null}
+          {dailyGrammar ? <GrammarHighlightCard key={dailyGrammar.id} entry={dailyGrammar} vocab={vocab} /> : null}
           <TasksCard tasks={tasks} onToggle={toggleTask} className="min-w-0 flex-[1_1_300px]" />
           <LearnedProgressCard
             learnedCount={learned.length}
