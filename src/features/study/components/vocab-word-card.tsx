@@ -16,7 +16,12 @@ interface VocabWordCardProps {
 function VocabWordCard({ entry, learned, onToggleLearned }: VocabWordCardProps) {
   return (
     <div className="flex flex-col overflow-hidden rounded-[var(--ob-radius-md)] border border-[var(--ob-color-border)] bg-[var(--ob-color-surface)]">
-      <ImageWithFallback src={entry.image} alt={entry.word} iconSize={28}>
+      <ImageWithFallback
+        src={entry.image}
+        alt={entry.word}
+        iconSize={28}
+        imageSizes="(max-width: 639px) 45vw, (max-width: 767px) 30vw, (max-width: 1023px) 22vw, 15vw"
+      >
         <SpeakButton word={entry.word} size="md" className="absolute top-2 left-2" />
         <button
           type="button"

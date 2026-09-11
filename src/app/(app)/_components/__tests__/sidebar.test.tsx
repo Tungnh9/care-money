@@ -45,4 +45,28 @@ describe("Sidebar", () => {
 
     await waitFor(() => expect(screen.getByTestId("calculator-result")).toHaveTextContent("0"))
   })
+
+  it("hides Máy tính and Ẩn số tiền when the Tài chính module is off", () => {
+    window.localStorage.setItem(
+      "app-settings",
+      JSON.stringify({ modules: [{ key: "taichinh", label: "Tài chính", hint: "", on: false }] })
+    )
+
+    render(<Sidebar />)
+
+    expect(screen.queryAllByLabelText("Máy tính")).toHaveLength(0)
+    expect(screen.queryAllByLabelText("Ẩn số tiền")).toHaveLength(0)
+  })
+
+  it("still shows Máy tính and Ẩn số tiền when the Tài chính module is on", () => {
+    window.localStorage.setItem(
+      "app-settings",
+      JSON.stringify({ modules: [{ key: "taichinh", label: "Tài chính", hint: "", on: true }] })
+    )
+
+    render(<Sidebar />)
+
+    expect(screen.getAllByLabelText("Máy tính").length).toBeGreaterThan(0)
+    expect(screen.getAllByLabelText("Ẩn số tiền").length).toBeGreaterThan(0)
+  })
 })

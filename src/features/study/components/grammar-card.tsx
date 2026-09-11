@@ -1,32 +1,39 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Languages } from "lucide-react"
 
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { buildVocabIndex } from "../highlight-vocab"
 import { HighlightedSentence } from "./highlighted-sentence"
 import type { GrammarEntry, VocabEntry } from "../types"
 
-function ExampleSentence({ sentence, translation, vocab }: { sentence: string; translation?: string; vocab: VocabEntry[] }) {
+function ExampleSentence({
+  sentence,
+  translation,
+  vocabIndex,
+}: {
+  sentence: string
+  translation?: string
+  vocabIndex: Map<string, string>
+}) {
   const [open, setOpen] = useState(false)
 
   return (
     <p className="text-sm leading-[1.6] italic">
-      <span className="inline-flex flex-wrap items-baseline gap-[6px]">
-        <HighlightedSentence sentence={sentence} vocab={vocab} />
-        {translation ? (
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            aria-label={open ? "Ẩn bản dịch" : "Dịch sang tiếng Việt"}
-            aria-pressed={open}
-            className="inline-flex size-6 flex-none items-center justify-center rounded-full bg-[var(--ob-color-action-soft)] text-[var(--ob-color-action-strong)] not-italic shadow-sm transition-colors duration-[var(--ob-dur-fast)] hover:bg-[var(--ob-color-action)] hover:text-white"
-          >
-            <Languages size={14} />
-          </button>
-        ) : null}
-      </span>
+      <HighlightedSentence sentence={sentence} vocabIndex={vocabIndex} />
+      {translation ? (
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-label={open ? "Ẩn bản dịch" : "Dịch sang tiếng Việt"}
+          aria-expanded={open}
+          className="ml-[6px] inline-flex size-6 flex-none items-center justify-center rounded-full bg-[var(--ob-color-action-soft)] text-[var(--ob-color-action-strong)] align-middle not-italic shadow-sm transition-colors duration-[var(--ob-dur-fast)] hover:bg-[var(--ob-color-action)] hover:text-white"
+        >
+          <Languages size={14} />
+        </button>
+      ) : null}
       {translation && open ? (
         <span className="block text-[var(--ob-color-text-subtle)] not-italic">{translation}</span>
       ) : null}
@@ -43,11 +50,14 @@ function ExampleList({
   translations?: string[]
   vocab: VocabEntry[]
 }) {
+  // Build the vocab lookup once per (grammar entry × vocab list) instead of once per sentence.
+  const vocabIndex = useMemo(() => buildVocabIndex(vocab), [vocab])
+
   if (!examples?.length) return null
   return (
     <div className="flex flex-col gap-1">
       {examples.map((example, i) => (
-        <ExampleSentence key={i} sentence={example} translation={translations?.[i]} vocab={vocab} />
+        <ExampleSentence key={i} sentence={example} translation={translations?.[i]} vocabIndex={vocabIndex} />
       ))}
     </div>
   )
