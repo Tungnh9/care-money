@@ -76,6 +76,7 @@ function Sidebar() {
   }
 
   const nav = NAV.filter((item) => !item.moduleKey || isModuleOn(item.moduleKey))
+  const showMoneyTools = isModuleOn("taichinh")
 
   function handleLogout() {
     clearStoredUser()
@@ -90,26 +91,30 @@ function Sidebar() {
           <span className="text-[var(--ob-color-action)]">Orange</span>{" "}
           <span className="text-[var(--ob-chuoi-500)]">Banana</span>
         </span>
-        <SidebarActionButton
-          variant="icon"
-          icon={<Calculator size={18} />}
-          label="Máy tính"
-          onClick={() => setCalcOpen(true)}
-          className="text-[var(--ob-color-text-muted)] hover:text-[var(--ob-color-action-strong)]"
-        />
-        <SidebarActionButton
-          variant="icon"
-          icon={hideMoney ? <EyeOff size={18} /> : <Eye size={18} />}
-          label={hideMoney ? "Hiện số tiền" : "Ẩn số tiền"}
-          onClick={toggleHideMoney}
-          ariaPressed={hideMoney}
-          className={cn(
-            "rounded-[var(--ob-radius-sm)]",
-            hideMoney
-              ? "text-[var(--ob-color-action-strong)]"
-              : "text-[var(--ob-color-text-subtle)] hover:text-[var(--ob-color-action-strong)]"
-          )}
-        />
+        {showMoneyTools ? (
+          <>
+            <SidebarActionButton
+              variant="icon"
+              icon={<Calculator size={18} />}
+              label="Máy tính"
+              onClick={() => setCalcOpen(true)}
+              className="text-[var(--ob-color-text-muted)] hover:text-[var(--ob-color-action-strong)]"
+            />
+            <SidebarActionButton
+              variant="icon"
+              icon={hideMoney ? <EyeOff size={18} /> : <Eye size={18} />}
+              label={hideMoney ? "Hiện số tiền" : "Ẩn số tiền"}
+              onClick={toggleHideMoney}
+              ariaPressed={hideMoney}
+              className={cn(
+                "rounded-[var(--ob-radius-sm)]",
+                hideMoney
+                  ? "text-[var(--ob-color-action-strong)]"
+                  : "text-[var(--ob-color-text-subtle)] hover:text-[var(--ob-color-action-strong)]"
+              )}
+            />
+          </>
+        ) : null}
         <SidebarActionButton
           variant="icon"
           icon={<LogOut size={18} />}
@@ -150,25 +155,29 @@ function Sidebar() {
         </nav>
 
         <div className="hidden md:mt-auto md:flex md:flex-col md:gap-[14px]">
-          <SidebarActionButton
-            variant="row"
-            icon={<Calculator size={18} />}
-            label="Máy tính"
-            onClick={() => setCalcOpen(true)}
-            className="text-[var(--ob-color-text-muted)]"
-          />
-          <SidebarActionButton
-            variant="row"
-            icon={hideMoney ? <EyeOff size={18} /> : <Eye size={18} />}
-            label={hideMoney ? "Hiện số tiền" : "Ẩn số tiền"}
-            onClick={toggleHideMoney}
-            ariaPressed={hideMoney}
-            className={
-              hideMoney
-                ? "bg-[var(--ob-color-action-soft)] text-[var(--ob-color-action-strong)]"
-                : "text-[var(--ob-color-text-muted)]"
-            }
-          />
+          {showMoneyTools ? (
+            <>
+              <SidebarActionButton
+                variant="row"
+                icon={<Calculator size={18} />}
+                label="Máy tính"
+                onClick={() => setCalcOpen(true)}
+                className="text-[var(--ob-color-text-muted)]"
+              />
+              <SidebarActionButton
+                variant="row"
+                icon={hideMoney ? <EyeOff size={18} /> : <Eye size={18} />}
+                label={hideMoney ? "Hiện số tiền" : "Ẩn số tiền"}
+                onClick={toggleHideMoney}
+                ariaPressed={hideMoney}
+                className={
+                  hideMoney
+                    ? "bg-[var(--ob-color-action-soft)] text-[var(--ob-color-action-strong)]"
+                    : "text-[var(--ob-color-text-muted)]"
+                }
+              />
+            </>
+          ) : null}
           <div className="flex items-center justify-center gap-[10px] rounded-[var(--ob-radius-md)] px-0 py-2 lg:justify-start lg:bg-[var(--ob-vo-100)] lg:px-[10px]">
             <Image src="/assets/avatar-clover.svg" width={32} height={32} alt="" className="flex-none" />
             <span className="hidden overflow-hidden bg-gradient-to-r from-[var(--ob-color-action)] to-[var(--ob-color-reward)] bg-clip-text text-[13.5px] font-bold text-ellipsis whitespace-nowrap text-transparent lg:inline">
