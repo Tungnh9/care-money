@@ -1,13 +1,12 @@
 import { highlightVocabInSentence } from "../highlight-vocab"
-import type { VocabEntry } from "../types"
 
 interface HighlightedSentenceProps {
   sentence: string
-  vocab: VocabEntry[]
+  vocabIndex: Map<string, string>
 }
 
-function HighlightedSentence({ sentence, vocab }: HighlightedSentenceProps) {
-  const segments = highlightVocabInSentence(sentence, vocab)
+function HighlightedSentence({ sentence, vocabIndex }: HighlightedSentenceProps) {
+  const segments = highlightVocabInSentence(sentence, vocabIndex)
   return (
     <>
       {segments.map((segment, i) =>
