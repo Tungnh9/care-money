@@ -71,7 +71,7 @@ function ExpenseEntryForm({ tags, onAdd }: ExpenseEntryFormProps) {
       <Field
         className="mt-3"
         label="Ghi chú"
-        placeholder="vd: Tháng 9"
+        placeholder="Ghi chú khoản chi"
         value={note}
         onChange={(e) => setNote(e.target.value)}
       />

@@ -11,6 +11,12 @@ const TAGS: BudgetTag[] = [
 ]
 
 describe("ExpenseEntryForm", () => {
+  it("shows a note placeholder describing what to write for the expense", () => {
+    render(<ExpenseEntryForm tags={TAGS} onAdd={vi.fn()} />)
+
+    expect(screen.getByPlaceholderText("Ghi chú khoản chi")).toBeInTheDocument()
+  })
+
   it("only shows tags that are turned on", () => {
     render(<ExpenseEntryForm tags={TAGS} onAdd={vi.fn()} />)
 

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { render, screen, waitFor, fireEvent } from "@testing-library/react"
 
 import { setStoredFinance, DEFAULT_FINANCE_STATE, getStoredFinance } from "@/features/finance/finance-storage"
+import { formatMoney } from "@/lib/format"
 import { setStoredBudget, DEFAULT_BUDGET_STATE } from "../../budget-storage"
 import { BudgetView } from "../../components/budget-view"
 
@@ -57,6 +58,32 @@ describe("BudgetView", () => {
     await waitFor(() => expect(screen.getAllByText("Lương tháng này").length).toBeGreaterThan(0))
 
     expect(screen.getByRole("button", { name: "Tất toán tháng" })).toBeDisabled()
+  })
+
+  it("highlights the surplus amount in the settle card, distinct from the surrounding sentence", async () => {
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [{ month: "2026-09", amount: 1_000_000 }],
+      expenses: [{ id: 1, dayKey: "2026-09-01", amount: 200_000, tag: null }],
+    })
+
+    render(<BudgetView />)
+
+    const amount = await screen.findByText(formatMoney(800_000))
+    expect(amount).toHaveStyle({ color: "var(--ob-color-income)" })
+  })
+
+  it("highlights the deficit amount in the settle card with the expense color", async () => {
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [{ month: "2026-09", amount: 500_000 }],
+      expenses: [{ id: 1, dayKey: "2026-09-01", amount: 800_000, tag: null }],
+    })
+
+    render(<BudgetView />)
+
+    const amount = await screen.findByText(formatMoney(300_000))
+    expect(amount).toHaveStyle({ color: "var(--ob-color-expense)" })
   })
 
   it("enables the settle button and completes a deposit settlement into a chosen fund", async () => {

@@ -36,7 +36,7 @@ function SalaryCard({ month, salary, onSave }: SalaryCardProps) {
   return (
     <Card label="Lương tháng này" className="min-w-0 flex-[1_1_260px]">
       <Field
-        label="Lương tháng này"
+        label="Số tiền"
         numeric
         group
         suffix="đ"

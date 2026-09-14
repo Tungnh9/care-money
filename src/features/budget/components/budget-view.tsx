@@ -54,9 +54,14 @@ function BudgetView() {
 
         <Card label="Tất toán tháng" className="min-w-0 flex-[1_1_260px]">
           <p className="mb-[14px] text-[13.5px] leading-[1.55] text-[var(--ob-color-text-muted)]">
-            {remaining >= 0
-              ? `Bạn đang dư ${formatMoney(remaining, hidden)} tháng này.`
-              : `Bạn đang thiếu ${formatMoney(Math.abs(remaining), hidden)} tháng này.`}
+            {remaining >= 0 ? "Bạn đang dư " : "Bạn đang thiếu "}
+            <span
+              className="font-bold"
+              style={{ color: remaining >= 0 ? "var(--ob-color-income)" : "var(--ob-color-expense)" }}
+            >
+              {formatMoney(Math.abs(remaining), hidden)}
+            </span>{" "}
+            tháng này.
           </p>
           <Button
             variant="primary"
