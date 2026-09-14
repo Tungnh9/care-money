@@ -54,4 +54,10 @@ describe("TagBreakdownChart", () => {
     expect(screen.getByText("Tiền trọ")).toBeInTheDocument()
     expect(screen.getByText("Mua sắm")).toBeInTheDocument()
   })
+
+  it("keeps legend text in a dark, readable color regardless of the tag's own pale tint", () => {
+    render(<TagBreakdownChart data={[{ label: "Tiền trọ", emoji: "🏠", tint: "#FFF0B8", total: 100_000 }]} />)
+
+    expect(screen.getByText("Tiền trọ")).toHaveStyle({ color: "var(--ob-color-text)" })
+  })
 })
