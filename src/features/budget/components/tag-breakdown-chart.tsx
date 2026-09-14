@@ -20,17 +20,19 @@ function TagBreakdownChart({ data }: TagBreakdownChartProps) {
   }
 
   return (
-    <ResponsiveContainer width="100%" height={260}>
+    <ResponsiveContainer width="100%" height={340}>
       <PieChart>
         <Pie
           data={data}
           dataKey="total"
           nameKey="label"
-          innerRadius={50}
-          outerRadius={90}
+          innerRadius="46%"
+          outerRadius="72%"
           paddingAngle={2}
           stroke="var(--ob-color-border-strong)"
           strokeWidth={1.5}
+          label={({ percent }) => `${Math.round((percent ?? 0) * 100)}%`}
+          labelLine={{ stroke: "var(--ob-color-border-strong)" }}
         >
           {data.map((entry) => (
             <Cell key={entry.label} fill={entry.tint} />

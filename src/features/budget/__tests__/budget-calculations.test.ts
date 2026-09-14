@@ -8,6 +8,7 @@ import {
   breakdownByTag,
   lastNMonthKeys,
   monthlyTrend,
+  trendMonthKeys,
 } from "../budget-calculations"
 import type { Expense, MonthlySalary, Settlement } from "../types"
 
@@ -241,5 +242,35 @@ describe("monthlyTrend", () => {
     const expenses = [expense({ dayKey: "2026-01-01", amount: 999_999 })]
     const result = monthlyTrend([], expenses, ["2026-09"])
     expect(result).toEqual([{ month: "2026-09", salary: 0, spent: 0 }])
+  })
+})
+
+describe("trendMonthKeys", () => {
+  const now = new Date(2026, 8, 15) // 2026-09
+
+  it("trims leading empty months, starting from the earliest month with any data", () => {
+    const salaries: MonthlySalary[] = [{ month: "2026-06", amount: 10_000_000 }]
+    expect(trendMonthKeys(salaries, [], 6, now)).toEqual(["2026-06", "2026-07", "2026-08", "2026-09"])
+  })
+
+  it("finds the earliest data point across both salaries and expenses", () => {
+    const salaries: MonthlySalary[] = [{ month: "2026-08", amount: 10_000_000 }]
+    const expenses = [expense({ dayKey: "2026-07-01" })]
+    expect(trendMonthKeys(salaries, expenses, 6, now)).toEqual(["2026-07", "2026-08", "2026-09"])
+  })
+
+  it("still returns the full N-month trailing window when data is older than the window", () => {
+    const salaries: MonthlySalary[] = [{ month: "2026-01", amount: 10_000_000 }]
+    expect(trendMonthKeys(salaries, [], 6, now)).toEqual(lastNMonthKeys(6, now))
+  })
+
+  it("guarantees at least 2 months so a single data point still reads as a trend", () => {
+    const salaries: MonthlySalary[] = [{ month: "2026-09", amount: 10_000_000 }]
+    const expenses = [expense({ dayKey: "2026-09-01" })]
+    expect(trendMonthKeys(salaries, expenses, 6, now)).toEqual(["2026-08", "2026-09"])
+  })
+
+  it("falls back to a short default window when there is no data at all", () => {
+    expect(trendMonthKeys([], [], 6, now)).toEqual(["2026-07", "2026-08", "2026-09"])
   })
 })

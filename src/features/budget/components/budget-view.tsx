@@ -12,10 +12,10 @@ import { dayKey, monthKey, monthKeyFromDayKey } from "@/lib/date"
 import { useBudget } from "../hooks/use-budget"
 import {
   breakdownByTag,
-  lastNMonthKeys,
   monthlyTrend,
   remainingToSettle,
   salaryForMonth,
+  trendMonthKeys,
 } from "../budget-calculations"
 import { SalaryCard } from "./salary-card"
 import { ExpenseEntryForm } from "./expense-entry-form"
@@ -37,7 +37,7 @@ function BudgetView() {
   const monthExpenses = expenses.filter((e) => monthKeyFromDayKey(e.dayKey) === month)
   const remaining = remainingToSettle(salaries, expenses, settlements, month)
   const tagBreakdown = breakdownByTag(expenses, month)
-  const trendData = monthlyTrend(salaries, expenses, lastNMonthKeys(6))
+  const trendData = monthlyTrend(salaries, expenses, trendMonthKeys(salaries, expenses, 6))
 
   return (
     <div>
@@ -76,10 +76,10 @@ function BudgetView() {
 
         <ExpenseListCard expenses={monthExpenses} onRemove={removeExpense} />
 
-        <Card label="Chi theo nhãn (tháng này)" className="min-w-0 flex-[1_1_420px]">
+        <Card label="Chi theo nhãn (tháng này)" className="min-w-0 flex-[1_1_360px]">
           <TagBreakdownChart data={tagBreakdown} />
         </Card>
-        <Card label="Xu hướng lương & chi tiêu" className="min-w-0 flex-[1_1_420px]">
+        <Card label="Xu hướng lương & chi tiêu" className="min-w-0 flex-[1.6_1_480px]">
           <MonthlyTrendChart data={trendData} />
         </Card>
       </div>

@@ -82,6 +82,27 @@ function monthlyTrend(salaries: MonthlySalary[], expenses: Expense[], months: st
   }))
 }
 
+// lastNMonthKeys(6) luôn trả về đúng 6 tháng bất kể có dữ liệu hay không — với người dùng
+// mới chỉ có 1-2 tháng dữ liệu thật, biểu đồ sẽ đầy tháng trống gây rối mắt. Hàm này thu hẹp
+// khung về đúng phần có dữ liệu (bắt đầu từ tháng sớm nhất có lương hoặc khoản chi), vẫn giữ
+// tối đa n tháng nếu lịch sử thật sự dài hơn khung, và luôn giữ tối thiểu 2 tháng để còn ra
+// được 1 đường xu hướng (1 điểm dữ liệu không thể hiện xu hướng gì).
+function trendMonthKeys(
+  salaries: MonthlySalary[],
+  expenses: Expense[],
+  n: number,
+  now: Date = new Date()
+): string[] {
+  const fullWindow = lastNMonthKeys(n, now)
+  const dataMonths = [...salaries.map((s) => s.month), ...expenses.map((e) => monthKeyFromDayKey(e.dayKey))]
+
+  if (dataMonths.length === 0) return fullWindow.slice(-3)
+
+  const earliest = dataMonths.reduce((min, m) => (m < min ? m : min), fullWindow[fullWindow.length - 1])
+  const trimmed = fullWindow.filter((m) => m >= earliest)
+  return trimmed.length >= 2 ? trimmed : fullWindow.slice(-2)
+}
+
 export {
   totalExpensesForMonth,
   salaryForMonth,
@@ -90,6 +111,7 @@ export {
   breakdownByTag,
   lastNMonthKeys,
   monthlyTrend,
+  trendMonthKeys,
   type TagBreakdownEntry,
   type MonthlyTrendPoint,
 }
