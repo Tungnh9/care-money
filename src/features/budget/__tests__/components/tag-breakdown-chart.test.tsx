@@ -42,7 +42,7 @@ describe("TagBreakdownChart", () => {
     expect(screen.getByText(/Chưa có khoản chi nào/)).toBeInTheDocument()
   })
 
-  it("renders without throwing and reflects each tag's label", () => {
+  it("renders without throwing and reflects each tag's label and percentage on the ring", () => {
     render(
       <TagBreakdownChart
         data={[
@@ -54,6 +54,8 @@ describe("TagBreakdownChart", () => {
 
     expect(screen.getByText("Tiền trọ")).toBeInTheDocument()
     expect(screen.getByText("Mua sắm")).toBeInTheDocument()
+    expect(screen.getByText("67%")).toBeInTheDocument()
+    expect(screen.getByText("33%")).toBeInTheDocument()
   })
 
   it("shows the total spent amount in the center of the donut", () => {
@@ -70,27 +72,11 @@ describe("TagBreakdownChart", () => {
     expect(screen.getByText(formatMoney(150_000))).toBeInTheDocument()
   })
 
-  it("lists each tag as its own row with a percentage and its amount", () => {
-    render(
-      <TagBreakdownChart
-        data={[
-          { label: "Tiền trọ", emoji: "🏠", tint: "#FFF0B8", total: 100_000 },
-          { label: "Mua sắm", emoji: "🛍️", tint: "#E7F6EF", total: 50_000 },
-        ]}
-      />
-    )
-
-    expect(screen.getByText("67%")).toBeInTheDocument()
-    expect(screen.getByText("33%")).toBeInTheDocument()
-    expect(screen.getByText(formatMoney(100_000))).toBeInTheDocument()
-    expect(screen.getByText(formatMoney(50_000))).toBeInTheDocument()
-  })
-
-  it("colors each list row's dot from the vivid chart palette, not the tag's own pale tint", () => {
+  it("colors each ring badge from the curated chart palette, not the tag's own pale tint", () => {
     render(<TagBreakdownChart data={[{ label: "Tiền trọ", emoji: "🏠", tint: "#FFF0B8", total: 100_000 }]} />)
 
-    const dot = document.querySelector('[data-testid="tag-color-dot"]')
-    expect(dot).not.toBeNull()
-    expect(dot).not.toHaveStyle({ backgroundColor: "#FFF0B8" })
+    const badge = document.querySelector('[data-testid="tag-badge"]')
+    expect(badge).not.toBeNull()
+    expect(badge).not.toHaveAttribute("fill", "#FFF0B8")
   })
 })

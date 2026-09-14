@@ -12,16 +12,9 @@ interface TagBreakdownChartProps {
 
 // tag.tint (dùng cho badge tròn nhỏ trong Cài đặt/danh sách chi tiêu) là màu pastel rất nhạt —
 // hợp cho nền badge nhỏ có chữ đen đè lên, nhưng lại quá nhạt để tô cả 1 lát biểu đồ lớn. Bảng
-// màu riêng này chỉ dùng cho biểu đồ, đậm/rõ hơn hẳn, tách biệt hoàn toàn khỏi tint dùng ở nơi khác.
-const CHART_PALETTE = [
-  "var(--ob-cam-500)",
-  "var(--ob-xanh-500)",
-  "var(--ob-la-500)",
-  "var(--ob-tag-tamtrang)",
-  "var(--ob-tag-muctieu)",
-  "var(--ob-chuoi-500)",
-  "var(--ob-do-500)",
-]
+// màu riêng này chỉ dùng cho biểu đồ, chọn tay để cùng một "tông" (độ đậm/sáng gần nhau) thay vì
+// trộn lẫn màu rất đậm với màu rất nhạt như bảng --ob-tag-* — nhìn đồng bộ và dễ chịu hơn.
+const CHART_PALETTE = ["#FF6B9D", "#3DCFB6", "#FFA94D", "#748FFC", "#9775FA", "#A0AEC0"]
 
 const RADIAN = Math.PI / 180
 
@@ -53,7 +46,7 @@ function renderRingLabel({ cx = 0, cy = 0, midAngle = 0, outerRadius = 0, percen
         strokeWidth={1.5}
         fill="none"
       />
-      <circle cx={badge.x} cy={badge.y} r={11} fill={fill} />
+      <circle data-testid="tag-badge" cx={badge.x} cy={badge.y} r={11} fill={fill} />
       <text x={badge.x} y={badge.y} textAnchor="middle" dominantBaseline="central" fontSize={12}>
         {payload?.emoji}
       </text>
@@ -93,62 +86,36 @@ function TagBreakdownChart({ data }: TagBreakdownChartProps) {
   const colors = data.map((_, i) => CHART_PALETTE[i % CHART_PALETTE.length])
 
   return (
-    <div>
-      <div className="relative">
-        <ResponsiveContainer width="100%" height={300}>
-          <PieChart>
-            <Pie
-              data={data}
-              dataKey="total"
-              nameKey="label"
-              innerRadius="50%"
-              outerRadius="68%"
-              paddingAngle={2}
-              stroke="var(--ob-color-surface)"
-              strokeWidth={2}
-              label={renderRingLabel}
-              labelLine={false}
-            >
-              {data.map((entry, i) => (
-                <Cell key={entry.label} fill={colors[i]} />
-              ))}
-            </Pie>
-            <Tooltip formatter={(value) => formatMoney(Number(value), hidden)} />
-          </PieChart>
-        </ResponsiveContainer>
-        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="[font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
-            Tổng chi
-          </span>
-          <span className="[font-family:var(--ob-font-num)] text-[17px] font-bold text-[var(--ob-color-text)]">
-            {formatMoney(total, hidden)}
-          </span>
-        </div>
-      </div>
-
-      <div className="mt-4 flex flex-col gap-[2px]">
-        {data.map((entry, i) => {
-          const percent = total > 0 ? Math.round((entry.total / total) * 100) : 0
-          return (
-            <div
-              key={entry.label}
-              className="flex items-center gap-[10px] rounded-[var(--ob-radius-sm)] px-1 py-[7px]"
-            >
-              <span
-                data-testid="tag-color-dot"
-                className="size-3 flex-none rounded-full"
-                style={{ backgroundColor: colors[i] }}
-              />
-              <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium text-[var(--ob-color-text)]">
-                <span aria-hidden="true">{entry.emoji}</span> <span>{entry.label}</span>
-              </span>
-              <span className="flex-none text-[13px] text-[var(--ob-color-text-subtle)]">{percent}%</span>
-              <span className="flex-none [font-family:var(--ob-font-num)] text-[13.5px] font-bold text-[var(--ob-color-text)]">
-                {formatMoney(entry.total, hidden)}
-              </span>
-            </div>
-          )
-        })}
+    <div className="relative">
+      <ResponsiveContainer width="100%" height={300}>
+        <PieChart>
+          <Pie
+            data={data}
+            dataKey="total"
+            nameKey="label"
+            innerRadius="50%"
+            outerRadius="68%"
+            paddingAngle={2}
+            stroke="var(--ob-color-surface)"
+            strokeWidth={2}
+            label={renderRingLabel}
+            labelLine={false}
+            isAnimationActive={false}
+          >
+            {data.map((entry, i) => (
+              <Cell key={entry.label} fill={colors[i]} />
+            ))}
+          </Pie>
+          <Tooltip formatter={(value) => formatMoney(Number(value), hidden)} />
+        </PieChart>
+      </ResponsiveContainer>
+      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+        <span className="[font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
+          Tổng chi
+        </span>
+        <span className="[font-family:var(--ob-font-num)] text-[17px] font-bold text-[var(--ob-color-text)]">
+          {formatMoney(total, hidden)}
+        </span>
       </div>
     </div>
   )
