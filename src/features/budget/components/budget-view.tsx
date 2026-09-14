@@ -10,18 +10,11 @@ import { useSettings } from "@/features/settings/hooks/use-settings"
 import { formatMoney } from "@/lib/format"
 import { dayKey, monthKey, monthKeyFromDayKey } from "@/lib/date"
 import { useBudget } from "../hooks/use-budget"
-import {
-  breakdownByTag,
-  monthlyTrend,
-  remainingToSettle,
-  salaryForMonth,
-  trendMonthKeys,
-} from "../budget-calculations"
+import { breakdownByTag, remainingToSettle, salaryForMonth } from "../budget-calculations"
 import { SalaryCard } from "./salary-card"
 import { ExpenseEntryForm } from "./expense-entry-form"
 import { ExpenseListCard } from "./expense-list-card"
 import { TagBreakdownChart } from "./tag-breakdown-chart"
-import { MonthlyTrendChart } from "./monthly-trend-chart"
 import { SettleMonthModal } from "./settle-month-modal"
 
 function BudgetView() {
@@ -37,7 +30,6 @@ function BudgetView() {
   const monthExpenses = expenses.filter((e) => monthKeyFromDayKey(e.dayKey) === month)
   const remaining = remainingToSettle(salaries, expenses, settlements, month)
   const tagBreakdown = breakdownByTag(expenses, month)
-  const trendData = monthlyTrend(salaries, expenses, trendMonthKeys(salaries, expenses, 6))
 
   return (
     <div>
@@ -78,9 +70,6 @@ function BudgetView() {
 
         <Card label="Chi theo nhãn (tháng này)" className="min-w-0 flex-[1_1_360px]">
           <TagBreakdownChart data={tagBreakdown} />
-        </Card>
-        <Card label="Xu hướng lương & chi tiêu" className="min-w-0 flex-[1.6_1_480px]">
-          <MonthlyTrendChart data={trendData} />
         </Card>
       </div>
 

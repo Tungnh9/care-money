@@ -42,14 +42,20 @@ describe("BudgetView", () => {
     vi.useRealTimers()
   })
 
-  it("renders the salary card, expense entry form, expense list and both charts", async () => {
+  it("renders the salary card, expense entry form, expense list and the tag breakdown chart", async () => {
     render(<BudgetView />)
 
     await waitFor(() => expect(screen.getAllByText("Lương tháng này").length).toBeGreaterThan(0))
     expect(screen.getAllByText("Ghi khoản chi").length).toBeGreaterThan(0)
     expect(screen.getByText("Khoản chi tháng này")).toBeInTheDocument()
     expect(screen.getByText(/Chi theo nhãn/)).toBeInTheDocument()
-    expect(screen.getByText(/Xu hướng/)).toBeInTheDocument()
+  })
+
+  it("temporarily hides the monthly trend chart", async () => {
+    render(<BudgetView />)
+
+    await waitFor(() => expect(screen.getAllByText("Lương tháng này").length).toBeGreaterThan(0))
+    expect(screen.queryByText(/Xu hướng/)).not.toBeInTheDocument()
   })
 
   it("disables the settle button when there is nothing to settle", async () => {
