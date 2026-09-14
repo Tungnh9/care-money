@@ -81,9 +81,34 @@ function totalFontSize(formatted: string) {
   return Math.max(MIN_TOTAL_FONT, Math.min(MAX_TOTAL_FONT, bySpace))
 }
 
-function polar(centerX: number, fraction: number, radius: number) {
-  const angle = fraction * 2 * Math.PI
+function pointAtAngle(centerX: number, angle: number, radius: number) {
   return { x: centerX + radius * Math.sin(angle), y: CENTER_Y - radius * Math.cos(angle) }
+}
+
+// Đặt nhãn đúng góc thật của mỗi lát khiến các lát nhỏ nằm cạnh nhau (vd 2% cạnh 8%) có nhãn
+// đè lên nhau — nhất là quanh khu vực nhiều lát nhỏ dồn cục. Gom các nhãn liền kề gần nhau hơn
+// MIN_LABEL_GAP thành 1 cụm rồi rải đều quanh đúng góc trung bình thật của cụm đó, thay vì đẩy
+// dồn về 1 phía (dễ trôi xa khỏi lát thật nếu nhiều lát nhỏ đứng liền nhau).
+const MIN_LABEL_GAP = 0.6 // radian (~34°) — đủ chỗ cho khối nhãn 2 dòng (%/tên) không chồng nhau
+
+function declutterAngles(trueAngles: number[]): number[] {
+  const result = [...trueAngles]
+  let i = 0
+  while (i < result.length) {
+    let j = i
+    while (j + 1 < result.length && result[j + 1] - result[j] < MIN_LABEL_GAP) {
+      j++
+    }
+    if (j > i) {
+      const clusterAvg = trueAngles.slice(i, j + 1).reduce((a, b) => a + b, 0) / (j - i + 1)
+      const start = clusterAvg - (MIN_LABEL_GAP * (j - i)) / 2
+      for (let k = i; k <= j; k++) {
+        result[k] = start + MIN_LABEL_GAP * (k - i)
+      }
+    }
+    i = j + 1
+  }
+  return result
 }
 
 // Callout kiểu "icon badge + đường nối + %/tên" quanh vòng — ApexCharts không có label renderer
@@ -92,11 +117,16 @@ function polar(centerX: number, fraction: number, radius: number) {
 // slice/reduce thuần (không dùng biến let cộng dồn qua từng vòng lặp) vì eslint's
 // react-hooks/immutability rule chặn reassign biến trong lúc render.
 function RingCallouts({ items, width, centerX }: { items: CalloutItem[]; width: number; centerX: number }) {
+  const trueAngles = items.map((item) => item.mid * 2 * Math.PI)
+  const labelAngles = declutterAngles(trueAngles)
+
   return (
     <svg width={width} height={CHART_HEIGHT} style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-      {items.map(({ fraction, mid, color, entry }) => {
-        const lineStart = polar(centerX, mid, OUTER_R + 4)
-        const badge = polar(centerX, mid, OUTER_R + 24)
+      {items.map(({ fraction, color, entry }, i) => {
+        // Đường nối luôn bám góc THẬT của lát (trỏ đúng vị trí trên vòng); chỉ vị trí nhãn dùng
+        // góc đã dời (labelAngle) để tránh chồng lên nhãn bên cạnh.
+        const lineStart = pointAtAngle(centerX, trueAngles[i], OUTER_R + 4)
+        const badge = pointAtAngle(centerX, labelAngles[i], OUTER_R + 24)
         const isRight = badge.x >= centerX
         const textX = badge.x + (isRight ? 14 : -14)
 
