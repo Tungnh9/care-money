@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { render, screen } from "@testing-library/react"
 
 import { TagBreakdownChart } from "../../components/tag-breakdown-chart"
+import { formatMoney } from "@/lib/format"
 
 function stubChartMeasurement() {
   vi.stubGlobal(
@@ -55,9 +56,41 @@ describe("TagBreakdownChart", () => {
     expect(screen.getByText("Mua sắm")).toBeInTheDocument()
   })
 
-  it("keeps legend text in a dark, readable color regardless of the tag's own pale tint", () => {
+  it("shows the total spent amount in the center of the donut", () => {
+    render(
+      <TagBreakdownChart
+        data={[
+          { label: "Tiền trọ", emoji: "🏠", tint: "#FFF0B8", total: 100_000 },
+          { label: "Mua sắm", emoji: "🛍️", tint: "#E7F6EF", total: 50_000 },
+        ]}
+      />
+    )
+
+    expect(screen.getByText("Tổng chi")).toBeInTheDocument()
+    expect(screen.getByText(formatMoney(150_000))).toBeInTheDocument()
+  })
+
+  it("lists each tag as its own row with a percentage and its amount", () => {
+    render(
+      <TagBreakdownChart
+        data={[
+          { label: "Tiền trọ", emoji: "🏠", tint: "#FFF0B8", total: 100_000 },
+          { label: "Mua sắm", emoji: "🛍️", tint: "#E7F6EF", total: 50_000 },
+        ]}
+      />
+    )
+
+    expect(screen.getByText("67%")).toBeInTheDocument()
+    expect(screen.getByText("33%")).toBeInTheDocument()
+    expect(screen.getByText(formatMoney(100_000))).toBeInTheDocument()
+    expect(screen.getByText(formatMoney(50_000))).toBeInTheDocument()
+  })
+
+  it("colors each list row's dot from the vivid chart palette, not the tag's own pale tint", () => {
     render(<TagBreakdownChart data={[{ label: "Tiền trọ", emoji: "🏠", tint: "#FFF0B8", total: 100_000 }]} />)
 
-    expect(screen.getByText("Tiền trọ")).toHaveStyle({ color: "var(--ob-color-text)" })
+    const dot = document.querySelector('[data-testid="tag-color-dot"]')
+    expect(dot).not.toBeNull()
+    expect(dot).not.toHaveStyle({ backgroundColor: "#FFF0B8" })
   })
 })
