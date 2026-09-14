@@ -64,7 +64,7 @@ const DEFAULT_MODULES: ModuleToggle[] = [
 
 const DEFAULT_TAGS: BudgetTag[] = [
   { label: "Tiền trọ", emoji: "🏠", desc: "Tiền nhà, tiền phòng hàng tháng", tint: "#FFF0B8", on: true },
-  { label: "Trả nợ thẻ", emoji: "💳", desc: "Thanh toán dư nợ thẻ tín dụng", tint: "#FFE0C7", on: true },
+  { label: "Trả nợ thẻ", emoji: "🏦", desc: "Thanh toán dư nợ thẻ tín dụng", tint: "#FFE0C7", on: true },
   { label: "Mua sắm", emoji: "🛍️", desc: "Quần áo, đồ dùng, linh tinh", tint: "#E7F6EF", on: true },
   { label: "Xăng xe", emoji: "⛽", desc: "Đổ xăng, gửi xe, đi lại", tint: "#EAF1FE", on: true },
   { label: "Hẹn hò", emoji: "❤️", desc: "Đi chơi, ăn uống cùng người yêu", tint: "#FDEBF2", on: true },
