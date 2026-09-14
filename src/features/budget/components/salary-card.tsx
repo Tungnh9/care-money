@@ -34,7 +34,7 @@ function SalaryCard({ month, salary, onSave }: SalaryCardProps) {
   }
 
   return (
-    <Card label="Lương tháng này" className="min-w-0 flex-[1_1_260px]">
+    <Card label="Lương tháng này" className="min-w-0">
       <Field
         label="Số tiền"
         numeric

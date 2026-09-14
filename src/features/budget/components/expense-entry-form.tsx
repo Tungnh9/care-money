@@ -37,7 +37,7 @@ function ExpenseEntryForm({ tags, onAdd }: ExpenseEntryFormProps) {
   }
 
   return (
-    <Card label="Ghi khoản chi" className="min-w-0 flex-[1_1_320px]">
+    <Card label="Ghi khoản chi" className="min-w-0">
       <Field
         label="Số tiền"
         numeric

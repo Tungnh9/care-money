@@ -38,10 +38,10 @@ function BudgetView() {
         Lương {formatMoney(salary, hidden)} · đã chi {formatMoney(salary - remaining, hidden)} tháng này
       </p>
       <div className="ob-card-grid flex flex-col gap-5">
-        <div className="flex flex-wrap gap-5">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <SalaryCard month={month} salary={salary} onSave={setSalary} />
 
-          <Card label="Tất toán tháng" className="min-w-0 flex-[1_1_260px]">
+          <Card label="Tất toán tháng" className="min-w-0">
             <p className="mb-[14px] text-[13.5px] leading-[1.55] text-[var(--ob-color-text-muted)]">
               {remaining >= 0 ? "Bạn đang dư " : "Bạn đang thiếu "}
               <span
@@ -64,13 +64,13 @@ function BudgetView() {
           </Card>
         </div>
 
-        <div className="flex flex-wrap gap-5">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <ExpenseEntryForm
             tags={settings.tags}
             onAdd={(input) => addExpense({ ...input, dayKey: dayKey() })}
           />
 
-          <Card label="Chi theo nhãn (tháng này)" className="min-w-0 flex-[1_1_360px]">
+          <Card label="Chi theo nhãn (tháng này)" className="min-w-0">
             <TagBreakdownChart data={tagBreakdown} />
           </Card>
         </div>
