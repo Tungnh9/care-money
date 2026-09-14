@@ -37,40 +37,45 @@ function BudgetView() {
       <p className="mb-5 text-sm text-[var(--ob-color-text-subtle)]">
         Lương {formatMoney(salary, hidden)} · đã chi {formatMoney(salary - remaining, hidden)} tháng này
       </p>
-      <div className="ob-card-grid flex flex-wrap gap-5">
-        <SalaryCard month={month} salary={salary} onSave={setSalary} />
-        <ExpenseEntryForm
-          tags={settings.tags}
-          onAdd={(input) => addExpense({ ...input, dayKey: dayKey() })}
-        />
+      <div className="ob-card-grid flex flex-col gap-5">
+        <div className="flex flex-wrap gap-5">
+          <SalaryCard month={month} salary={salary} onSave={setSalary} />
 
-        <Card label="Tất toán tháng" className="min-w-0 flex-[1_1_260px]">
-          <p className="mb-[14px] text-[13.5px] leading-[1.55] text-[var(--ob-color-text-muted)]">
-            {remaining >= 0 ? "Bạn đang dư " : "Bạn đang thiếu "}
-            <span
-              className="font-bold"
-              style={{ color: remaining >= 0 ? "var(--ob-color-income)" : "var(--ob-color-expense)" }}
+          <Card label="Tất toán tháng" className="min-w-0 flex-[1_1_260px]">
+            <p className="mb-[14px] text-[13.5px] leading-[1.55] text-[var(--ob-color-text-muted)]">
+              {remaining >= 0 ? "Bạn đang dư " : "Bạn đang thiếu "}
+              <span
+                className="font-bold"
+                style={{ color: remaining >= 0 ? "var(--ob-color-income)" : "var(--ob-color-expense)" }}
+              >
+                {formatMoney(Math.abs(remaining), hidden)}
+              </span>{" "}
+              tháng này.
+            </p>
+            <Button
+              variant="primary"
+              size="sm"
+              type="button"
+              disabled={remaining === 0}
+              onClick={() => setSettleOpen(true)}
             >
-              {formatMoney(Math.abs(remaining), hidden)}
-            </span>{" "}
-            tháng này.
-          </p>
-          <Button
-            variant="primary"
-            size="sm"
-            type="button"
-            disabled={remaining === 0}
-            onClick={() => setSettleOpen(true)}
-          >
-            Tất toán tháng
-          </Button>
-        </Card>
+              Tất toán tháng
+            </Button>
+          </Card>
+        </div>
+
+        <div className="flex flex-wrap gap-5">
+          <ExpenseEntryForm
+            tags={settings.tags}
+            onAdd={(input) => addExpense({ ...input, dayKey: dayKey() })}
+          />
+
+          <Card label="Chi theo nhãn (tháng này)" className="min-w-0 flex-[1_1_360px]">
+            <TagBreakdownChart data={tagBreakdown} />
+          </Card>
+        </div>
 
         <ExpenseListCard expenses={monthExpenses} onRemove={removeExpense} />
-
-        <Card label="Chi theo nhãn (tháng này)" className="min-w-0 flex-[1_1_360px]">
-          <TagBreakdownChart data={tagBreakdown} />
-        </Card>
       </div>
 
       <SettleMonthModal
