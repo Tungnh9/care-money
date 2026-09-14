@@ -17,6 +17,15 @@ function SalaryCard({ month, salary, onSave }: SalaryCardProps) {
   const [amount, setAmount] = useState(String(salary || ""))
   const [saved, setSaved] = useState(false)
 
+  // useBudget() starts at salary=0 before its localStorage-hydration effect runs, then
+  // re-renders once with the real value — resync the field when that happens instead of
+  // trusting whatever `salary` was at this component's very first render.
+  const [prevSalary, setPrevSalary] = useState(salary)
+  if (salary !== prevSalary) {
+    setAmount(String(salary || ""))
+    setPrevSalary(salary)
+  }
+
   const disabled = !amount.trim() || Number(amount) === salary
 
   function handleSave() {
