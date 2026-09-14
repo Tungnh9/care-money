@@ -28,7 +28,9 @@ function TagPicker({ tags, selectedLabel, onSelect }: TagPickerProps) {
                 : "border-[var(--ob-color-border)] text-[var(--ob-color-text-muted)]"
             )}
           >
-            <span className="text-base leading-none">{t.emoji}</span>
+            <span className="inline-flex size-[18px] shrink-0 items-center justify-center text-base leading-none">
+              {t.emoji}
+            </span>
             {t.label}
           </button>
         )
