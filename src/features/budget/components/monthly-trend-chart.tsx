@@ -1,10 +1,12 @@
 "use client"
 
-import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
+import dynamic from "next/dynamic"
 
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import type { MonthlyTrendPoint } from "../budget-calculations"
+
+const Chart = dynamic(() => import("react-apexcharts"), { ssr: false })
 
 interface MonthlyTrendChartProps {
   data: MonthlyTrendPoint[]
@@ -14,33 +16,25 @@ function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
   const { hidden } = useMoneyVisibility()
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <LineChart data={data} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} />
-        <XAxis dataKey="month" />
-        <YAxis tickFormatter={(value: number) => formatMoney(value, hidden)} width={90} />
-        <Tooltip formatter={(value) => formatMoney(Number(value), hidden)} />
-        <Legend />
-        <Line
-          type="monotone"
-          dataKey="salary"
-          name="Lương"
-          stroke="var(--ob-color-action)"
-          strokeWidth={2.5}
-          dot={{ r: 5 }}
-          activeDot={{ r: 7 }}
-        />
-        <Line
-          type="monotone"
-          dataKey="spent"
-          name="Đã chi"
-          stroke="var(--ob-color-expense)"
-          strokeWidth={2.5}
-          dot={{ r: 5 }}
-          activeDot={{ r: 7 }}
-        />
-      </LineChart>
-    </ResponsiveContainer>
+    <Chart
+      type="line"
+      height={300}
+      series={[
+        { name: "Lương", data: data.map((point) => point.salary) },
+        { name: "Đã chi", data: data.map((point) => point.spent) },
+      ]}
+      options={{
+        chart: { fontFamily: "inherit", toolbar: { show: false } },
+        colors: ["var(--ob-color-action)", "var(--ob-color-expense)"],
+        stroke: { width: 2.5, curve: "smooth" },
+        markers: { size: 5, hover: { size: 7 } },
+        grid: { strokeDashArray: 4 },
+        xaxis: { categories: data.map((point) => point.month) },
+        yaxis: { labels: { formatter: (value: number) => formatMoney(value, hidden) } },
+        tooltip: { y: { formatter: (value: number) => formatMoney(value, hidden) } },
+        legend: { position: "top", horizontalAlign: "left" },
+      }}
+    />
   )
 }
 

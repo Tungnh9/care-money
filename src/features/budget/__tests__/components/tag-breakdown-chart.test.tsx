@@ -72,6 +72,14 @@ describe("TagBreakdownChart", () => {
     expect(screen.getByText(formatMoney(150_000))).toBeInTheDocument()
   })
 
+  it("shrinks the center total's font size for a long formatted amount so it doesn't overflow the donut hole", () => {
+    render(<TagBreakdownChart data={[{ label: "Tiền trọ", emoji: "🏠", tint: "#FFF0B8", total: 135_456_000 }]} />)
+
+    const total = screen.getByText(formatMoney(135_456_000))
+    const smallTotal = 17
+    expect(Number(getComputedStyle(total).fontSize.replace("px", ""))).toBeLessThan(smallTotal)
+  })
+
   it("colors each ring badge from the curated chart palette, not the tag's own pale tint", () => {
     render(<TagBreakdownChart data={[{ label: "Tiền trọ", emoji: "🏠", tint: "#FFF0B8", total: 100_000 }]} />)
 
