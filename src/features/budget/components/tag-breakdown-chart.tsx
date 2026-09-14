@@ -35,22 +35,48 @@ interface RingLabelProps {
   payload?: TagBreakdownEntry
 }
 
+// Callout kiểu "icon badge + đường nối + %/tên" quanh vòng — không có thư viện chart nào cho
+// sẵn đúng kiểu này (kể cả recharts), phải tự vẽ bằng label renderer trả về SVG tuỳ ý.
 function renderRingLabel({ cx = 0, cy = 0, midAngle = 0, outerRadius = 0, percent, fill, payload }: RingLabelProps) {
-  const radius = outerRadius + 16
-  const x = cx + radius * Math.cos(-midAngle * RADIAN)
-  const y = cy + radius * Math.sin(-midAngle * RADIAN)
+  const cos = Math.cos(-midAngle * RADIAN)
+  const sin = Math.sin(-midAngle * RADIAN)
+  const lineStart = { x: cx + (outerRadius + 4) * cos, y: cy + (outerRadius + 4) * sin }
+  const badge = { x: cx + (outerRadius + 26) * cos, y: cy + (outerRadius + 26) * sin }
+  const isRight = cos >= 0
+  const textX = badge.x + (isRight ? 16 : -16)
+
   return (
-    <text
-      x={x}
-      y={y}
-      fill={fill}
-      textAnchor={x > cx ? "start" : "end"}
-      dominantBaseline="central"
-      fontSize={13}
-      fontWeight={700}
-    >
-      {payload?.emoji} {Math.round((percent ?? 0) * 100)}%
-    </text>
+    <g>
+      <path
+        d={`M${lineStart.x},${lineStart.y} L${badge.x},${badge.y}`}
+        stroke={fill}
+        strokeWidth={1.5}
+        fill="none"
+      />
+      <circle cx={badge.x} cy={badge.y} r={11} fill={fill} />
+      <text x={badge.x} y={badge.y} textAnchor="middle" dominantBaseline="central" fontSize={12}>
+        {payload?.emoji}
+      </text>
+      <text
+        x={textX}
+        y={badge.y - 6}
+        textAnchor={isRight ? "start" : "end"}
+        fontSize={13}
+        fontWeight={700}
+        fill={fill}
+      >
+        {Math.round((percent ?? 0) * 100)}%
+      </text>
+      <text
+        x={textX}
+        y={badge.y + 9}
+        textAnchor={isRight ? "start" : "end"}
+        fontSize={11}
+        fill="var(--ob-color-text-subtle)"
+      >
+        {payload?.label}
+      </text>
+    </g>
   )
 }
 
@@ -69,14 +95,14 @@ function TagBreakdownChart({ data }: TagBreakdownChartProps) {
   return (
     <div>
       <div className="relative">
-        <ResponsiveContainer width="100%" height={260}>
+        <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <Pie
               data={data}
               dataKey="total"
               nameKey="label"
-              innerRadius="56%"
-              outerRadius="80%"
+              innerRadius="50%"
+              outerRadius="68%"
               paddingAngle={2}
               stroke="var(--ob-color-surface)"
               strokeWidth={2}
