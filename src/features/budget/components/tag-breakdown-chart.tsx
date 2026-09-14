@@ -23,6 +23,37 @@ const CHART_PALETTE = [
   "var(--ob-do-500)",
 ]
 
+const RADIAN = Math.PI / 180
+
+interface RingLabelProps {
+  cx?: number
+  cy?: number
+  midAngle?: number
+  outerRadius?: number
+  percent?: number
+  fill?: string
+  payload?: TagBreakdownEntry
+}
+
+function renderRingLabel({ cx = 0, cy = 0, midAngle = 0, outerRadius = 0, percent, fill, payload }: RingLabelProps) {
+  const radius = outerRadius + 16
+  const x = cx + radius * Math.cos(-midAngle * RADIAN)
+  const y = cy + radius * Math.sin(-midAngle * RADIAN)
+  return (
+    <text
+      x={x}
+      y={y}
+      fill={fill}
+      textAnchor={x > cx ? "start" : "end"}
+      dominantBaseline="central"
+      fontSize={13}
+      fontWeight={700}
+    >
+      {payload?.emoji} {Math.round((percent ?? 0) * 100)}%
+    </text>
+  )
+}
+
 function TagBreakdownChart({ data }: TagBreakdownChartProps) {
   const { hidden } = useMoneyVisibility()
 
@@ -38,17 +69,19 @@ function TagBreakdownChart({ data }: TagBreakdownChartProps) {
   return (
     <div>
       <div className="relative">
-        <ResponsiveContainer width="100%" height={220}>
+        <ResponsiveContainer width="100%" height={260}>
           <PieChart>
             <Pie
               data={data}
               dataKey="total"
               nameKey="label"
-              innerRadius="62%"
-              outerRadius="95%"
+              innerRadius="56%"
+              outerRadius="80%"
               paddingAngle={2}
               stroke="var(--ob-color-surface)"
               strokeWidth={2}
+              label={renderRingLabel}
+              labelLine={false}
             >
               {data.map((entry, i) => (
                 <Cell key={entry.label} fill={colors[i]} />
