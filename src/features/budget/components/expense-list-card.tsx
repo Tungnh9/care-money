@@ -1,6 +1,6 @@
 "use client"
 
-import { Trash2 } from "lucide-react"
+import { Pencil, Trash2 } from "lucide-react"
 
 import { Card } from "@/components/ui/card"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
@@ -13,9 +13,10 @@ const UNTAGGED_EMOJI = "🏷️"
 interface ExpenseListCardProps {
   expenses: Expense[]
   onRemove: (id: number) => void
+  onEdit: (expense: Expense) => void
 }
 
-function ExpenseListCard({ expenses, onRemove }: ExpenseListCardProps) {
+function ExpenseListCard({ expenses, onRemove, onEdit }: ExpenseListCardProps) {
   const { hidden } = useMoneyVisibility()
 
   return (
@@ -44,14 +45,24 @@ function ExpenseListCard({ expenses, onRemove }: ExpenseListCardProps) {
             <div className="[font-family:var(--ob-font-num)] text-sm font-bold">
               {formatMoney(e.amount, hidden)}
             </div>
-            <button
-              type="button"
-              aria-label={`Xoá khoản chi ${e.tag?.label ?? UNTAGGED_LABEL}`}
-              onClick={() => onRemove(e.id)}
-              className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
-            >
-              <Trash2 size={17} />
-            </button>
+            <div className="flex flex-none items-center">
+              <button
+                type="button"
+                aria-label={`Sửa khoản chi ${e.tag?.label ?? UNTAGGED_LABEL}`}
+                onClick={() => onEdit(e)}
+                className="flex size-9 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-action)]"
+              >
+                <Pencil size={17} />
+              </button>
+              <button
+                type="button"
+                aria-label={`Xoá khoản chi ${e.tag?.label ?? UNTAGGED_LABEL}`}
+                onClick={() => onRemove(e.id)}
+                className="flex size-9 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
+              >
+                <Trash2 size={17} />
+              </button>
+            </div>
           </div>
         ))}
         {!expenses.length ? (

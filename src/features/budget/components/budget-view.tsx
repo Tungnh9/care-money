@@ -14,16 +14,27 @@ import { breakdownByTag, remainingToSettle, salaryForMonth } from "../budget-cal
 import { SalaryCard } from "./salary-card"
 import { ExpenseEntryForm } from "./expense-entry-form"
 import { ExpenseListCard } from "./expense-list-card"
+import { EditExpenseModal } from "./edit-expense-modal"
 import { TagBreakdownChart } from "./tag-breakdown-chart"
 import { SettleMonthModal } from "./settle-month-modal"
+import type { Expense } from "../types"
 
 function BudgetView() {
   const { hidden } = useMoneyVisibility()
-  const { salaries, expenses, settlements, setSalary, addExpense, removeExpense, confirmSettlement } =
-    useBudget()
+  const {
+    salaries,
+    expenses,
+    settlements,
+    setSalary,
+    addExpense,
+    updateExpense,
+    removeExpense,
+    confirmSettlement,
+  } = useBudget()
   const { savings } = useFinance()
   const { settings } = useSettings()
   const [settleOpen, setSettleOpen] = useState(false)
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
 
   const month = monthKey()
   const salary = salaryForMonth(salaries, month)
@@ -75,7 +86,7 @@ function BudgetView() {
           </Card>
         </div>
 
-        <ExpenseListCard expenses={monthExpenses} onRemove={removeExpense} />
+        <ExpenseListCard expenses={monthExpenses} onRemove={removeExpense} onEdit={setEditingExpense} />
       </div>
 
       <SettleMonthModal
@@ -85,6 +96,13 @@ function BudgetView() {
         remaining={remaining}
         savings={savings}
         onConfirm={(fundName, direction, amount) => confirmSettlement(month, fundName, direction, amount)}
+      />
+
+      <EditExpenseModal
+        expense={editingExpense}
+        tags={settings.tags}
+        onOpenChange={(open) => !open && setEditingExpense(null)}
+        onSave={updateExpense}
       />
     </div>
   )

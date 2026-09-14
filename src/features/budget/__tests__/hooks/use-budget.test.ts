@@ -76,6 +76,32 @@ describe("useBudget", () => {
     expect(result.current.expenses.map((e) => e.id)).toEqual([keepId])
   })
 
+  it("updateExpense changes only the targeted expense's fields, leaving its id and others untouched", async () => {
+    const { result } = renderHook(() => useBudget())
+    await waitFor(() => expect(result.current.expenses).toEqual([]))
+
+    act(() => result.current.addExpense({ dayKey: "2026-09-01", amount: 10_000, tag: null }))
+    act(() => result.current.addExpense({ dayKey: "2026-09-02", amount: 20_000, tag: null }))
+    const keepId = result.current.expenses[0].id
+    const editId = result.current.expenses[1].id
+
+    act(() =>
+      result.current.updateExpense(editId, {
+        amount: 99_000,
+        tag: { label: "Mua sắm", emoji: "🛍️", tint: "#E7F6EF" },
+        note: "Sửa rồi",
+      })
+    )
+
+    expect(result.current.expenses.find((e) => e.id === editId)).toMatchObject({
+      amount: 99_000,
+      tag: { label: "Mua sắm", emoji: "🛍️", tint: "#E7F6EF" },
+      note: "Sửa rồi",
+    })
+    expect(result.current.expenses.find((e) => e.id === keepId)).toMatchObject({ amount: 20_000 })
+    expect(getStoredBudget().expenses.find((e) => e.id === editId)).toMatchObject({ amount: 99_000 })
+  })
+
   describe("confirmSettlement", () => {
     beforeEach(() => {
       setStoredFinance({

@@ -11,13 +11,13 @@ const EXPENSES: Expense[] = [
 
 describe("ExpenseListCard", () => {
   it("shows the empty state when there are no expenses", () => {
-    render(<ExpenseListCard expenses={[]} onRemove={vi.fn()} />)
+    render(<ExpenseListCard expenses={[]} onRemove={vi.fn()} onEdit={vi.fn()} />)
 
     expect(screen.getByText(/Chưa có khoản chi nào/)).toBeInTheDocument()
   })
 
   it("renders each expense's amount, tag label (or untagged) and note", () => {
-    render(<ExpenseListCard expenses={EXPENSES} onRemove={vi.fn()} />)
+    render(<ExpenseListCard expenses={EXPENSES} onRemove={vi.fn()} onEdit={vi.fn()} />)
 
     expect(screen.getByText("50.000 ₫")).toBeInTheDocument()
     expect(screen.getByText("Mua sắm")).toBeInTheDocument()
@@ -28,10 +28,19 @@ describe("ExpenseListCard", () => {
 
   it("calls onRemove with the expense's id when its delete button is clicked", () => {
     const onRemove = vi.fn()
-    render(<ExpenseListCard expenses={EXPENSES} onRemove={onRemove} />)
+    render(<ExpenseListCard expenses={EXPENSES} onRemove={onRemove} onEdit={vi.fn()} />)
 
     fireEvent.click(screen.getAllByRole("button", { name: /Xoá/ })[0])
 
     expect(onRemove).toHaveBeenCalledWith(2)
+  })
+
+  it("calls onEdit with the full expense when its edit button is clicked", () => {
+    const onEdit = vi.fn()
+    render(<ExpenseListCard expenses={EXPENSES} onRemove={vi.fn()} onEdit={onEdit} />)
+
+    fireEvent.click(screen.getAllByRole("button", { name: /Sửa/ })[0])
+
+    expect(onEdit).toHaveBeenCalledWith(EXPENSES[0])
   })
 })

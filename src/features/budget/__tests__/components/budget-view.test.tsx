@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
-import { render, screen, waitFor, fireEvent } from "@testing-library/react"
+import { render, screen, waitFor, fireEvent, within } from "@testing-library/react"
 
 import { setStoredFinance, DEFAULT_FINANCE_STATE, getStoredFinance } from "@/features/finance/finance-storage"
 import { formatMoney } from "@/lib/format"
@@ -90,6 +90,26 @@ describe("BudgetView", () => {
 
     const amount = await screen.findByText(formatMoney(300_000))
     expect(amount).toHaveStyle({ color: "var(--ob-color-expense)" })
+  })
+
+  it("edits an existing expense's amount from the list", async () => {
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [{ month: "2026-09", amount: 1_000_000 }],
+      expenses: [{ id: 1, dayKey: "2026-09-01", amount: 200_000, tag: null, note: "Ăn trưa" }],
+    })
+
+    render(<BudgetView />)
+    await screen.findByText("Ăn trưa")
+
+    fireEvent.click(screen.getByRole("button", { name: /Sửa/ }))
+    const modal = screen.getByRole("dialog")
+    fireEvent.change(within(modal).getByLabelText("Số tiền", { exact: false }), { target: { value: "350000" } })
+    fireEvent.click(within(modal).getByRole("button", { name: "Lưu" }))
+
+    const listCard = screen.getByText("Khoản chi tháng này").closest("section") as HTMLElement
+    await waitFor(() => expect(within(listCard).getByText(formatMoney(350_000))).toBeInTheDocument())
+    expect(screen.queryByText("Sửa khoản chi")).not.toBeInTheDocument()
   })
 
   it("enables the settle button and completes a deposit settlement into a chosen fund", async () => {

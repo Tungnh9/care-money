@@ -15,6 +15,12 @@ interface AddExpenseInput {
   tag: Expense["tag"]
 }
 
+interface UpdateExpenseInput {
+  amount: number
+  note?: string
+  tag: Expense["tag"]
+}
+
 function useBudget() {
   const [state, setState] = useState<BudgetState>(DEFAULT_BUDGET_STATE)
 
@@ -54,6 +60,21 @@ function useBudget() {
         persist({ ...state, expenses: [expense, ...state.expenses] })
       } catch {
         toast.error("Không thể ghi khoản chi. Vui lòng thử lại.")
+      }
+    },
+    [state, persist]
+  )
+
+  const updateExpense = useCallback(
+    (id: number, input: UpdateExpenseInput) => {
+      try {
+        persist({
+          ...state,
+          expenses: state.expenses.map((e) => (e.id === id ? { ...e, ...input } : e)),
+        })
+        toast.success("Đã cập nhật khoản chi")
+      } catch {
+        toast.error("Không thể cập nhật khoản chi. Vui lòng thử lại.")
       }
     },
     [state, persist]
@@ -109,6 +130,7 @@ function useBudget() {
     settlements: state.settlements,
     setSalary,
     addExpense,
+    updateExpense,
     removeExpense,
     confirmSettlement,
     replaceBudget: persist,
