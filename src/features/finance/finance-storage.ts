@@ -127,12 +127,37 @@ function setStoredFinance(state: FinanceState) {
   notifyDataChanged()
 }
 
+type ApplySavingsFundDeltaResult =
+  | { ok: true; before: number; after: number }
+  | { ok: false; reason: "fund-not-found" | "insufficient-balance" }
+
+// Đọc tươi ngay tại thời điểm gọi (không nhận state đã đọc từ trước) — dùng cho flow chốt
+// ngân sách, nơi có khoảng chờ người dùng (mở modal, chọn quỹ, gõ số tiền) giữa lúc đọc và ghi.
+function applySavingsFundDelta(
+  name: string,
+  direction: "deposit" | "withdraw",
+  amount: number
+): ApplySavingsFundDeltaResult {
+  const current = getStoredFinance()
+  const fund = current.savings.find((f) => f.name === name)
+  if (!fund) return { ok: false, reason: "fund-not-found" }
+  if (direction === "withdraw" && amount > fund.amount) return { ok: false, reason: "insufficient-balance" }
+
+  const after = direction === "deposit" ? fund.amount + amount : fund.amount - amount
+  setStoredFinance({
+    ...current,
+    savings: current.savings.map((f) => (f.name === name ? { ...f, amount: after } : f)),
+  })
+  return { ok: true, before: fund.amount, after }
+}
+
 export {
   FINANCE_STORAGE_KEY,
   DEFAULT_FINANCE_STATE,
   DEFAULT_GOLD_STORE_NAME,
   getStoredFinance,
   setStoredFinance,
+  applySavingsFundDelta,
   parseFinanceState,
   financeStateSchema,
   savingsFundSchema,

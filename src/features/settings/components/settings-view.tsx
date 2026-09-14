@@ -3,21 +3,34 @@
 import { useFinance } from "@/features/finance/hooks/use-finance"
 import { useJournal } from "@/features/journal/hooks/use-journal"
 import { useStudy } from "@/features/study/hooks/use-study"
+import { useBudget } from "@/features/budget/hooks/use-budget"
 import { splitGreeting } from "@/features/overview/overview-calculations"
 import { ProfileCard } from "./profile-card"
 import { ModulesCard } from "./modules-card"
 import { MoodsCard } from "./moods-card"
+import { TagsCard } from "./tags-card"
 import { DataCard } from "./data-card"
 import { ResetCard } from "./reset-card"
 import { useDataManagement } from "../hooks/use-data-management"
 import { useSettings } from "../hooks/use-settings"
 
 function SettingsView() {
-  const { settings, updateProfile, toggleModule, toggleMood, removeMood, addMood, replaceSettings } =
-    useSettings()
+  const {
+    settings,
+    updateProfile,
+    toggleModule,
+    toggleMood,
+    removeMood,
+    addMood,
+    toggleTag,
+    removeTag,
+    addTag,
+    replaceSettings,
+  } = useSettings()
   const { entries, replaceJournal } = useJournal()
   const { savings, cards, gold, invests, replaceFinance } = useFinance()
   const { tasks, learned, replaceStudy } = useStudy()
+  const { expenses, replaceBudget } = useBudget()
   const {
     exported,
     imported,
@@ -33,6 +46,7 @@ function SettingsView() {
     onReplaceFinance: replaceFinance,
     onReplaceStudy: replaceStudy,
     onReplaceSettings: replaceSettings,
+    onReplaceBudget: replaceBudget,
   })
 
   const counts = [
@@ -43,6 +57,7 @@ function SettingsView() {
     cards.length ? `${cards.length} thẻ tín dụng` : null,
     tasks.some((task) => task.done) ? "nhiệm vụ đã tick" : null,
     learned.length ? `${learned.length} từ đã học` : null,
+    expenses.length ? `${expenses.length} khoản chi` : null,
   ].filter((count): count is string => count !== null)
 
   function handleSaveDisplayName(name: string) {
@@ -59,6 +74,7 @@ function SettingsView() {
       <div className="ob-card-grid flex flex-wrap gap-5">
         <ProfileCard displayName={settings.profile.displayName} onSave={handleSaveDisplayName} />
         <MoodsCard moods={settings.moods} onToggle={toggleMood} onRemove={removeMood} onAdd={addMood} />
+        <TagsCard tags={settings.tags} onToggle={toggleTag} onRemove={removeTag} onAdd={addTag} />
         <ModulesCard modules={settings.modules} onToggle={toggleModule} />
         <DataCard
           exported={exported}

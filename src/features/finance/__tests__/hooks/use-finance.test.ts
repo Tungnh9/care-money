@@ -4,6 +4,7 @@ import { act, renderHook, waitFor } from "@testing-library/react"
 import { useFinance } from "../../hooks/use-finance"
 import { DEFAULT_FINANCE_STATE, FINANCE_STORAGE_KEY, getStoredFinance } from "../../finance-storage"
 import { getCarGoalFundName, setCarGoalFundName } from "@/features/goals/car-goal-storage"
+import { DEFAULT_BUDGET_STATE, getStoredBudget, setStoredBudget } from "@/features/budget/budget-storage"
 import { toast } from "sonner"
 
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
@@ -101,6 +102,39 @@ describe("useFinance", () => {
     })
 
     expect(getCarGoalFundName()).toBe("Quỹ mua xe")
+  })
+
+  it("updateSavingsFund cascades a rename into historical budget settlements", async () => {
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      settlements: [
+        {
+          id: 1,
+          month: "2026-09",
+          at: "2026-09-30T00:00:00.000Z",
+          direction: "deposit",
+          amount: 50_000,
+          fundName: "Quỹ dự phòng",
+          fundAmountBefore: 0,
+          fundAmountAfter: 50_000,
+        },
+      ],
+    })
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.savings).toEqual([]))
+
+    act(() => {
+      result.current.addSavingsFund({ name: "Quỹ dự phòng", amount: 5_000_000, target: 20_000_000 })
+    })
+    act(() => {
+      result.current.updateSavingsFund("Quỹ dự phòng", {
+        name: "Quỹ khẩn cấp",
+        amount: 8_000_000,
+        target: 25_000_000,
+      })
+    })
+
+    expect(getStoredBudget().settlements[0].fundName).toBe("Quỹ khẩn cấp")
   })
 
   it("removeSavingsFund deletes only the matching fund", async () => {

@@ -8,4 +8,12 @@ function dayKey(d: Date = new Date()): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
 }
 
-export { longDate, dayKey }
+function monthKey(d: Date = new Date()): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+}
+
+function monthKeyFromDayKey(key: string): string {
+  return key.slice(0, 7)
+}
+
+export { longDate, dayKey, monthKey, monthKeyFromDayKey }

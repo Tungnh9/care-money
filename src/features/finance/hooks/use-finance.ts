@@ -11,11 +11,8 @@ import {
 import type { CreditCard, GoldPurchase, GoldStore, Investment, SavingsFund } from "../types"
 import { toast } from "sonner"
 import { getCarGoalFundName, setCarGoalFundName } from "@/features/goals/car-goal-storage"
-
-function nextId(existing: { id: number }[]) {
-  // Date.now() có thể trùng nếu add 2 lần trong cùng 1ms — dùng max(id hiện có)+1 để chắc chắn không đụng.
-  return existing.reduce((max, item) => Math.max(max, item.id), 0) + 1
-}
+import { renameFundInSettlements } from "@/features/budget/budget-storage"
+import { nextId } from "@/lib/next-id"
 
 function useFinance() {
   const [state, setState] = useState<FinanceState>(DEFAULT_FINANCE_STATE)
@@ -54,6 +51,11 @@ function useFinance() {
         // thì phải đổi luôn tên lưu ở car-goal-storage, nếu không link sẽ bị mồ côi.
         if (fund.name !== originalName && getCarGoalFundName() === originalName) {
           setCarGoalFundName(fund.name)
+        }
+        // Lịch sử tất toán ngân sách cũng tham chiếu quỹ theo tên — cascade tương tự
+        // để lịch sử vẫn hiển thị đúng tên hiện tại của quỹ.
+        if (fund.name !== originalName) {
+          renameFundInSettlements(originalName, fund.name)
         }
         toast.success(`Đã cập nhật quỹ tiết kiệm "${fund.name}"`)
       } catch {

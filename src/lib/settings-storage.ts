@@ -20,10 +20,19 @@ interface ModuleToggle {
   on: boolean
 }
 
+interface BudgetTag {
+  label: string
+  emoji: string
+  desc: string
+  tint: string
+  on: boolean
+}
+
 interface AppSettings {
   profile: Profile
   moods: Mood[]
   modules: ModuleToggle[]
+  tags: BudgetTag[]
 }
 
 const SETTINGS_STORAGE_KEY = "app-settings"
@@ -46,16 +55,26 @@ const DEFAULT_MOODS: Mood[] = [
 
 const DEFAULT_MODULES: ModuleToggle[] = [
   { key: "taichinh", label: "Tài chính", hint: "Mục trên sidebar · thẻ số dư ở Tổng quan", on: true },
+  { key: "chitieu", label: "Chi tiêu", hint: "Mục trên sidebar · thẻ chi tiêu ở Tổng quan", on: true },
   { key: "nhatky", label: "Nhật ký", hint: "Mục trên sidebar · thẻ nhật ký gần đây", on: true },
   { key: "hoctap", label: "Học tập", hint: "Mục trên sidebar · thẻ học hôm nay", on: true },
   { key: "muctieu", label: "Mục tiêu", hint: "Mục trên sidebar · thẻ mục tiêu tiết kiệm", on: true },
   { key: "tamtrang", label: "Tâm trạng", hint: "Chip tâm trạng trong màn Nhật ký", on: true },
 ]
 
+const DEFAULT_TAGS: BudgetTag[] = [
+  { label: "Tiền trọ", emoji: "🏠", desc: "Tiền nhà, tiền phòng hàng tháng", tint: "#FFF0B8", on: true },
+  { label: "Trả nợ thẻ", emoji: "💳", desc: "Thanh toán dư nợ thẻ tín dụng", tint: "#FFE0C7", on: true },
+  { label: "Mua sắm", emoji: "🛍️", desc: "Quần áo, đồ dùng, linh tinh", tint: "#E7F6EF", on: true },
+  { label: "Xăng xe", emoji: "⛽", desc: "Đổ xăng, gửi xe, đi lại", tint: "#EAF1FE", on: true },
+  { label: "Hẹn hò", emoji: "❤️", desc: "Đi chơi, ăn uống cùng người yêu", tint: "#FDEBF2", on: true },
+]
+
 const DEFAULT_SETTINGS: AppSettings = {
   profile: DEFAULT_PROFILE,
   moods: DEFAULT_MOODS,
   modules: DEFAULT_MODULES,
+  tags: DEFAULT_TAGS,
 }
 
 const TINT_PALETTE = [
@@ -70,6 +89,8 @@ const TINT_PALETTE = [
 ]
 
 const EMOJI_PICKER = ["😄", "🙂", "😌", "😐", "😴", "😟", "😔", "😣", "🥳", "🤯", "🤒", "😍"]
+
+const TAG_EMOJI_PICKER = ["🏠", "💳", "🛍️", "⛽", "❤️", "🍔", "🚌", "📱", "🎁", "💊", "🎬", "☕"]
 
 function mergeModules(stored: ModuleToggle[] | undefined): ModuleToggle[] {
   // label/hint luôn lấy từ DEFAULT_MODULES (nguồn) — chỉ "on" lấy từ storage.
@@ -93,7 +114,8 @@ function getStoredSettings(): AppSettings {
         ? { ...DEFAULT_SETTINGS.profile, ...parsed.profile }
         : DEFAULT_SETTINGS.profile
     const moods = Array.isArray(parsed.moods) ? parsed.moods : DEFAULT_SETTINGS.moods
-    return { profile, moods, modules: mergeModules(parsed.modules) }
+    const tags = Array.isArray(parsed.tags) ? parsed.tags : DEFAULT_SETTINGS.tags
+    return { profile, moods, modules: mergeModules(parsed.modules), tags }
   } catch {
     return DEFAULT_SETTINGS
   }
@@ -108,12 +130,15 @@ export {
   SETTINGS_STORAGE_KEY,
   DEFAULT_SETTINGS,
   DEFAULT_MODULES,
+  DEFAULT_TAGS,
   TINT_PALETTE,
   EMOJI_PICKER,
+  TAG_EMOJI_PICKER,
   getStoredSettings,
   setStoredSettings,
   type AppSettings,
   type Profile,
   type Mood,
   type ModuleToggle,
+  type BudgetTag,
 }

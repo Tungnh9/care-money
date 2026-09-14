@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest"
 
 import {
   DEFAULT_MODULES,
+  DEFAULT_TAGS,
   SETTINGS_STORAGE_KEY,
   getStoredSettings,
   setStoredSettings,
@@ -84,5 +85,37 @@ describe("getStoredSettings", () => {
 
     expect(settings).not.toHaveProperty("budget")
     expect(settings).toEqual(DEFAULT_SETTINGS)
+  })
+
+  it("registers a 'chitieu' module for the Budget feature", () => {
+    const chitieu = DEFAULT_MODULES.find((m) => m.key === "chitieu")
+    expect(chitieu).toBeDefined()
+    expect(chitieu?.label).toBe("Chi tiêu")
+    expect(chitieu?.on).toBe(true)
+  })
+
+  it("seeds the 5 default expense tags", () => {
+    expect(DEFAULT_TAGS).toHaveLength(5)
+    expect(DEFAULT_TAGS.map((t) => t.label)).toEqual([
+      "Tiền trọ",
+      "Trả nợ thẻ",
+      "Mua sắm",
+      "Xăng xe",
+      "Hẹn hò",
+    ])
+    expect(DEFAULT_TAGS.every((t) => t.on)).toBe(true)
+  })
+
+  it("falls back to the default tags when the stored tags field is not an array", () => {
+    window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ ...DEFAULT_SETTINGS, tags: "corrupted" }))
+
+    expect(getStoredSettings().tags).toEqual(DEFAULT_TAGS)
+  })
+
+  it("keeps the user's own tags list untouched when it is a valid array", () => {
+    const customTags = [{ label: "Riêng", emoji: "✨", desc: "", tint: "#FFF0B8", on: true }]
+    window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ ...DEFAULT_SETTINGS, tags: customTags }))
+
+    expect(getStoredSettings().tags).toEqual(customTags)
   })
 })

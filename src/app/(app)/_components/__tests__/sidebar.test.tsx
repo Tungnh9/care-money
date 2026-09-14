@@ -14,6 +14,14 @@ describe("Sidebar", () => {
     window.localStorage.clear()
   })
 
+  it("shows a Chi tiêu nav link pointing at /budget", () => {
+    render(<Sidebar />)
+
+    const links = screen.getAllByRole("link", { name: "Chi tiêu" })
+    expect(links.length).toBeGreaterThan(0)
+    links.forEach((link) => expect(link).toHaveAttribute("href", "/budget"))
+  })
+
   it("shows the avatar image next to the display name", () => {
     render(<Sidebar />)
 

@@ -9,6 +9,7 @@ import {
   getStoredSettings,
   setStoredSettings,
   type AppSettings,
+  type BudgetTag,
   type Mood,
   type Profile,
 } from "@/lib/settings-storage"
@@ -93,6 +94,42 @@ function useSettings() {
     [settings, persist]
   )
 
+  const toggleTag = useCallback(
+    (index: number) => {
+      persist({
+        ...settings,
+        tags: settings.tags.map((t, i) => (i === index ? { ...t, on: !t.on } : t)),
+      })
+    },
+    [settings, persist]
+  )
+
+  const removeTag = useCallback(
+    (index: number) => {
+      const label = settings.tags[index]?.label
+      try {
+        persist({ ...settings, tags: settings.tags.filter((_, i) => i !== index) })
+        toast.success(label ? `Đã xoá nhãn "${label}"` : "Đã xoá nhãn")
+      } catch {
+        toast.error("Không thể xoá nhãn. Vui lòng thử lại.")
+      }
+    },
+    [settings, persist]
+  )
+
+  const addTag = useCallback(
+    (tag: Omit<BudgetTag, "tint" | "on">) => {
+      try {
+        const tint = TINT_PALETTE[settings.tags.length % TINT_PALETTE.length]
+        persist({ ...settings, tags: [...settings.tags, { ...tag, tint, on: true }] })
+        toast.success(`Đã thêm nhãn "${tag.label}"`)
+      } catch {
+        toast.error(`Không thể thêm nhãn "${tag.label}". Vui lòng thử lại.`)
+      }
+    },
+    [settings, persist]
+  )
+
   return {
     settings,
     updateProfile,
@@ -100,6 +137,9 @@ function useSettings() {
     toggleMood,
     removeMood,
     addMood,
+    toggleTag,
+    removeTag,
+    addTag,
     replaceSettings: persist,
   }
 }

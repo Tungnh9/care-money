@@ -77,6 +77,52 @@ describe("useSettings", () => {
     expect(getStoredSettings().moods).toHaveLength(countBefore - 1)
   })
 
+  it("toggles a tag and persists it", async () => {
+    const { result } = renderHook(() => useSettings())
+    await waitFor(() => expect(result.current.settings).toEqual(DEFAULT_SETTINGS))
+
+    const wasOn = result.current.settings.tags[0].on
+
+    act(() => {
+      result.current.toggleTag(0)
+    })
+
+    expect(result.current.settings.tags[0].on).toBe(!wasOn)
+    expect(getStoredSettings().tags[0].on).toBe(!wasOn)
+  })
+
+  it("adds a tag with a tint from the palette and persists it", async () => {
+    const { result } = renderHook(() => useSettings())
+    await waitFor(() => expect(result.current.settings).toEqual(DEFAULT_SETTINGS))
+
+    const countBefore = result.current.settings.tags.length
+
+    act(() => {
+      result.current.addTag({ label: "Giải trí", desc: "Xem phim, chơi game", emoji: "🎬" })
+    })
+
+    expect(result.current.settings.tags).toHaveLength(countBefore + 1)
+    const added = result.current.settings.tags.at(-1)
+    expect(added).toMatchObject({ label: "Giải trí", desc: "Xem phim, chơi game", emoji: "🎬", on: true })
+    expect(getStoredSettings().tags).toHaveLength(countBefore + 1)
+  })
+
+  it("removes a tag and persists it", async () => {
+    const { result } = renderHook(() => useSettings())
+    await waitFor(() => expect(result.current.settings).toEqual(DEFAULT_SETTINGS))
+
+    const countBefore = result.current.settings.tags.length
+    const removedLabel = result.current.settings.tags[0].label
+
+    act(() => {
+      result.current.removeTag(0)
+    })
+
+    expect(result.current.settings.tags).toHaveLength(countBefore - 1)
+    expect(result.current.settings.tags.some((t) => t.label === removedLabel)).toBe(false)
+    expect(getStoredSettings().tags).toHaveLength(countBefore - 1)
+  })
+
   it("shows a success toast naming the mood when addMood succeeds", async () => {
     const { result } = renderHook(() => useSettings())
     await waitFor(() => expect(result.current.settings).toEqual(DEFAULT_SETTINGS))
