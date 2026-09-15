@@ -3,6 +3,7 @@ import { render } from "@testing-library/react"
 
 import { setStoredFinance, DEFAULT_FINANCE_STATE } from "@/features/finance/finance-storage"
 import { setStoredJournal, DEFAULT_JOURNAL_STATE } from "@/features/journal/journal-storage"
+import { setStoredBudget, DEFAULT_BUDGET_STATE } from "@/features/budget/budget-storage"
 import { setSyncSecret } from "@/lib/sync-secret-storage"
 import { getAutoBackupStatus } from "../../auto-backup-storage"
 import { EXPORT_VERSION } from "../../data-transfer"
@@ -53,6 +54,25 @@ describe("AutoBackup", () => {
         version: EXPORT_VERSION,
         journal: DEFAULT_JOURNAL_STATE,
         finance: expect.objectContaining({ goldStores: [{ name: "SJC", price: "935.000" }] }),
+      })
+    )
+  })
+
+  it("includes the budget state in the pushed snapshot", async () => {
+    setSyncSecret("my-secret")
+    vi.mocked(pushSnapshot).mockResolvedValue({ ok: true, summary: "ok" })
+    render(<AutoBackup />)
+
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [{ month: "2026-09", amount: 20_000_000 }],
+    })
+    await vi.advanceTimersByTimeAsync(DEBOUNCE_MS)
+
+    expect(pushSnapshot).toHaveBeenCalledWith(
+      "my-secret",
+      expect.objectContaining({
+        budget: expect.objectContaining({ salaries: [{ month: "2026-09", amount: 20_000_000 }] }),
       })
     )
   })

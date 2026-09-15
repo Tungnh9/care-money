@@ -5,6 +5,7 @@ import { useCallback, useState } from "react"
 import { getStoredFinance, type FinanceState } from "@/features/finance/finance-storage"
 import { DEFAULT_JOURNAL_STATE, getStoredJournal, type JournalState } from "@/features/journal/journal-storage"
 import { DEFAULT_STUDY_STATE, getStoredStudy, type StudyState } from "@/features/study/study-storage"
+import { DEFAULT_BUDGET_STATE, getStoredBudget, type BudgetState } from "@/features/budget/budget-storage"
 import { getStoredSettings, type AppSettings } from "@/lib/settings-storage"
 import { pushSnapshot, pullSnapshot } from "../api"
 import { buildExportPayload, exportFileName, parseImportPayload } from "../data-transfer"
@@ -23,6 +24,7 @@ interface UseDataManagementOptions {
   onReplaceFinance: (finance: FinanceState) => void
   onReplaceStudy: (study: StudyState) => void
   onReplaceSettings: (settings: AppSettings) => void
+  onReplaceBudget: (budget: BudgetState) => void
 }
 
 function useDataManagement({
@@ -30,6 +32,7 @@ function useDataManagement({
   onReplaceFinance,
   onReplaceStudy,
   onReplaceSettings,
+  onReplaceBudget,
 }: UseDataManagementOptions) {
   const [exported, setExported] = useState<ExportedInfo | null>(null)
   const [imported, setImported] = useState<ImportedInfo | null>(null)
@@ -44,6 +47,7 @@ function useDataManagement({
         finance: getStoredFinance(),
         study: getStoredStudy(),
         settings: getStoredSettings(),
+        budget: getStoredBudget(),
       },
       new Date().toISOString()
     )
@@ -61,13 +65,14 @@ function useDataManagement({
         onReplaceFinance(result.data.finance)
         onReplaceStudy(result.data.study)
         onReplaceSettings(result.data.settings)
+        onReplaceBudget(result.data.budget)
         setSyncResult({ ok: true, summary: result.summary })
       } else {
         setSyncResult({ ok: false, error: result.error })
       }
       setSyncing(false)
     },
-    [onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceSettings]
+    [onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceSettings, onReplaceBudget]
   )
 
   const exportData = useCallback(() => {
@@ -78,6 +83,7 @@ function useDataManagement({
         finance: getStoredFinance(),
         study: getStoredStudy(),
         settings: getStoredSettings(),
+        budget: getStoredBudget(),
       },
       now.toISOString()
     )
@@ -107,13 +113,14 @@ function useDataManagement({
         onReplaceFinance(result.data.finance)
         onReplaceStudy(result.data.study)
         onReplaceSettings(result.data.settings)
+        onReplaceBudget(result.data.budget)
         setImported({ ok: true, file: file.name, summary: result.summary })
       } else {
         setImported({ ok: false, error: result.error })
       }
       setExported(null)
     },
-    [onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceSettings]
+    [onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceSettings, onReplaceBudget]
   )
 
   const wipeData = useCallback(() => {
@@ -121,9 +128,10 @@ function useDataManagement({
     onReplaceJournal(DEFAULT_JOURNAL_STATE)
     onReplaceFinance({ savings: [], cards: [], gold: [], invests: [], goldStores })
     onReplaceStudy(DEFAULT_STUDY_STATE)
+    onReplaceBudget(DEFAULT_BUDGET_STATE)
     setExported(null)
     setImported(null)
-  }, [onReplaceJournal, onReplaceFinance, onReplaceStudy])
+  }, [onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceBudget])
 
   return {
     exported,

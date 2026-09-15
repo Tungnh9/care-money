@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest"
 import { DEFAULT_FINANCE_STATE } from "@/features/finance/finance-storage"
 import { DEFAULT_JOURNAL_STATE } from "@/features/journal/journal-storage"
 import { DEFAULT_STUDY_STATE } from "@/features/study/study-storage"
+import { DEFAULT_BUDGET_STATE } from "@/features/budget/budget-storage"
 import { DEFAULT_SETTINGS } from "@/lib/settings-storage"
 import {
   EXPORT_VERSION,
@@ -19,6 +20,7 @@ describe("buildExportPayload", () => {
         finance: DEFAULT_FINANCE_STATE,
         study: DEFAULT_STUDY_STATE,
         settings: DEFAULT_SETTINGS,
+        budget: DEFAULT_BUDGET_STATE,
       },
       "2026-08-14T09:00:00.000Z"
     )
@@ -56,6 +58,37 @@ describe("parseImportPayload", () => {
       expect(result.data.finance).toEqual(DEFAULT_FINANCE_STATE)
       expect(result.data.study).toEqual(DEFAULT_STUDY_STATE)
       expect(result.data.settings).toEqual(DEFAULT_SETTINGS)
+      expect(result.data.budget).toEqual(DEFAULT_BUDGET_STATE)
+    }
+  })
+
+  it("restores a valid budget section from the file", () => {
+    const raw = JSON.stringify({
+      version: EXPORT_VERSION,
+      budget: {
+        salaries: [{ month: "2026-09", amount: 20_000_000 }],
+        expenses: [{ id: 1, dayKey: "2026-09-01", amount: 50_000, tag: null }],
+        settlements: [],
+      },
+    })
+
+    const result = parseImportPayload(raw)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.budget.salaries).toHaveLength(1)
+      expect(result.data.budget.expenses).toHaveLength(1)
+    }
+  })
+
+  it("falls back to defaults instead of crashing when the budget section is wrong-typed", () => {
+    const raw = JSON.stringify({ version: EXPORT_VERSION, budget: { expenses: "not-an-array" } })
+
+    const result = parseImportPayload(raw)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.budget.expenses).toEqual([])
     }
   })
 
@@ -110,6 +143,35 @@ describe("parseImportPayload", () => {
     expect(result.ok).toBe(true)
     if (result.ok) {
       expect(result.data.settings.modules).toEqual(DEFAULT_SETTINGS.modules)
+    }
+  })
+
+  it("falls back to the default tags array instead of corrupting it when wrong-typed", () => {
+    const raw = JSON.stringify({
+      version: EXPORT_VERSION,
+      settings: { tags: "x" },
+    })
+
+    const result = parseImportPayload(raw)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.settings.tags).toEqual(DEFAULT_SETTINGS.tags)
+    }
+  })
+
+  it("restores a valid custom tags array from the backup", () => {
+    const customTags = [{ label: "Riêng", emoji: "✨", desc: "", tint: "#FFF0B8", on: true }]
+    const raw = JSON.stringify({
+      version: EXPORT_VERSION,
+      settings: { tags: customTags },
+    })
+
+    const result = parseImportPayload(raw)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.settings.tags).toEqual(customTags)
     }
   })
 

@@ -93,6 +93,16 @@ function useSettings() {
     [settings, persist]
   )
 
+  const toggleTag = useCallback(
+    (index: number) => {
+      persist({
+        ...settings,
+        tags: settings.tags.map((t, i) => (i === index ? { ...t, on: !t.on } : t)),
+      })
+    },
+    [settings, persist]
+  )
+
   return {
     settings,
     updateProfile,
@@ -100,6 +110,7 @@ function useSettings() {
     toggleMood,
     removeMood,
     addMood,
+    toggleTag,
     replaceSettings: persist,
   }
 }

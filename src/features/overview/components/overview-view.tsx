@@ -4,15 +4,18 @@ import { summarizeFinance } from "@/features/finance/finance-calculations"
 import { useFinance } from "@/features/finance/hooks/use-finance"
 import { getGoals, useCarGoalFund } from "@/features/goals"
 import { useJournal } from "@/features/journal/hooks/use-journal"
+import { useBudget } from "@/features/budget/hooks/use-budget"
+import { remainingToSettle, salaryForMonth, totalExpensesForMonth } from "@/features/budget/budget-calculations"
 import { pickDaily } from "@/features/study/daily-pick"
 import { useStudy } from "@/features/study/hooks/use-study"
 import type { GrammarEntry, VocabEntry } from "@/features/study/types"
 import { useSettings } from "@/features/settings/hooks/use-settings"
 import { Monkey } from "@/components/ob/monkey"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
-import { dayKey, longDate } from "@/lib/date"
+import { dayKey, longDate, monthKey } from "@/lib/date"
 import { formatMoney } from "@/lib/format"
 import { splitGreeting } from "../overview-calculations"
+import { BudgetSummarySection } from "./budget-summary-section"
 import { FinanceSummarySection } from "./finance-summary-section"
 import { GoalsSummarySection } from "./goals-summary-section"
 import { JournalSummarySection } from "./journal-summary-section"
@@ -29,6 +32,7 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
   const { settings } = useSettings()
   const { savings, cards, gold, goldStores, invests } = useFinance()
   const { entries } = useJournal()
+  const { salaries, expenses, settlements } = useBudget()
   const { tasks, toggleTask, learned } = useStudy()
   const { fundName } = useCarGoalFund()
 
@@ -37,6 +41,11 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
   }
 
   const summary = summarizeFinance({ savings, cards, gold, goldStores, invests })
+
+  const currentMonth = monthKey()
+  const monthSalary = salaryForMonth(salaries, currentMonth)
+  const monthSpent = totalExpensesForMonth(expenses, currentMonth)
+  const monthRemaining = remainingToSettle(salaries, expenses, settlements, currentMonth)
 
   const daily = pickDaily(vocab, 5, dayKey(), "vocab")
   const learnedToday = daily.filter((entry) => learned.includes(entry.id)).length
@@ -82,6 +91,22 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
             href="/finance"
           />
           <FinanceSummarySection savings={savings} cards={cards} invests={invests} summary={summary} />
+        </>
+      ) : null}
+
+      {enabled("chitieu") ? (
+        <>
+          <SectionHead
+            icon="receipt"
+            title="Chi tiêu"
+            hint={
+              monthRemaining >= 0
+                ? `dư ${formatMoney(monthRemaining, hidden)}`
+                : `thiếu ${formatMoney(Math.abs(monthRemaining), hidden)}`
+            }
+            href="/budget"
+          />
+          <BudgetSummarySection salary={monthSalary} spent={monthSpent} remaining={monthRemaining} />
         </>
       ) : null}
 

@@ -12,6 +12,7 @@ import {
   GraduationCap,
   LayoutDashboard,
   LogOut,
+  Receipt,
   Settings,
   Target,
   Wallet,
@@ -58,6 +59,7 @@ function SidebarActionButton({ variant, icon, label, onClick, ariaPressed, class
 const NAV = [
   { label: "Tổng quan", href: "/overview", icon: LayoutDashboard, moduleKey: null },
   { label: "Tài chính", href: "/finance", icon: Wallet, moduleKey: "taichinh" },
+  { label: "Chi tiêu", href: "/budget", icon: Receipt, moduleKey: "chitieu" },
   { label: "Nhật ký", href: "/journal", icon: BookOpen, moduleKey: "nhatky" },
   { label: "Học tập", href: "/study", icon: GraduationCap, moduleKey: "hoctap" },
   { label: "Mục tiêu", href: "/goals", icon: Target, moduleKey: "muctieu" },

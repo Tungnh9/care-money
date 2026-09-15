@@ -1,6 +1,7 @@
 import { parseFinanceState, type FinanceState } from "@/features/finance/finance-storage"
 import { DEFAULT_JOURNAL_STATE, type JournalState } from "@/features/journal/journal-storage"
 import { parseStudyState, type StudyState } from "@/features/study/study-storage"
+import { parseBudgetState, type BudgetState } from "@/features/budget/budget-storage"
 import { DEFAULT_SETTINGS, type AppSettings } from "@/lib/settings-storage"
 
 const EXPORT_VERSION = 1
@@ -10,6 +11,7 @@ interface ExportSnapshot {
   finance: FinanceState
   study: StudyState
   settings: AppSettings
+  budget: BudgetState
 }
 
 interface ExportPayload extends ExportSnapshot {
@@ -60,6 +62,8 @@ function parseImportPayload(raw: string): ImportResult {
 
   const study: StudyState = parseStudyState(isObject(parsed.study) ? parsed.study : {})
 
+  const budget: BudgetState = parseBudgetState(isObject(parsed.budget) ? parsed.budget : {})
+
   const settingsOverride = isObject(parsed.settings) ? parsed.settings : {}
   const profileOverride = isObject(settingsOverride.profile) ? settingsOverride.profile : {}
   // Chỉ build đúng 3 field của AppSettings hiện tại — không spread nguyên settingsOverride,
@@ -68,11 +72,12 @@ function parseImportPayload(raw: string): ImportResult {
     profile: { ...DEFAULT_SETTINGS.profile, ...profileOverride },
     moods: ensureArray(settingsOverride.moods, DEFAULT_SETTINGS.moods),
     modules: ensureArray(settingsOverride.modules, DEFAULT_SETTINGS.modules),
+    tags: ensureArray(settingsOverride.tags, DEFAULT_SETTINGS.tags),
   }
 
   const summary = `${journal.entries.length} bài nhật ký · ${finance.gold.length} lần mua vàng · đã khôi phục tiết kiệm, nợ thẻ, mục tiêu`
 
-  return { ok: true, data: { journal, finance, study, settings }, summary }
+  return { ok: true, data: { journal, finance, study, settings, budget }, summary }
 }
 
 export {
