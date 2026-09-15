@@ -6,9 +6,8 @@ import {
   signedSettledForMonth,
   remainingToSettle,
   breakdownByTag,
-  lastNMonthKeys,
-  monthlyTrend,
-  trendMonthKeys,
+  groupExpensesByDay,
+  monthlyExpenseTotals,
 } from "../budget-calculations"
 import type { Expense, MonthlySalary, Settlement } from "../types"
 
@@ -208,69 +207,58 @@ describe("breakdownByTag", () => {
   })
 })
 
-describe("lastNMonthKeys", () => {
-  it("returns n month keys ending at the given date's month, oldest first", () => {
-    expect(lastNMonthKeys(3, new Date(2026, 8, 15))).toEqual(["2026-07", "2026-08", "2026-09"])
+describe("groupExpensesByDay", () => {
+  it("groups expenses that share the same dayKey and sums their total", () => {
+    const expenses = [
+      expense({ id: 1, dayKey: "2026-09-01", amount: 100_000 }),
+      expense({ id: 2, dayKey: "2026-09-01", amount: 50_000 }),
+      expense({ id: 3, dayKey: "2026-09-02", amount: 30_000 }),
+    ]
+    const result = groupExpensesByDay(expenses)
+    expect(result).toEqual([
+      { dayKey: "2026-09-02", expenses: [expenses[2]], total: 30_000 },
+      { dayKey: "2026-09-01", expenses: [expenses[0], expenses[1]], total: 150_000 },
+    ])
   })
 
-  it("correctly wraps across a year boundary", () => {
-    expect(lastNMonthKeys(3, new Date(2026, 1, 1))).toEqual(["2025-12", "2026-01", "2026-02"])
+  it("orders days most-recent-first", () => {
+    const expenses = [
+      expense({ id: 1, dayKey: "2026-09-05" }),
+      expense({ id: 2, dayKey: "2026-09-20" }),
+      expense({ id: 3, dayKey: "2026-09-12" }),
+    ]
+    expect(groupExpensesByDay(expenses).map((g) => g.dayKey)).toEqual([
+      "2026-09-20",
+      "2026-09-12",
+      "2026-09-05",
+    ])
+  })
+
+  it("returns an empty array for no expenses", () => {
+    expect(groupExpensesByDay([])).toEqual([])
   })
 })
 
-describe("monthlyTrend", () => {
-  it("produces one data point per month in the window, even for a month with zero expenses", () => {
-    const salaries: MonthlySalary[] = [{ month: "2026-09", amount: 1_000_000 }]
-    const expenses = [expense({ dayKey: "2026-09-01", amount: 200_000 })]
-    const result = monthlyTrend(salaries, expenses, ["2026-08", "2026-09"])
+describe("monthlyExpenseTotals", () => {
+  it("produces one data point per requested month, even for a month with zero expenses", () => {
+    const expenses = [expense({ dayKey: "2026-10-01", amount: 200_000 })]
+    const result = monthlyExpenseTotals(expenses, ["2026-10", "2026-11"])
     expect(result).toEqual([
-      { month: "2026-08", salary: 0, spent: 0 },
-      { month: "2026-09", salary: 1_000_000, spent: 200_000 },
+      { month: "2026-10", total: 200_000 },
+      { month: "2026-11", total: 0 },
     ])
   })
 
-  it("attributes each expense to its month via dayKey, not any stored field", () => {
-    const expenses = [expense({ dayKey: "2026-08-31", amount: 50_000 })]
-    const result = monthlyTrend([], expenses, ["2026-08", "2026-09"])
-    expect(result).toEqual([
-      { month: "2026-08", salary: 0, spent: 50_000 },
-      { month: "2026-09", salary: 0, spent: 0 },
-    ])
+  it("sums every expense within each requested month via dayKey", () => {
+    const expenses = [
+      expense({ id: 1, dayKey: "2026-10-01", amount: 100_000 }),
+      expense({ id: 2, dayKey: "2026-10-31", amount: 50_000 }),
+    ]
+    expect(monthlyExpenseTotals(expenses, ["2026-10"])).toEqual([{ month: "2026-10", total: 150_000 }])
   })
 
-  it("excludes months outside the requested window", () => {
+  it("excludes expenses outside the requested months", () => {
     const expenses = [expense({ dayKey: "2026-01-01", amount: 999_999 })]
-    const result = monthlyTrend([], expenses, ["2026-09"])
-    expect(result).toEqual([{ month: "2026-09", salary: 0, spent: 0 }])
-  })
-})
-
-describe("trendMonthKeys", () => {
-  const now = new Date(2026, 8, 15) // 2026-09
-
-  it("trims leading empty months, starting from the earliest month with any data", () => {
-    const salaries: MonthlySalary[] = [{ month: "2026-06", amount: 10_000_000 }]
-    expect(trendMonthKeys(salaries, [], 6, now)).toEqual(["2026-06", "2026-07", "2026-08", "2026-09"])
-  })
-
-  it("finds the earliest data point across both salaries and expenses", () => {
-    const salaries: MonthlySalary[] = [{ month: "2026-08", amount: 10_000_000 }]
-    const expenses = [expense({ dayKey: "2026-07-01" })]
-    expect(trendMonthKeys(salaries, expenses, 6, now)).toEqual(["2026-07", "2026-08", "2026-09"])
-  })
-
-  it("still returns the full N-month trailing window when data is older than the window", () => {
-    const salaries: MonthlySalary[] = [{ month: "2026-01", amount: 10_000_000 }]
-    expect(trendMonthKeys(salaries, [], 6, now)).toEqual(lastNMonthKeys(6, now))
-  })
-
-  it("guarantees at least 2 months so a single data point still reads as a trend", () => {
-    const salaries: MonthlySalary[] = [{ month: "2026-09", amount: 10_000_000 }]
-    const expenses = [expense({ dayKey: "2026-09-01" })]
-    expect(trendMonthKeys(salaries, expenses, 6, now)).toEqual(["2026-08", "2026-09"])
-  })
-
-  it("falls back to a short default window when there is no data at all", () => {
-    expect(trendMonthKeys([], [], 6, now)).toEqual(["2026-07", "2026-08", "2026-09"])
+    expect(monthlyExpenseTotals(expenses, ["2026-10"])).toEqual([{ month: "2026-10", total: 0 }])
   })
 })

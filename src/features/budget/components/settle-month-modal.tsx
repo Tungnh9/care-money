@@ -8,6 +8,7 @@ import { Modal } from "@/components/ui/modal"
 import { FundPicker } from "@/components/ob/fund-picker"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
+import { formatMonthKey } from "@/lib/date"
 import type { SavingsFund } from "@/features/finance/types"
 import type { SettlementDirection } from "../types"
 
@@ -20,7 +21,7 @@ interface SettleMonthModalProps {
   onConfirm: (fundName: string, direction: SettlementDirection, amount: number) => void
 }
 
-function SettleMonthModal({ open, onOpenChange, remaining, savings, onConfirm }: SettleMonthModalProps) {
+function SettleMonthModal({ open, onOpenChange, month, remaining, savings, onConfirm }: SettleMonthModalProps) {
   const { hidden } = useMoneyVisibility()
   const direction: SettlementDirection = remaining >= 0 ? "deposit" : "withdraw"
   const cap = Math.abs(remaining)
@@ -60,10 +61,10 @@ function SettleMonthModal({ open, onOpenChange, remaining, savings, onConfirm }:
       backdropTestId="settle-month-backdrop"
     >
       <div id="settle-month-title" className="mb-1 text-[17px] font-bold">
-        Tất toán tháng
+        Tất toán {formatMonthKey(month)}
       </div>
       <p className="mb-4 text-sm text-[var(--ob-color-text-muted)]">
-        {direction === "deposit" ? "Bạn dư" : "Bạn đang thiếu"} {formatMoney(cap, hidden)} tháng này.
+        {direction === "deposit" ? "Bạn dư" : "Bạn đang thiếu"} {formatMoney(cap, hidden)} trong {formatMonthKey(month)}.
       </p>
 
       <FundPicker savings={savings} selected={selectedFund} onSelect={setSelectedFund} />

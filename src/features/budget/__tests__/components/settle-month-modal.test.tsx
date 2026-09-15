@@ -20,6 +20,14 @@ describe("SettleMonthModal", () => {
     expect(screen.getByLabelText("Số tiền", { exact: false })).toHaveValue("200.000")
   })
 
+  it("titles the modal with the specific month being settled", () => {
+    render(
+      <SettleMonthModal open onOpenChange={vi.fn()} month="2026-07" remaining={200_000} savings={SAVINGS} onConfirm={vi.fn()} />
+    )
+
+    expect(screen.getByText("Tất toán Tháng 7, 2026")).toBeInTheDocument()
+  })
+
   it("frames a negative remaining as a deficit", () => {
     render(
       <SettleMonthModal open onOpenChange={vi.fn()} month="2026-09" remaining={-150_000} savings={SAVINGS} onConfirm={vi.fn()} />

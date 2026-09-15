@@ -51,11 +51,11 @@ describe("BudgetView", () => {
     expect(screen.getByText(/Chi theo nhãn/)).toBeInTheDocument()
   })
 
-  it("temporarily hides the monthly trend chart", async () => {
+  it("renders the monthly expense bar chart", async () => {
     render(<BudgetView />)
 
     await waitFor(() => expect(screen.getAllByText("Lương tháng này").length).toBeGreaterThan(0))
-    expect(screen.queryByText(/Xu hướng/)).not.toBeInTheDocument()
+    expect(screen.getByText("Chi tiêu theo tháng")).toBeInTheDocument()
   })
 
   it("disables the settle button when there is nothing to settle", async () => {
@@ -108,7 +108,9 @@ describe("BudgetView", () => {
     fireEvent.click(within(modal).getByRole("button", { name: "Lưu" }))
 
     const listCard = screen.getByText("Khoản chi tháng này").closest("section") as HTMLElement
-    await waitFor(() => expect(within(listCard).getByText(formatMoney(350_000))).toBeInTheDocument())
+    await waitFor(() =>
+      expect(within(listCard).getAllByText(formatMoney(350_000)).length).toBeGreaterThan(0)
+    )
     expect(screen.queryByText("Sửa khoản chi")).not.toBeInTheDocument()
   })
 
