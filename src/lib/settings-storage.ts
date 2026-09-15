@@ -68,6 +68,12 @@ const DEFAULT_TAGS: BudgetTag[] = [
   { label: "Mua sắm", emoji: "🛍️", desc: "Quần áo, đồ dùng, linh tinh", tint: "#E7F6EF", on: true },
   { label: "Xăng xe", emoji: "⛽", desc: "Đổ xăng, gửi xe, đi lại", tint: "#EAF1FE", on: true },
   { label: "Hẹn hò", emoji: "❤️", desc: "Đi chơi, ăn uống cùng người yêu", tint: "#FDEBF2", on: true },
+  { label: "Ăn uống", emoji: "🍔", desc: "Ăn ngoài, đồ ăn nhanh, giao đồ ăn", tint: "#F0ECFE", on: true },
+  { label: "Điện thoại", emoji: "📱", desc: "Cước điện thoại, mua sắm thiết bị", tint: "#E4E9F2", on: true },
+  { label: "Quà tặng", emoji: "🎁", desc: "Quà sinh nhật, lễ tết, cưới hỏi", tint: "#FFF0B8", on: true },
+  { label: "Sức khoẻ", emoji: "💊", desc: "Thuốc men, khám bệnh", tint: "#FFE0C7", on: true },
+  { label: "Giải trí", emoji: "🎬", desc: "Xem phim, chơi game", tint: "#E7F6EF", on: true },
+  { label: "Cà phê", emoji: "☕", desc: "Cà phê, trà sữa, đồ uống", tint: "#EAF1FE", on: true },
 ]
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -89,8 +95,6 @@ const TINT_PALETTE = [
 ]
 
 const EMOJI_PICKER = ["😄", "🙂", "😌", "😐", "😴", "😟", "😔", "😣", "🥳", "🤯", "🤒", "😍"]
-
-const TAG_EMOJI_PICKER = ["🏠", "💳", "🛍️", "⛽", "❤️", "🍔", "🚌", "📱", "🎁", "💊", "🎬", "☕"]
 
 function mergeModules(stored: ModuleToggle[] | undefined): ModuleToggle[] {
   // label/hint luôn lấy từ DEFAULT_MODULES (nguồn) — chỉ "on" lấy từ storage.
@@ -133,7 +137,6 @@ export {
   DEFAULT_TAGS,
   TINT_PALETTE,
   EMOJI_PICKER,
-  TAG_EMOJI_PICKER,
   getStoredSettings,
   setStoredSettings,
   type AppSettings,

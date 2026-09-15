@@ -23,8 +23,6 @@ function SettingsView() {
     removeMood,
     addMood,
     toggleTag,
-    removeTag,
-    addTag,
     replaceSettings,
   } = useSettings()
   const { entries, replaceJournal } = useJournal()
@@ -74,7 +72,7 @@ function SettingsView() {
       <div className="ob-card-grid flex flex-wrap gap-5">
         <ProfileCard displayName={settings.profile.displayName} onSave={handleSaveDisplayName} />
         <MoodsCard moods={settings.moods} onToggle={toggleMood} onRemove={removeMood} onAdd={addMood} />
-        <TagsCard tags={settings.tags} onToggle={toggleTag} onRemove={removeTag} onAdd={addTag} />
+        <TagsCard tags={settings.tags} onToggle={toggleTag} />
         <ModulesCard modules={settings.modules} onToggle={toggleModule} />
         <DataCard
           exported={exported}

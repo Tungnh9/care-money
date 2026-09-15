@@ -94,14 +94,20 @@ describe("getStoredSettings", () => {
     expect(chitieu?.on).toBe(true)
   })
 
-  it("seeds the 5 default expense tags", () => {
-    expect(DEFAULT_TAGS).toHaveLength(5)
+  it("seeds the 11 default expense tags", () => {
+    expect(DEFAULT_TAGS).toHaveLength(11)
     expect(DEFAULT_TAGS.map((t) => t.label)).toEqual([
       "Tiền trọ",
       "Trả nợ thẻ",
       "Mua sắm",
       "Xăng xe",
       "Hẹn hò",
+      "Ăn uống",
+      "Điện thoại",
+      "Quà tặng",
+      "Sức khoẻ",
+      "Giải trí",
+      "Cà phê",
     ])
     expect(DEFAULT_TAGS.every((t) => t.on)).toBe(true)
   })
