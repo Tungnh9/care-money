@@ -37,6 +37,41 @@ describe("QuizGame", () => {
     expect(onFinish).toHaveBeenCalledWith(expect.any(Number))
   })
 
+  it("scores 10/10 when the correct meaning is clicked for every question", () => {
+    const onFinish = vi.fn()
+    render(<QuizGame vocab={VOCAB} onFinish={onFinish} />)
+
+    for (let i = 0; i < 10; i++) {
+      const heading = screen.getByRole("heading", { level: 3 })
+      const correctEntry = VOCAB.find((entry) => entry.word === heading.textContent)
+      expect(correctEntry).toBeDefined()
+
+      const correctButton = screen.getByRole("button", { name: correctEntry!.meaning })
+      fireEvent.click(correctButton)
+    }
+
+    expect(onFinish).toHaveBeenCalledWith(10)
+  })
+
+  it("scores 0/10 when a wrong meaning is clicked for every question", () => {
+    const onFinish = vi.fn()
+    render(<QuizGame vocab={VOCAB} onFinish={onFinish} />)
+
+    for (let i = 0; i < 10; i++) {
+      const heading = screen.getByRole("heading", { level: 3 })
+      const correctEntry = VOCAB.find((entry) => entry.word === heading.textContent)
+      expect(correctEntry).toBeDefined()
+
+      const wrongButton = screen
+        .getAllByRole("button")
+        .find((button) => button.textContent !== correctEntry!.meaning)
+      expect(wrongButton).toBeDefined()
+      fireEvent.click(wrongButton!)
+    }
+
+    expect(onFinish).toHaveBeenCalledWith(0)
+  })
+
   it("auto-advances to the next question when the 10-second timer runs out", () => {
     render(<QuizGame vocab={VOCAB} onFinish={vi.fn()} />)
 

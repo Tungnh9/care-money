@@ -41,9 +41,11 @@ const gameStreakSchema: z.ZodType<GameStreak> = z.object({
   lastPlayedDayKey: z.string().nullable(),
 })
 
-const studyStateSchema = z.object({
+const studyStateSchema: z.ZodType<StudyState> = z.object({
   tasks: z.array(taskSchema),
   learned: z.array(z.string()),
+  gameHighScores: gameHighScoresSchema,
+  gameStreak: gameStreakSchema,
 })
 
 // Field nào sai shape thì rơi về default riêng field đó, không kéo sập cả state.

@@ -30,6 +30,7 @@ function buildCards(vocab: VocabEntry[]): MatchCard[] {
 
 function MatchGame({ vocab, onFinish }: MatchGameProps) {
   const [cards] = useState(() => buildCards(vocab))
+  const actualPairCount = cards.length / 2
   const [flippedCards, setFlippedCards] = useState<MatchCard[]>([])
   const [matchedIds, setMatchedIds] = useState<string[]>([])
   const [flipsUsed, setFlipsUsed] = useState(0)
@@ -55,8 +56,8 @@ function MatchGame({ vocab, onFinish }: MatchGameProps) {
       const nextMatched = [...matchedIds, first.vocabId]
       setMatchedIds(nextMatched)
       setFlippedCards([])
-      if (nextMatched.length === PAIR_COUNT) {
-        onFinish(matchScoreFromFlips(PAIR_COUNT, usedFlips))
+      if (nextMatched.length === actualPairCount) {
+        onFinish(matchScoreFromFlips(actualPairCount, usedFlips))
       }
       return
     }
