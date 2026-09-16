@@ -5,19 +5,13 @@ import { useEffect, useState } from "react"
 
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
-import type { TagBreakdownEntry } from "../budget-calculations"
+import { CHART_PALETTE, type TagBreakdownEntry } from "../budget-calculations"
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false })
 
 interface TagBreakdownChartProps {
   data: TagBreakdownEntry[]
 }
-
-// tag.tint (dùng cho badge tròn nhỏ trong Cài đặt/danh sách chi tiêu) là màu pastel rất nhạt —
-// hợp cho nền badge nhỏ có chữ đen đè lên, nhưng lại quá nhạt để tô cả 1 lát biểu đồ lớn. Bảng
-// màu riêng này chỉ dùng cho biểu đồ, chọn tay để cùng một "tông" (độ đậm/sáng gần nhau) thay vì
-// trộn lẫn màu rất đậm với màu rất nhạt như bảng --ob-tag-* — nhìn đồng bộ và dễ chịu hơn.
-const CHART_PALETTE = ["#FF6B9D", "#3DCFB6", "#FFA94D", "#748FFC", "#9775FA", "#A0AEC0"]
 
 const CHART_HEIGHT = 300
 const CENTER_Y = CHART_HEIGHT / 2
