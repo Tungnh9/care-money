@@ -1,4 +1,4 @@
-import { MOCK_ACCOUNT } from "./mock-data"
+import { MOCK_ACCOUNT } from "@/lib/mock-account"
 
 const MOCK_DELAY_MS = 900
 
