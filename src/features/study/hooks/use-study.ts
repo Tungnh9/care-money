@@ -2,12 +2,15 @@
 
 import { useCallback, useEffect, useState } from "react"
 
+import { dayKey } from "@/lib/date"
+import { nextStreak } from "../game-calculations"
 import {
   DEFAULT_STUDY_STATE,
   getStoredStudy,
   setStoredStudy,
   type StudyState,
 } from "../study-storage"
+import type { GameType } from "../types"
 
 function useStudy() {
   const [state, setState] = useState<StudyState>(DEFAULT_STUDY_STATE)
@@ -43,11 +46,28 @@ function useStudy() {
     [state, persist]
   )
 
+  const recordGameResult = useCallback(
+    (type: GameType, score: number): { isNewHighScore: boolean } => {
+      const isNewHighScore = score > state.gameHighScores[type]
+      const gameHighScores = {
+        ...state.gameHighScores,
+        [type]: Math.max(state.gameHighScores[type], score),
+      }
+      const gameStreak = nextStreak(state.gameStreak, dayKey())
+      persist({ ...state, gameHighScores, gameStreak })
+      return { isNewHighScore }
+    },
+    [state, persist]
+  )
+
   return {
     tasks: state.tasks,
     learned: state.learned,
+    gameHighScores: state.gameHighScores,
+    gameStreak: state.gameStreak,
     toggleTask,
     toggleLearned,
+    recordGameResult,
     replaceStudy: persist,
   }
 }
