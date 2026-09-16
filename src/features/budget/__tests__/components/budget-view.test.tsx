@@ -58,6 +58,13 @@ describe("BudgetView", () => {
     expect(screen.getByText("Chi tiêu theo tháng")).toBeInTheDocument()
   })
 
+  it("renders the 6-month tag trend chart", async () => {
+    render(<BudgetView />)
+
+    await waitFor(() => expect(screen.getAllByText("Lương tháng này").length).toBeGreaterThan(0))
+    expect(screen.getByText("Xu hướng chi tiêu (6 tháng gần nhất)")).toBeInTheDocument()
+  })
+
   it("disables the settle button when there is nothing to settle", async () => {
     render(<BudgetView />)
 

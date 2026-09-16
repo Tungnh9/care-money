@@ -8,6 +8,7 @@ import {
   breakdownByTag,
   groupExpensesByDay,
   monthlyExpenseTotals,
+  monthlyTagBreakdown,
 } from "../budget-calculations"
 import type { Expense, MonthlySalary, Settlement } from "../types"
 
@@ -260,5 +261,44 @@ describe("monthlyExpenseTotals", () => {
   it("excludes expenses outside the requested months", () => {
     const expenses = [expense({ dayKey: "2026-01-01", amount: 999_999 })]
     expect(monthlyExpenseTotals(expenses, ["2026-10"])).toEqual([{ month: "2026-10", total: 0 }])
+  })
+})
+
+describe("monthlyTagBreakdown", () => {
+  it("returns one series per distinct tag seen across the requested months, aligned to those months", () => {
+    const expenses = [
+      expense({ id: 1, dayKey: "2026-08-01", amount: 100_000, tag: TAG_RENT }),
+      expense({ id: 2, dayKey: "2026-09-01", amount: 50_000, tag: TAG_RENT }),
+      expense({ id: 3, dayKey: "2026-09-02", amount: 30_000, tag: TAG_SHOPPING }),
+    ]
+
+    const result = monthlyTagBreakdown(expenses, ["2026-08", "2026-09"])
+
+    expect(result).toEqual(
+      expect.arrayContaining([
+        { label: "Tiền trọ", emoji: "🏠", tint: "#FFF0B8", data: [100_000, 50_000] },
+        { label: "Mua sắm", emoji: "🛍️", tint: "#E7F6EF", data: [0, 30_000] },
+      ])
+    )
+  })
+
+  it("fills 0 for a month where a tag (seen in another requested month) has no expenses", () => {
+    const expenses = [expense({ id: 1, dayKey: "2026-09-01", amount: 100_000, tag: TAG_RENT })]
+
+    const result = monthlyTagBreakdown(expenses, ["2026-08", "2026-09", "2026-10"])
+
+    expect(result).toEqual([{ label: "Tiền trọ", emoji: "🏠", tint: "#FFF0B8", data: [0, 100_000, 0] }])
+  })
+
+  it("buckets untagged expenses into 'Không gắn thẻ' just like breakdownByTag", () => {
+    const expenses = [expense({ id: 1, dayKey: "2026-09-01", amount: 40_000, tag: null })]
+
+    const result = monthlyTagBreakdown(expenses, ["2026-09"])
+
+    expect(result).toEqual([{ label: "Không gắn thẻ", emoji: "🏷️", tint: "#F2E9DC", data: [40_000] }])
+  })
+
+  it("returns an empty array when no requested month has any expenses", () => {
+    expect(monthlyTagBreakdown([], ["2026-09", "2026-10"])).toEqual([])
   })
 })

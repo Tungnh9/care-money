@@ -88,6 +88,46 @@ function monthlyExpenseTotals(expenses: Expense[], months: string[]): MonthlyExp
   return months.map((month) => ({ month, total: totalExpensesForMonth(expenses, month) }))
 }
 
+// tag.tint là màu pastel rất nhạt (dùng cho badge tròn nhỏ trong Cài đặt/danh sách chi tiêu),
+// không đủ rực để phân biệt trên chart — dùng chung 1 bảng màu rực cố định, cycle theo index,
+// cho mọi chart liên quan tới nhãn (donut "Chi theo nhãn" + cột "Xu hướng theo nhãn").
+const CHART_PALETTE = ["#FF6B9D", "#3DCFB6", "#FFA94D", "#748FFC", "#9775FA", "#A0AEC0"]
+
+interface MonthlyTagSeries {
+  label: string
+  emoji: string
+  tint: string
+  data: number[]
+}
+
+// Pivot breakdownByTag (theo TỪNG tháng) thành 1 series/nhãn xuyên suốt nhiều tháng — nhãn nào
+// không phát sinh chi tiêu ở 1 tháng bất kỳ trong khoảng vẫn có mặt, giá trị tháng đó = 0 (thay vì
+// bị thiếu điểm dữ liệu, gây lệch trục X khi vẽ stacked bar).
+function monthlyTagBreakdown(expenses: Expense[], months: string[]): MonthlyTagSeries[] {
+  const perMonth = months.map((month) => breakdownByTag(expenses, month))
+
+  const order: string[] = []
+  const meta = new Map<string, { emoji: string; tint: string }>()
+  for (const entries of perMonth) {
+    for (const entry of entries) {
+      if (!meta.has(entry.label)) {
+        meta.set(entry.label, { emoji: entry.emoji, tint: entry.tint })
+        order.push(entry.label)
+      }
+    }
+  }
+
+  return order.map((label) => {
+    const { emoji, tint } = meta.get(label) as { emoji: string; tint: string }
+    return {
+      label,
+      emoji,
+      tint,
+      data: perMonth.map((entries) => entries.find((e) => e.label === label)?.total ?? 0),
+    }
+  })
+}
+
 export {
   totalExpensesForMonth,
   salaryForMonth,
@@ -96,7 +136,10 @@ export {
   breakdownByTag,
   groupExpensesByDay,
   monthlyExpenseTotals,
+  monthlyTagBreakdown,
+  CHART_PALETTE,
   type TagBreakdownEntry,
   type DayGroup,
   type MonthlyExpensePoint,
+  type MonthlyTagSeries,
 }
