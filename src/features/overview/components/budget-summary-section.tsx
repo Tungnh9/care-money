@@ -21,16 +21,20 @@ function BudgetSummarySection({ salary, spent, remaining }: BudgetSummarySection
 
   return (
     <div className="ob-card-grid flex flex-wrap gap-5">
-      <Card tone="action" label="Chi tiêu tháng này" className="min-w-0 w-full">
-        <CountMoney
-          value={spent}
-          caption={`trên lương ${formatMoney(salary, hidden)}`}
-          delta={formatMoney(Math.abs(remaining), hidden)}
-          direction={isSurplus ? "up" : "down"}
-        />
+      <Card label="Chi tiêu tháng này" className="min-w-0 w-full">
+        <CountMoney value={spent} />
+        <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13.5px]">
+          <span
+            className="font-bold"
+            style={{ color: isSurplus ? "var(--ob-color-income)" : "var(--ob-color-expense)" }}
+          >
+            {isSurplus ? "▲" : "▼"} {formatMoney(Math.abs(remaining), hidden)}
+          </span>
+          <span className="text-[var(--ob-color-text-subtle)]">trên lương {formatMoney(salary, hidden)}</span>
+        </p>
         <div className="mt-5 flex h-2 gap-1.5 overflow-hidden rounded-[var(--ob-radius-pill)]">
           {salary <= 0 ? (
-            <span className="flex-1" style={{ background: "var(--ob-vo-700)" }} />
+            <span className="flex-1" style={{ background: "var(--ob-color-border)" }} />
           ) : overBudget ? (
             <span data-testid="segment-spent" className="flex-1" style={{ background: "var(--ob-color-expense)" }} />
           ) : (
@@ -44,7 +48,7 @@ function BudgetSummarySection({ salary, spent, remaining }: BudgetSummarySection
           )}
         </div>
         {salary > 0 ? (
-          <div className="mt-2.5 flex flex-wrap gap-3.5 text-xs text-[var(--ob-vo-300)]">
+          <div className="mt-2.5 flex flex-wrap gap-3.5 text-xs text-[var(--ob-color-text-subtle)]">
             <span className="inline-flex items-center gap-1.5">
               <span className="size-2 rounded-full" style={{ background: "var(--ob-color-expense)" }} />
               Đã chi

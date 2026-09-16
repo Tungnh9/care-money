@@ -97,7 +97,7 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
       {enabled("chitieu") ? (
         <>
           <SectionHead
-            icon="receipt"
+            icon="card"
             title="Chi tiêu"
             hint={
               monthRemaining >= 0

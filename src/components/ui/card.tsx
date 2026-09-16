@@ -16,8 +16,6 @@ const cardVariants = cva(
           "border-[1.5px] border-transparent bg-[var(--ob-color-reward)] text-[var(--ob-vo-900)]",
         soft:
           "border-[1.5px] border-transparent bg-[var(--ob-color-action-soft)] text-[var(--ob-color-text)]",
-        action:
-          "border-[1.5px] border-transparent bg-[var(--ob-cam-700)] text-[var(--ob-color-text-invert)]",
       },
       elevated: {
         true: "shadow-[var(--ob-shadow-md)]",
