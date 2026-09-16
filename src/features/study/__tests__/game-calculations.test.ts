@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest"
 
-import { matchScoreFromFlips, nextStreak, pickQuizOptions, pickRandomSet } from "../game-calculations"
+import { isTypableWord, matchScoreFromFlips, nextStreak, pickQuizOptions, pickRandomSet } from "../game-calculations"
 import type { VocabEntry } from "../types"
 
-function vocab(id: string): VocabEntry {
-  return { id, word: `word-${id}`, meaning: `nghĩa-${id}`, addedAt: "2026-01-01" }
+function vocab(id: string, word?: string): VocabEntry {
+  return { id, word: word ?? `word-${id}`, meaning: `nghĩa-${id}`, addedAt: "2026-01-01" }
 }
 
 const POOL: VocabEntry[] = Array.from({ length: 10 }, (_, i) => vocab(`${i}`))
@@ -53,6 +53,17 @@ describe("matchScoreFromFlips", () => {
 
   it("never goes below 0 even with a very high flip count", () => {
     expect(matchScoreFromFlips(6, 1000)).toBeGreaterThanOrEqual(0)
+  })
+})
+
+describe("isTypableWord", () => {
+  it("rejects a word containing a literal ... collocation placeholder", () => {
+    expect(isTypableWord(vocab("tmpl1", "offer ... (to ...)"))).toBe(false)
+    expect(isTypableWord(vocab("tmpl2", "go to ..."))).toBe(false)
+  })
+
+  it("accepts a normal word with no placeholder", () => {
+    expect(isTypableWord(vocab("normal", "hello"))).toBe(true)
   })
 })
 

@@ -1,3 +1,5 @@
+import { sampleWithRng } from "./random-sample"
+
 function seedFrom(str: string): number {
   let h = 2166136261
   for (let i = 0; i < str.length; i++) {
@@ -9,20 +11,13 @@ function seedFrom(str: string): number {
 
 function pickDaily<T>(list: T[], n: number, key: string, salt: string): T[] {
   let seed = seedFrom(`${key}|${salt}`)
-  const pool = list.map((_, i) => i)
-  const out: T[] = []
 
   function rnd(): number {
     seed = (seed * 1664525 + 1013904223) >>> 0
     return seed / 4294967296
   }
 
-  while (out.length < n && pool.length) {
-    const [index] = pool.splice(Math.floor(rnd() * pool.length), 1)
-    out.push(list[index])
-  }
-
-  return out
+  return sampleWithRng(list, n, rnd)
 }
 
 export { seedFrom, pickDaily }

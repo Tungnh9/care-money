@@ -1,14 +1,17 @@
 import { shiftDay } from "@/lib/date"
+import { sampleWithRng } from "./random-sample"
 import type { GameStreak, VocabEntry } from "./types"
 
 function pickRandomSet<T>(pool: T[], count: number): T[] {
-  const remaining = [...pool]
-  const out: T[] = []
-  while (out.length < count && remaining.length) {
-    const [item] = remaining.splice(Math.floor(Math.random() * remaining.length), 1)
-    out.push(item)
-  }
-  return out
+  return sampleWithRng(pool, count, Math.random)
+}
+
+// Một số mục trong content/vocabulary.jsonl là mẫu collocation chứa dấu "..." literal (vd.
+// "offer ... (to ...)", "go to ...") — không thể gõ đúng chữ để so khớp chính xác. Loại các mục
+// này khỏi vòng Gõ từ (SpellingGame) trước khi rút ngẫu nhiên, để người chơi không bao giờ gặp
+// từ không thể thắng được. Trắc nghiệm/Ghép cặp không cần lọc vì không yêu cầu gõ chữ.
+function isTypableWord(entry: VocabEntry): boolean {
+  return !entry.word.includes("...")
 }
 
 function pickQuizOptions(pool: VocabEntry[], correct: VocabEntry, optionCount = 4): VocabEntry[] {
@@ -32,4 +35,4 @@ function nextStreak(current: GameStreak, today: string): GameStreak {
   return { count: 1, lastPlayedDayKey: today }
 }
 
-export { pickRandomSet, pickQuizOptions, matchScoreFromFlips, nextStreak }
+export { pickRandomSet, pickQuizOptions, matchScoreFromFlips, nextStreak, isTypableWord }
