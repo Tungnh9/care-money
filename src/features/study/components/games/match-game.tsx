@@ -42,13 +42,14 @@ function MatchGame({ vocab, onFinish }: MatchGameProps) {
   function handleFlip(card: MatchCard) {
     if (locked || isFaceUp(card)) return
 
+    const usedFlips = flipsUsed + 1
+    setFlipsUsed(usedFlips)
+
     const nextFlipped = [...flippedCards, card]
     setFlippedCards(nextFlipped)
     if (nextFlipped.length < 2) return
 
     const [first, second] = nextFlipped
-    const usedFlips = flipsUsed + 1
-    setFlipsUsed(usedFlips)
 
     if (first.vocabId === second.vocabId) {
       const nextMatched = [...matchedIds, first.vocabId]
