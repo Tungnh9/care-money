@@ -41,6 +41,8 @@ function FinanceView() {
     updateGold,
     removeGold,
     addInvest,
+    updateInvest,
+    removeInvest,
   } = useFinance()
 
   const summary = summarizeFinance({ savings, cards, gold, goldStores, invests })
@@ -126,7 +128,13 @@ function FinanceView() {
             onRemoveGold={removeGold}
           />
         ) : (
-          <InvestmentsTab invests={invests} summary={summary} onAddInvest={addInvest} />
+          <InvestmentsTab
+            invests={invests}
+            summary={summary}
+            onAddInvest={addInvest}
+            onUpdateInvest={updateInvest}
+            onRemoveInvest={removeInvest}
+          />
         )}
       </div>
     </div>

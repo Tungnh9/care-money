@@ -1,5 +1,10 @@
-import Image from "next/image"
+"use client"
 
+import { useState } from "react"
+import Image from "next/image"
+import { Pencil, Trash2 } from "lucide-react"
+
+import { AlertDialog } from "@/components/ui/alert-dialog"
 import { Card } from "@/components/ui/card"
 import { Figure } from "@/components/ob/figure"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
@@ -7,21 +12,27 @@ import { formatMoney } from "@/lib/format"
 import { pct1, type FinanceSummary } from "../finance-calculations"
 import type { Investment } from "../types"
 import { AddInvestForm } from "./add-invest-form"
+import { EditInvestmentModal } from "./edit-investment-modal"
 
 interface InvestmentsTabProps {
   invests: Investment[]
   summary: FinanceSummary
   onAddInvest: (invest: Omit<Investment, "id">) => void
+  onUpdateInvest: (id: number, invest: Omit<Investment, "id">) => void
+  onRemoveInvest: (id: number) => void
 }
 
 function signedMoney(n: number, hidden: boolean): string {
   return (n >= 0 ? "+ " : "− ") + formatMoney(Math.abs(n), hidden)
 }
 
-function InvestmentsTab({ invests, summary, onAddInvest }: InvestmentsTabProps) {
+function InvestmentsTab({ invests, summary, onAddInvest, onUpdateInvest, onRemoveInvest }: InvestmentsTabProps) {
   const { hidden } = useMoneyVisibility()
   const { investValue, investPL, investPct } = summary
   const gain = investPL >= 0
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [deletingId, setDeletingId] = useState<number | null>(null)
+  const deletingInvestment = invests.find((i) => i.id === deletingId) ?? null
 
   return (
     <Card label="Danh mục đầu tư">
@@ -72,6 +83,24 @@ function InvestmentsTab({ invests, summary, onAddInvest }: InvestmentsTabProps) 
                 >
                   {signedMoney(pl, hidden)}
                 </span>
+                <div className="flex flex-none items-center gap-1">
+                  <button
+                    type="button"
+                    aria-label={`Sửa ${investment.name}`}
+                    onClick={() => setEditingId(investment.id)}
+                    className="flex size-9 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-info)]"
+                  >
+                    <Pencil size={17} />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Xoá ${investment.name}`}
+                    onClick={() => setDeletingId(investment.id)}
+                    className="flex size-9 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
+                  >
+                    <Trash2 size={17} />
+                  </button>
+                </div>
               </div>
             )
           })}
@@ -85,6 +114,29 @@ function InvestmentsTab({ invests, summary, onAddInvest }: InvestmentsTabProps) 
         </div>
       )}
       <AddInvestForm onAdd={onAddInvest} />
+      <EditInvestmentModal
+        investment={invests.find((i) => i.id === editingId) ?? null}
+        onOpenChange={(open) => !open && setEditingId(null)}
+        onSave={(id, updated) => {
+          onUpdateInvest(id, updated)
+          setEditingId(null)
+        }}
+      />
+      <AlertDialog
+        open={!!deletingId}
+        onOpenChange={(open) => !open && setDeletingId(null)}
+        title="Xoá khoản đầu tư?"
+        description={
+          <>
+            Xoá &quot;<strong>{deletingInvestment?.name}</strong>&quot; sẽ không thể hoàn tác.
+          </>
+        }
+        confirmLabel="Xoá"
+        destructive
+        onConfirm={() => {
+          if (deletingId !== null) onRemoveInvest(deletingId)
+        }}
+      />
     </Card>
   )
 }
