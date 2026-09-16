@@ -58,7 +58,12 @@ describe("useStudy", () => {
     const { result } = renderHook(() => useStudy())
     await waitFor(() => expect(result.current.tasks).toEqual(DEFAULT_STUDY_STATE.tasks))
 
-    const restored = { tasks: [{ label: "Việc mới", done: true }], learned: ["v-0009"] }
+    const restored = {
+      tasks: [{ label: "Việc mới", done: true }],
+      learned: ["v-0009"],
+      gameHighScores: { quiz: 0, match: 0, spelling: 0 },
+      gameStreak: { count: 0, lastPlayedDayKey: null },
+    }
     act(() => {
       result.current.replaceStudy(restored)
     })
