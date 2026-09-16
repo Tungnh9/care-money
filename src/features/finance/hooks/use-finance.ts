@@ -11,11 +11,8 @@ import {
 import type { CreditCard, GoldPurchase, GoldStore, Investment, SavingsFund } from "../types"
 import { toast } from "sonner"
 import { getCarGoalFundName, setCarGoalFundName } from "@/features/goals/car-goal-storage"
-
-function nextId(existing: { id: number }[]) {
-  // Date.now() có thể trùng nếu add 2 lần trong cùng 1ms — dùng max(id hiện có)+1 để chắc chắn không đụng.
-  return existing.reduce((max, item) => Math.max(max, item.id), 0) + 1
-}
+import { renameFundInSettlements } from "@/features/budget/budget-storage"
+import { nextId } from "@/lib/next-id"
 
 function useFinance() {
   const [state, setState] = useState<FinanceState>(DEFAULT_FINANCE_STATE)
@@ -54,6 +51,11 @@ function useFinance() {
         // thì phải đổi luôn tên lưu ở car-goal-storage, nếu không link sẽ bị mồ côi.
         if (fund.name !== originalName && getCarGoalFundName() === originalName) {
           setCarGoalFundName(fund.name)
+        }
+        // Lịch sử tất toán ngân sách cũng tham chiếu quỹ theo tên — cascade tương tự
+        // để lịch sử vẫn hiển thị đúng tên hiện tại của quỹ.
+        if (fund.name !== originalName) {
+          renameFundInSettlements(originalName, fund.name)
         }
         toast.success(`Đã cập nhật quỹ tiết kiệm "${fund.name}"`)
       } catch {
@@ -254,6 +256,34 @@ function useFinance() {
     [state, persist]
   )
 
+  const updateInvest = useCallback(
+    (id: number, invest: Omit<Investment, "id">) => {
+      try {
+        persist({
+          ...state,
+          invests: state.invests.map((i) => (i.id === id ? { ...invest, id } : i)),
+        })
+        toast.success(`Đã cập nhật khoản đầu tư "${invest.name}"`)
+      } catch {
+        toast.error("Không thể cập nhật khoản đầu tư. Vui lòng thử lại.")
+      }
+    },
+    [state, persist]
+  )
+
+  const removeInvest = useCallback(
+    (id: number) => {
+      const name = state.invests.find((i) => i.id === id)?.name
+      try {
+        persist({ ...state, invests: state.invests.filter((i) => i.id !== id) })
+        toast.success(name ? `Đã xoá khoản đầu tư "${name}"` : "Đã xoá khoản đầu tư")
+      } catch {
+        toast.error("Không thể xoá khoản đầu tư. Vui lòng thử lại.")
+      }
+    },
+    [state, persist]
+  )
+
   return {
     savings: state.savings,
     cards: state.cards,
@@ -275,6 +305,8 @@ function useFinance() {
     updateGold,
     removeGold,
     addInvest,
+    updateInvest,
+    removeInvest,
     replaceFinance: persist,
   }
 }

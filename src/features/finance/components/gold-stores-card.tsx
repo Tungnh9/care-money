@@ -4,10 +4,10 @@ import { useState } from "react"
 import { Pencil, Trash2 } from "lucide-react"
 
 import { AlertDialog } from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Field } from "@/components/ui/field"
 import { AddGoldStoreForm } from "./add-gold-store-form"
+import { EditGoldStoreModal } from "./edit-gold-store-modal"
 import type { GoldPurchase, GoldStore } from "../types"
 
 interface GoldStoresCardProps {
@@ -17,41 +17,6 @@ interface GoldStoresCardProps {
   onUpdate: (originalName: string, store: GoldStore) => void
   onRemove: (name: string) => void
   onSetPrice: (name: string, price: string) => void
-}
-
-interface EditGoldStoreFormProps {
-  store: GoldStore
-  onSave: (store: GoldStore) => void
-  onCancel: () => void
-}
-
-function EditGoldStoreForm({ store, onSave, onCancel }: EditGoldStoreFormProps) {
-  const [name, setName] = useState(store.name)
-
-  return (
-    <div className="mt-2">
-      <Field
-        className="min-w-0 max-w-[280px]"
-        label="Tên cửa hàng"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
-      <div className="mt-3 flex gap-[10px]">
-        <Button
-          variant="primary"
-          size="sm"
-          type="button"
-          disabled={!name.trim()}
-          onClick={() => onSave({ ...store, name: name.trim() })}
-        >
-          Lưu
-        </Button>
-        <Button variant="ghost" size="sm" type="button" onClick={onCancel}>
-          Huỷ
-        </Button>
-      </div>
-    </div>
-  )
 }
 
 function GoldStoresCard({ stores, gold, onAdd, onUpdate, onRemove, onSetPrice }: GoldStoresCardProps) {
@@ -65,16 +30,31 @@ function GoldStoresCard({ stores, gold, onAdd, onUpdate, onRemove, onSetPrice }:
   return (
     <Card label="Giá thị trường hôm nay">
       {stores.length ? (
-        stores.map((store) => {
-          const inUse = isInUse(store.name)
-          return (
-            <div
-              key={store.name}
-              className="border-b border-[var(--ob-color-border)] py-[14px] last:border-b-0"
-            >
-              <div className="mb-2 flex items-center justify-between gap-3">
-                <div className="text-[14px] font-bold">{store.name}</div>
-                <div className="flex items-center gap-1">
+        <>
+          {/* Nhãn cột — ẩn ở màn hẹp vì mỗi dòng tự xuống dòng (flex-wrap), lúc đó nhãn không còn
+              thẳng hàng với ô tương ứng nữa. */}
+          <div className="mb-1 hidden items-center gap-3 text-[11px] font-semibold tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)] uppercase sm:flex">
+            <div className="min-w-0 flex-1">Cửa hàng</div>
+            <div className="w-[200px] flex-none">Giá hôm nay (mỗi phân)</div>
+            <div className="w-[84px] flex-none" />
+          </div>
+          {stores.map((store) => {
+            const inUse = isInUse(store.name)
+            return (
+              <div
+                key={store.name}
+                className="flex flex-wrap items-center gap-3 border-b border-[var(--ob-color-border)] py-[10px] last:border-b-0"
+              >
+                <div className="min-w-0 flex-1 text-[14px] font-bold">{store.name}</div>
+                <Field
+                  className="w-[200px] flex-none"
+                  numeric
+                  group
+                  suffix="đ"
+                  value={store.price}
+                  onChange={(e) => onSetPrice(store.name, e.target.value)}
+                />
+                <div className="flex flex-none items-center gap-1">
                   <button
                     type="button"
                     aria-label={`Sửa ${store.name}`}
@@ -87,6 +67,11 @@ function GoldStoresCard({ stores, gold, onAdd, onUpdate, onRemove, onSetPrice }:
                     type="button"
                     aria-label={`Xoá ${store.name}`}
                     disabled={inUse}
+                    title={
+                      inUse
+                        ? "Không thể xoá — vẫn còn giao dịch mua vàng gắn với cửa hàng này."
+                        : undefined
+                    }
                     onClick={() => setDeletingName(store.name)}
                     className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)] disabled:cursor-not-allowed disabled:opacity-45"
                   >
@@ -94,41 +79,23 @@ function GoldStoresCard({ stores, gold, onAdd, onUpdate, onRemove, onSetPrice }:
                   </button>
                 </div>
               </div>
-              {editingName === store.name ? (
-                <EditGoldStoreForm
-                  store={store}
-                  onSave={(updated) => {
-                    onUpdate(store.name, updated)
-                    setEditingName(null)
-                  }}
-                  onCancel={() => setEditingName(null)}
-                />
-              ) : (
-                <>
-                  <Field
-                    label="Giá hôm nay (mỗi phân)"
-                    numeric
-                    group
-                    suffix="đ"
-                    value={store.price}
-                    onChange={(e) => onSetPrice(store.name, e.target.value)}
-                  />
-                  {inUse ? (
-                    <p className="mt-2 text-[12px] text-[var(--ob-color-text-subtle)]">
-                      Không thể xoá — vẫn còn giao dịch mua vàng gắn với cửa hàng này.
-                    </p>
-                  ) : null}
-                </>
-              )}
-            </div>
-          )
-        })
+            )
+          })}
+        </>
       ) : (
         <p className="text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)]">
           Chưa có cửa hàng nào. Thêm cửa hàng đầu tiên để bắt đầu theo dõi giá.
         </p>
       )}
       <AddGoldStoreForm onAdd={onAdd} />
+      <EditGoldStoreModal
+        store={stores.find((s) => s.name === editingName) ?? null}
+        onOpenChange={(open) => !open && setEditingName(null)}
+        onSave={(updated) => {
+          if (editingName) onUpdate(editingName, updated)
+          setEditingName(null)
+        }}
+      />
       <AlertDialog
         open={!!deletingName}
         onOpenChange={(open) => !open && setDeletingName(null)}

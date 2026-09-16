@@ -3,13 +3,13 @@
 import { cn } from "@/lib/utils"
 import type { SavingsFund } from "@/features/finance/types"
 
-interface CarFundPickerProps {
+interface FundPickerProps {
   savings: SavingsFund[]
   selected: string | null
   onSelect: (name: string | null) => void
 }
 
-function CarFundPicker({ savings, selected, onSelect }: CarFundPickerProps) {
+function FundPicker({ savings, selected, onSelect }: FundPickerProps) {
   if (!savings.length) {
     return (
       <p className="mt-3 text-[12.5px] text-[var(--ob-color-text-subtle)]">
@@ -42,4 +42,4 @@ function CarFundPicker({ savings, selected, onSelect }: CarFundPickerProps) {
   )
 }
 
-export { CarFundPicker }
+export { FundPicker }

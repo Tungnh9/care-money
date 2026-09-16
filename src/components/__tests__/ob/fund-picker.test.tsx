@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest"
 import { render, screen, fireEvent } from "@testing-library/react"
 
-import { CarFundPicker } from "../../components/car-fund-picker"
+import { FundPicker } from "@/components/ob/fund-picker"
 import type { SavingsFund } from "@/features/finance/types"
 
 const SAVINGS: SavingsFund[] = [
@@ -9,9 +9,9 @@ const SAVINGS: SavingsFund[] = [
   { name: "Quỹ mua xe", amount: 20_000_000, target: 300_000_000 },
 ]
 
-describe("CarFundPicker", () => {
+describe("FundPicker", () => {
   it("shows a fallback message and no buttons when there are no savings funds", () => {
-    render(<CarFundPicker savings={[]} selected={null} onSelect={vi.fn()} />)
+    render(<FundPicker savings={[]} selected={null} onSelect={vi.fn()} />)
 
     expect(
       screen.getByText("Chưa có quỹ tiết kiệm nào. Tạo 1 quỹ ở màn Tài chính để gắn vào đây.")
@@ -20,7 +20,7 @@ describe("CarFundPicker", () => {
   })
 
   it("renders a pill button per fund with none active when nothing is selected", () => {
-    render(<CarFundPicker savings={SAVINGS} selected={null} onSelect={vi.fn()} />)
+    render(<FundPicker savings={SAVINGS} selected={null} onSelect={vi.fn()} />)
 
     const buttons = screen.getAllByRole("button")
     expect(buttons).toHaveLength(2)
@@ -34,7 +34,7 @@ describe("CarFundPicker", () => {
 
   it("selects a fund by name when clicking an unselected pill", () => {
     const onSelect = vi.fn()
-    render(<CarFundPicker savings={SAVINGS} selected={null} onSelect={onSelect} />)
+    render(<FundPicker savings={SAVINGS} selected={null} onSelect={onSelect} />)
 
     fireEvent.click(screen.getByRole("button", { name: "Quỹ mua xe" }))
 
@@ -44,7 +44,7 @@ describe("CarFundPicker", () => {
 
   it("deselects the fund (calls onSelect with null) when clicking the already-selected pill", () => {
     const onSelect = vi.fn()
-    render(<CarFundPicker savings={SAVINGS} selected="Quỹ mua xe" onSelect={onSelect} />)
+    render(<FundPicker savings={SAVINGS} selected="Quỹ mua xe" onSelect={onSelect} />)
 
     const activeButton = screen.getByRole("button", { name: "Quỹ mua xe" })
     expect(activeButton).toHaveClass("border-[var(--ob-color-action)]")

@@ -6,12 +6,13 @@ import { Pencil, Trash2 } from "lucide-react"
 import { AlertDialog } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Field } from "@/components/ui/field"
 import { Figure } from "@/components/ob/figure"
 import { Progress } from "@/components/ui/progress"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import { AddCreditCardForm } from "./add-credit-card-form"
+import { EditCreditCardModal } from "./edit-credit-card-modal"
+import { PayCreditCardModal } from "./pay-credit-card-modal"
 import type { CreditCard } from "../types"
 
 interface CreditCardsTabProps {
@@ -20,13 +21,6 @@ interface CreditCardsTabProps {
   onPayCard: (name: string, amount: number) => void
   onUpdateCard: (originalName: string, card: CreditCard) => void
   onRemoveCard: (name: string) => void
-}
-
-function todayLabel() {
-  const now = new Date()
-  const day = String(now.getDate()).padStart(2, "0")
-  const month = String(now.getMonth() + 1).padStart(2, "0")
-  return `${day}/${month}/${now.getFullYear()}`
 }
 
 function CreditCardsTab({
@@ -38,49 +32,17 @@ function CreditCardsTab({
 }: CreditCardsTabProps) {
   const { hidden } = useMoneyVisibility()
   const [payCard, setPayCard] = useState("")
-  const [payAmount, setPayAmount] = useState("")
   const [editingCard, setEditingCard] = useState("")
-  const [editName, setEditName] = useState("")
-  const [editBalance, setEditBalance] = useState("")
-  const [editMin, setEditMin] = useState("")
-  const [editLimit, setEditLimit] = useState("")
-  const [editDue, setEditDue] = useState("")
-  const [editColor, setEditColor] = useState("")
   const [deletingCard, setDeletingCard] = useState("")
 
-  const payingCard = cards.find((card) => card.name === payCard)
-  const cardBeingEdited = cards.find((card) => card.name === editingCard)
-
-  function resetPay() {
-    setPayCard("")
-    setPayAmount("")
-  }
-
-  function resetEdit() {
-    setEditingCard("")
-    setEditName("")
-    setEditBalance("")
-    setEditMin("")
-    setEditLimit("")
-    setEditDue("")
-    setEditColor("")
-  }
-
   function startEdit(card: CreditCard) {
-    resetPay()
+    setPayCard("")
     setEditingCard(card.name)
-    setEditName(card.name)
-    setEditBalance(String(card.balance))
-    setEditMin(String(card.min))
-    setEditLimit(String(card.limit))
-    setEditDue(card.due)
-    setEditColor(card.color ?? "")
   }
 
   function startPay(name: string) {
-    resetEdit()
+    setEditingCard("")
     setPayCard(name)
-    setPayAmount("")
   }
 
   return (
@@ -161,127 +123,6 @@ function CreditCardsTab({
           </Card>
         )}
 
-        {payingCard ? (
-          <Card
-            label={`Ghi một lần trả · ${payingCard.name}`}
-            className="min-w-0 flex-[1_1_300px]"
-          >
-            <Field
-              label="Số tiền trả"
-              numeric
-              group
-              suffix="đ"
-              placeholder="0"
-              value={payAmount}
-              onChange={(e) => setPayAmount(e.target.value)}
-              hint={`Dư nợ hiện tại ${formatMoney(payingCard.balance, hidden)}`}
-            />
-            <div className="h-[14px]" />
-            <Field label="Ngày trả" placeholder={todayLabel()} />
-            <div className="mt-4 flex flex-wrap gap-[10px]">
-              <Button
-                variant="primary"
-                size="sm"
-                type="button"
-                disabled={!Number(payAmount)}
-                onClick={() => {
-                  onPayCard(payingCard.name, Number(payAmount) || 0)
-                  resetPay()
-                }}
-              >
-                Lưu
-              </Button>
-              <Button variant="ghost" size="sm" type="button" onClick={resetPay}>
-                Huỷ
-              </Button>
-            </div>
-          </Card>
-        ) : null}
-
-        {cardBeingEdited ? (
-          <Card label={`Sửa thẻ · ${cardBeingEdited.name}`} className="min-w-0 flex-[1_1_300px]">
-            <div className="flex flex-wrap gap-3">
-              <Field
-                className="min-w-0 flex-[1_1_220px]"
-                label="Tên thẻ"
-                placeholder="Nhập tên thẻ"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                prefix={
-                  <input
-                    type="color"
-                    aria-label="Chọn màu cho thẻ"
-                    value={editColor || "#f26311"}
-                    onChange={(e) => setEditColor(e.target.value)}
-                    className="size-6 cursor-pointer rounded-[var(--ob-radius-sm)] border border-[var(--ob-color-border)] bg-transparent p-0 [&::-webkit-color-swatch]:rounded-[var(--ob-radius-sm)] [&::-webkit-color-swatch]:border-none [&::-webkit-color-swatch-wrapper]:rounded-[var(--ob-radius-sm)] [&::-webkit-color-swatch-wrapper]:p-0"
-                  />
-                }
-              />
-              <Field
-                className="min-w-0 flex-[1_1_220px]"
-                label="Dư nợ hiện tại"
-                numeric
-                group
-                suffix="đ"
-                placeholder="0"
-                value={editBalance}
-                onChange={(e) => setEditBalance(e.target.value)}
-              />
-              <Field
-                className="min-w-0 flex-[1_1_220px]"
-                label="Số tiền tối thiểu"
-                numeric
-                group
-                suffix="đ"
-                placeholder="0"
-                value={editMin}
-                onChange={(e) => setEditMin(e.target.value)}
-              />
-              <Field
-                className="min-w-0 flex-[1_1_220px]"
-                label="Hạn mức"
-                numeric
-                group
-                suffix="đ"
-                placeholder="0"
-                value={editLimit}
-                onChange={(e) => setEditLimit(e.target.value)}
-              />
-              <Field
-                className="min-w-0 flex-[1_1_220px]"
-                label="Ngày đến hạn"
-                placeholder="Nhập ngày đến hạn"
-                value={editDue}
-                onChange={(e) => setEditDue(e.target.value)}
-              />
-            </div>
-            <div className="mt-4 flex flex-wrap gap-[10px]">
-              <Button
-                variant="primary"
-                size="sm"
-                type="button"
-                disabled={!editName.trim() || !editBalance.trim() || !editLimit.trim() || !editDue.trim()}
-                onClick={() => {
-                  onUpdateCard(cardBeingEdited.name, {
-                    name: editName.trim(),
-                    balance: Number(editBalance) || 0,
-                    min: Number(editMin) || 0,
-                    limit: Number(editLimit) || 0,
-                    due: editDue.trim(),
-                    color: editColor || undefined,
-                  })
-                  resetEdit()
-                }}
-              >
-                Lưu
-              </Button>
-              <Button variant="ghost" size="sm" type="button" onClick={resetEdit}>
-                Huỷ
-              </Button>
-            </div>
-          </Card>
-        ) : null}
-
         <Card tone="soft" label="Nhắc trả nợ" className="min-w-0 flex-[1_1_300px]">
           <p className="text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)]">
             Trả đủ và đúng hạn để tránh mất lãi phát sinh trên dư nợ thẻ tín dụng.
@@ -289,6 +130,22 @@ function CreditCardsTab({
         </Card>
       </div>
       <AddCreditCardForm onAdd={onAddCard} />
+      <PayCreditCardModal
+        card={cards.find((c) => c.name === payCard) ?? null}
+        onOpenChange={(open) => !open && setPayCard("")}
+        onPay={(name, amount) => {
+          onPayCard(name, amount)
+          setPayCard("")
+        }}
+      />
+      <EditCreditCardModal
+        card={cards.find((c) => c.name === editingCard) ?? null}
+        onOpenChange={(open) => !open && setEditingCard("")}
+        onSave={(updated) => {
+          if (editingCard) onUpdateCard(editingCard, updated)
+          setEditingCard("")
+        }}
+      />
       <AlertDialog
         open={!!deletingCard}
         onOpenChange={(open) => !open && setDeletingCard("")}

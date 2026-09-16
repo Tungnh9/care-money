@@ -77,6 +77,20 @@ describe("useSettings", () => {
     expect(getStoredSettings().moods).toHaveLength(countBefore - 1)
   })
 
+  it("toggles a tag and persists it", async () => {
+    const { result } = renderHook(() => useSettings())
+    await waitFor(() => expect(result.current.settings).toEqual(DEFAULT_SETTINGS))
+
+    const wasOn = result.current.settings.tags[0].on
+
+    act(() => {
+      result.current.toggleTag(0)
+    })
+
+    expect(result.current.settings.tags[0].on).toBe(!wasOn)
+    expect(getStoredSettings().tags[0].on).toBe(!wasOn)
+  })
+
   it("shows a success toast naming the mood when addMood succeeds", async () => {
     const { result } = renderHook(() => useSettings())
     await waitFor(() => expect(result.current.settings).toEqual(DEFAULT_SETTINGS))

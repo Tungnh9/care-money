@@ -120,7 +120,7 @@ describe("GoldTransactionsTable", () => {
     expect(losingRow).toHaveClass("bg-[var(--ob-color-surface-sunken)]")
   })
 
-  it("centers each row's edit and delete buttons together in a shared flex container", () => {
+  it("pushes each row's edit and delete buttons together to the end of the row", () => {
     render(
       <GoldTransactionsTable
         gold={PURCHASES}
@@ -136,7 +136,7 @@ describe("GoldTransactionsTable", () => {
 
     const container = editButton.parentElement
     expect(container).toBe(deleteButton.parentElement)
-    expect(container).toHaveClass("flex", "items-center", "justify-center")
+    expect(container).toHaveClass("flex", "items-center", "justify-end")
   })
 
   it("values each purchase against its OWN store's price, not one shared price", () => {

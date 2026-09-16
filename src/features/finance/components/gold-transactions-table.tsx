@@ -51,7 +51,7 @@ function GoldTransactionsTable({ gold, stores, onRemove, onEdit }: GoldTransacti
                     ? "border-l border-l-transparent text-left"
                     : index === 1
                       ? "text-left"
-                      : index === 6 || index === HEADERS.length - 1
+                      : index === 6
                         ? "text-center"
                         : "text-right")
                 }
@@ -112,8 +112,8 @@ function GoldTransactionsTable({ gold, stores, onRemove, onEdit }: GoldTransacti
                     {formatMoney(Math.abs(pl), hidden)}
                   </span>
                 </td>
-                <td className="py-[10px] px-[12px] text-center">
-                  <div className="flex items-center justify-center gap-1">
+                <td className="py-[10px] px-[12px] text-right">
+                  <div className="flex items-center justify-end gap-1">
                     <button
                       type="button"
                       aria-label={`Sửa giao dịch vàng ${purchase.date}`}

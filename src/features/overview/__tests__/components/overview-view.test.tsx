@@ -4,6 +4,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { DEFAULT_SETTINGS, setStoredSettings } from "@/lib/settings-storage"
 import { DEFAULT_FINANCE_STATE, setStoredFinance } from "@/features/finance/finance-storage"
 import { setCarGoalFundName } from "@/features/goals/car-goal-storage"
+import { DEFAULT_BUDGET_STATE, setStoredBudget } from "@/features/budget/budget-storage"
 import { formatMoney } from "@/lib/format"
 import type { GrammarEntry, VocabEntry } from "@/features/study/types"
 import { OverviewView } from "../../components/overview-view"
@@ -44,6 +45,34 @@ describe("OverviewView", () => {
     await waitFor(() => expect(screen.getByText("Tài chính")).toBeInTheDocument())
     expect(screen.queryByText("Mục tiêu")).not.toBeInTheDocument()
     expect(screen.queryByText("3 mục tiêu đang chạy")).not.toBeInTheDocument()
+  })
+
+  it("shows the current month's budget summary computed from real data via useBudget()", async () => {
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [{ month: "2026-08", amount: 20_000_000 }],
+      expenses: [{ id: 1, dayKey: "2026-08-05", amount: 5_000_000, tag: null }],
+    })
+
+    render(<OverviewView vocab={VOCAB} grammar={GRAMMAR} />)
+
+    await waitFor(() => expect(screen.getByText("Chi tiêu tháng này")).toBeInTheDocument())
+    const card = screen.getByText("Chi tiêu tháng này").closest("section") as HTMLElement
+    await waitFor(() => expect(within(card).getByText(formatMoney(5_000_000))).toBeInTheDocument())
+    expect(within(card).getByText(formatMoney(20_000_000), { exact: false })).toBeInTheDocument()
+    expect(within(card).getByText(formatMoney(15_000_000), { exact: false })).toBeInTheDocument()
+  })
+
+  it("hides the budget section when the chitieu module is turned off", async () => {
+    setStoredSettings({
+      ...DEFAULT_SETTINGS,
+      modules: DEFAULT_SETTINGS.modules.map((m) => (m.key === "chitieu" ? { ...m, on: false } : m)),
+    })
+
+    render(<OverviewView vocab={VOCAB} grammar={GRAMMAR} />)
+
+    await waitFor(() => expect(screen.getByText("Tài chính")).toBeInTheDocument())
+    expect(screen.queryByText("Chi tiêu tháng này")).not.toBeInTheDocument()
   })
 
   it("ticks the real task through useStudy(), not a mock", async () => {

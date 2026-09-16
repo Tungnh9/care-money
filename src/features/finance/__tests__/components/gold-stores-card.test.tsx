@@ -42,7 +42,7 @@ describe("GoldStoresCard", () => {
     expect(onSetPrice).toHaveBeenCalledWith("SJC", "950000")
   })
 
-  it("opens an inline rename form and calls onUpdate keyed by the original name", () => {
+  it("opens a rename modal and calls onUpdate keyed by the original name", () => {
     const onUpdate = vi.fn()
     render(
       <GoldStoresCard stores={STORES} gold={[]} onAdd={vi.fn()} onUpdate={onUpdate} onRemove={vi.fn()} onSetPrice={vi.fn()} />
@@ -69,15 +69,16 @@ describe("GoldStoresCard", () => {
     expect(onRemove).toHaveBeenCalledWith("SJC")
   })
 
-  it("disables removing a store that still has purchases attached, with an explanatory hint", () => {
+  it("disables removing a store that still has purchases attached, with an explanatory tooltip", () => {
     const gold: GoldPurchase[] = [{ id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" }]
     render(
       <GoldStoresCard stores={STORES} gold={gold} onAdd={vi.fn()} onUpdate={vi.fn()} onRemove={vi.fn()} onSetPrice={vi.fn()} />
     )
 
-    expect(screen.getByRole("button", { name: "Xoá SJC" })).toBeDisabled()
+    const disabledButton = screen.getByRole("button", { name: "Xoá SJC" })
+    expect(disabledButton).toBeDisabled()
+    expect(disabledButton).toHaveAttribute("title", expect.stringMatching(/vẫn còn giao dịch mua vàng/))
     expect(screen.getByRole("button", { name: "Xoá PNJ" })).not.toBeDisabled()
-    expect(screen.getByText(/vẫn còn giao dịch mua vàng/)).toBeInTheDocument()
   })
 
   it("opens the add-store form, fills in fields and reports the new store on submit", () => {

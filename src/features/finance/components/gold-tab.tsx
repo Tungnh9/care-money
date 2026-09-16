@@ -4,9 +4,7 @@ import { useState } from "react"
 import { TrendingDown, TrendingUp } from "lucide-react"
 
 import { AlertDialog } from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Field } from "@/components/ui/field"
 import { Figure } from "@/components/ob/figure"
 import { Progress } from "@/components/ui/progress"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
@@ -21,7 +19,7 @@ import {
 } from "../finance-calculations"
 import type { GoldPurchase, GoldStore } from "../types"
 import { AddGoldForm } from "./add-gold-form"
-import { GoldStorePicker } from "./gold-store-picker"
+import { EditGoldPurchaseModal } from "./edit-gold-purchase-modal"
 import { GoldStoresCard } from "./gold-stores-card"
 import { GoldTransactionsCards } from "./gold-transactions-cards"
 import { GoldTransactionsTable } from "./gold-transactions-table"
@@ -69,28 +67,8 @@ function GoldTab({
   const totalLoss = purchasePLs.filter((pl) => pl < 0).reduce((sum, pl) => sum + pl, 0)
 
   const [editingId, setEditingId] = useState<number | null>(null)
-  const [editDate, setEditDate] = useState("")
-  const [editPhan, setEditPhan] = useState("")
-  const [editBuy, setEditBuy] = useState("")
-  const [editStore, setEditStore] = useState("")
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const deletingPurchase = gold.find((p) => p.id === deletingId) ?? null
-
-  function startEdit(purchase: GoldPurchase) {
-    setEditingId(purchase.id)
-    setEditDate(purchase.date)
-    setEditPhan(String(purchase.phan))
-    setEditBuy(String(purchase.buy))
-    setEditStore(purchase.store)
-  }
-
-  function resetEdit() {
-    setEditingId(null)
-    setEditDate("")
-    setEditPhan("")
-    setEditBuy("")
-    setEditStore("")
-  }
 
   const stats = [
     ["Đang giữ", `${goldPhan} phân`],
@@ -171,64 +149,6 @@ function GoldTab({
 
       <AddGoldForm stores={stores} onAdd={onAddGold} />
 
-      {editingId !== null ? (
-        <Card label="Sửa lần mua vàng">
-          <div className="flex flex-wrap gap-3">
-            <Field
-              className="min-w-0 flex-[1_1_220px]"
-              label="Ngày mua"
-              placeholder="vd: 10/08/2026"
-              value={editDate}
-              onChange={(e) => setEditDate(e.target.value)}
-            />
-            <Field
-              className="min-w-0 flex-[1_1_220px]"
-              label="Khối lượng (phân)"
-              numeric
-              placeholder="0"
-              value={editPhan}
-              onChange={(e) => setEditPhan(e.target.value)}
-              hint="10 phân = 1 chỉ"
-            />
-            <Field
-              className="min-w-0 flex-[1_1_220px]"
-              label="Giá mua (mỗi phân)"
-              numeric
-              group
-              suffix="đ"
-              placeholder="0"
-              value={editBuy}
-              onChange={(e) => setEditBuy(e.target.value)}
-            />
-          </div>
-          <div className="mt-3">
-            <GoldStorePicker stores={stores} selected={editStore} onSelect={setEditStore} />
-          </div>
-          <div className="mt-4 flex gap-[10px]">
-            <Button
-              variant="primary"
-              size="sm"
-              type="button"
-              disabled={!editDate.trim() || !editPhan.trim() || !editBuy.trim() || !editStore}
-              onClick={() => {
-                onUpdateGold(editingId, {
-                  date: editDate.trim(),
-                  phan: Number(editPhan) || 0,
-                  buy: Number(editBuy) || 0,
-                  store: editStore,
-                })
-                resetEdit()
-              }}
-            >
-              Lưu
-            </Button>
-            <Button variant="ghost" size="sm" type="button" onClick={resetEdit}>
-              Huỷ
-            </Button>
-          </div>
-        </Card>
-      ) : null}
-
       <Card label={`Các lần mua vàng${gold.length ? ` · ${gold.length} lần` : ""}`}>
         {gold.length ? (
           <div className="mb-4 grid grid-cols-2 gap-3">
@@ -257,7 +177,7 @@ function GoldTab({
             gold={sortedGold}
             stores={stores}
             onRemove={setDeletingId}
-            onEdit={startEdit}
+            onEdit={(purchase) => setEditingId(purchase.id)}
           />
         </div>
         <div className="lg:hidden">
@@ -265,11 +185,20 @@ function GoldTab({
             gold={sortedGold}
             stores={stores}
             onRemove={setDeletingId}
-            onEdit={startEdit}
+            onEdit={(purchase) => setEditingId(purchase.id)}
           />
         </div>
       </Card>
 
+      <EditGoldPurchaseModal
+        purchase={gold.find((p) => p.id === editingId) ?? null}
+        stores={stores}
+        onOpenChange={(open) => !open && setEditingId(null)}
+        onSave={(id, updated) => {
+          onUpdateGold(id, updated)
+          setEditingId(null)
+        }}
+      />
       <AlertDialog
         open={!!deletingId}
         onOpenChange={(open) => !open && setDeletingId(null)}

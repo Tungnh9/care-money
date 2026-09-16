@@ -4,6 +4,7 @@ import { act, renderHook, waitFor } from "@testing-library/react"
 import { useFinance } from "../../hooks/use-finance"
 import { DEFAULT_FINANCE_STATE, FINANCE_STORAGE_KEY, getStoredFinance } from "../../finance-storage"
 import { getCarGoalFundName, setCarGoalFundName } from "@/features/goals/car-goal-storage"
+import { DEFAULT_BUDGET_STATE, getStoredBudget, setStoredBudget } from "@/features/budget/budget-storage"
 import { toast } from "sonner"
 
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
@@ -101,6 +102,39 @@ describe("useFinance", () => {
     })
 
     expect(getCarGoalFundName()).toBe("Quỹ mua xe")
+  })
+
+  it("updateSavingsFund cascades a rename into historical budget settlements", async () => {
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      settlements: [
+        {
+          id: 1,
+          month: "2026-09",
+          at: "2026-09-30T00:00:00.000Z",
+          direction: "deposit",
+          amount: 50_000,
+          fundName: "Quỹ dự phòng",
+          fundAmountBefore: 0,
+          fundAmountAfter: 50_000,
+        },
+      ],
+    })
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.savings).toEqual([]))
+
+    act(() => {
+      result.current.addSavingsFund({ name: "Quỹ dự phòng", amount: 5_000_000, target: 20_000_000 })
+    })
+    act(() => {
+      result.current.updateSavingsFund("Quỹ dự phòng", {
+        name: "Quỹ khẩn cấp",
+        amount: 8_000_000,
+        target: 25_000_000,
+      })
+    })
+
+    expect(getStoredBudget().settlements[0].fundName).toBe("Quỹ khẩn cấp")
   })
 
   it("removeSavingsFund deletes only the matching fund", async () => {
@@ -430,6 +464,50 @@ describe("useFinance", () => {
 
     expect(result.current.invests).toHaveLength(2)
     expect(result.current.invests[0].id).not.toBe(result.current.invests[1].id)
+  })
+
+  it("updateInvest replaces the matching investment's fields, keyed by its id", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.invests).toEqual([]))
+
+    act(() => {
+      result.current.addInvest({ name: "Quỹ cổ phiếu", cost: 10_000_000, value: 12_000_000 })
+    })
+    const id = result.current.invests[0].id
+
+    act(() => {
+      result.current.updateInvest(id, { name: "Quỹ cổ phiếu FPT", cost: 11_000_000, value: 13_500_000 })
+    })
+
+    expect(result.current.invests).toHaveLength(1)
+    expect(result.current.invests[0]).toEqual({
+      id,
+      name: "Quỹ cổ phiếu FPT",
+      cost: 11_000_000,
+      value: 13_500_000,
+    })
+    expect(getStoredFinance().invests[0].value).toBe(13_500_000)
+  })
+
+  it("removeInvest deletes only the matching investment", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.invests).toEqual([]))
+
+    act(() => {
+      result.current.addInvest({ name: "Quỹ cổ phiếu", cost: 10_000_000, value: 12_000_000 })
+    })
+    act(() => {
+      result.current.addInvest({ name: "Quỹ trái phiếu", cost: 5_000_000, value: 5_200_000 })
+    })
+    expect(result.current.invests).toHaveLength(2)
+
+    const idToRemove = result.current.invests[0].id
+    act(() => {
+      result.current.removeInvest(idToRemove)
+    })
+
+    expect(result.current.invests).toHaveLength(1)
+    expect(result.current.invests[0].name).toBe("Quỹ trái phiếu")
   })
 
   it("replaceFinance overwrites the whole state and persists it, e.g. after restoring a backup", async () => {
@@ -862,6 +940,82 @@ describe("useFinance toast notifications", () => {
 
     expect(toast.error).toHaveBeenCalledWith("Không thể thêm khoản đầu tư. Vui lòng thử lại.")
     expect(result.current.invests).toEqual([])
+  })
+
+  it("updateInvest shows a success toast when the write succeeds", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.invests).toEqual([]))
+
+    act(() => {
+      result.current.addInvest({ name: "Quỹ cổ phiếu", cost: 10_000_000, value: 12_000_000 })
+    })
+    const id = result.current.invests[0].id
+
+    act(() => {
+      result.current.updateInvest(id, { name: "Quỹ cổ phiếu FPT", cost: 11_000_000, value: 13_500_000 })
+    })
+
+    expect(toast.success).toHaveBeenCalledWith('Đã cập nhật khoản đầu tư "Quỹ cổ phiếu FPT"')
+  })
+
+  it("updateInvest shows an error toast and does not update state when storage write fails", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.invests).toEqual([]))
+
+    act(() => {
+      result.current.addInvest({ name: "Quỹ cổ phiếu", cost: 10_000_000, value: 12_000_000 })
+    })
+    const id = result.current.invests[0].id
+
+    const spy = vi.spyOn(Storage.prototype, "setItem").mockImplementationOnce(() => {
+      throw new Error("QuotaExceededError")
+    })
+
+    act(() => {
+      result.current.updateInvest(id, { name: "Quỹ cổ phiếu FPT", cost: 11_000_000, value: 13_500_000 })
+    })
+    spy.mockRestore()
+
+    expect(toast.error).toHaveBeenCalledWith("Không thể cập nhật khoản đầu tư. Vui lòng thử lại.")
+    expect(result.current.invests[0].name).toBe("Quỹ cổ phiếu")
+  })
+
+  it("removeInvest shows a success toast with the investment's name when the write succeeds", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.invests).toEqual([]))
+
+    act(() => {
+      result.current.addInvest({ name: "Quỹ cổ phiếu", cost: 10_000_000, value: 12_000_000 })
+    })
+    const id = result.current.invests[0].id
+
+    act(() => {
+      result.current.removeInvest(id)
+    })
+
+    expect(toast.success).toHaveBeenCalledWith('Đã xoá khoản đầu tư "Quỹ cổ phiếu"')
+  })
+
+  it("removeInvest shows an error toast and does not update state when storage write fails", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.invests).toEqual([]))
+
+    act(() => {
+      result.current.addInvest({ name: "Quỹ cổ phiếu", cost: 10_000_000, value: 12_000_000 })
+    })
+    const id = result.current.invests[0].id
+
+    const spy = vi.spyOn(Storage.prototype, "setItem").mockImplementationOnce(() => {
+      throw new Error("QuotaExceededError")
+    })
+
+    act(() => {
+      result.current.removeInvest(id)
+    })
+    spy.mockRestore()
+
+    expect(toast.error).toHaveBeenCalledWith("Không thể xoá khoản đầu tư. Vui lòng thử lại.")
+    expect(result.current.invests).toHaveLength(1)
   })
 
   it("setGoldStorePrice does not throw and leaves the price unchanged when storage write fails", async () => {

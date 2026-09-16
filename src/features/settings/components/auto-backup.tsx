@@ -6,6 +6,7 @@ import { onDataChanged } from "@/lib/data-change-bus"
 import { getStoredFinance } from "@/features/finance/finance-storage"
 import { getStoredJournal } from "@/features/journal/journal-storage"
 import { getStoredStudy } from "@/features/study/study-storage"
+import { getStoredBudget } from "@/features/budget/budget-storage"
 import { getStoredSettings } from "@/lib/settings-storage"
 import { getSyncSecret } from "@/lib/sync-secret-storage"
 import { pushSnapshot } from "../api"
@@ -32,6 +33,7 @@ function AutoBackup() {
             finance: getStoredFinance(),
             study: getStoredStudy(),
             settings: getStoredSettings(),
+            budget: getStoredBudget(),
           },
           new Date().toISOString()
         )

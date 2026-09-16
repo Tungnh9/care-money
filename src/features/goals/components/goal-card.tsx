@@ -1,12 +1,12 @@
 import Image from "next/image"
 
 import { Confetti } from "@/components/ob/confetti"
+import { FundPicker } from "@/components/ob/fund-picker"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
 import type { SavingsFund } from "@/features/finance/types"
 import type { Goal } from "../types"
-import { CarFundPicker } from "./car-fund-picker"
 
 interface GoalCardProps {
   goal: Goal
@@ -57,7 +57,7 @@ function GoalCard({ goal, className, savings, selectedFundName, onSelectFund }: 
       <Progress value={goal.percent} tone={goal.tone} />
       <p className="mt-[14px] text-[13px] leading-[1.55] text-[var(--ob-color-text-muted)]">{goal.note}</p>
       {isCar && savings && onSelectFund ? (
-        <CarFundPicker savings={savings} selected={selectedFundName ?? null} onSelect={onSelectFund} />
+        <FundPicker savings={savings} selected={selectedFundName ?? null} onSelect={onSelectFund} />
       ) : null}
     </Card>
   )

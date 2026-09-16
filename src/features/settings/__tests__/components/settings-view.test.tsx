@@ -20,6 +20,7 @@ describe("SettingsView", () => {
 
     await waitFor(() => expect(screen.getByText("Module hiển thị")).toBeInTheDocument())
     expect(screen.getByText("Tâm trạng dùng trong nhật ký")).toBeInTheDocument()
+    expect(screen.getByText("Nhãn dùng trong chi tiêu")).toBeInTheDocument()
     expect(screen.getByText("Module hiển thị")).toBeInTheDocument()
     expect(screen.getByText("Dữ liệu")).toBeInTheDocument()
     expect(screen.getByText("Bắt đầu lại")).toBeInTheDocument()

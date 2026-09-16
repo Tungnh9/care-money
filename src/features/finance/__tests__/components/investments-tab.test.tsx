@@ -26,7 +26,15 @@ function summaryFor(invests: Investment[]): FinanceSummary {
 
 describe("InvestmentsTab", () => {
   it("renders the empty-state message when there are no investments", () => {
-    render(<InvestmentsTab invests={[]} summary={summaryFor([])} onAddInvest={vi.fn()} />)
+    render(
+      <InvestmentsTab
+        invests={[]}
+        summary={summaryFor([])}
+        onAddInvest={vi.fn()}
+        onUpdateInvest={vi.fn()}
+        onRemoveInvest={vi.fn()}
+      />
+    )
 
     expect(
       screen.getByText(
@@ -38,7 +46,7 @@ describe("InvestmentsTab", () => {
 
   it("renders total value, total P&L and each investment's cost/value/P&L for a gain and a loss", () => {
     render(
-      <InvestmentsTab invests={[GAINING, LOSING]} summary={summaryFor([GAINING, LOSING])} onAddInvest={vi.fn()} />
+      <InvestmentsTab invests={[GAINING, LOSING]} summary={summaryFor([GAINING, LOSING])} onAddInvest={vi.fn()} onUpdateInvest={vi.fn()} onRemoveInvest={vi.fn()} />
     )
 
     // Tổng giá trị hiện tại: 12.000.000 + 4.000.000
@@ -66,7 +74,7 @@ describe("InvestmentsTab", () => {
       investPL: 20_000_000,
       investPct: 20,
     }
-    render(<InvestmentsTab invests={[GAINING, LOSING]} summary={mismatchedSummary} onAddInvest={vi.fn()} />)
+    render(<InvestmentsTab invests={[GAINING, LOSING]} summary={mismatchedSummary} onAddInvest={vi.fn()} onUpdateInvest={vi.fn()} onRemoveInvest={vi.fn()} />)
 
     expect(screen.getByText(formatMoney(120_000_000))).toBeInTheDocument()
     expect(screen.getByText(`+ ${formatMoney(20_000_000)}`, { exact: false })).toBeInTheDocument()
@@ -77,7 +85,7 @@ describe("InvestmentsTab", () => {
 
   it("opens the add-investment form, fills in fields and reports the new investment on submit", () => {
     const onAddInvest = vi.fn()
-    render(<InvestmentsTab invests={[]} summary={summaryFor([])} onAddInvest={onAddInvest} />)
+    render(<InvestmentsTab invests={[]} summary={summaryFor([])} onAddInvest={onAddInvest} onUpdateInvest={vi.fn()} onRemoveInvest={vi.fn()} />)
 
     fireEvent.click(screen.getByRole("button", { name: "Thêm khoản đầu tư" }))
 
@@ -102,7 +110,7 @@ describe("InvestmentsTab", () => {
 
   it("defaults value to cost when the Giá trị hiện tại field is left blank", () => {
     const onAddInvest = vi.fn()
-    render(<InvestmentsTab invests={[]} summary={summaryFor([])} onAddInvest={onAddInvest} />)
+    render(<InvestmentsTab invests={[]} summary={summaryFor([])} onAddInvest={onAddInvest} onUpdateInvest={vi.fn()} onRemoveInvest={vi.fn()} />)
 
     fireEvent.click(screen.getByRole("button", { name: "Thêm khoản đầu tư" }))
 
@@ -123,7 +131,7 @@ describe("InvestmentsTab", () => {
   })
 
   it("keeps Thêm disabled until name and Số tiền đã bỏ vào are filled in", () => {
-    render(<InvestmentsTab invests={[]} summary={summaryFor([])} onAddInvest={vi.fn()} />)
+    render(<InvestmentsTab invests={[]} summary={summaryFor([])} onAddInvest={vi.fn()} onUpdateInvest={vi.fn()} onRemoveInvest={vi.fn()} />)
 
     fireEvent.click(screen.getByRole("button", { name: "Thêm khoản đầu tư" }))
     expect(screen.getByRole("button", { name: "Thêm" })).toBeDisabled()
@@ -141,7 +149,7 @@ describe("InvestmentsTab", () => {
 
   it("closes the add-investment form without calling onAddInvest when Huỷ is clicked", () => {
     const onAddInvest = vi.fn()
-    render(<InvestmentsTab invests={[]} summary={summaryFor([])} onAddInvest={onAddInvest} />)
+    render(<InvestmentsTab invests={[]} summary={summaryFor([])} onAddInvest={onAddInvest} onUpdateInvest={vi.fn()} onRemoveInvest={vi.fn()} />)
 
     fireEvent.click(screen.getByRole("button", { name: "Thêm khoản đầu tư" }))
     fireEvent.change(screen.getByLabelText("Tên khoản", { exact: false }), {
@@ -151,5 +159,58 @@ describe("InvestmentsTab", () => {
 
     expect(onAddInvest).not.toHaveBeenCalled()
     expect(screen.queryByLabelText("Tên khoản", { exact: false })).not.toBeInTheDocument()
+  })
+
+  it("shows an edit button per investment, opens a prefilled modal on click, and reports the update on Lưu", () => {
+    const onUpdateInvest = vi.fn()
+    render(
+      <InvestmentsTab
+        invests={[GAINING, LOSING]}
+        summary={summaryFor([GAINING, LOSING])}
+        onAddInvest={vi.fn()}
+        onUpdateInvest={onUpdateInvest}
+        onRemoveInvest={vi.fn()}
+      />
+    )
+
+    expect(screen.getByRole("button", { name: `Sửa ${GAINING.name}` })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole("button", { name: `Sửa ${LOSING.name}` }))
+
+    expect(screen.getByLabelText("Tên khoản đầu tư", { exact: false })).toHaveValue(LOSING.name)
+
+    fireEvent.change(screen.getByLabelText("Giá trị hiện tại", { exact: false }), {
+      target: { value: "4500000" },
+    })
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
+
+    expect(onUpdateInvest).toHaveBeenCalledWith(LOSING.id, {
+      name: LOSING.name,
+      cost: LOSING.cost,
+      value: 4_500_000,
+    })
+  })
+
+  it("shows a confirm dialog instead of deleting immediately when the delete button is clicked", () => {
+    const onRemoveInvest = vi.fn()
+    render(
+      <InvestmentsTab
+        invests={[GAINING, LOSING]}
+        summary={summaryFor([GAINING, LOSING])}
+        onAddInvest={vi.fn()}
+        onUpdateInvest={vi.fn()}
+        onRemoveInvest={onRemoveInvest}
+      />
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: `Xoá ${GAINING.name}` }))
+
+    expect(screen.getByText("Xoá khoản đầu tư?")).toBeInTheDocument()
+    const boldName = screen.getByText(GAINING.name, { selector: "strong" })
+    expect(boldName).toBeInTheDocument()
+    expect(onRemoveInvest).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole("button", { name: "Xoá" }))
+
+    expect(onRemoveInvest).toHaveBeenCalledWith(GAINING.id)
   })
 })
