@@ -8,15 +8,22 @@ import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { useFinance } from "@/features/finance/hooks/use-finance"
 import { useSettings } from "@/features/settings/hooks/use-settings"
 import { formatMoney } from "@/lib/format"
-import { dayKey, monthKey, monthKeyFromDayKey, monthsThroughYearEnd } from "@/lib/date"
+import { dayKey, monthKey, monthKeyFromDayKey, monthsFrom, monthsThroughYearEnd, shiftMonth } from "@/lib/date"
 import { useBudget } from "../hooks/use-budget"
-import { breakdownByTag, monthlyExpenseTotals, remainingToSettle, salaryForMonth } from "../budget-calculations"
+import {
+  breakdownByTag,
+  monthlyExpenseTotals,
+  monthlyTagBreakdown,
+  remainingToSettle,
+  salaryForMonth,
+} from "../budget-calculations"
 import { SalaryCard } from "./salary-card"
 import { ExpenseEntryForm } from "./expense-entry-form"
 import { ExpenseListCard } from "./expense-list-card"
 import { EditExpenseModal } from "./edit-expense-modal"
 import { TagBreakdownChart } from "./tag-breakdown-chart"
 import { MonthlyTrendChart } from "./monthly-trend-chart"
+import { MonthlyTagTrendChart } from "./monthly-tag-trend-chart"
 import { SettleMonthModal } from "./settle-month-modal"
 import type { Expense } from "../types"
 
@@ -51,6 +58,11 @@ function BudgetView() {
   // bấm-để-xem-tháng-khác nào (đã bỏ: không có cách hợp lệ nào để xem trước 1 tháng chưa xảy ra).
   const upcomingMonths = monthsThroughYearEnd(currentMonth)
   const monthlyExpenses = monthlyExpenseTotals(expenses, upcomingMonths)
+
+  // "Xu hướng chi tiêu" nhìn về 6 tháng gần nhất TÍNH ĐẾN tháng hiện tại (bao gồm cả tháng này) —
+  // ngược hướng với chart dự báo ở trên, vì đây là lịch sử thật đã xảy ra, không phải ước tính.
+  const trendMonths = monthsFrom(shiftMonth(currentMonth, -5), 6)
+  const tagTrend = monthlyTagBreakdown(expenses, trendMonths)
 
   return (
     <div>
@@ -100,6 +112,10 @@ function BudgetView() {
 
         <Card label="Chi tiêu theo tháng" className="min-w-0 w-full">
           <MonthlyTrendChart data={monthlyExpenses} currentMonth={currentMonth} />
+        </Card>
+
+        <Card label="Xu hướng chi tiêu (6 tháng gần nhất)" className="min-w-0 w-full">
+          <MonthlyTagTrendChart months={trendMonths} series={tagTrend} />
         </Card>
       </div>
 
