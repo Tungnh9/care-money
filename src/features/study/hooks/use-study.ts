@@ -53,8 +53,13 @@ function useStudy() {
         ...state.gameHighScores,
         [type]: Math.max(state.gameHighScores[type], score),
       }
+      // nextStreak trả về chính state.gameStreak (cùng reference) khi chơi lại trong cùng ngày —
+      // nhờ đó so sánh === dưới đây phát hiện đúng lúc không có gì thật sự đổi.
       const gameStreak = nextStreak(state.gameStreak, dayKey())
-      persist({ ...state, gameHighScores, gameStreak })
+      const unchanged = gameHighScores[type] === state.gameHighScores[type] && gameStreak === state.gameStreak
+      if (!unchanged) {
+        persist({ ...state, gameHighScores, gameStreak })
+      }
       return { isNewHighScore }
     },
     [state, persist]

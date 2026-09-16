@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest"
+import { describe, it, expect, beforeEach, vi } from "vitest"
 import { act, renderHook, waitFor } from "@testing-library/react"
 
 import { useStudy } from "../../hooks/use-study"
@@ -96,6 +96,24 @@ describe("useStudy", () => {
     })
     expect(outcome).toEqual({ isNewHighScore: false })
     expect(result.current.gameHighScores.quiz).toBe(7)
+  })
+
+  it("does not write to storage again when recording an unchanged result on the same day", async () => {
+    const { result } = renderHook(() => useStudy())
+    await waitFor(() => expect(result.current.tasks).toEqual(DEFAULT_STUDY_STATE.tasks))
+
+    act(() => {
+      result.current.recordGameResult("quiz", 7)
+    })
+
+    const setItemSpy = vi.spyOn(Storage.prototype, "setItem")
+    act(() => {
+      // Cùng ngày, không phá kỷ lục (7) → cả gameHighScores lẫn gameStreak đều không đổi.
+      result.current.recordGameResult("quiz", 5)
+    })
+
+    expect(setItemSpy).not.toHaveBeenCalled()
+    setItemSpy.mockRestore()
   })
 
   it("advances the play streak via nextStreak when recording a game result", async () => {
