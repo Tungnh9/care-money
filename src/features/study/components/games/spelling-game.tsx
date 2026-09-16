@@ -3,11 +3,11 @@
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { Empty } from "@/components/ob/empty"
 import { Field } from "@/components/ui/field"
-import { pickRandomSet } from "../../game-calculations"
+import { SPELLING_WORD_COUNT } from "../../game-config"
+import { isTypableWord, pickRandomSet } from "../../game-calculations"
 import type { VocabEntry } from "../../types"
-
-const WORD_COUNT = 10
 
 interface SpellingGameProps {
   vocab: VocabEntry[]
@@ -15,10 +15,14 @@ interface SpellingGameProps {
 }
 
 function SpellingGame({ vocab, onFinish }: SpellingGameProps) {
-  const [words] = useState(() => pickRandomSet(vocab, WORD_COUNT))
+  const [words] = useState(() => pickRandomSet(vocab.filter(isTypableWord), SPELLING_WORD_COUNT))
   const [index, setIndex] = useState(0)
   const [score, setScore] = useState(0)
   const [input, setInput] = useState("")
+
+  if (!words.length) {
+    return <Empty pose="sleep" title="Chưa đủ từ vựng để chơi" hint="Cần thêm từ vựng trong ngân hàng từ." />
+  }
 
   const word = words[index]
   const isLast = index + 1 >= words.length
@@ -36,7 +40,12 @@ function SpellingGame({ vocab, onFinish }: SpellingGameProps) {
   }
 
   return (
-    <div>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault()
+        handleSubmit()
+      }}
+    >
       <p className="mb-2 text-sm text-[var(--ob-color-text-subtle)]">
         Từ {index + 1}/{words.length}
       </p>
@@ -45,16 +54,17 @@ function SpellingGame({ vocab, onFinish }: SpellingGameProps) {
       </p>
       {word.phonetic ? <p className="mb-4 text-sm text-[var(--ob-color-text-subtle)]">{word.phonetic}</p> : null}
       <Field
+        key={index}
         label="Gõ lại từ tiếng Anh"
         placeholder="Nhập câu trả lời..."
         value={input}
         onChange={(e) => setInput(e.target.value)}
         autoFocus
       />
-      <Button className="mt-4" type="button" onClick={handleSubmit} disabled={!input.trim()}>
+      <Button className="mt-4" type="submit" disabled={!input.trim()}>
         {isLast ? "Hoàn thành" : "Tiếp theo"}
       </Button>
-    </div>
+    </form>
   )
 }
 

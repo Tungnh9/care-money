@@ -53,4 +53,48 @@ describe("SpellingGame", () => {
 
     expect(onFinish).toHaveBeenCalledWith(0)
   })
+
+  it("never asks the player to type a word containing a literal ... placeholder", () => {
+    const templateEntry: VocabEntry = {
+      id: "tmpl",
+      word: "offer ... (to ...)",
+      meaning: "mẫu câu không thể gõ đúng",
+      addedAt: "2026-01-01",
+    }
+    render(<SpellingGame vocab={[...VOCAB, templateEntry]} onFinish={vi.fn()} />)
+
+    for (let i = 0; i < 10; i++) {
+      expect(screen.getByTestId("spelling-meaning").textContent).not.toBe(templateEntry.meaning)
+      fireEvent.change(screen.getByLabelText("Gõ lại từ tiếng Anh", { exact: false }), { target: { value: "x" } })
+      fireEvent.click(screen.getByRole("button"))
+    }
+  })
+
+  it("shows an empty-state message instead of crashing when there is no typable vocab", () => {
+    const templateOnly: VocabEntry[] = [
+      { id: "tmpl", word: "go to ...", meaning: "đi học ở đâu đó", addedAt: "2026-01-01" },
+    ]
+    render(<SpellingGame vocab={templateOnly} onFinish={vi.fn()} />)
+
+    expect(screen.getByText("Chưa đủ từ vựng để chơi")).toBeInTheDocument()
+  })
+
+  it("submits when Enter is pressed inside the input, not just via button click", () => {
+    render(<SpellingGame vocab={VOCAB} onFinish={vi.fn()} />)
+
+    const input = screen.getByLabelText("Gõ lại từ tiếng Anh", { exact: false })
+    fireEvent.change(input, { target: { value: currentWord().word } })
+    fireEvent.submit(input.closest("form")!)
+
+    expect(screen.getByText("Từ 2/10", { exact: false })).toBeInTheDocument()
+  })
+
+  it("keeps the input focused after moving to the next word", () => {
+    render(<SpellingGame vocab={VOCAB} onFinish={vi.fn()} />)
+
+    fireEvent.change(screen.getByLabelText("Gõ lại từ tiếng Anh", { exact: false }), { target: { value: "x" } })
+    fireEvent.click(screen.getByRole("button"))
+
+    expect(screen.getByLabelText("Gõ lại từ tiếng Anh", { exact: false })).toHaveFocus()
+  })
 })
