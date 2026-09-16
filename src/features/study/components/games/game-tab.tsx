@@ -2,12 +2,10 @@
 
 import { useState } from "react"
 
+import { gameDefinition } from "../../game-registry"
 import type { GameHighScores, GameStreak, GameType, VocabEntry } from "../../types"
 import { GameMenuCard } from "./game-menu-card"
 import { GameResultCard } from "./game-result-card"
-import { MatchGame } from "./match-game"
-import { QuizGame } from "./quiz-game"
-import { SpellingGame } from "./spelling-game"
 
 interface GameTabProps {
   vocab: VocabEntry[]
@@ -16,49 +14,41 @@ interface GameTabProps {
   onFinish: (type: GameType, score: number) => { isNewHighScore: boolean }
 }
 
-interface GameResult {
-  type: GameType
-  score: number
-  isNewHighScore: boolean
-}
+// 1 union thay vì 2 state nullable độc lập (activeGame/result trước đây) — mỗi lần chỉ ở đúng 1
+// trong 3 màn hình, không thể vô tình vừa có activeGame vừa có result cùng lúc.
+type Screen =
+  | { kind: "menu" }
+  | { kind: "playing"; game: GameType }
+  | { kind: "result"; type: GameType; score: number; isNewHighScore: boolean }
 
 function GameTab({ vocab, highScores, streak, onFinish }: GameTabProps) {
-  const [activeGame, setActiveGame] = useState<GameType | null>(null)
-  const [result, setResult] = useState<GameResult | null>(null)
+  const [screen, setScreen] = useState<Screen>({ kind: "menu" })
 
   function handleGameFinish(type: GameType, score: number) {
     const { isNewHighScore } = onFinish(type, score)
-    setActiveGame(null)
-    setResult({ type, score, isNewHighScore })
+    setScreen({ kind: "result", type, score, isNewHighScore })
   }
 
-  if (result) {
+  if (screen.kind === "result") {
     return (
       <GameResultCard
-        type={result.type}
-        score={result.score}
-        isNewHighScore={result.isNewHighScore}
-        onPlayAgain={() => {
-          const type = result.type
-          setResult(null)
-          setActiveGame(type)
-        }}
-        onBackToMenu={() => setResult(null)}
+        type={screen.type}
+        score={screen.score}
+        isNewHighScore={screen.isNewHighScore}
+        onPlayAgain={() => setScreen({ kind: "playing", game: screen.type })}
+        onBackToMenu={() => setScreen({ kind: "menu" })}
       />
     )
   }
 
-  if (activeGame === "quiz") {
-    return <QuizGame vocab={vocab} onFinish={(score) => handleGameFinish("quiz", score)} />
-  }
-  if (activeGame === "match") {
-    return <MatchGame vocab={vocab} onFinish={(score) => handleGameFinish("match", score)} />
-  }
-  if (activeGame === "spelling") {
-    return <SpellingGame vocab={vocab} onFinish={(score) => handleGameFinish("spelling", score)} />
+  if (screen.kind === "playing") {
+    const { Component } = gameDefinition(screen.game)
+    return <Component vocab={vocab} onFinish={(score) => handleGameFinish(screen.game, score)} />
   }
 
-  return <GameMenuCard highScores={highScores} streak={streak} onSelect={setActiveGame} />
+  return (
+    <GameMenuCard highScores={highScores} streak={streak} onSelect={(game) => setScreen({ kind: "playing", game })} />
+  )
 }
 
 export { GameTab }

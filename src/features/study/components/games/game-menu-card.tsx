@@ -2,13 +2,8 @@
 
 import { Card } from "@/components/ui/card"
 import { Streak } from "@/components/ob/streak"
+import { GAME_REGISTRY } from "../../game-registry"
 import type { GameHighScores, GameStreak, GameType } from "../../types"
-
-const GAMES: { type: GameType; icon: string; label: string }[] = [
-  { type: "quiz", icon: "❓", label: "Trắc nghiệm" },
-  { type: "match", icon: "🃏", label: "Ghép cặp" },
-  { type: "spelling", icon: "⌨️", label: "Gõ từ" },
-]
 
 interface GameMenuCardProps {
   highScores: GameHighScores
@@ -23,7 +18,7 @@ function GameMenuCard({ highScores, streak, onSelect }: GameMenuCardProps) {
         <Streak days={7} done={Math.min(streak.count, 7)} icon="🔥" />
       </Card>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {GAMES.map((game) => (
+        {GAME_REGISTRY.map((game) => (
           <button
             key={game.type}
             type="button"
@@ -33,7 +28,7 @@ function GameMenuCard({ highScores, streak, onSelect }: GameMenuCardProps) {
             <span className="text-3xl">{game.icon}</span>
             <span className="font-bold">{game.label}</span>
             <span className="text-[12.5px] text-[var(--ob-color-text-subtle)]">
-              Kỷ lục: {highScores[game.type]}/10
+              Kỷ lục: {highScores[game.type]}/{game.maxScore}
             </span>
           </button>
         ))}
