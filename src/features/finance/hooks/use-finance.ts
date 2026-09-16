@@ -256,6 +256,34 @@ function useFinance() {
     [state, persist]
   )
 
+  const updateInvest = useCallback(
+    (id: number, invest: Omit<Investment, "id">) => {
+      try {
+        persist({
+          ...state,
+          invests: state.invests.map((i) => (i.id === id ? { ...invest, id } : i)),
+        })
+        toast.success(`Đã cập nhật khoản đầu tư "${invest.name}"`)
+      } catch {
+        toast.error("Không thể cập nhật khoản đầu tư. Vui lòng thử lại.")
+      }
+    },
+    [state, persist]
+  )
+
+  const removeInvest = useCallback(
+    (id: number) => {
+      const name = state.invests.find((i) => i.id === id)?.name
+      try {
+        persist({ ...state, invests: state.invests.filter((i) => i.id !== id) })
+        toast.success(name ? `Đã xoá khoản đầu tư "${name}"` : "Đã xoá khoản đầu tư")
+      } catch {
+        toast.error("Không thể xoá khoản đầu tư. Vui lòng thử lại.")
+      }
+    },
+    [state, persist]
+  )
+
   return {
     savings: state.savings,
     cards: state.cards,
@@ -277,6 +305,8 @@ function useFinance() {
     updateGold,
     removeGold,
     addInvest,
+    updateInvest,
+    removeInvest,
     replaceFinance: persist,
   }
 }

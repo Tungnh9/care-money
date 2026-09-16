@@ -4,97 +4,20 @@ import { useState } from "react"
 import { Calculator, Pencil, Trash2 } from "lucide-react"
 
 import { AlertDialog } from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Field } from "@/components/ui/field"
 import { Progress } from "@/components/ui/progress"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import type { SavingsFund } from "../types"
 import { AddSavingsFundForm } from "./add-savings-fund-form"
 import { AdjustSavingsFundModal } from "./adjust-savings-fund-modal"
+import { EditSavingsFundModal } from "./edit-savings-fund-modal"
 
 interface SavingsTabProps {
   savings: SavingsFund[]
   onAddSavingsFund: (fund: SavingsFund) => void
   onUpdateSavingsFund: (originalName: string, fund: SavingsFund) => void
   onRemoveSavingsFund: (name: string) => void
-}
-
-interface EditSavingsFundFormProps {
-  fund: SavingsFund
-  onSave: (fund: SavingsFund) => void
-  onCancel: () => void
-}
-
-function EditSavingsFundForm({ fund, onSave, onCancel }: EditSavingsFundFormProps) {
-  const [name, setName] = useState(fund.name)
-  const [amount, setAmount] = useState(String(fund.amount))
-  const [target, setTarget] = useState(String(fund.target))
-  const [note, setNote] = useState(fund.note ?? "")
-
-  return (
-    <div className="mt-2">
-      <div className="flex flex-wrap gap-3">
-        <Field
-          className="min-w-0 flex-[1_1_220px]"
-          label="Tên quỹ"
-          placeholder="vd: Quỹ khẩn cấp"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <Field
-          className="min-w-0 flex-[1_1_220px]"
-          label="Số tiền hiện có"
-          numeric
-          group
-          suffix="đ"
-          placeholder="0"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-        />
-        <Field
-          className="min-w-0 flex-[1_1_220px]"
-          label="Mục tiêu"
-          numeric
-          group
-          suffix="đ"
-          placeholder="0"
-          value={target}
-          onChange={(e) => setTarget(e.target.value)}
-        />
-        <Field
-          className="min-w-0 flex-[1_1_220px]"
-          label="Ghi chú"
-          placeholder="vd: Duy trì 3-6 tháng chi tiêu"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-        />
-      </div>
-      <div className="mt-4 flex gap-[10px]">
-        <Button
-          variant="primary"
-          size="sm"
-          type="button"
-          disabled={!name.trim() || !amount.trim() || !target.trim()}
-          onClick={() => {
-            const updated: SavingsFund = {
-              name: name.trim(),
-              amount: Number(amount) || 0,
-              target: Number(target) || 0,
-            }
-            if (note.trim()) updated.note = note.trim()
-            onSave(updated)
-          }}
-        >
-          Lưu
-        </Button>
-        <Button variant="ghost" size="sm" type="button" onClick={onCancel}>
-          Huỷ
-        </Button>
-      </div>
-    </div>
-  )
 }
 
 function SavingsTab({
@@ -146,30 +69,17 @@ function SavingsTab({
                 </button>
               </div>
             </div>
-            {editingName === fund.name ? (
-              <EditSavingsFundForm
-                fund={fund}
-                onSave={(updated) => {
-                  onUpdateSavingsFund(fund.name, updated)
-                  setEditingName(null)
-                }}
-                onCancel={() => setEditingName(null)}
-              />
-            ) : (
-              <>
-                <Progress
-                  value={Math.min((fund.amount / fund.target) * 100, 100)}
-                  tone="action"
-                  label={formatMoney(fund.amount, hidden)}
-                  hint={`trên ${formatMoney(fund.target, hidden)}`}
-                />
-                {fund.note ? (
-                  <div className="mt-2 text-[12.5px] text-[var(--ob-color-text-subtle)]">
-                    {fund.note}
-                  </div>
-                ) : null}
-              </>
-            )}
+            <Progress
+              value={Math.min((fund.amount / fund.target) * 100, 100)}
+              tone="action"
+              label={formatMoney(fund.amount, hidden)}
+              hint={`trên ${formatMoney(fund.target, hidden)}`}
+            />
+            {fund.note ? (
+              <div className="mt-2 text-[12.5px] text-[var(--ob-color-text-subtle)]">
+                {fund.note}
+              </div>
+            ) : null}
           </div>
         ))
       ) : (
@@ -184,6 +94,14 @@ function SavingsTab({
         fund={savings.find((f) => f.name === adjustingName) ?? null}
         onOpenChange={(open) => !open && setAdjustingName(null)}
         onConfirm={(updated) => onUpdateSavingsFund(updated.name, updated)}
+      />
+      <EditSavingsFundModal
+        fund={savings.find((f) => f.name === editingName) ?? null}
+        onOpenChange={(open) => !open && setEditingName(null)}
+        onSave={(updated) => {
+          if (editingName) onUpdateSavingsFund(editingName, updated)
+          setEditingName(null)
+        }}
       />
       <AlertDialog
         open={!!deletingName}
