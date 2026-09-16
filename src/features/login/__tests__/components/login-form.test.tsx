@@ -4,7 +4,7 @@ import { fireEvent, render, screen } from "@testing-library/react"
 import { LoginForm } from "../../components/login-form"
 import { EMPTY_CREDENTIALS_MESSAGE } from "../../schemas"
 import { MAX_ATTEMPTS, LOCKOUT_MINUTES } from "../../hooks/use-login-lockout"
-import { MOCK_ACCOUNT } from "../../mock-data"
+import { MOCK_ACCOUNT } from "@/lib/mock-account"
 import { getStoredUser } from "@/lib/auth"
 
 const push = vi.fn()
