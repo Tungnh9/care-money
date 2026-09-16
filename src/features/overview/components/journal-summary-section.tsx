@@ -36,9 +36,6 @@ function JournalSummarySection({ entries }: JournalSummarySectionProps) {
                 </div>
               </div>
             ))}
-            <Link href="/journal" className={buttonVariants({ variant: "secondary", size: "sm", className: "mt-4" })}>
-              Viết thêm một bài
-            </Link>
           </div>
         ) : (
           <Empty pose="book" size={78} title="Chưa có bài nào cho hôm nay" hint="Ba câu là đủ để tuần sau nhìn lại.">
