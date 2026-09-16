@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { matchScoreFromFlips, pickRandomSet } from "../../game-calculations"
 import type { VocabEntry } from "../../types"
@@ -34,7 +34,20 @@ function MatchGame({ vocab, onFinish }: MatchGameProps) {
   const [flippedCards, setFlippedCards] = useState<MatchCard[]>([])
   const [matchedIds, setMatchedIds] = useState<string[]>([])
   const [flipsUsed, setFlipsUsed] = useState(0)
-  const [locked, setLocked] = useState(false)
+  // locked suy ra thẳng từ flippedCards thay vì 1 state riêng — luôn đúng 2 lá đang lật (kể cả
+  // lệch cặp, chờ auto-lật úp lại) thì khoá bàn chơi, không cần đồng bộ tay 1 cờ bool riêng qua
+  // từng nhánh (ăn cặp/lệch cặp/hết giờ chờ).
+  const locked = flippedCards.length === 2
+  const mismatchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Dọn timer chờ lật úp lại nếu component unmount giữa chừng (vd. rời tab "Trò chơi" ngay sau
+  // khi lật lệch cặp) — nếu không, setTimeout vẫn bắn sau khi unmount và gọi setState trên
+  // instance đã chết.
+  useEffect(() => {
+    return () => {
+      if (mismatchTimerRef.current) clearTimeout(mismatchTimerRef.current)
+    }
+  }, [])
 
   function isFaceUp(card: MatchCard): boolean {
     return flippedCards.some((c) => c.key === card.key) || matchedIds.includes(card.vocabId)
@@ -62,10 +75,8 @@ function MatchGame({ vocab, onFinish }: MatchGameProps) {
       return
     }
 
-    setLocked(true)
-    setTimeout(() => {
+    mismatchTimerRef.current = setTimeout(() => {
       setFlippedCards([])
-      setLocked(false)
     }, MISMATCH_DELAY_MS)
   }
 

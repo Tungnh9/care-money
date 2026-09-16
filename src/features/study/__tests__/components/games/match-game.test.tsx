@@ -93,4 +93,20 @@ describe("MatchGame", () => {
     // không phải trên số "lượt" (turn) là 7.
     expect(onFinish).toHaveBeenCalledWith(matchScoreFromFlips(6, 14))
   })
+
+  it("clears the pending mismatch timer on unmount so it never fires afterwards", () => {
+    const clearTimeoutSpy = vi.spyOn(window, "clearTimeout")
+    const { unmount } = render(<MatchGame vocab={VOCAB} onFinish={vi.fn()} />)
+
+    const sorted = sortedByVocabId(screen.getAllByRole("button"))
+    fireEvent.click(sorted[0])
+    fireEvent.click(sorted[2]) // chắc chắn lệch cặp, đặt lịch setTimeout 800ms lật úp lại
+
+    unmount()
+
+    expect(clearTimeoutSpy).toHaveBeenCalled()
+    // Không có state nào bị set sau unmount — advanceTimersByTime không được ném lỗi.
+    expect(() => act(() => vi.advanceTimersByTime(800))).not.toThrow()
+    clearTimeoutSpy.mockRestore()
+  })
 })
