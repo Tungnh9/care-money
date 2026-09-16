@@ -1,3 +1,4 @@
+import { StrictMode } from "react"
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { render, screen, fireEvent, act } from "@testing-library/react"
 
@@ -80,5 +81,29 @@ describe("QuizGame", () => {
     })
 
     expect(screen.getByText("Câu 2/10", { exact: false })).toBeInTheDocument()
+  })
+
+  it("calls onFinish exactly once when every question times out, even under React Strict Mode", () => {
+    const onFinish = vi.fn()
+    render(
+      <StrictMode>
+        <QuizGame vocab={VOCAB} onFinish={onFinish} />
+      </StrictMode>
+    )
+
+    for (let round = 0; round < 10; round++) {
+      act(() => {
+        vi.advanceTimersByTime(10_000)
+      })
+    }
+
+    expect(onFinish).toHaveBeenCalledTimes(1)
+    expect(onFinish).toHaveBeenCalledWith(0)
+  })
+
+  it("shows an empty-state message instead of crashing when there is no vocab", () => {
+    render(<QuizGame vocab={[]} onFinish={vi.fn()} />)
+
+    expect(screen.getByText("Chưa đủ từ vựng để chơi")).toBeInTheDocument()
   })
 })

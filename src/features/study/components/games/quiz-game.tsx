@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { Empty } from "@/components/ob/empty"
+import { QUIZ_QUESTION_COUNT } from "../../game-config"
 import { pickQuizOptions, pickRandomSet } from "../../game-calculations"
 import type { VocabEntry } from "../../types"
 
-const QUESTION_COUNT = 10
 const QUESTION_SECONDS = 10
 
 interface QuizGameProps {
@@ -20,7 +21,7 @@ interface QuizQuestion {
 }
 
 function buildQuestions(vocab: VocabEntry[]): QuizQuestion[] {
-  return pickRandomSet(vocab, QUESTION_COUNT).map((correct) => ({
+  return pickRandomSet(vocab, QUIZ_QUESTION_COUNT).map((correct) => ({
     correct,
     options: pickQuizOptions(vocab, correct, 4),
   }))
@@ -44,25 +45,35 @@ function QuizGame({ vocab, onFinish }: QuizGameProps) {
     setIndex(index + 1)
   }
 
-  // Mirror của cách Pomodoro (pomodoro.tsx) chạy đồng hồ đếm ngược: 1 setInterval trong effect
-  // khoá theo "vòng hiện tại" (ở đây là index câu hỏi), dùng updater dạng hàm để đọc giá trị mới
-  // nhất mà không cần đưa secondsLeft vào dependency — effect chỉ tạo lại khi sang câu mới.
+  // 1 setInterval khoá theo "vòng hiện tại" (index câu hỏi) chỉ làm đúng 1 việc: đếm lùi, dùng
+  // updater dạng hàm THUẦN (không side effect) để React Strict Mode (bật mặc định khi
+  // reactStrictMode không cấu hình trong next.config.ts) có thể double-invoke an toàn lúc dev mà
+  // không gọi trùng bất kỳ side effect nào.
   useEffect(() => {
     const id = setInterval(() => {
-      setSecondsLeft((s) => {
-        if (s > 1) return s - 1
-        clearInterval(id)
-        advance(false)
-        return QUESTION_SECONDS
-      })
+      setSecondsLeft((s) => Math.max(0, s - 1))
     }, 1000)
     return () => clearInterval(id)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index])
+
+  // Side effect thật sự (advance câu hỏi khi hết giờ) tách hẳn khỏi updater ở effect trên, đặt
+  // trong effect riêng theo dõi secondsLeft — chỉ chạy khi giá trị THẬT SỰ đổi (React bỏ qua
+  // lần double-invoke thứ 2 nếu nó trả về cùng giá trị), nên advance()/onFinish không bị gọi 2 lần.
+  useEffect(() => {
+    if (secondsLeft > 0) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- chỉ chạy đúng lúc hết giờ, không phải mỗi lần effect chạy
+    setSecondsLeft(QUESTION_SECONDS)
+    advance(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [secondsLeft])
 
   function handleSelect(optionId: string) {
     setSecondsLeft(QUESTION_SECONDS)
     advance(optionId === question.correct.id)
+  }
+
+  if (!question) {
+    return <Empty pose="sleep" title="Chưa đủ từ vựng để chơi" hint="Cần thêm từ vựng trong ngân hàng từ." />
   }
 
   return (
