@@ -56,10 +56,11 @@ describe("OverviewView", () => {
 
     render(<OverviewView vocab={VOCAB} grammar={GRAMMAR} />)
 
-    await waitFor(() => expect(screen.getByText("Ngân sách tháng này")).toBeInTheDocument())
-    expect(screen.getByText(formatMoney(20_000_000))).toBeInTheDocument()
-    expect(screen.getByText(formatMoney(5_000_000))).toBeInTheDocument()
-    expect(screen.getByText(formatMoney(15_000_000))).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText("Chi tiêu tháng này")).toBeInTheDocument())
+    const card = screen.getByText("Chi tiêu tháng này").closest("section") as HTMLElement
+    await waitFor(() => expect(within(card).getByText(formatMoney(5_000_000))).toBeInTheDocument())
+    expect(within(card).getByText(formatMoney(20_000_000), { exact: false })).toBeInTheDocument()
+    expect(within(card).getByText(formatMoney(15_000_000), { exact: false })).toBeInTheDocument()
   })
 
   it("hides the budget section when the chitieu module is turned off", async () => {
@@ -71,7 +72,7 @@ describe("OverviewView", () => {
     render(<OverviewView vocab={VOCAB} grammar={GRAMMAR} />)
 
     await waitFor(() => expect(screen.getByText("Tài chính")).toBeInTheDocument())
-    expect(screen.queryByText("Ngân sách tháng này")).not.toBeInTheDocument()
+    expect(screen.queryByText("Chi tiêu tháng này")).not.toBeInTheDocument()
   })
 
   it("ticks the real task through useStudy(), not a mock", async () => {
