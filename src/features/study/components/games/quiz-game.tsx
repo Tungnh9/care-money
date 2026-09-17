@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import { Empty } from "@/components/ob/empty"
+import { Progress } from "@/components/ui/progress"
 import { QUIZ_QUESTION_COUNT } from "../../game-config"
 import { pickQuizOptions, pickRandomSet } from "../../game-calculations"
 import type { VocabEntry } from "../../types"
@@ -12,7 +14,7 @@ const QUESTION_SECONDS = 10
 
 interface QuizGameProps {
   vocab: VocabEntry[]
-  onFinish: (score: number) => void
+  onFinish: (score: number, total: number) => void
 }
 
 interface QuizQuestion {
@@ -38,7 +40,7 @@ function QuizGame({ vocab, onFinish }: QuizGameProps) {
   function advance(gainedPoint: boolean) {
     const nextScore = gainedPoint ? score + 1 : score
     if (index + 1 >= questions.length) {
-      onFinish(nextScore)
+      onFinish(nextScore, questions.length)
       return
     }
     setScore(nextScore)
@@ -48,24 +50,27 @@ function QuizGame({ vocab, onFinish }: QuizGameProps) {
   // 1 setInterval khoá theo "vòng hiện tại" (index câu hỏi) chỉ làm đúng 1 việc: đếm lùi, dùng
   // updater dạng hàm THUẦN (không side effect) để React Strict Mode (bật mặc định khi
   // reactStrictMode không cấu hình trong next.config.ts) có thể double-invoke an toàn lúc dev mà
-  // không gọi trùng bất kỳ side effect nào.
+  // không gọi trùng bất kỳ side effect nào. Không chạy khi hết câu hỏi (vd. thiếu từ vựng) — nếu
+  // không, đếm lùi vẫn chạy nền dù màn hình đang hiện "Chưa đủ từ vựng để chơi" và tự gọi
+  // onFinish(0) sau 10s dù người chơi chưa từng bấm gì.
   useEffect(() => {
+    if (!questions.length) return
     const id = setInterval(() => {
       setSecondsLeft((s) => Math.max(0, s - 1))
     }, 1000)
     return () => clearInterval(id)
-  }, [index])
+  }, [index, questions.length])
 
   // Side effect thật sự (advance câu hỏi khi hết giờ) tách hẳn khỏi updater ở effect trên, đặt
   // trong effect riêng theo dõi secondsLeft — chỉ chạy khi giá trị THẬT SỰ đổi (React bỏ qua
   // lần double-invoke thứ 2 nếu nó trả về cùng giá trị), nên advance()/onFinish không bị gọi 2 lần.
   useEffect(() => {
-    if (secondsLeft > 0) return
+    if (!questions.length || secondsLeft > 0) return
     // eslint-disable-next-line react-hooks/set-state-in-effect -- chỉ chạy đúng lúc hết giờ, không phải mỗi lần effect chạy
     setSecondsLeft(QUESTION_SECONDS)
     advance(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [secondsLeft])
+  }, [secondsLeft, questions.length])
 
   function handleSelect(optionId: string) {
     setSecondsLeft(QUESTION_SECONDS)
@@ -78,13 +83,23 @@ function QuizGame({ vocab, onFinish }: QuizGameProps) {
 
   return (
     <div>
-      <p className="mb-2 text-sm text-[var(--ob-color-text-subtle)]">
-        Câu {index + 1}/{questions.length} · còn {secondsLeft}s
-      </p>
-      <h3 className="mb-4 text-xl font-bold">{question.correct.word}</h3>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <Card label={`Câu ${index + 1}/${questions.length}`} className="mb-4">
+        <Progress
+          value={(secondsLeft / QUESTION_SECONDS) * 100}
+          tone={secondsLeft <= 3 ? "expense" : "action"}
+          hint={`còn ${secondsLeft}s`}
+        />
+        <h3 className="mt-4 text-xl font-bold">{question.correct.word}</h3>
+      </Card>
+      <div className="grid grid-cols-1 gap-[10px] sm:grid-cols-2">
         {question.options.map((option) => (
-          <Button key={option.id} type="button" variant="secondary" onClick={() => handleSelect(option.id)}>
+          <Button
+            key={option.id}
+            type="button"
+            variant="outline"
+            onClick={() => handleSelect(option.id)}
+            className="w-full justify-start rounded-[var(--ob-radius-md)] px-[18px] py-[13px] text-left text-[14.5px] font-semibold"
+          >
             {option.meaning}
           </Button>
         ))}

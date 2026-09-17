@@ -1,7 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import { ChevronLeft } from "lucide-react"
 
+import { Button } from "@/components/ui/button"
 import { gameDefinition } from "../../game-registry"
 import type { GameHighScores, GameStreak, GameType, VocabEntry } from "../../types"
 import { GameMenuCard } from "./game-menu-card"
@@ -43,7 +45,21 @@ function GameTab({ vocab, highScores, streak, onFinish }: GameTabProps) {
 
   if (screen.kind === "playing") {
     const { Component } = gameDefinition(screen.game)
-    return <Component vocab={vocab} onFinish={(score) => handleGameFinish(screen.game, score)} />
+    return (
+      <div>
+        <Button
+          variant="ghost"
+          size="sm"
+          type="button"
+          className="mb-4"
+          onClick={() => setScreen({ kind: "menu" })}
+        >
+          <ChevronLeft size={16} />
+          Về màn chọn
+        </Button>
+        <Component vocab={vocab} onFinish={(score) => handleGameFinish(screen.game, score)} />
+      </div>
+    )
   }
 
   return (

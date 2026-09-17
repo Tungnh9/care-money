@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState } from "react"
 
+import { cn } from "@/lib/utils"
+import { Empty } from "@/components/ob/empty"
+import { Fireworks } from "@/components/ob/fireworks"
 import { matchScoreFromFlips, pickRandomSet } from "../../game-calculations"
 import type { VocabEntry } from "../../types"
 
@@ -10,7 +13,7 @@ const MISMATCH_DELAY_MS = 800
 
 interface MatchGameProps {
   vocab: VocabEntry[]
-  onFinish: (score: number) => void
+  onFinish: (score: number, total?: number) => void
 }
 
 interface MatchCard {
@@ -39,6 +42,11 @@ function MatchGame({ vocab, onFinish }: MatchGameProps) {
   // từng nhánh (ăn cặp/lệch cặp/hết giờ chờ).
   const locked = flippedCards.length === 2
   const mismatchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // null = không có hiệu ứng; khác null = nonce để remount <Fireworks> mỗi lần ăn 1 cặp mới, kể
+  // cả khi 2 cặp liên tiếp ăn đúng (key đổi mới bắt animation phát lại từ đầu). Dùng luôn
+  // nextMatched.length (đã tính bên dưới) làm nonce — nó vốn đã tăng dần đúng 1 mỗi lần ăn cặp,
+  // không cần thêm ref/hàm impure (Date.now()) nào khác để tạo giá trị đó.
+  const [matchBurst, setMatchBurst] = useState<number | null>(null)
 
   // Dọn timer chờ lật úp lại nếu component unmount giữa chừng (vd. rời tab "Trò chơi" ngay sau
   // khi lật lệch cặp) — nếu không, setTimeout vẫn bắn sau khi unmount và gọi setState trên
@@ -69,6 +77,7 @@ function MatchGame({ vocab, onFinish }: MatchGameProps) {
       const nextMatched = [...matchedIds, first.vocabId]
       setMatchedIds(nextMatched)
       setFlippedCards([])
+      setMatchBurst(nextMatched.length)
       if (nextMatched.length === actualPairCount) {
         onFinish(matchScoreFromFlips(actualPairCount, usedFlips))
       }
@@ -80,20 +89,36 @@ function MatchGame({ vocab, onFinish }: MatchGameProps) {
     }, MISMATCH_DELAY_MS)
   }
 
+  if (!cards.length) {
+    return <Empty pose="sleep" title="Chưa đủ từ vựng để chơi" hint="Cần thêm từ vựng trong ngân hàng từ." />
+  }
+
   return (
-    <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
-      {cards.map((card) => (
-        <button
-          key={card.key}
-          type="button"
-          data-vocab-id={card.vocabId}
-          disabled={matchedIds.includes(card.vocabId)}
-          onClick={() => handleFlip(card)}
-          className="flex aspect-square items-center justify-center rounded-[var(--ob-radius-md)] border-[1.5px] border-[var(--ob-color-border)] bg-[var(--ob-color-surface)] p-2 text-center text-[13px] font-bold"
-        >
-          {isFaceUp(card) ? card.label : "?"}
-        </button>
-      ))}
+    <div className="relative mx-auto max-w-[560px]">
+      {matchBurst !== null ? <Fireworks key={matchBurst} /> : null}
+      <div className="grid grid-cols-4 gap-2.5">
+        {cards.map((card) => {
+          const isMatched = matchedIds.includes(card.vocabId)
+          const faceUp = isFaceUp(card)
+          return (
+            <button
+              key={card.key}
+              type="button"
+              data-vocab-id={card.vocabId}
+              disabled={isMatched}
+              onClick={() => handleFlip(card)}
+              className={cn(
+                "flex aspect-square items-center justify-center overflow-hidden rounded-[var(--ob-radius-md)] border-[1.5px] p-2 text-center text-[13px] leading-tight font-bold transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)]",
+                isMatched
+                  ? "border-transparent bg-[var(--ob-color-income-soft)] text-[var(--ob-color-income)]"
+                  : "border-[var(--ob-color-border)] bg-[var(--ob-color-surface)] text-[var(--ob-color-text)] hover:border-[var(--ob-color-action)] hover:bg-[var(--ob-color-action-soft)]"
+              )}
+            >
+              {faceUp ? card.label : "?"}
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }

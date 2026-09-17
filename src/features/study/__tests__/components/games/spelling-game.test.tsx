@@ -1,100 +1,154 @@
-import { describe, it, expect, vi } from "vitest"
-import { render, screen, fireEvent } from "@testing-library/react"
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
+import { render, screen, fireEvent, act } from "@testing-library/react"
 
 import { SpellingGame } from "../../../components/games/spelling-game"
 import type { VocabEntry } from "../../../types"
 
+vi.mock("@/lib/speak", () => ({ speakWord: vi.fn() }))
+
+import { speakWord } from "@/lib/speak"
+
 function vocab(id: string): VocabEntry {
-  return { id, word: `word-${id}`, meaning: `nghĩa-${id}`, addedAt: "2026-01-01" }
+  return { id, word: `word${id}`, meaning: `nghĩa-${id}`, addedAt: "2026-01-01" }
 }
 
-const VOCAB: VocabEntry[] = Array.from({ length: 15 }, (_, i) => vocab(`${i}`))
+const VOCAB: VocabEntry[] = Array.from({ length: 10 }, (_, i) => vocab(`${i}`))
 
-function currentWord(): VocabEntry {
-  const meaning = screen.getByTestId("spelling-meaning").textContent
-  const entry = VOCAB.find((v) => v.meaning === meaning)
-  if (!entry) throw new Error("test setup error: current meaning not found in VOCAB")
-  return entry
+function typeChar(area: HTMLElement, key: string) {
+  fireEvent.keyDown(area, { key })
+}
+
+function typeWord(area: HTMLElement, word: string) {
+  for (const ch of word) typeChar(area, ch)
 }
 
 describe("SpellingGame", () => {
-  it("shows the meaning for the first word and an input to type the answer", () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it("shows the round progress and full lives at the start", () => {
     render(<SpellingGame vocab={VOCAB} onFinish={vi.fn()} />)
 
-    expect(screen.getByText("Từ 1/10", { exact: false })).toBeInTheDocument()
-    expect(screen.getByLabelText("Gõ lại từ tiếng Anh", { exact: false })).toBeInTheDocument()
-  })
-
-  it("accepts a correct answer regardless of case, and calls onFinish with 10 after 10 correct words", () => {
-    const onFinish = vi.fn()
-    render(<SpellingGame vocab={VOCAB} onFinish={onFinish} />)
-
-    for (let i = 0; i < 10; i++) {
-      const entry = currentWord()
-      fireEvent.change(screen.getByLabelText("Gõ lại từ tiếng Anh", { exact: false }), {
-        target: { value: entry.word.toUpperCase() },
-      })
-      fireEvent.click(screen.getByRole("button"))
-    }
-
-    expect(onFinish).toHaveBeenCalledWith(10)
-  })
-
-  it("does not count a wrong spelling as correct", () => {
-    const onFinish = vi.fn()
-    render(<SpellingGame vocab={VOCAB} onFinish={onFinish} />)
-
-    for (let i = 0; i < 10; i++) {
-      fireEvent.change(screen.getByLabelText("Gõ lại từ tiếng Anh", { exact: false }), {
-        target: { value: "definitely-wrong-answer" },
-      })
-      fireEvent.click(screen.getByRole("button"))
-    }
-
-    expect(onFinish).toHaveBeenCalledWith(0)
-  })
-
-  it("never asks the player to type a word containing a literal ... placeholder", () => {
-    const templateEntry: VocabEntry = {
-      id: "tmpl",
-      word: "offer ... (to ...)",
-      meaning: "mẫu câu không thể gõ đúng",
-      addedAt: "2026-01-01",
-    }
-    render(<SpellingGame vocab={[...VOCAB, templateEntry]} onFinish={vi.fn()} />)
-
-    for (let i = 0; i < 10; i++) {
-      expect(screen.getByTestId("spelling-meaning").textContent).not.toBe(templateEntry.meaning)
-      fireEvent.change(screen.getByLabelText("Gõ lại từ tiếng Anh", { exact: false }), { target: { value: "x" } })
-      fireEvent.click(screen.getByRole("button"))
-    }
+    expect(screen.getByText("Từ 0/10", { exact: false })).toBeInTheDocument()
+    expect(screen.getAllByTestId("heart-full")).toHaveLength(5)
+    expect(screen.queryAllByTestId("heart-empty")).toHaveLength(0)
   })
 
   it("shows an empty-state message instead of crashing when there is no typable vocab", () => {
-    const templateOnly: VocabEntry[] = [
-      { id: "tmpl", word: "go to ...", meaning: "đi học ở đâu đó", addedAt: "2026-01-01" },
-    ]
-    render(<SpellingGame vocab={templateOnly} onFinish={vi.fn()} />)
+    render(<SpellingGame vocab={[]} onFinish={vi.fn()} />)
 
     expect(screen.getByText("Chưa đủ từ vựng để chơi")).toBeInTheDocument()
   })
 
-  it("submits when Enter is pressed inside the input, not just via button click", () => {
+  it("spawns a falling word shortly after mount", () => {
     render(<SpellingGame vocab={VOCAB} onFinish={vi.fn()} />)
 
-    const input = screen.getByLabelText("Gõ lại từ tiếng Anh", { exact: false })
-    fireEvent.change(input, { target: { value: currentWord().word } })
-    fireEvent.submit(input.closest("form")!)
+    act(() => {
+      vi.advanceTimersByTime(100)
+    })
 
-    expect(screen.getByText("Từ 2/10", { exact: false })).toBeInTheDocument()
+    expect(screen.getAllByTestId("falling-word").length).toBeGreaterThan(0)
   })
 
-  it("keeps the input focused after moving to the next word", () => {
+  it("destroys a word when typed correctly, speaks it aloud, and advances the resolved count", () => {
     render(<SpellingGame vocab={VOCAB} onFinish={vi.fn()} />)
 
-    fireEvent.change(screen.getByLabelText("Gõ lại từ tiếng Anh", { exact: false }), { target: { value: "x" } })
-    fireEvent.click(screen.getByRole("button"))
+    act(() => {
+      vi.advanceTimersByTime(100)
+    })
 
-    expect(screen.getByLabelText("Gõ lại từ tiếng Anh", { exact: false })).toHaveFocus()
+    const area = screen.getByRole("application")
+    const word = screen.getAllByTestId("falling-word")[0].textContent!
+
+    typeWord(area, word)
+
+    expect(screen.queryByText(word)).not.toBeInTheDocument()
+    expect(speakWord).toHaveBeenCalledWith(word)
+    expect(screen.getByText("Từ 1/10", { exact: false })).toBeInTheDocument()
+  })
+
+  it("ignores a keystroke that doesn't match any falling word's prefix", () => {
+    render(<SpellingGame vocab={VOCAB} onFinish={vi.fn()} />)
+
+    act(() => {
+      vi.advanceTimersByTime(100)
+    })
+
+    const area = screen.getByRole("application")
+    typeChar(area, "z") // không từ mẫu "wordN" nào bắt đầu bằng z
+
+    expect(screen.getByText("Gõ từ tiếng Anh đang rơi...")).toBeInTheDocument()
+  })
+
+  it("removes the last typed character on Backspace", () => {
+    render(<SpellingGame vocab={VOCAB} onFinish={vi.fn()} />)
+
+    act(() => {
+      vi.advanceTimersByTime(100)
+    })
+
+    const area = screen.getByRole("application")
+    typeChar(area, "w")
+    typeChar(area, "o")
+    expect(screen.getByText("Đang gõ: wo")).toBeInTheDocument()
+
+    fireEvent.keyDown(area, { key: "Backspace" })
+    expect(screen.getByText("Đang gõ: w")).toBeInTheDocument()
+  })
+
+  it("loses a life and removes the word once it falls for the full duration without being typed", () => {
+    render(<SpellingGame vocab={VOCAB} onFinish={vi.fn()} />)
+
+    act(() => {
+      vi.advanceTimersByTime(100)
+    })
+    expect(screen.getAllByTestId("falling-word").length).toBeGreaterThan(0)
+
+    act(() => {
+      vi.advanceTimersByTime(15000)
+    })
+
+    expect(screen.getAllByTestId("heart-full")).toHaveLength(4)
+    expect(screen.getAllByTestId("heart-empty")).toHaveLength(1)
+  })
+
+  it("calls onFinish with the destroyed count exactly once all lives are lost", () => {
+    const onFinish = vi.fn()
+    render(<SpellingGame vocab={VOCAB} onFinish={onFinish} />)
+
+    // Không gõ gì cả — để các từ lần lượt rơi hết, mất dần cả 5 mạng.
+    act(() => {
+      vi.advanceTimersByTime(80_000)
+    })
+
+    expect(onFinish).toHaveBeenCalledTimes(1)
+    expect(onFinish).toHaveBeenCalledWith(0)
+  })
+
+  it("calls onFinish with the destroyed count once every word in the round is resolved", () => {
+    const onFinish = vi.fn()
+    render(<SpellingGame vocab={VOCAB} onFinish={onFinish} />)
+
+    const area = screen.getByRole("application")
+    // Gõ đúng từng từ ngay khi nó vừa xuất hiện, không để rơi hết mạng nào — chạy tới khi cả 10
+    // từ đều được gõ xong.
+    for (let i = 0; i < 10; i++) {
+      act(() => {
+        vi.advanceTimersByTime(2300) // > SPAWN_GAP_MS, đủ để từ tiếp theo xuất hiện
+      })
+      const words = screen.queryAllByTestId("falling-word")
+      if (words.length) {
+        typeWord(area, words[0].textContent!)
+      }
+    }
+
+    expect(onFinish).toHaveBeenCalledTimes(1)
+    expect(onFinish).toHaveBeenCalledWith(10)
   })
 })

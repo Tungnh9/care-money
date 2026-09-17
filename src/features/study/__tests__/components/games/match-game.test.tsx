@@ -94,6 +94,35 @@ describe("MatchGame", () => {
     expect(onFinish).toHaveBeenCalledWith(matchScoreFromFlips(6, 14))
   })
 
+  it("plays a firework burst when a pair is matched", () => {
+    render(<MatchGame vocab={VOCAB} onFinish={vi.fn()} />)
+
+    const sorted = sortedByVocabId(screen.getAllByRole("button"))
+    expect(document.querySelectorAll(".ob-firework-spark")).toHaveLength(0)
+
+    fireEvent.click(sorted[0])
+    fireEvent.click(sorted[1]) // sorted[0]/[1] luôn là 1 cặp giống nhau
+
+    expect(document.querySelectorAll(".ob-firework-spark").length).toBeGreaterThan(0)
+  })
+
+  it("replays the firework burst on a second match, not just the first", () => {
+    render(<MatchGame vocab={VOCAB} onFinish={vi.fn()} />)
+
+    const sorted = sortedByVocabId(screen.getAllByRole("button"))
+    fireEvent.click(sorted[0])
+    fireEvent.click(sorted[1])
+    const firstBurst = document.querySelector(".ob-firework-spark")
+    expect(firstBurst).not.toBeNull()
+
+    fireEvent.click(sorted[2])
+    fireEvent.click(sorted[3])
+    const secondBurst = document.querySelector(".ob-firework-spark")
+
+    // key (nonce) đổi mới → React remount hẳn node mới, không phải node cũ tái sử dụng.
+    expect(secondBurst).not.toBe(firstBurst)
+  })
+
   it("clears the pending mismatch timer on unmount so it never fires afterwards", () => {
     const clearTimeoutSpy = vi.spyOn(window, "clearTimeout")
     const { unmount } = render(<MatchGame vocab={VOCAB} onFinish={vi.fn()} />)
