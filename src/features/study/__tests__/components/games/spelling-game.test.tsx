@@ -102,6 +102,19 @@ describe("SpellingGame", () => {
     expect(screen.getByText("Đang gõ: w")).toBeInTheDocument()
   })
 
+  it("prevents the browser's default action for space and Backspace, so the page doesn't scroll/navigate mid-game", () => {
+    render(<SpellingGame vocab={VOCAB} onFinish={vi.fn()} />)
+
+    act(() => {
+      vi.advanceTimersByTime(100)
+    })
+
+    const area = screen.getByRole("application")
+    // dispatchEvent (dùng bên trong fireEvent) trả về false nếu có handler nào gọi preventDefault().
+    expect(fireEvent.keyDown(area, { key: " " })).toBe(false)
+    expect(fireEvent.keyDown(area, { key: "Backspace" })).toBe(false)
+  })
+
   it("loses a life and removes the word once it falls for the full duration without being typed", () => {
     render(<SpellingGame vocab={VOCAB} onFinish={vi.fn()} />)
 
