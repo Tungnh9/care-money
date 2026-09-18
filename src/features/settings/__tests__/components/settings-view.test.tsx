@@ -4,6 +4,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { setStoredJournal } from "@/features/journal/journal-storage"
 import { setStoredFinance, DEFAULT_FINANCE_STATE } from "@/features/finance/finance-storage"
 import { getStoredSettings } from "@/lib/settings-storage"
+import { MOCK_ACCOUNT } from "@/lib/mock-account"
 import { EXPORT_VERSION } from "../../data-transfer"
 import { SettingsView } from "../../components/settings-view"
 
@@ -48,6 +49,10 @@ describe("SettingsView", () => {
     expect(screen.getByText("1 quỹ tiết kiệm", { exact: false })).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole("button", { name: "Xoá vĩnh viễn" }))
+    fireEvent.change(screen.getByLabelText("Mật khẩu", { exact: false }), {
+      target: { value: MOCK_ACCOUNT.password },
+    })
+    fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }))
 
     expect(screen.getByText("Đã xoá sạch.")).toBeInTheDocument()
   })

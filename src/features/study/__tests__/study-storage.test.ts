@@ -41,4 +41,28 @@ describe("getStoredStudy", () => {
 
     expect(getStoredStudy()).toEqual(DEFAULT_STUDY_STATE)
   })
+
+  it("backfills default game high scores and streak for data saved before this feature existed", () => {
+    window.localStorage.setItem(
+      STUDY_STORAGE_KEY,
+      JSON.stringify({ tasks: DEFAULT_STUDY_STATE.tasks, learned: ["v-1"] })
+    )
+
+    const state = getStoredStudy()
+    expect(state.gameHighScores).toEqual({ quiz: 0, match: 0, spelling: 0 })
+    expect(state.gameStreak).toEqual({ count: 0, lastPlayedDayKey: null })
+    expect(state.learned).toEqual(["v-1"])
+  })
+
+  it("keeps valid game high scores and streak already in storage", () => {
+    const saved = {
+      ...DEFAULT_STUDY_STATE,
+      gameHighScores: { quiz: 8, match: 6, spelling: 10 },
+      gameStreak: { count: 4, lastPlayedDayKey: "2026-09-15" },
+    }
+    window.localStorage.setItem(STUDY_STORAGE_KEY, JSON.stringify(saved))
+
+    expect(getStoredStudy().gameHighScores).toEqual({ quiz: 8, match: 6, spelling: 10 })
+    expect(getStoredStudy().gameStreak).toEqual({ count: 4, lastPlayedDayKey: "2026-09-15" })
+  })
 })

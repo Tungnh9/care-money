@@ -25,4 +25,17 @@ interface Task {
   done: boolean
 }
 
-export type { VocabEntry, GrammarEntry, Task }
+type GameType = "quiz" | "match" | "spelling"
+
+interface GameHighScores {
+  quiz: number
+  match: number
+  spelling: number
+}
+
+interface GameStreak {
+  count: number
+  lastPlayedDayKey: string | null
+}
+
+export type { VocabEntry, GrammarEntry, Task, GameType, GameHighScores, GameStreak }

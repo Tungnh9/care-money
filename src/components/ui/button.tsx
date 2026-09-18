@@ -14,6 +14,8 @@ const buttonVariants = cva(
         reward: "bg-[var(--ob-color-reward)] text-[var(--ob-vo-900)]",
         ghost:
           "border-[var(--ob-color-border)] bg-transparent text-[var(--ob-color-text)] hover:bg-[var(--ob-color-surface-sunken)]",
+        outline:
+          "border-[var(--ob-color-border)] bg-[var(--ob-color-surface)] text-[var(--ob-color-text)] hover:border-[var(--ob-color-action)] hover:bg-[var(--ob-color-action-soft)] hover:text-[var(--ob-color-action-strong)]",
       },
       size: {
         sm: "px-[18px] py-[8px] text-[13px]",

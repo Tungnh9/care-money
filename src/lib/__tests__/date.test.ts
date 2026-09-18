@@ -8,6 +8,7 @@ import {
   monthKeyFromDayKey,
   monthsFrom,
   monthsThroughYearEnd,
+  shiftDay,
   shiftMonth,
 } from "../date"
 
@@ -86,5 +87,20 @@ describe("monthsThroughYearEnd", () => {
 
   it("returns just December itself when starting in December", () => {
     expect(monthsThroughYearEnd("2026-12")).toEqual(["2026-12"])
+  })
+})
+
+describe("shiftDay", () => {
+  it("moves forward and backward within the same month", () => {
+    expect(shiftDay("2026-09-15", 1)).toBe("2026-09-16")
+    expect(shiftDay("2026-09-15", -1)).toBe("2026-09-14")
+  })
+
+  it("rolls over across a month boundary backward", () => {
+    expect(shiftDay("2026-09-01", -1)).toBe("2026-08-31")
+  })
+
+  it("rolls over across a year boundary backward", () => {
+    expect(shiftDay("2026-01-01", -1)).toBe("2025-12-31")
   })
 })

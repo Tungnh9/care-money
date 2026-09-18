@@ -35,6 +35,11 @@ function shiftMonth(month: string, delta: number): string {
   return monthKey(new Date(y, m - 1 + delta, 1))
 }
 
+function shiftDay(day: string, delta: number): string {
+  const [y, m, d] = day.split("-").map(Number)
+  return dayKey(new Date(y, m - 1, d + delta))
+}
+
 function monthsThroughYearEnd(fromMonth: string): string[] {
   const [, m] = fromMonth.split("-").map(Number)
   return monthsFrom(fromMonth, 12 - m + 1)
@@ -54,5 +59,6 @@ export {
   monthKeyFromDayKey,
   monthsFrom,
   monthsThroughYearEnd,
+  shiftDay,
   shiftMonth,
 }
