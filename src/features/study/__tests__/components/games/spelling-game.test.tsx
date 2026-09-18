@@ -128,7 +128,7 @@ describe("SpellingGame", () => {
     })
 
     expect(onFinish).toHaveBeenCalledTimes(1)
-    expect(onFinish).toHaveBeenCalledWith(0)
+    expect(onFinish).toHaveBeenCalledWith(0, 10)
   })
 
   it("calls onFinish with the destroyed count once every word in the round is resolved", () => {
@@ -149,6 +149,6 @@ describe("SpellingGame", () => {
     }
 
     expect(onFinish).toHaveBeenCalledTimes(1)
-    expect(onFinish).toHaveBeenCalledWith(10)
+    expect(onFinish).toHaveBeenCalledWith(10, 10)
   })
 })

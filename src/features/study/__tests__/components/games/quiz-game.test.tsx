@@ -35,7 +35,7 @@ describe("QuizGame", () => {
       fireEvent.click(screen.getAllByRole("button")[0])
     }
 
-    expect(onFinish).toHaveBeenCalledWith(expect.any(Number))
+    expect(onFinish).toHaveBeenCalledWith(expect.any(Number), 10)
   })
 
   it("scores 10/10 when the correct meaning is clicked for every question", () => {
@@ -51,7 +51,7 @@ describe("QuizGame", () => {
       fireEvent.click(correctButton)
     }
 
-    expect(onFinish).toHaveBeenCalledWith(10)
+    expect(onFinish).toHaveBeenCalledWith(10, 10)
   })
 
   it("scores 0/10 when a wrong meaning is clicked for every question", () => {
@@ -70,7 +70,7 @@ describe("QuizGame", () => {
       fireEvent.click(wrongButton!)
     }
 
-    expect(onFinish).toHaveBeenCalledWith(0)
+    expect(onFinish).toHaveBeenCalledWith(0, 10)
   })
 
   it("auto-advances to the next question when the 10-second timer runs out", () => {
@@ -98,7 +98,7 @@ describe("QuizGame", () => {
     }
 
     expect(onFinish).toHaveBeenCalledTimes(1)
-    expect(onFinish).toHaveBeenCalledWith(0)
+    expect(onFinish).toHaveBeenCalledWith(0, 10)
   })
 
   it("shows an empty-state message instead of crashing when there is no vocab", () => {
