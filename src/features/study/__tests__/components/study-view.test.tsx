@@ -132,4 +132,14 @@ describe("StudyView", () => {
     expect(vocabCard).toHaveClass("ob-tada")
     expect(vocabCard?.querySelector(".ob-conf")).toBeInTheDocument()
   })
+
+  it("renders the game menu when the Trò chơi tab is selected", () => {
+    render(<StudyView vocab={VOCAB} grammar={GRAMMAR} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Trò chơi" }))
+
+    expect(screen.getByText("Trắc nghiệm")).toBeInTheDocument()
+    expect(screen.getByText("Ghép cặp")).toBeInTheDocument()
+    expect(screen.getByText("Gõ từ")).toBeInTheDocument()
+  })
 })

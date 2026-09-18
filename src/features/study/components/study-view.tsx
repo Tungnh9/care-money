@@ -7,13 +7,14 @@ import { dayKey } from "@/lib/date"
 import { pickDaily } from "../daily-pick"
 import { useStudy } from "../hooks/use-study"
 import type { GrammarEntry, VocabEntry } from "../types"
+import { GameTab } from "./games/game-tab"
 import { GrammarHighlightCard, GrammarListCard } from "./grammar-card"
 import { LearnedProgressCard } from "./learned-progress-card"
 import { Pomodoro } from "./pomodoro"
 import { TasksCard } from "./tasks-card"
 import { VocabCard } from "./vocab-card"
 
-const TABS = ["Hôm nay", "Từ vựng", "Ngữ pháp"]
+const TABS = ["Hôm nay", "Từ vựng", "Ngữ pháp", "Trò chơi"]
 
 interface StudyViewProps {
   vocab: VocabEntry[]
@@ -22,7 +23,7 @@ interface StudyViewProps {
 
 function StudyView({ vocab, grammar }: StudyViewProps) {
   const [tab, setTab] = useState(TABS[0])
-  const { tasks, learned, toggleTask, toggleLearned } = useStudy()
+  const { tasks, learned, toggleTask, toggleLearned, gameHighScores, gameStreak, recordGameResult } = useStudy()
 
   const key = dayKey()
   const daily = pickDaily(vocab, 5, key, "vocab")
@@ -69,15 +70,17 @@ function StudyView({ vocab, grammar }: StudyViewProps) {
             className="min-w-0 flex-[1_1_300px]"
           />
         </div>
+      ) : tab === "Trò chơi" ? (
+        <div className="ob-card-grid">
+          <GameTab vocab={vocab} highScores={gameHighScores} streak={gameStreak} onFinish={recordGameResult} />
+        </div>
       ) : (
         <div className="ob-card-grid">
           {tab === "Từ vựng" ? (
             <VocabCard
               label={`Kho từ vựng giao tiếp · ${vocab.length} từ`}
               action={
-                <span className="text-[12.5px] text-[var(--ob-color-text-subtle)]">
-                  Đã học {learned.length}
-                </span>
+                <span className="text-[12.5px] text-[var(--ob-color-text-subtle)]">Đã học {learned.length}</span>
               }
               entries={vocab}
               learned={learned}
