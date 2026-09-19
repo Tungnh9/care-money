@@ -1082,6 +1082,41 @@ describe("useFinance toast notifications", () => {
     expect(toast.error).toHaveBeenCalledWith('Đã có cửa hàng tên "SJC". Vui lòng chọn tên khác.')
   })
 
+  it("updateGoldStore refuses to rename a store to a name another store already has", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.goldStores).toEqual([]))
+
+    act(() => {
+      result.current.addGoldStore({ name: "SJC", price: "935.000" })
+    })
+    act(() => {
+      result.current.addGoldStore({ name: "PNJ", price: "800.000" })
+    })
+    act(() => {
+      result.current.updateGoldStore("PNJ", { name: "SJC", price: "900.000" })
+    })
+
+    expect(toast.error).toHaveBeenCalledWith('Đã có cửa hàng tên "SJC". Vui lòng chọn tên khác.')
+    expect(result.current.goldStores).toEqual([
+      { name: "SJC", price: "935.000" },
+      { name: "PNJ", price: "800.000" },
+    ])
+  })
+
+  it("updateGoldStore allows keeping the same name while only changing the price", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.goldStores).toEqual([]))
+
+    act(() => {
+      result.current.addGoldStore({ name: "SJC", price: "935.000" })
+    })
+    act(() => {
+      result.current.updateGoldStore("SJC", { name: "SJC", price: "950.000" })
+    })
+
+    expect(result.current.goldStores).toEqual([{ name: "SJC", price: "950.000" }])
+  })
+
   it("updateGoldStore shows a success toast when the write succeeds", async () => {
     const { result } = renderHook(() => useFinance())
     await waitFor(() => expect(result.current.goldStores).toEqual([]))

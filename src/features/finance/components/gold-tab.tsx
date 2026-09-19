@@ -14,12 +14,17 @@ import {
   goldStorePrice,
   pct1,
   phanToChi,
+  signedMoney,
   sortGoldByDate,
+  summarizeGoldByStore,
   type FinanceSummary,
+  type GoldStoreSummary,
 } from "../finance-calculations"
 import type { GoldPurchase, GoldStore } from "../types"
 import { AddGoldForm } from "./add-gold-form"
 import { EditGoldPurchaseModal } from "./edit-gold-purchase-modal"
+import { GoldStoreSummaryCards } from "./gold-store-summary-cards"
+import { GoldStoreSummaryTable } from "./gold-store-summary-table"
 import { GoldStoresCard } from "./gold-stores-card"
 import { GoldTransactionsCards } from "./gold-transactions-cards"
 import { GoldTransactionsTable } from "./gold-transactions-table"
@@ -35,10 +40,6 @@ interface GoldTabProps {
   onAddGold: (purchase: Omit<GoldPurchase, "id">) => void
   onUpdateGold: (id: number, purchase: Omit<GoldPurchase, "id">) => void
   onRemoveGold: (id: number) => void
-}
-
-function signedMoney(n: number, hidden: boolean): string {
-  return (n >= 0 ? "+ " : "− ") + formatMoney(Math.abs(n), hidden)
 }
 
 function GoldTab({
@@ -65,6 +66,15 @@ function GoldTab({
   const lossCount = purchasePLs.filter((pl) => pl < 0).length
   const totalWin = purchasePLs.filter((pl) => pl >= 0).reduce((sum, pl) => sum + pl, 0)
   const totalLoss = purchasePLs.filter((pl) => pl < 0).reduce((sum, pl) => sum + pl, 0)
+  const storeSummaries = summarizeGoldByStore(gold, stores)
+  const storeTotal: GoldStoreSummary = {
+    store: "Tổng cộng",
+    phan: goldPhan,
+    avgBuy: Math.round(avgCost),
+    cost: goldCost,
+    value: goldValue,
+    pl: goldPL,
+  }
 
   const [editingId, setEditingId] = useState<number | null>(null)
   const [deletingId, setDeletingId] = useState<number | null>(null)
@@ -188,6 +198,20 @@ function GoldTab({
             onEdit={(purchase) => setEditingId(purchase.id)}
           />
         </div>
+        {storeSummaries.length ? (
+          <div className="mt-5">
+            <div className="ob-wave-divider mb-4" />
+            <div className="mb-3 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
+              Tổng hợp theo cửa hàng
+            </div>
+            <div className="hidden lg:block">
+              <GoldStoreSummaryTable summaries={storeSummaries} total={storeTotal} />
+            </div>
+            <div className="lg:hidden">
+              <GoldStoreSummaryCards summaries={storeSummaries} total={storeTotal} />
+            </div>
+          </div>
+        ) : null}
       </Card>
 
       <EditGoldPurchaseModal

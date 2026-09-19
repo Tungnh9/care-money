@@ -1,3 +1,4 @@
+import { formatMoney } from "@/lib/format"
 import type { FinanceState } from "./finance-storage"
 import type { GoldPurchase, GoldStore } from "./types"
 
@@ -6,6 +7,10 @@ function phanToChi(phan: number): string {
   const rest = phan % 10
   if (chi === 0) return `${rest} phân`
   return `${chi} chỉ${rest ? ` ${rest} phân` : ""}`
+}
+
+function signedMoney(n: number, hidden = false): string {
+  return (n >= 0 ? "+ " : "− ") + formatMoney(Math.abs(n), hidden)
 }
 
 function pct1(n: number): string {
@@ -36,6 +41,40 @@ function parseGoldDate(date: string): number {
 
 function sortGoldByDate(gold: GoldPurchase[]): GoldPurchase[] {
   return [...gold].sort((a, b) => parseGoldDate(b.date) - parseGoldDate(a.date))
+}
+
+interface GoldStoreSummary {
+  store: string
+  phan: number
+  avgBuy: number
+  cost: number
+  value: number
+  pl: number
+}
+
+// Gộp các lần mua theo từng cửa hàng — cần khi có nhiều cửa hàng, để thấy tổng khối lượng/lãi lỗ
+// theo từng nơi thay vì phải tự cộng tay từng dòng trong bảng giao dịch.
+function summarizeGoldByStore(gold: GoldPurchase[], stores: GoldStore[]): GoldStoreSummary[] {
+  const byStore = new Map<string, { phan: number; cost: number; value: number }>()
+  for (const purchase of gold) {
+    const price = goldStorePrice(stores, purchase.store)
+    const entry = byStore.get(purchase.store) ?? { phan: 0, cost: 0, value: 0 }
+    entry.phan += purchase.phan
+    entry.cost += purchase.phan * purchase.buy
+    entry.value += purchase.phan * price
+    byStore.set(purchase.store, entry)
+  }
+
+  return Array.from(byStore.entries())
+    .map(([store, { phan, cost, value }]) => ({
+      store,
+      phan,
+      avgBuy: phan > 0 ? Math.round(cost / phan) : 0,
+      cost,
+      value,
+      pl: value - cost,
+    }))
+    .sort((a, b) => a.store.localeCompare(b.store, "vi"))
 }
 
 interface FinanceSummary {
@@ -95,6 +134,7 @@ function summarizeFinance(state: FinanceState): FinanceSummary {
 
 export {
   phanToChi,
+  signedMoney,
   pct1,
   parseGoldPrice,
   summarizeFinance,
@@ -102,5 +142,7 @@ export {
   goldStorePrice,
   parseGoldDate,
   sortGoldByDate,
+  summarizeGoldByStore,
   type FinanceSummary,
+  type GoldStoreSummary,
 }

@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card"
 import { Figure } from "@/components/ob/figure"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
-import { pct1, type FinanceSummary } from "../finance-calculations"
+import { pct1, signedMoney, type FinanceSummary } from "../finance-calculations"
 import type { Investment } from "../types"
 import { AddInvestForm } from "./add-invest-form"
 import { EditInvestmentModal } from "./edit-investment-modal"
@@ -20,10 +20,6 @@ interface InvestmentsTabProps {
   onAddInvest: (invest: Omit<Investment, "id">) => void
   onUpdateInvest: (id: number, invest: Omit<Investment, "id">) => void
   onRemoveInvest: (id: number) => void
-}
-
-function signedMoney(n: number, hidden: boolean): string {
-  return (n >= 0 ? "+ " : "− ") + formatMoney(Math.abs(n), hidden)
 }
 
 function InvestmentsTab({ invests, summary, onAddInvest, onUpdateInvest, onRemoveInvest }: InvestmentsTabProps) {

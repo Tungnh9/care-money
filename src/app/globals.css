@@ -431,6 +431,16 @@ body {
   display: inline-block;
   transform-origin: 70% 80%;
 }
+.ob-wave-divider {
+  height: 8px;
+  background-color: var(--ob-color-action);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 8'%3E%3Cpath d='M0 4 C2 1 6 1 8 4 C10 7 14 7 16 4' fill='none' stroke='black' stroke-width='1.6'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 8'%3E%3Cpath d='M0 4 C2 1 6 1 8 4 C10 7 14 7 16 4' fill='none' stroke='black' stroke-width='1.6'/%3E%3C/svg%3E");
+  -webkit-mask-repeat: repeat-x;
+  mask-repeat: repeat-x;
+  -webkit-mask-size: 16px 8px;
+  mask-size: 16px 8px;
+}
 
 @media (prefers-reduced-motion: no-preference) {
   .ob-wave-arm {

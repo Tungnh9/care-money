@@ -158,6 +158,29 @@ describe("GoldTab", () => {
     expect(screen.getByRole("button", { name: "Thêm" })).not.toBeDisabled()
   })
 
+  it("keeps the add-purchase Thêm button disabled when khối lượng is zero or negative", () => {
+    render(<GoldTab summary={ZERO_SUMMARY} stores={[SJC]} gold={[]} {...noopHandlers} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Thêm lần mua vàng" }))
+    fireEvent.click(screen.getByRole("button", { name: "SJC" }))
+    fireEvent.change(screen.getByLabelText("Ngày mua", { exact: false }), {
+      target: { value: "10/08/2026" },
+    })
+    fireEvent.change(screen.getByLabelText("Giá mua (mỗi phân)", { exact: false }), {
+      target: { value: "900000" },
+    })
+
+    fireEvent.change(screen.getByLabelText("Khối lượng (phân)", { exact: false }), {
+      target: { value: "0" },
+    })
+    expect(screen.getByRole("button", { name: "Thêm" })).toBeDisabled()
+
+    fireEvent.change(screen.getByLabelText("Khối lượng (phân)", { exact: false }), {
+      target: { value: "-3" },
+    })
+    expect(screen.getByRole("button", { name: "Thêm" })).toBeDisabled()
+  })
+
   it("stagger-animates its stacked cards in via the shared ob-card-grid wrapper", () => {
     render(<GoldTab summary={ZERO_SUMMARY} stores={[]} gold={[]} {...noopHandlers} />)
 
@@ -327,6 +350,48 @@ describe("GoldTab", () => {
     expect(screen.getByText("Các lần mua vàng")).toBeInTheDocument()
     expect(screen.queryByText(/lần lãi/)).not.toBeInTheDocument()
     expect(screen.queryByText(/lần lỗ/)).not.toBeInTheDocument()
+  })
+
+  it("omits the per-store summary section entirely when there are no purchases", () => {
+    render(<GoldTab summary={ZERO_SUMMARY} stores={[SJC]} gold={[]} {...noopHandlers} />)
+
+    expect(screen.queryByText("Tổng hợp theo cửa hàng")).not.toBeInTheDocument()
+  })
+
+  it("shows a per-store total, grouping multiple purchases from the same store into one row", () => {
+    // SJC: (10 phân @ 900.000) + (5 phân @ 920.000) = 15 phân, vốn 13.600.000, giá trị nay
+    // 15*950.000 = 14.250.000, lãi 650.000. PNJ: 8 phân @ 900.000 = vốn 7.200.000, giá trị nay
+    // 8*880.000 = 7.040.000, lỗ -160.000. Tổng: 23 phân, vốn 20.800.000, giá trị 21.290.000, lãi 490.000.
+    const purchases = [
+      { id: 1, date: "01/01/2026", phan: 10, buy: 900_000, store: "SJC" },
+      { id: 2, date: "02/01/2026", phan: 5, buy: 920_000, store: "SJC" },
+      { id: 3, date: "03/01/2026", phan: 8, buy: 900_000, store: "PNJ" },
+    ]
+    const summary = {
+      ...ZERO_SUMMARY,
+      goldPhan: 23,
+      goldCost: 20_800_000,
+      goldValue: 21_290_000,
+      goldPL: 490_000,
+    }
+    render(
+      <GoldTab
+        summary={summary}
+        stores={[
+          { name: "SJC", price: "950.000" },
+          { name: "PNJ", price: "880.000" },
+        ]}
+        gold={purchases}
+        {...noopHandlers}
+      />
+    )
+
+    expect(screen.getByText("Tổng hợp theo cửa hàng")).toBeInTheDocument()
+    expect(screen.getAllByText("SJC").length).toBeGreaterThan(0)
+    expect(screen.getAllByText("PNJ").length).toBeGreaterThan(0)
+    expect(screen.getAllByText("Tổng cộng").length).toBeGreaterThan(0)
+    expect(screen.getAllByText(formatMoney(21_290_000)).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(formatMoney(490_000)).length).toBeGreaterThan(0)
   })
 
   it("closes the confirmation dialog without removing the purchase when Huỷ is clicked", () => {

@@ -54,6 +54,16 @@ describe("EditGoldPurchaseModal", () => {
     expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
   })
 
+  it("disables Lưu when khối lượng is zero or negative", () => {
+    render(<EditGoldPurchaseModal purchase={PURCHASE} stores={STORES} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+
+    fireEvent.change(screen.getByLabelText("Khối lượng", { exact: false }), { target: { value: "0" } })
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
+
+    fireEvent.change(screen.getByLabelText("Khối lượng", { exact: false }), { target: { value: "-5" } })
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
+  })
+
   it("reseeds fields when switching to a different purchase while already open", () => {
     const OTHER: GoldPurchase = { id: 2, date: "01/09/2026", phan: 1, buy: 7_550_000, store: "SJC" }
     const { rerender } = render(
