@@ -21,14 +21,17 @@ interface GameTabProps {
 type Screen =
   | { kind: "menu" }
   | { kind: "playing"; game: GameType }
-  | { kind: "result"; type: GameType; score: number; isNewHighScore: boolean }
+  | { kind: "result"; type: GameType; score: number; total: number; isNewHighScore: boolean }
 
 function GameTab({ vocab, highScores, streak, onFinish }: GameTabProps) {
   const [screen, setScreen] = useState<Screen>({ kind: "menu" })
 
-  function handleGameFinish(type: GameType, score: number) {
+  // total: số câu/từ thật sự có trong ván (có thể nhỏ hơn maxScore cấu hình sẵn nếu kho từ vựng
+  // ít) — game không báo total (vd. Ghép cặp, điểm đã tự quy về thang 0-10) thì dùng maxScore mặc
+  // định của game đó để hiển thị, giữ nguyên hành vi cũ.
+  function handleGameFinish(type: GameType, score: number, total?: number) {
     const { isNewHighScore } = onFinish(type, score)
-    setScreen({ kind: "result", type, score, isNewHighScore })
+    setScreen({ kind: "result", type, score, total: total ?? gameDefinition(type).maxScore, isNewHighScore })
   }
 
   if (screen.kind === "result") {
@@ -36,6 +39,7 @@ function GameTab({ vocab, highScores, streak, onFinish }: GameTabProps) {
       <GameResultCard
         type={screen.type}
         score={screen.score}
+        total={screen.total}
         isNewHighScore={screen.isNewHighScore}
         onPlayAgain={() => setScreen({ kind: "playing", game: screen.type })}
         onBackToMenu={() => setScreen({ kind: "menu" })}
@@ -57,7 +61,7 @@ function GameTab({ vocab, highScores, streak, onFinish }: GameTabProps) {
           <ChevronLeft size={16} />
           Về màn chọn
         </Button>
-        <Component vocab={vocab} onFinish={(score) => handleGameFinish(screen.game, score)} />
+        <Component vocab={vocab} onFinish={(score, total) => handleGameFinish(screen.game, score, total)} />
       </div>
     )
   }

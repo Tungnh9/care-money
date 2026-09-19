@@ -27,7 +27,7 @@ describe("QuizGame", () => {
     expect(screen.getAllByRole("button")).toHaveLength(4)
   })
 
-  it("calls onFinish with a numeric score after answering all 10 questions", () => {
+  it("calls onFinish with a numeric score and the round's total after answering all 10 questions", () => {
     const onFinish = vi.fn()
     render(<QuizGame vocab={VOCAB} onFinish={onFinish} />)
 
@@ -101,9 +101,18 @@ describe("QuizGame", () => {
     expect(onFinish).toHaveBeenCalledWith(0, 10)
   })
 
-  it("shows an empty-state message instead of crashing when there is no vocab", () => {
-    render(<QuizGame vocab={[]} onFinish={vi.fn()} />)
+  it("shows an empty-state message and never calls onFinish when there is no vocab", () => {
+    const onFinish = vi.fn()
+    render(<QuizGame vocab={[]} onFinish={onFinish} />)
 
     expect(screen.getByText("Chưa đủ từ vựng để chơi")).toBeInTheDocument()
+
+    // Trước có lỗi: countdown vẫn chạy ngầm dù đang hiện màn hình rỗng, hết 10s là tự gọi
+    // onFinish(0) — advance qua nhiều hơn 10s để chắc chắn bẫy được lỗi đó nếu tái diễn.
+    act(() => {
+      vi.advanceTimersByTime(30_000)
+    })
+
+    expect(onFinish).not.toHaveBeenCalled()
   })
 })

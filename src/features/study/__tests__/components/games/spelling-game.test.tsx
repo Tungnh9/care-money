@@ -40,10 +40,19 @@ describe("SpellingGame", () => {
     expect(screen.queryAllByTestId("heart-empty")).toHaveLength(0)
   })
 
-  it("shows an empty-state message instead of crashing when there is no typable vocab", () => {
-    render(<SpellingGame vocab={[]} onFinish={vi.fn()} />)
+  it("shows an empty-state message and never calls onFinish when there is no typable vocab", () => {
+    const onFinish = vi.fn()
+    render(<SpellingGame vocab={[]} onFinish={onFinish} />)
 
     expect(screen.getByText("Chưa đủ từ vựng để chơi")).toBeInTheDocument()
+
+    // Trước có lỗi: hiệu ứng kiểm tra "hết vòng" tính 0+0 >= 0 là đúng ngay từ đầu và tự gọi
+    // onFinish(0), đè mất luôn màn hình rỗng phía trên.
+    act(() => {
+      vi.advanceTimersByTime(30_000)
+    })
+
+    expect(onFinish).not.toHaveBeenCalled()
   })
 
   it("spawns a falling word shortly after mount", () => {

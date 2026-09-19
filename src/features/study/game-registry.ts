@@ -11,7 +11,7 @@ interface GameDefinition {
   icon: string
   label: string
   maxScore: number
-  Component: ComponentType<{ vocab: VocabEntry[]; onFinish: (score: number) => void }>
+  Component: ComponentType<{ vocab: VocabEntry[]; onFinish: (score: number, total?: number) => void }>
 }
 
 // Nguồn duy nhất cho danh sách mini-game (icon/nhãn/điểm tối đa/component render) — thêm 1 game
