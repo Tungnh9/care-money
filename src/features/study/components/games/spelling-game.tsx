@@ -136,10 +136,12 @@ function SpellingGame({ vocab, onFinish }: SpellingGameProps) {
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
     if (e.key === "Backspace") {
+      e.preventDefault() // vùng gõ là <div>, không phải <input> — trình duyệt có thể hiểu Backspace là "quay lại trang trước"
       setTyped((t) => t.slice(0, -1))
       return
     }
     if (e.key.length !== 1) return // bỏ qua phím điều khiển (Shift, Enter, mũi tên, Tab...)
+    e.preventDefault() // chặn hành vi mặc định của phím ký tự đơn — quan trọng nhất là Space, vốn cuộn trang khi focus không nằm trên ô nhập liệu thật
 
     const next = (typed + e.key).toLowerCase()
     const stillPossible = round.fallingWords.some((w) => w.entry.word.toLowerCase().startsWith(next))
