@@ -73,8 +73,10 @@ describe("GameTab", () => {
       fireEvent.click(options[0])
     }
 
+    // Điểm số (tử số) phụ thuộc thứ tự ngẫu nhiên của đáp án nên không cố định — chỉ cần khẳng
+    // định mẫu số là 3 (số câu thật của ván), không phải maxScore mặc định (10).
     expect(
-      screen.getByText((_, element) => element?.tagName === "P" && element.textContent === "0/3")
+      screen.getByText((_, element) => element?.tagName === "P" && /\/3$/.test(element.textContent ?? ""))
     ).toBeInTheDocument()
   })
 
