@@ -167,6 +167,10 @@ function useFinance() {
 
   const updateGoldStore = useCallback(
     (originalName: string, store: GoldStore) => {
+      if (store.name !== originalName && state.goldStores.some((s) => s.name === store.name)) {
+        toast.error(`Đã có cửa hàng tên "${store.name}". Vui lòng chọn tên khác.`)
+        return
+      }
       try {
         persist({
           ...state,

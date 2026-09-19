@@ -9,6 +9,7 @@ import {
   goldStorePrice,
   parseGoldDate,
   sortGoldByDate,
+  summarizeGoldByStore,
 } from "../finance-calculations"
 import { DEFAULT_FINANCE_STATE, type FinanceState } from "../finance-storage"
 
@@ -221,5 +222,71 @@ describe("sortGoldByDate", () => {
     sortGoldByDate(gold)
 
     expect(gold).toEqual(original)
+  })
+})
+
+describe("summarizeGoldByStore", () => {
+  it("returns an empty array when there are no purchases", () => {
+    expect(summarizeGoldByStore([], [])).toEqual([])
+  })
+
+  it("groups multiple purchases from the same store into one row", () => {
+    const gold = [
+      { id: 1, date: "01/01/2026", phan: 10, buy: 900_000, store: "SJC" },
+      { id: 2, date: "02/01/2026", phan: 5, buy: 950_000, store: "SJC" },
+    ]
+    const stores = [{ name: "SJC", price: "1.000.000" }]
+
+    const result = summarizeGoldByStore(gold, stores)
+
+    expect(result).toHaveLength(1)
+    expect(result[0]).toEqual({
+      store: "SJC",
+      phan: 15,
+      avgBuy: Math.round((10 * 900_000 + 5 * 950_000) / 15),
+      cost: 10 * 900_000 + 5 * 950_000,
+      value: 15 * 1_000_000,
+      pl: 15 * 1_000_000 - (10 * 900_000 + 5 * 950_000),
+    })
+  })
+
+  it("keeps purchases from different stores as separate rows, sorted alphabetically by store name", () => {
+    const gold = [
+      { id: 1, date: "01/01/2026", phan: 10, buy: 900_000, store: "SJC" },
+      { id: 2, date: "02/01/2026", phan: 8, buy: 900_000, store: "PNJ" },
+    ]
+    const stores = [
+      { name: "SJC", price: "1.000.000" },
+      { name: "PNJ", price: "800.000" },
+    ]
+
+    const result = summarizeGoldByStore(gold, stores)
+
+    expect(result.map((s) => s.store)).toEqual(["PNJ", "SJC"])
+    expect(result.find((s) => s.store === "PNJ")).toMatchObject({ phan: 8, cost: 7_200_000, value: 6_400_000 })
+    expect(result.find((s) => s.store === "SJC")).toMatchObject({ phan: 10, cost: 9_000_000, value: 10_000_000 })
+  })
+
+  it("sums to the same totals summarizeFinance computes from the same gold/store data", () => {
+    const state: FinanceState = {
+      ...DEFAULT_FINANCE_STATE,
+      gold: [
+        { id: 1, date: "01/01/2026", phan: 10, buy: 900_000, store: "SJC" },
+        { id: 2, date: "02/01/2026", phan: 5, buy: 920_000, store: "SJC" },
+        { id: 3, date: "03/01/2026", phan: 8, buy: 900_000, store: "PNJ" },
+      ],
+      goldStores: [
+        { name: "SJC", price: "950.000" },
+        { name: "PNJ", price: "880.000" },
+      ],
+    }
+
+    const summary = summarizeFinance(state)
+    const byStore = summarizeGoldByStore(state.gold, state.goldStores)
+
+    expect(byStore.reduce((sum, s) => sum + s.phan, 0)).toBe(summary.goldPhan)
+    expect(byStore.reduce((sum, s) => sum + s.cost, 0)).toBe(summary.goldCost)
+    expect(byStore.reduce((sum, s) => sum + s.value, 0)).toBe(summary.goldValue)
+    expect(byStore.reduce((sum, s) => sum + s.pl, 0)).toBe(summary.goldPL)
   })
 })

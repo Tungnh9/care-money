@@ -1,12 +1,13 @@
 "use client"
 
-import { Pencil, Trash2, TrendingDown, TrendingUp } from "lucide-react"
+import { Pencil, Trash2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import { goldPurchasePL, goldStorePrice, phanToChi } from "../finance-calculations"
 import type { GoldPurchase, GoldStore } from "../types"
+import { GoldPLBadge } from "./gold-pl-indicator"
 
 interface GoldTransactionsTableProps {
   gold: GoldPurchase[]
@@ -100,17 +101,7 @@ function GoldTransactionsTable({ gold, stores, onRemove, onEdit }: GoldTransacti
                   {formatMoney(value, hidden)}
                 </td>
                 <td className="whitespace-nowrap py-[10px] px-[12px] text-center text-[13px]">
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-[4px] rounded-full px-[9px] py-[3px] font-semibold [font-family:var(--ob-font-num)] tabular-nums",
-                      positive
-                        ? "bg-[var(--ob-color-income)]/10 text-[var(--ob-color-income)]"
-                        : "bg-[var(--ob-color-expense)]/10 text-[var(--ob-color-expense)]"
-                    )}
-                  >
-                    {positive ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
-                    {formatMoney(Math.abs(pl), hidden)}
-                  </span>
+                  <GoldPLBadge pl={pl} hidden={hidden} />
                 </td>
                 <td className="py-[10px] px-[12px] text-right">
                   <div className="flex items-center justify-end gap-1">

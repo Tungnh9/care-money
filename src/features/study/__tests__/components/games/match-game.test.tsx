@@ -26,6 +26,13 @@ describe("MatchGame", () => {
     vi.useRealTimers()
   })
 
+  it("shows an empty-state message instead of a blank board when there is no vocab", () => {
+    render(<MatchGame vocab={[]} onFinish={vi.fn()} />)
+
+    expect(screen.getByText("Chưa đủ từ vựng để chơi")).toBeInTheDocument()
+    expect(screen.queryAllByRole("button")).toHaveLength(0)
+  })
+
   it("renders 12 face-down cards for 6 pairs", () => {
     render(<MatchGame vocab={VOCAB} onFinish={vi.fn()} />)
 

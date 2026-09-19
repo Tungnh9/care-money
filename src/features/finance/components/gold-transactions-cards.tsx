@@ -1,11 +1,12 @@
 "use client"
 
-import { Pencil, Trash2, TrendingDown, TrendingUp } from "lucide-react"
+import { Pencil, Trash2 } from "lucide-react"
 
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import { goldPurchasePL, goldStorePrice, phanToChi } from "../finance-calculations"
 import type { GoldPurchase, GoldStore } from "../types"
+import { GoldPLBox } from "./gold-pl-indicator"
 
 interface GoldTransactionsCardsProps {
   gold: GoldPurchase[]
@@ -102,24 +103,7 @@ function GoldTransactionsCards({
                 </div>
               </div>
             </div>
-            <div
-              className="mt-3 rounded-[var(--ob-radius-sm)] border px-3 py-[10px]"
-              style={{
-                backgroundColor: pl >= 0 ? "var(--ob-color-income-soft)" : "var(--ob-color-expense-soft)",
-                borderColor: pl >= 0 ? "var(--ob-color-income)" : "var(--ob-color-expense)",
-              }}
-            >
-              <div className="mb-1 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
-                Lãi lỗ
-              </div>
-              <div
-                className="flex items-center gap-1 text-[13px] font-semibold [font-family:var(--ob-font-num)] tabular-nums"
-                style={{ color: pl >= 0 ? "var(--ob-color-income)" : "var(--ob-color-expense)" }}
-              >
-                {pl >= 0 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
-                {formatMoney(Math.abs(pl), hidden)}
-              </div>
-            </div>
+            <GoldPLBox pl={pl} hidden={hidden} />
           </div>
         )
       })}

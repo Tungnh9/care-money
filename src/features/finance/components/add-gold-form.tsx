@@ -78,7 +78,7 @@ function AddGoldForm({ stores, onAdd }: AddGoldFormProps) {
           variant="primary"
           size="sm"
           type="button"
-          disabled={!date.trim() || !phan.trim() || !buy.trim() || !store}
+          disabled={!date.trim() || !(Number(phan) > 0) || !buy.trim() || !store}
           onClick={() => {
             onAdd({
               date: date.trim(),
