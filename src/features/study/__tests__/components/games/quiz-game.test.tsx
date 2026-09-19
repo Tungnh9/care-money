@@ -27,7 +27,7 @@ describe("QuizGame", () => {
     expect(screen.getAllByRole("button")).toHaveLength(4)
   })
 
-  it("calls onFinish with a numeric score after answering all 10 questions", () => {
+  it("calls onFinish with a numeric score and the round's total after answering all 10 questions", () => {
     const onFinish = vi.fn()
     render(<QuizGame vocab={VOCAB} onFinish={onFinish} />)
 
@@ -35,7 +35,7 @@ describe("QuizGame", () => {
       fireEvent.click(screen.getAllByRole("button")[0])
     }
 
-    expect(onFinish).toHaveBeenCalledWith(expect.any(Number))
+    expect(onFinish).toHaveBeenCalledWith(expect.any(Number), 10)
   })
 
   it("scores 10/10 when the correct meaning is clicked for every question", () => {
@@ -51,7 +51,7 @@ describe("QuizGame", () => {
       fireEvent.click(correctButton)
     }
 
-    expect(onFinish).toHaveBeenCalledWith(10)
+    expect(onFinish).toHaveBeenCalledWith(10, 10)
   })
 
   it("scores 0/10 when a wrong meaning is clicked for every question", () => {
@@ -70,7 +70,7 @@ describe("QuizGame", () => {
       fireEvent.click(wrongButton!)
     }
 
-    expect(onFinish).toHaveBeenCalledWith(0)
+    expect(onFinish).toHaveBeenCalledWith(0, 10)
   })
 
   it("auto-advances to the next question when the 10-second timer runs out", () => {
@@ -98,12 +98,21 @@ describe("QuizGame", () => {
     }
 
     expect(onFinish).toHaveBeenCalledTimes(1)
-    expect(onFinish).toHaveBeenCalledWith(0)
+    expect(onFinish).toHaveBeenCalledWith(0, 10)
   })
 
-  it("shows an empty-state message instead of crashing when there is no vocab", () => {
-    render(<QuizGame vocab={[]} onFinish={vi.fn()} />)
+  it("shows an empty-state message and never calls onFinish when there is no vocab", () => {
+    const onFinish = vi.fn()
+    render(<QuizGame vocab={[]} onFinish={onFinish} />)
 
     expect(screen.getByText("Chưa đủ từ vựng để chơi")).toBeInTheDocument()
+
+    // Trước có lỗi: countdown vẫn chạy ngầm dù đang hiện màn hình rỗng, hết 10s là tự gọi
+    // onFinish(0) — advance qua nhiều hơn 10s để chắc chắn bẫy được lỗi đó nếu tái diễn.
+    act(() => {
+      vi.advanceTimersByTime(30_000)
+    })
+
+    expect(onFinish).not.toHaveBeenCalled()
   })
 })

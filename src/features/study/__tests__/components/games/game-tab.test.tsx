@@ -62,6 +62,22 @@ describe("GameTab", () => {
     expect(screen.getByText("Trắc nghiệm")).toBeInTheDocument()
   })
 
+  it("shows the round's actual size, not the game's configured max, on the result screen when the vocab pool is small", () => {
+    const smallVocab: VocabEntry[] = Array.from({ length: 3 }, (_, i) => vocab(`${i}`))
+    const onFinish = vi.fn(() => ({ isNewHighScore: false }))
+    render(<GameTab vocab={smallVocab} highScores={HIGH_SCORES} streak={STREAK} onFinish={onFinish} />)
+
+    fireEvent.click(screen.getByText("Trắc nghiệm"))
+    for (let i = 0; i < 3; i++) {
+      const options = screen.getAllByRole("button").filter((b) => b.textContent !== "Về màn chọn")
+      fireEvent.click(options[0])
+    }
+
+    expect(
+      screen.getByText((_, element) => element?.tagName === "P" && element.textContent === "0/3")
+    ).toBeInTheDocument()
+  })
+
   it("lets the player quit back to the menu while a game is in progress, without calling onFinish", () => {
     const onFinish = vi.fn(() => ({ isNewHighScore: false }))
     render(<GameTab vocab={VOCAB} highScores={HIGH_SCORES} streak={STREAK} onFinish={onFinish} />)
