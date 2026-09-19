@@ -64,7 +64,7 @@ function useCalculator() {
     }
     const a = formatResult(v)
     const m = toMachineString(v)
-    setHistory((h) => [{ q: expr, a, m }, ...h].slice(0, MAX_HISTORY))
+    setHistory((h) => [...h, { q: expr, a, m }].slice(-MAX_HISTORY))
     setExpr(m)
     setOut(a)
     setError(false)

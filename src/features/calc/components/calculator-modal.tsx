@@ -71,9 +71,18 @@ function CalculatorModal({ open, onOpenChange }: CalculatorModalProps) {
   const boxRef = useRef<HTMLDivElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
   const previouslyFocusedRef = useRef<HTMLElement | null>(null)
+  const histRef = useRef<HTMLDivElement>(null)
 
   const { expr, out, error, history, push, back, clear, equals, restoreFromHistory, insertParen } =
     useCalculator()
+
+  // Dòng mới nhất nối vào CUỐI danh sách, nhưng khung lịch sử chỉ cao 74px (ob-calc-hist trong
+  // globals.css) nên cuộn xuống đáy mỗi khi có dòng mới — nếu không, dòng vừa tính bị khuất dưới
+  // fold, người dùng phải tự cuộn mới thấy.
+  useEffect(() => {
+    const el = histRef.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [history])
 
   // Mở: nhớ phần tử đang focus, khoá scroll body, focus vào nút Đóng sau 1 tick.
   // Đóng: trả lại scroll body, focus lại đúng phần tử đã lưu trước khi mở.
@@ -213,7 +222,7 @@ function CalculatorModal({ open, onOpenChange }: CalculatorModalProps) {
         </div>
 
         {history.length ? (
-          <div className="ob-calc-hist" data-testid="calculator-history">
+          <div className="ob-calc-hist" ref={histRef} data-testid="calculator-history">
             {history.map((item, index) => (
               <button
                 key={`${item.m}-${index}`}

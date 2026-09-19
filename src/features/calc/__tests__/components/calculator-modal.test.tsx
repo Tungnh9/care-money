@@ -129,9 +129,23 @@ describe("CalculatorModal", () => {
 
     const items = screen.getAllByTestId("calculator-history-item")
     expect(items).toHaveLength(4)
-    // Mới nhất (5+5) ở đầu, cũ nhất (1+1) đã bị đẩy ra.
-    expect(items[0]).toHaveTextContent("5+5")
-    expect(items[3]).toHaveTextContent("2+2")
+    // Mới nhất (5+5) ở cuối, cũ nhất (1+1) đã bị đẩy ra.
+    expect(items[3]).toHaveTextContent("5+5")
+    expect(items[0]).toHaveTextContent("2+2")
+  })
+
+  it("cuộn khung lịch sử xuống đáy mỗi khi có dòng mới, để dòng vừa tính không bị khuất", () => {
+    render(<CalculatorModal open onOpenChange={vi.fn()} />)
+
+    type(["1", "+", "1", "="])
+    const hist = screen.getByTestId("calculator-history")
+    // jsdom không tự tính layout thật — set cứng scrollHeight để mô phỏng khung bị tràn nội dung.
+    Object.defineProperty(hist, "scrollHeight", { configurable: true, value: 120 })
+    hist.scrollTop = 0
+
+    type(["2", "+", "2", "="])
+
+    expect(hist.scrollTop).toBe(120)
   })
 
   it("bấm '=' xong bấm tiếp 1 số → thay hẳn biểu thức cũ", () => {
