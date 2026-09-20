@@ -69,9 +69,9 @@ describe("GoalsView", () => {
     render(<GoalsView />)
 
     // goldValue = 10*1.000.000 + 10*800.000 = 18.000.000 -> giá bình quân 900.000/phân
-    // còn 80 phân (8 chỉ) * 900.000 = 72.000.000
+    // mục tiêu 180 phân, đang giữ 20 phân -> còn 160 phân (16 chỉ) * 900.000 = 144.000.000
     await waitFor(() =>
-      expect(screen.getByText(`Còn 8 chỉ · tương đương ${formatMoney(72_000_000)}`)).toBeInTheDocument()
+      expect(screen.getByText(`Còn 16 chỉ · tương đương ${formatMoney(144_000_000)}`)).toBeInTheDocument()
     )
   })
 })

@@ -2,14 +2,16 @@ import { formatMoney } from "@/lib/format"
 
 import type { Goal, GoalsInput } from "./types"
 
+const GOLD_TARGET_PHAN = 180 // 18 chỉ
+
 function formatChi(phan: number): string {
   const chi = Math.floor(phan / 10)
   const rest = phan % 10
   return `${chi} chỉ${rest ? ` ${rest} phân` : ""}`
 }
 
-function goldRemainingNote(goldPhan: number, goldPricePerPhan: number, hidden: boolean): string {
-  const remaining = 100 - goldPhan
+function goldRemainingNote(goldPhan: number, target: number, goldPricePerPhan: number, hidden: boolean): string {
+  const remaining = target - goldPhan
   const remainingChi =
     remaining % 10 === 0 ? String(remaining / 10) : (remaining / 10).toFixed(1).replace(".", ",")
   return `Còn ${remainingChi} chỉ · tương đương ${formatMoney(remaining * goldPricePerPhan, hidden)}`
@@ -41,12 +43,12 @@ function getGoals(data: GoalsInput, hidden = false): { goals: Goal[]; avg: numbe
     },
     {
       key: "gold",
-      name: "Tích lũy 10 chỉ vàng",
+      name: "Tích lũy 18 chỉ vàng",
       icon: "gold",
       now: goldPhan,
-      target: 100,
+      target: GOLD_TARGET_PHAN,
       format: formatChi,
-      note: goldRemainingNote(goldPhan, goldPricePerPhan, hidden),
+      note: goldRemainingNote(goldPhan, GOLD_TARGET_PHAN, goldPricePerPhan, hidden),
       tone: "reward" as const,
       linked: true,
     },

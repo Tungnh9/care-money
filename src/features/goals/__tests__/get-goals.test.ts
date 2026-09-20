@@ -18,7 +18,7 @@ describe("getGoals", () => {
 
     expect(goals.map((g) => [g.key, g.percent])).toEqual([
       ["savings", 44],
-      ["gold", 60],
+      ["gold", 33],
       ["car", 0],
     ])
   })
@@ -26,7 +26,7 @@ describe("getGoals", () => {
   it("computes the overall average from the raw ratios, not the rounded percents", () => {
     const { avg } = getGoals(GOALS_INPUT)
 
-    expect(avg).toBe(35)
+    expect(avg).toBe(26)
   })
 
   it("marks a goal as done only once now reaches its target", () => {
@@ -41,7 +41,7 @@ describe("getGoals", () => {
   })
 
   it("caps percent at 100 even when now overshoots target", () => {
-    const { goals } = getGoals({ ...GOALS_INPUT, goldPhan: 140 })
+    const { goals } = getGoals({ ...GOALS_INPUT, goldPhan: 200 })
 
     const goldGoal = goals.find((g) => g.key === "gold")
     expect(goldGoal?.percent).toBe(100)
