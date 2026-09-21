@@ -216,4 +216,22 @@ describe("SpellingGame", () => {
       })
     }).not.toThrow()
   })
+
+  it("reports onWordReviewed(id, false) for every missed word, not just the last one in a batch", () => {
+    const onWordReviewed = vi.fn()
+    render(<SpellingGame vocab={VOCAB} onFinish={vi.fn()} onWordReviewed={onWordReviewed} />)
+
+    // Để hết 5 mạng, nhiều từ rơi trong cùng 1 batch fake-timer — nếu không accumulate,
+    // chỉ từ cuối cùng được báo thay vì tất cả.
+    act(() => {
+      vi.advanceTimersByTime(80_000)
+    })
+
+    const missedCalls = onWordReviewed.mock.calls.filter(([, correct]) => correct === false)
+    // Kỳ vọng: nhiều lần báo (tất cả từ rơi hết mạng), mỗi lần 1 từ khác nhau, không mất id
+    expect(missedCalls.length).toBeGreaterThan(1) // ít nhất 2 từ rơi
+    // Kiểm tra số id khác nhau = số lần báo (không lặp, không mất)
+    const missedIds = new Set(missedCalls.map(([id]) => id))
+    expect(missedIds.size).toBe(missedCalls.length)
+  })
 })

@@ -113,7 +113,7 @@ function SpellingGame({ vocab, onFinish, onWordReviewed }: SpellingGameProps) {
           lives: Math.max(0, prev.lives - missedNow.length),
           destroyed: prev.destroyed,
           missed: prev.missed + missedNow.length,
-          lastMissedIds: missedNow.map((w) => w.entry.id),
+          lastMissedIds: [...prev.lastMissedIds, ...missedNow.map((w) => w.entry.id)],
         }
       })
     }, TICK_MS)
