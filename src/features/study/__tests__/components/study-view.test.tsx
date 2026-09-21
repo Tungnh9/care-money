@@ -4,6 +4,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { StudyView } from "../../components/study-view"
 import { dayKey } from "@/lib/date"
 import { pickDaily } from "../../daily-pick"
+import { STUDY_STORAGE_KEY } from "../../study-storage"
 import type { GrammarEntry, VocabEntry } from "../../types"
 
 const VOCAB: VocabEntry[] = Array.from({ length: 10 }, (_, i) => ({
@@ -163,5 +164,41 @@ describe("StudyView", () => {
     await waitFor(() =>
       expect(screen.getByText("0/3 nhiệm vụ · 9 từ cần ôn · ngày 14/08")).toBeInTheDocument()
     )
+  })
+
+  it("shows the actually-due words for a returning user, not the cold-seed order (regression: ReviewDueCard must not freeze before hydration)", async () => {
+    const wordReviews: Record<string, unknown> = {}
+    // v-0..v-4 already reviewed and due far in the future; only v-5..v-9 are actually due today.
+    for (let i = 0; i < 5; i++) {
+      wordReviews[`v-${i}`] = {
+        wordId: `v-${i}`,
+        easeFactor: 2.5,
+        intervalDays: 999,
+        repetitions: 5,
+        dueAt: "2099-12-31",
+        lastReviewedAt: "2026-01-01T00:00:00.000Z",
+      }
+    }
+    window.localStorage.setItem(
+      STUDY_STORAGE_KEY,
+      JSON.stringify({
+        tasks: [],
+        learned: [],
+        gameHighScores: { quiz: 0, match: 0, spelling: 0 },
+        gameStreak: { count: 0, lastPlayedDayKey: null },
+        wordReviews,
+      })
+    )
+
+    render(<StudyView vocab={VOCAB} grammar={GRAMMAR} />)
+
+    await waitFor(() => {
+      for (const word of VOCAB.slice(5, 10)) {
+        expect(screen.getByText(word.word)).toBeInTheDocument()
+      }
+    })
+    for (const word of VOCAB.slice(0, 5)) {
+      expect(screen.queryByText(word.word)).not.toBeInTheDocument()
+    }
   })
 })

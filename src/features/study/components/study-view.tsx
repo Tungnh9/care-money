@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { Tabs } from "@/components/ob/tabs"
 import { dayKey } from "@/lib/date"
@@ -35,7 +35,15 @@ function StudyView({ vocab, grammar }: StudyViewProps) {
     recordGameResult,
     wordReviews,
     gradeWord,
+    hydrated,
+    seedReviews,
   } = useStudy()
+
+  // Ghi lại 1 lần những entry SRS còn thiếu ngay khi dữ liệu thật đã tải xong (xem lý do trong
+  // use-study.ts's seedReviews) — chỉ chạy khi hydrated chuyển sang true.
+  useEffect(() => {
+    if (hydrated) seedReviews(vocab)
+  }, [hydrated, seedReviews, vocab])
 
   const key = dayKey()
   const dailyGrammar = pickDaily(grammar, 1, key, "grammar")[0]
@@ -58,7 +66,9 @@ function StudyView({ vocab, grammar }: StudyViewProps) {
           <div className="min-w-0 flex-[1_1_100%]">
             <Pomodoro />
           </div>
-          <ReviewDueCard dueWords={dueWords} onGrade={gradeWord} className="min-w-0 flex-[1_1_100%]" />
+          {hydrated ? (
+            <ReviewDueCard dueWords={dueWords} onGrade={gradeWord} className="min-w-0 flex-[1_1_100%]" />
+          ) : null}
           {dailyGrammar ? <GrammarHighlightCard key={dailyGrammar.id} entry={dailyGrammar} vocab={vocab} /> : null}
           <TasksCard tasks={tasks} onToggle={toggleTask} className="min-w-0 flex-[1_1_300px]" />
           <LearnedProgressCard

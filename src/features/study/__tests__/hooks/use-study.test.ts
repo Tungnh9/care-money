@@ -173,4 +173,20 @@ describe("useStudy", () => {
     expect(result.current.wordReviews["v-0001"].repetitions).toBe(2)
     expect(result.current.wordReviews["v-0001"].intervalDays).toBe(6)
   })
+
+  it("does not lose a grade when gradeWord and recordGameResult are called in the same tick", async () => {
+    const { result } = renderHook(() => useStudy())
+    await waitFor(() => expect(result.current.tasks).toEqual(DEFAULT_STUDY_STATE.tasks))
+
+    act(() => {
+      result.current.gradeWord("v-9", "good")
+      result.current.recordGameResult("quiz", 10)
+    })
+
+    expect(result.current.wordReviews["v-9"]).toBeDefined()
+    expect(result.current.wordReviews["v-9"].repetitions).toBe(1)
+    expect(result.current.gameHighScores.quiz).toBe(10)
+    expect(getStoredStudy().wordReviews["v-9"]).toBeDefined()
+    expect(getStoredStudy().gameHighScores.quiz).toBe(10)
+  })
 })
