@@ -173,4 +173,65 @@ describe("SpellingGame", () => {
     expect(onFinish).toHaveBeenCalledTimes(1)
     expect(onFinish).toHaveBeenCalledWith(10, 10)
   })
+
+  it("reports onWordReviewed(id, true) when a word is destroyed by typing it correctly", () => {
+    const onWordReviewed = vi.fn()
+    render(<SpellingGame vocab={VOCAB} onFinish={vi.fn()} onWordReviewed={onWordReviewed} />)
+
+    act(() => {
+      vi.advanceTimersByTime(100)
+    })
+    const area = screen.getByRole("application")
+    const wordText = screen.getAllByTestId("falling-word")[0].textContent!
+    const entry = VOCAB.find((v) => v.word === wordText)!
+
+    typeWord(area, wordText)
+
+    expect(onWordReviewed).toHaveBeenCalledWith(entry.id, true)
+  })
+
+  it("reports onWordReviewed(id, false) for a word that falls for the full duration untyped", () => {
+    const onWordReviewed = vi.fn()
+    render(<SpellingGame vocab={VOCAB} onFinish={vi.fn()} onWordReviewed={onWordReviewed} />)
+
+    act(() => {
+      vi.advanceTimersByTime(100)
+    })
+    const firstWordText = screen.getAllByTestId("falling-word")[0].textContent!
+    const firstEntry = VOCAB.find((v) => v.word === firstWordText)!
+
+    act(() => {
+      vi.advanceTimersByTime(15000) // FALL_DURATION_MS — để rơi hết mà không gõ
+    })
+
+    expect(onWordReviewed).toHaveBeenCalledWith(firstEntry.id, false)
+  })
+
+  it("does not crash when onWordReviewed is omitted", () => {
+    render(<SpellingGame vocab={VOCAB} onFinish={vi.fn()} />)
+
+    expect(() => {
+      act(() => {
+        vi.advanceTimersByTime(20000)
+      })
+    }).not.toThrow()
+  })
+
+  it("reports onWordReviewed(id, false) for every missed word, not just the last one in a batch", () => {
+    const onWordReviewed = vi.fn()
+    render(<SpellingGame vocab={VOCAB} onFinish={vi.fn()} onWordReviewed={onWordReviewed} />)
+
+    // Để hết 5 mạng, nhiều từ rơi trong cùng 1 batch fake-timer — nếu không accumulate,
+    // chỉ từ cuối cùng được báo thay vì tất cả.
+    act(() => {
+      vi.advanceTimersByTime(80_000)
+    })
+
+    const missedCalls = onWordReviewed.mock.calls.filter(([, correct]) => correct === false)
+    // Kỳ vọng: nhiều lần báo (tất cả từ rơi hết mạng), mỗi lần 1 từ khác nhau, không mất id
+    expect(missedCalls.length).toBeGreaterThan(1) // ít nhất 2 từ rơi
+    // Kiểm tra số id khác nhau = số lần báo (không lặp, không mất)
+    const missedIds = new Set(missedCalls.map(([id]) => id))
+    expect(missedIds.size).toBe(missedCalls.length)
+  })
 })

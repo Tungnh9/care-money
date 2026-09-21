@@ -14,6 +14,7 @@ const MISMATCH_DELAY_MS = 800
 interface MatchGameProps {
   vocab: VocabEntry[]
   onFinish: (score: number, total?: number) => void
+  onWordReviewed?: (wordId: string, correct: boolean) => void
 }
 
 interface MatchCard {
@@ -31,7 +32,7 @@ function buildCards(vocab: VocabEntry[]): MatchCard[] {
   return pickRandomSet(cards, cards.length)
 }
 
-function MatchGame({ vocab, onFinish }: MatchGameProps) {
+function MatchGame({ vocab, onFinish, onWordReviewed }: MatchGameProps) {
   const [cards] = useState(() => buildCards(vocab))
   const actualPairCount = cards.length / 2
   const [flippedCards, setFlippedCards] = useState<MatchCard[]>([])
@@ -78,12 +79,15 @@ function MatchGame({ vocab, onFinish }: MatchGameProps) {
       setMatchedIds(nextMatched)
       setFlippedCards([])
       setMatchBurst(nextMatched.length)
+      onWordReviewed?.(first.vocabId, true)
       if (nextMatched.length === actualPairCount) {
         onFinish(matchScoreFromFlips(actualPairCount, usedFlips))
       }
       return
     }
 
+    // KHÔNG gọi onWordReviewed ở nhánh lệch cặp bên dưới — lật lệch thường do quên vị trí thẻ
+    // trên bàn chơi, không phải quên nghĩa từ; chấm "Quên" ở đây sẽ làm nhiễu lịch ôn SRS.
     mismatchTimerRef.current = setTimeout(() => {
       setFlippedCards([])
     }, MISMATCH_DELAY_MS)

@@ -14,6 +14,7 @@ interface GameTabProps {
   highScores: GameHighScores
   streak: GameStreak
   onFinish: (type: GameType, score: number) => { isNewHighScore: boolean }
+  onWordReviewed?: (wordId: string, correct: boolean) => void
 }
 
 // 1 union thay vì 2 state nullable độc lập (activeGame/result trước đây) — mỗi lần chỉ ở đúng 1
@@ -23,7 +24,7 @@ type Screen =
   | { kind: "playing"; game: GameType }
   | { kind: "result"; type: GameType; score: number; total: number; isNewHighScore: boolean }
 
-function GameTab({ vocab, highScores, streak, onFinish }: GameTabProps) {
+function GameTab({ vocab, highScores, streak, onFinish, onWordReviewed }: GameTabProps) {
   const [screen, setScreen] = useState<Screen>({ kind: "menu" })
 
   // total: số câu/từ thật sự có trong ván (có thể nhỏ hơn maxScore cấu hình sẵn nếu kho từ vựng
@@ -61,7 +62,11 @@ function GameTab({ vocab, highScores, streak, onFinish }: GameTabProps) {
           <ChevronLeft size={16} />
           Về màn chọn
         </Button>
-        <Component vocab={vocab} onFinish={(score, total) => handleGameFinish(screen.game, score, total)} />
+        <Component
+          vocab={vocab}
+          onFinish={(score, total) => handleGameFinish(screen.game, score, total)}
+          onWordReviewed={onWordReviewed}
+        />
       </div>
     )
   }

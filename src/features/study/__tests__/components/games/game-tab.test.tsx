@@ -92,4 +92,40 @@ describe("GameTab", () => {
     expect(screen.getByText("Trắc nghiệm")).toBeInTheDocument()
     expect(onFinish).not.toHaveBeenCalled()
   })
+
+  it("forwards onWordReviewed down to the active game", () => {
+    const onWordReviewed = vi.fn()
+    render(
+      <GameTab
+        vocab={VOCAB}
+        highScores={HIGH_SCORES}
+        streak={STREAK}
+        onFinish={vi.fn(() => ({ isNewHighScore: false }))}
+        onWordReviewed={onWordReviewed}
+      />
+    )
+
+    fireEvent.click(screen.getByText("Ghép cặp"))
+    const cards = screen.getAllByRole("button").filter((b) => b.hasAttribute("data-vocab-id"))
+    const sorted = [...cards].sort((a, b) =>
+      (a.getAttribute("data-vocab-id") ?? "").localeCompare(b.getAttribute("data-vocab-id") ?? "")
+    )
+    fireEvent.click(sorted[0])
+    fireEvent.click(sorted[1])
+
+    expect(onWordReviewed).toHaveBeenCalledWith(sorted[0].getAttribute("data-vocab-id"), true)
+  })
+
+  it("does not crash when onWordReviewed is omitted", () => {
+    render(
+      <GameTab
+        vocab={VOCAB}
+        highScores={HIGH_SCORES}
+        streak={STREAK}
+        onFinish={vi.fn(() => ({ isNewHighScore: false }))}
+      />
+    )
+
+    expect(() => fireEvent.click(screen.getByText("Ghép cặp"))).not.toThrow()
+  })
 })

@@ -64,6 +64,7 @@ describe("useStudy", () => {
       learned: ["v-0009"],
       gameHighScores: { quiz: 0, match: 0, spelling: 0 },
       gameStreak: { count: 0, lastPlayedDayKey: null },
+      wordReviews: {},
     }
     act(() => {
       result.current.replaceStudy(restored)
@@ -126,5 +127,105 @@ describe("useStudy", () => {
 
     expect(result.current.gameStreak).toEqual({ count: 1, lastPlayedDayKey: dayKey() })
     expect(getStoredStudy().gameStreak).toEqual({ count: 1, lastPlayedDayKey: dayKey() })
+  })
+
+  it("wordReviews starts empty and gradeWord creates a fresh entry for a never-graded word", async () => {
+    const { result } = renderHook(() => useStudy())
+    await waitFor(() => expect(result.current.tasks).toEqual(DEFAULT_STUDY_STATE.tasks))
+
+    expect(result.current.wordReviews).toEqual({})
+
+    act(() => {
+      result.current.gradeWord("v-0001", "good")
+    })
+
+    expect(result.current.wordReviews["v-0001"]).toBeDefined()
+    expect(result.current.wordReviews["v-0001"].repetitions).toBe(1)
+    expect(getStoredStudy().wordReviews["v-0001"].repetitions).toBe(1)
+  })
+
+  it("seeds an already-learned word with a 6-day head start before grading it", async () => {
+    const { result } = renderHook(() => useStudy())
+    await waitFor(() => expect(result.current.tasks).toEqual(DEFAULT_STUDY_STATE.tasks))
+
+    act(() => {
+      result.current.toggleLearned("v-0002")
+    })
+    act(() => {
+      result.current.gradeWord("v-0002", "good")
+    })
+
+    // Từ "learned" bắt đầu từ repetitions=2 (seedLearnedReviewState), chấm "good" 1 lần nữa → 3.
+    expect(result.current.wordReviews["v-0002"].repetitions).toBe(3)
+  })
+
+  it("updates an existing wordReviews entry via applyGrade instead of re-seeding it", async () => {
+    const { result } = renderHook(() => useStudy())
+    await waitFor(() => expect(result.current.tasks).toEqual(DEFAULT_STUDY_STATE.tasks))
+
+    act(() => {
+      result.current.gradeWord("v-0001", "good")
+    })
+    act(() => {
+      result.current.gradeWord("v-0001", "good")
+    })
+
+    expect(result.current.wordReviews["v-0001"].repetitions).toBe(2)
+    expect(result.current.wordReviews["v-0001"].intervalDays).toBe(6)
+  })
+
+  it("does not lose a grade when gradeWord and recordGameResult are called in the same tick", async () => {
+    const { result } = renderHook(() => useStudy())
+    await waitFor(() => expect(result.current.tasks).toEqual(DEFAULT_STUDY_STATE.tasks))
+
+    act(() => {
+      result.current.gradeWord("v-9", "good")
+      result.current.recordGameResult("quiz", 10)
+    })
+
+    expect(result.current.wordReviews["v-9"]).toBeDefined()
+    expect(result.current.wordReviews["v-9"].repetitions).toBe(1)
+    expect(result.current.gameHighScores.quiz).toBe(10)
+    expect(getStoredStudy().wordReviews["v-9"]).toBeDefined()
+    expect(getStoredStudy().gameHighScores.quiz).toBe(10)
+  })
+
+  it("still defers a word's schedule when marked learned even after seedReviews already cold-seeded it (regression: seedReviews must not make toggleLearned inert)", async () => {
+    const { result } = renderHook(() => useStudy())
+    await waitFor(() => expect(result.current.tasks).toEqual(DEFAULT_STUDY_STATE.tasks))
+
+    // Mô phỏng seedReviews đã chạy trước đó (vd. StudyView mount) — v-0003 đã có 1 entry cold-seed
+    // (due hôm nay, chưa từng ôn thật — lastReviewedAt: null).
+    act(() => {
+      result.current.seedReviews([{ id: "v-0003", word: "test", meaning: "test", addedAt: "2026-01-01" }])
+    })
+    expect(result.current.wordReviews["v-0003"].lastReviewedAt).toBeNull()
+    expect(result.current.wordReviews["v-0003"].dueAt).toBe(dayKey())
+
+    // Đánh dấu "đã học" SAU KHI entry cold-seed đã tồn tại — vẫn phải đẩy lịch ôn ra xa (6 ngày),
+    // không được giữ nguyên "due hôm nay" của lượt cold-seed trước đó.
+    act(() => {
+      result.current.toggleLearned("v-0003")
+    })
+
+    expect(result.current.wordReviews["v-0003"].repetitions).toBe(2)
+    expect(result.current.wordReviews["v-0003"].dueAt).not.toBe(dayKey())
+  })
+
+  it("does not reset an already-graded word's real progress when marked learned", async () => {
+    const { result } = renderHook(() => useStudy())
+    await waitFor(() => expect(result.current.tasks).toEqual(DEFAULT_STUDY_STATE.tasks))
+
+    act(() => {
+      result.current.gradeWord("v-0004", "good")
+    })
+    const before = result.current.wordReviews["v-0004"]
+    expect(before.lastReviewedAt).not.toBeNull()
+
+    act(() => {
+      result.current.toggleLearned("v-0004")
+    })
+
+    expect(result.current.wordReviews["v-0004"]).toEqual(before)
   })
 })

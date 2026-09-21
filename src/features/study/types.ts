@@ -38,4 +38,15 @@ interface GameStreak {
   lastPlayedDayKey: string | null
 }
 
-export type { VocabEntry, GrammarEntry, Task, GameType, GameHighScores, GameStreak }
+type ReviewGrade = "again" | "hard" | "good" | "easy"
+
+interface WordReviewState {
+  wordId: string
+  easeFactor: number
+  intervalDays: number
+  repetitions: number
+  dueAt: string // dayKey "YYYY-MM-DD"
+  lastReviewedAt: string | null
+}
+
+export type { VocabEntry, GrammarEntry, Task, GameType, GameHighScores, GameStreak, ReviewGrade, WordReviewState }
