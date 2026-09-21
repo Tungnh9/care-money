@@ -147,6 +147,20 @@ describe("QuizGame", () => {
     expect(onWordReviewed).toHaveBeenCalledTimes(10)
   })
 
+  it("reports onWordReviewed(id, false) when a question times out without an answer", () => {
+    const onWordReviewed = vi.fn()
+    render(<QuizGame vocab={VOCAB} onFinish={vi.fn()} onWordReviewed={onWordReviewed} />)
+
+    const heading = screen.getByRole("heading", { level: 3 })
+    const correctEntry = VOCAB.find((entry) => entry.word === heading.textContent)!
+
+    act(() => {
+      vi.advanceTimersByTime(10_000)
+    })
+
+    expect(onWordReviewed).toHaveBeenCalledWith(correctEntry.id, false)
+  })
+
   it("does not crash when onWordReviewed is omitted", () => {
     render(<QuizGame vocab={VOCAB} onFinish={vi.fn()} />)
 
