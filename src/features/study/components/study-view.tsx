@@ -69,7 +69,13 @@ function StudyView({ vocab, grammar }: StudyViewProps) {
         </div>
       ) : tab === "Trò chơi" ? (
         <div className="ob-card-grid">
-          <GameTab vocab={vocab} highScores={gameHighScores} streak={gameStreak} onFinish={recordGameResult} />
+          <GameTab
+            vocab={vocab}
+            highScores={gameHighScores}
+            streak={gameStreak}
+            onFinish={recordGameResult}
+            onWordReviewed={(wordId, correct) => gradeWord(wordId, correct ? "good" : "again")}
+          />
         </div>
       ) : (
         <div className="ob-card-grid">

@@ -146,4 +146,22 @@ describe("StudyView", () => {
     // Thẻ vừa chấm vẫn còn hiển thị (đóng băng theo phiên), không biến mất khỏi lưới.
     expect(screen.getByText(VOCAB[0].word)).toBeInTheDocument()
   })
+
+  it("feeds mini-game results into the SRS schedule via gradeWord", async () => {
+    render(<StudyView vocab={VOCAB} grammar={GRAMMAR} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Trò chơi" }))
+    fireEvent.click(screen.getByText("Ghép cặp"))
+    const cards = screen.getAllByRole("button").filter((b) => b.hasAttribute("data-vocab-id"))
+    const sorted = [...cards].sort((a, b) =>
+      (a.getAttribute("data-vocab-id") ?? "").localeCompare(b.getAttribute("data-vocab-id") ?? "")
+    )
+    fireEvent.click(sorted[0])
+    fireEvent.click(sorted[1]) // luôn là 1 cặp giống nhau — chắc chắn ăn cặp, bất kể 6 cặp nào được rút ngẫu nhiên
+
+    fireEvent.click(screen.getByRole("button", { name: "Hôm nay" }))
+    await waitFor(() =>
+      expect(screen.getByText("0/3 nhiệm vụ · 9 từ cần ôn · ngày 14/08")).toBeInTheDocument()
+    )
+  })
 })
