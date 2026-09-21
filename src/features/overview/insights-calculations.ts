@@ -1,5 +1,5 @@
 import { monthKeyFromDayKey, shiftMonth } from "@/lib/date"
-import { monthlyExpenseTotals, totalExpensesForMonth } from "@/features/budget/budget-calculations"
+import { monthlyExpenseTotals, monthlyTagBreakdown, totalExpensesForMonth } from "@/features/budget/budget-calculations"
 import type { Expense } from "@/features/budget/types"
 
 interface Insight {
@@ -9,6 +9,7 @@ interface Insight {
 
 const ANOMALY_LOOKBACK_MONTHS = 3
 const ANOMALY_Z_SCORE_THRESHOLD = 1.5
+const TAG_ANOMALY_PCT_THRESHOLD = 0.5
 
 function mean(values: number[]): number {
   return values.reduce((sum, v) => sum + v, 0) / values.length
@@ -49,4 +50,38 @@ function detectSpendingAnomaly(expenses: Expense[], month: string, today: string
   }
 }
 
-export { ANOMALY_LOOKBACK_MONTHS, ANOMALY_Z_SCORE_THRESHOLD, detectSpendingAnomaly, type Insight }
+function detectTagAnomaly(expenses: Expense[], month: string): Insight | null {
+  const priorMonths = Array.from({ length: ANOMALY_LOOKBACK_MONTHS }, (_, i) =>
+    shiftMonth(month, -(ANOMALY_LOOKBACK_MONTHS - i))
+  )
+  const allMonths = [...priorMonths, month]
+  const series = monthlyTagBreakdown(expenses, allMonths)
+
+  let worst: { label: string; emoji: string; pct: number; direction: string } | null = null
+  for (const tagSeries of series) {
+    const priorValues = tagSeries.data.slice(0, ANOMALY_LOOKBACK_MONTHS)
+    const currentValue = tagSeries.data[ANOMALY_LOOKBACK_MONTHS]
+    const avgPrior = mean(priorValues)
+    if (avgPrior === 0) continue
+    const pct = (currentValue - avgPrior) / avgPrior
+    if (Math.abs(pct) < TAG_ANOMALY_PCT_THRESHOLD) continue
+    if (!worst || Math.abs(pct) > Math.abs(worst.pct)) {
+      worst = { label: tagSeries.label, emoji: tagSeries.emoji, pct, direction: pct > 0 ? "tăng" : "giảm" }
+    }
+  }
+  if (!worst) return null
+
+  return {
+    id: `tag-anomaly-${month}`,
+    text: `Chi tiêu cho "${worst.emoji} ${worst.label}" tháng này ${worst.direction} ${Math.round(Math.abs(worst.pct) * 100)}% so với trung bình 3 tháng trước.`,
+  }
+}
+
+export {
+  ANOMALY_LOOKBACK_MONTHS,
+  ANOMALY_Z_SCORE_THRESHOLD,
+  TAG_ANOMALY_PCT_THRESHOLD,
+  detectSpendingAnomaly,
+  detectTagAnomaly,
+  type Insight,
+}
