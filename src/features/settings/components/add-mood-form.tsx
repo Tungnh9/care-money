@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils"
 import { EMOJI_PICKER, type Mood } from "@/lib/settings-storage"
 
 interface AddMoodFormProps {
-  onAdd: (mood: Omit<Mood, "tint" | "on">) => void
+  onAdd: (mood: Omit<Mood, "tint" | "on" | "score">) => void
 }
 
 function AddMoodForm({ onAdd }: AddMoodFormProps) {

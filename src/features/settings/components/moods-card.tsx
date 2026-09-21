@@ -11,7 +11,7 @@ interface MoodsCardProps {
   moods: Mood[]
   onToggle: (index: number) => void
   onRemove: (index: number) => void
-  onAdd: (mood: Omit<Mood, "tint" | "on">) => void
+  onAdd: (mood: Omit<Mood, "tint" | "on" | "score">) => void
 }
 
 function MoodsCard({ moods, onToggle, onRemove, onAdd }: MoodsCardProps) {

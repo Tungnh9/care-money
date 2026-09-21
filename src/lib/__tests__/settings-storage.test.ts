@@ -124,4 +124,37 @@ describe("getStoredSettings", () => {
 
     expect(getStoredSettings().tags).toEqual(customTags)
   })
+
+  it("backfills a score of 3 for a mood saved before this feature existed", () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const oldMoods = DEFAULT_SETTINGS.moods.map(({ score, ...rest }) => rest)
+    window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ ...DEFAULT_SETTINGS, moods: oldMoods }))
+
+    const settings = getStoredSettings()
+
+    expect(settings.moods.every((m) => typeof m.score === "number")).toBe(true)
+    expect(settings.moods[0].score).toBe(3)
+  })
+
+  it("keeps a mood's own score when it is already present in storage", () => {
+    const moods = DEFAULT_SETTINGS.moods.map((m) => (m.label === "Buồn" ? { ...m, score: 1 } : m))
+    window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ ...DEFAULT_SETTINGS, moods }))
+
+    expect(getStoredSettings().moods.find((m) => m.label === "Buồn")?.score).toBe(1)
+  })
+
+  it("defaults dismissedInsights to an empty array when missing from storage", () => {
+    window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ ...DEFAULT_SETTINGS, dismissedInsights: undefined }))
+
+    expect(getStoredSettings().dismissedInsights).toEqual([])
+  })
+
+  it("keeps a valid dismissedInsights array from storage", () => {
+    window.localStorage.setItem(
+      SETTINGS_STORAGE_KEY,
+      JSON.stringify({ ...DEFAULT_SETTINGS, dismissedInsights: ["spending-anomaly-2026-08"] })
+    )
+
+    expect(getStoredSettings().dismissedInsights).toEqual(["spending-anomaly-2026-08"])
+  })
 })

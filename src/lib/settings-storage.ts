@@ -11,6 +11,7 @@ interface Mood {
   desc: string
   tint: string
   on: boolean
+  score: number // 1 (rất tệ) – 5 (rất tốt), dùng để tính tương quan chi tiêu-tâm trạng
 }
 
 interface ModuleToggle {
@@ -33,6 +34,7 @@ interface AppSettings {
   moods: Mood[]
   modules: ModuleToggle[]
   tags: BudgetTag[]
+  dismissedInsights: string[]
 }
 
 const SETTINGS_STORAGE_KEY = "app-settings"
@@ -43,14 +45,14 @@ const DEFAULT_PROFILE: Profile = {
 }
 
 const DEFAULT_MOODS: Mood[] = [
-  { label: "Tuyệt vời", emoji: "😄", desc: "Mọi thứ đều trôi chảy", tint: "#FFF0B8", on: true },
-  { label: "Vui", emoji: "🙂", desc: "Tâm trạng tốt, nhẹ người", tint: "#FFE0C7", on: true },
-  { label: "Bình yên", emoji: "😌", desc: "Thư thái, không vướng bận", tint: "#E7F6EF", on: true },
-  { label: "Bình thường", emoji: "😐", desc: "Không vui cũng không buồn", tint: "#F2E9DC", on: true },
-  { label: "Mệt", emoji: "😴", desc: "Cần nghỉ, thiếu năng lượng", tint: "#EAF1FE", on: true },
-  { label: "Lo lắng", emoji: "😟", desc: "Có chuyện đang nghĩ", tint: "#F0ECFE", on: false },
-  { label: "Buồn", emoji: "😔", desc: "Hôm nay hơi trũng", tint: "#E4E9F2", on: false },
-  { label: "Căng thẳng", emoji: "😣", desc: "Áp lực, quá tải", tint: "#FDEBF2", on: false },
+  { label: "Tuyệt vời", emoji: "😄", desc: "Mọi thứ đều trôi chảy", tint: "#FFF0B8", on: true, score: 5 },
+  { label: "Vui", emoji: "🙂", desc: "Tâm trạng tốt, nhẹ người", tint: "#FFE0C7", on: true, score: 4 },
+  { label: "Bình yên", emoji: "😌", desc: "Thư thái, không vướng bận", tint: "#E7F6EF", on: true, score: 4 },
+  { label: "Bình thường", emoji: "😐", desc: "Không vui cũng không buồn", tint: "#F2E9DC", on: true, score: 3 },
+  { label: "Mệt", emoji: "😴", desc: "Cần nghỉ, thiếu năng lượng", tint: "#EAF1FE", on: true, score: 2 },
+  { label: "Lo lắng", emoji: "😟", desc: "Có chuyện đang nghĩ", tint: "#F0ECFE", on: false, score: 2 },
+  { label: "Buồn", emoji: "😔", desc: "Hôm nay hơi trũng", tint: "#E4E9F2", on: false, score: 1 },
+  { label: "Căng thẳng", emoji: "😣", desc: "Áp lực, quá tải", tint: "#FDEBF2", on: false, score: 1 },
 ]
 
 const DEFAULT_MODULES: ModuleToggle[] = [
@@ -81,6 +83,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   moods: DEFAULT_MOODS,
   modules: DEFAULT_MODULES,
   tags: DEFAULT_TAGS,
+  dismissedInsights: [],
 }
 
 const TINT_PALETTE = [
@@ -117,9 +120,16 @@ function getStoredSettings(): AppSettings {
       parsed.profile && typeof parsed.profile === "object"
         ? { ...DEFAULT_SETTINGS.profile, ...parsed.profile }
         : DEFAULT_SETTINGS.profile
-    const moods = Array.isArray(parsed.moods) ? parsed.moods : DEFAULT_SETTINGS.moods
+    // Mood cũ lưu trước tính năng insight thiếu hẳn `score` — backfill 3 (trung tính) cho
+    // từng phần tử thiếu, không làm mất cả mảng như 1 validate toàn phần sẽ làm.
+    const rawMoods = Array.isArray(parsed.moods) ? parsed.moods : DEFAULT_SETTINGS.moods
+    const moods = rawMoods.map((m: Partial<Mood>) => ({
+      ...m,
+      score: typeof m.score === "number" ? m.score : 3,
+    })) as Mood[]
     const tags = Array.isArray(parsed.tags) ? parsed.tags : DEFAULT_SETTINGS.tags
-    return { profile, moods, modules: mergeModules(parsed.modules), tags }
+    const dismissedInsights = Array.isArray(parsed.dismissedInsights) ? parsed.dismissedInsights : []
+    return { profile, moods, modules: mergeModules(parsed.modules), tags, dismissedInsights }
   } catch {
     return DEFAULT_SETTINGS
   }

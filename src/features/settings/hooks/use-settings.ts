@@ -81,10 +81,10 @@ function useSettings() {
   )
 
   const addMood = useCallback(
-    (mood: Omit<Mood, "tint" | "on">) => {
+    (mood: Omit<Mood, "tint" | "on" | "score">) => {
       try {
         const tint = TINT_PALETTE[settings.moods.length % TINT_PALETTE.length]
-        persist({ ...settings, moods: [...settings.moods, { ...mood, tint, on: true }] })
+        persist({ ...settings, moods: [...settings.moods, { ...mood, tint, on: true, score: 3 }] })
         toast.success(`Đã thêm tâm trạng "${mood.label}"`)
       } catch {
         toast.error(`Không thể thêm tâm trạng "${mood.label}". Vui lòng thử lại.`)
