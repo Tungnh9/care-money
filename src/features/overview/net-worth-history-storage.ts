@@ -20,7 +20,7 @@ const netWorthSnapshotSchema: z.ZodType<NetWorthSnapshot> = z.object({
 })
 
 // Lịch sử tích luỹ dài hạn, không giới hạn số điểm — 1 bản ghi hỏng không được kéo sập cả
-// mảy, đúng nguyên tắc đã dùng ở budget-storage.ts cho expenses/settlements.
+// mảng, đúng nguyên tắc đã dùng ở budget-storage.ts cho expenses/settlements.
 function safeArray<T>(schema: z.ZodType<T>, value: unknown): T[] {
   if (!Array.isArray(value)) return []
   return value.filter((item): item is T => schema.safeParse(item).success)
