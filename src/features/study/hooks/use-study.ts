@@ -102,6 +102,14 @@ function useStudy() {
         (current.learned.includes(wordId)
           ? seedLearnedReviewState(wordId, today)
           : initialReviewState(wordId, today))
+
+      // Giới hạn 1 lần chấm/từ/ngày, áp dụng chung cho cả chấm tay lẫn tín hiệu tự động từ
+      // mini-game — nếu không, trúng lại đúng 1 từ nhiều lần trong cùng ngày (chơi nhiều ván liên
+      // tiếp) sẽ dồn khoảng cách ôn tăng vọt (1→6→15→...) chỉ trong vài phút, thay vì đúng nhịp
+      // 1 lần/ngày mà SM-2 giả định.
+      const alreadyGradedToday = existing.lastReviewedAt !== null && dayKey(new Date(existing.lastReviewedAt)) === today
+      if (alreadyGradedToday) return
+
       const wordReviews = {
         ...current.wordReviews,
         [wordId]: applyGrade(existing, grade, today, new Date().toISOString()),

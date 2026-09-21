@@ -6,8 +6,8 @@ import { getGoals, useCarGoalFund } from "@/features/goals"
 import { useJournal } from "@/features/journal/hooks/use-journal"
 import { useBudget } from "@/features/budget/hooks/use-budget"
 import { remainingToSettle, salaryForMonth, totalExpensesForMonth } from "@/features/budget/budget-calculations"
-import { pickDaily } from "@/features/study/daily-pick"
 import { useStudy } from "@/features/study/hooks/use-study"
+import { ensureReviewStates, getDueWords } from "@/features/study/srs-calculations"
 import type { GrammarEntry, VocabEntry } from "@/features/study/types"
 import { useSettings } from "@/features/settings/hooks/use-settings"
 import { Monkey } from "@/components/ob/monkey"
@@ -33,7 +33,7 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
   const { savings, cards, gold, goldStores, invests } = useFinance()
   const { entries } = useJournal()
   const { salaries, expenses, settlements } = useBudget()
-  const { tasks, toggleTask, learned } = useStudy()
+  const { tasks, toggleTask, learned, wordReviews } = useStudy()
   const { fundName } = useCarGoalFund()
 
   function enabled(key: string): boolean {
@@ -47,8 +47,9 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
   const monthSpent = totalExpensesForMonth(expenses, currentMonth)
   const monthRemaining = remainingToSettle(salaries, expenses, settlements, currentMonth)
 
-  const daily = pickDaily(vocab, 5, dayKey(), "vocab")
-  const learnedToday = daily.filter((entry) => learned.includes(entry.id)).length
+  // Đúng với cách trang Học tập tính "từ cần ôn" — không dùng pickDaily/learnedToday nữa, vì
+  // 2 trang phải khớp cùng 1 khái niệm "hôm nay cần ôn từ nào" thay vì mỗi nơi tính 1 kiểu.
+  const dueWords = getDueWords(ensureReviewStates(wordReviews, vocab, learned, dayKey()), vocab, dayKey())
 
   // Nhiều cửa hàng nay có nhiều giá khác nhau — dùng giá bình quân theo tỷ trọng vàng
   // đang giữ (goldValue/goldPhan) làm đại diện, thay vì 1 giá chung duy nhất như trước.
@@ -124,13 +125,14 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
 
       {enabled("hoctap") ? (
         <>
-          <SectionHead icon="cap" title="Học tập" hint={`${learnedToday}/5 từ hôm nay`} href="/study" />
+          <SectionHead icon="cap" title="Học tập" hint={`${dueWords.length} từ cần ôn`} href="/study" />
           <StudySummarySection
             vocab={vocab}
             grammar={grammar}
             tasks={tasks}
             onToggleTask={toggleTask}
             learned={learned}
+            dueWords={dueWords}
           />
         </>
       ) : null}

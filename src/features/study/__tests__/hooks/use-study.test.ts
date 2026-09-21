@@ -160,18 +160,46 @@ describe("useStudy", () => {
   })
 
   it("updates an existing wordReviews entry via applyGrade instead of re-seeding it", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    vi.setSystemTime(new Date(2026, 0, 1, 9, 0))
+
     const { result } = renderHook(() => useStudy())
     await waitFor(() => expect(result.current.tasks).toEqual(DEFAULT_STUDY_STATE.tasks))
 
     act(() => {
       result.current.gradeWord("v-0001", "good")
     })
+
+    // Giới hạn 1 lần chấm/ngày — phải sang ngày khác mới được chấm lại cùng 1 từ.
+    vi.setSystemTime(new Date(2026, 0, 2, 9, 0))
     act(() => {
       result.current.gradeWord("v-0001", "good")
     })
 
     expect(result.current.wordReviews["v-0001"].repetitions).toBe(2)
     expect(result.current.wordReviews["v-0001"].intervalDays).toBe(6)
+
+    vi.useRealTimers()
+  })
+
+  it("does not apply a second grade to the same word again on the same day", async () => {
+    const { result } = renderHook(() => useStudy())
+    await waitFor(() => expect(result.current.tasks).toEqual(DEFAULT_STUDY_STATE.tasks))
+
+    act(() => {
+      result.current.gradeWord("v-0001", "good")
+    })
+    const afterFirst = result.current.wordReviews["v-0001"]
+    expect(afterFirst.repetitions).toBe(1)
+
+    act(() => {
+      // Trúng lại đúng từ này lần 2 trong CÙNG ngày (vd. chơi 2 mini-game liên tiếp, hoặc chơi
+      // lại) — không được cộng dồn thêm 1 lần chấm nữa.
+      result.current.gradeWord("v-0001", "good")
+    })
+
+    expect(result.current.wordReviews["v-0001"]).toEqual(afterFirst)
+    expect(getStoredStudy().wordReviews["v-0001"]).toEqual(afterFirst)
   })
 
   it("does not lose a grade when gradeWord and recordGameResult are called in the same tick", async () => {
