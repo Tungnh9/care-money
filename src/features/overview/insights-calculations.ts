@@ -1,7 +1,8 @@
-import { dayKey, monthKeyFromDayKey, shiftDay, shiftMonth } from "@/lib/date"
+import { dayKey, formatDayKey, monthKeyFromDayKey, shiftDay, shiftMonth } from "@/lib/date"
 import { monthlyExpenseTotals, monthlyTagBreakdown, totalExpensesForMonth } from "@/features/budget/budget-calculations"
 import type { Expense } from "@/features/budget/types"
 import type { JournalEntry } from "@/features/journal/types"
+import type { NetWorthSnapshot } from "./net-worth-history-storage"
 
 interface Insight {
   id: string
@@ -16,6 +17,7 @@ const MOOD_MIN_DAYS_PER_GROUP = 5
 const MOOD_LOW_SCORE_MAX = 2
 const MOOD_HIGH_SCORE_MIN = 4
 const MOOD_PCT_THRESHOLD = 0.2
+const FORECAST_MIN_POINTS = 14
 
 function mean(values: number[]): number {
   return values.reduce((sum, v) => sum + v, 0) / values.length
@@ -123,6 +125,30 @@ function detectMoodSpendingCorrelation(expenses: Expense[], entries: JournalEntr
   }
 }
 
+function forecastSavingsGoal(history: NetWorthSnapshot[], target: number, today: string): Insight | null {
+  if (history.length < FORECAST_MIN_POINTS) return null
+
+  const n = history.length
+  const xs = history.map((_, i) => i)
+  const ys = history.map((h) => h.savingsTotal)
+  const meanX = mean(xs)
+  const meanY = mean(ys)
+  const numerator = xs.reduce((sum, x, i) => sum + (x - meanX) * (ys[i] - meanY), 0)
+  const denominator = xs.reduce((sum, x) => sum + (x - meanX) ** 2, 0)
+  const slope = denominator === 0 ? 0 : numerator / denominator
+
+  const currentSavings = history[n - 1].savingsTotal
+  if (currentSavings >= target || slope <= 0) return null
+
+  const daysToTarget = Math.ceil((target - currentSavings) / slope)
+  const targetDate = shiftDay(today, daysToTarget)
+
+  return {
+    id: "savings-forecast",
+    text: `Với nhịp tiết kiệm hiện tại, bạn có thể đạt mục tiêu tiết kiệm vào khoảng ${formatDayKey(targetDate)}.`,
+  }
+}
+
 export {
   ANOMALY_LOOKBACK_MONTHS,
   ANOMALY_Z_SCORE_THRESHOLD,
@@ -132,8 +158,10 @@ export {
   MOOD_LOW_SCORE_MAX,
   MOOD_HIGH_SCORE_MIN,
   MOOD_PCT_THRESHOLD,
+  FORECAST_MIN_POINTS,
   detectSpendingAnomaly,
   detectTagAnomaly,
   detectMoodSpendingCorrelation,
+  forecastSavingsGoal,
   type Insight,
 }

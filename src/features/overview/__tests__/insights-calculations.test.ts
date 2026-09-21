@@ -148,3 +148,47 @@ describe("detectMoodSpendingCorrelation", () => {
     })
   })
 })
+
+import { forecastSavingsGoal } from "../insights-calculations"
+import type { NetWorthSnapshot } from "../net-worth-history-storage"
+
+function linearHistory(startDate: string, points: number, dailyIncrease: number, startValue: number): NetWorthSnapshot[] {
+  return Array.from({ length: points }, (_, i) => {
+    const d = new Date(startDate)
+    d.setDate(d.getDate() + i)
+    const date = d.toISOString().slice(0, 10)
+    const savingsTotal = startValue + i * dailyIncrease
+    return { date, net: savingsTotal, savingsTotal }
+  })
+}
+
+describe("forecastSavingsGoal", () => {
+  it("returns null when there are fewer than 14 points", () => {
+    const history = linearHistory("2026-09-01", 10, 100_000, 5_000_000)
+    expect(forecastSavingsGoal(history, 10_000_000, "2026-09-10")).toBeNull()
+  })
+
+  it("returns null when the trend is flat or decreasing", () => {
+    const history = linearHistory("2026-09-01", 14, 0, 5_000_000)
+    expect(forecastSavingsGoal(history, 10_000_000, "2026-09-14")).toBeNull()
+  })
+
+  it("returns null when the target is already reached", () => {
+    const history = linearHistory("2026-09-01", 14, 100_000, 9_500_000)
+    expect(forecastSavingsGoal(history, 10_000_000, "2026-09-14")).toBeNull()
+  })
+
+  it("forecasts the correct target date for a steady upward trend", () => {
+    const history = linearHistory("2026-09-01", 14, 100_000, 5_000_000)
+    const today = "2026-09-14"
+
+    const insight = forecastSavingsGoal(history, 10_000_000, today)
+
+    // Điểm cuối: 5,000,000 + 13*100,000 = 6,300,000. Còn thiếu 3,700,000, tốc độ 100,000/ngày
+    // → 37 ngày nữa. shiftDay("2026-09-14", 37) = "2026-10-21".
+    expect(insight).toEqual({
+      id: "savings-forecast",
+      text: expect.stringContaining("21/10"),
+    })
+  })
+})
