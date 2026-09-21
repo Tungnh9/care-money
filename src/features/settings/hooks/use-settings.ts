@@ -103,6 +103,14 @@ function useSettings() {
     [settings, persist]
   )
 
+  const dismissInsight = useCallback(
+    (id: string) => {
+      if (settings.dismissedInsights.includes(id)) return
+      persist({ ...settings, dismissedInsights: [...settings.dismissedInsights, id] })
+    },
+    [settings, persist]
+  )
+
   return {
     settings,
     updateProfile,
@@ -111,6 +119,7 @@ function useSettings() {
     removeMood,
     addMood,
     toggleTag,
+    dismissInsight,
     replaceSettings: persist,
   }
 }

@@ -170,4 +170,41 @@ describe("useSettings", () => {
 
     expect(getStoredSettings()).toEqual(DEFAULT_SETTINGS)
   })
+
+  it("defaults a newly added mood's score to 3 (neutral)", async () => {
+    const { result } = renderHook(() => useSettings())
+    await waitFor(() => expect(result.current.settings).toEqual(DEFAULT_SETTINGS))
+
+    act(() => {
+      result.current.addMood({ label: "Hào hứng", desc: "Có việc đang mong chờ", emoji: "🥳" })
+    })
+
+    expect(result.current.settings.moods.at(-1)?.score).toBe(3)
+  })
+
+  it("dismisses an insight by id and persists it", async () => {
+    const { result } = renderHook(() => useSettings())
+    await waitFor(() => expect(result.current.settings).toEqual(DEFAULT_SETTINGS))
+
+    act(() => {
+      result.current.dismissInsight("spending-anomaly-2026-09")
+    })
+
+    expect(result.current.settings.dismissedInsights).toEqual(["spending-anomaly-2026-09"])
+    expect(getStoredSettings().dismissedInsights).toEqual(["spending-anomaly-2026-09"])
+  })
+
+  it("does not add the same insight id twice when dismissed more than once", async () => {
+    const { result } = renderHook(() => useSettings())
+    await waitFor(() => expect(result.current.settings).toEqual(DEFAULT_SETTINGS))
+
+    act(() => {
+      result.current.dismissInsight("savings-forecast")
+    })
+    act(() => {
+      result.current.dismissInsight("savings-forecast")
+    })
+
+    expect(result.current.settings.dismissedInsights).toEqual(["savings-forecast"])
+  })
 })
