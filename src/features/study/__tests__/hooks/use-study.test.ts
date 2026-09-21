@@ -189,4 +189,43 @@ describe("useStudy", () => {
     expect(getStoredStudy().wordReviews["v-9"]).toBeDefined()
     expect(getStoredStudy().gameHighScores.quiz).toBe(10)
   })
+
+  it("still defers a word's schedule when marked learned even after seedReviews already cold-seeded it (regression: seedReviews must not make toggleLearned inert)", async () => {
+    const { result } = renderHook(() => useStudy())
+    await waitFor(() => expect(result.current.tasks).toEqual(DEFAULT_STUDY_STATE.tasks))
+
+    // Mô phỏng seedReviews đã chạy trước đó (vd. StudyView mount) — v-0003 đã có 1 entry cold-seed
+    // (due hôm nay, chưa từng ôn thật — lastReviewedAt: null).
+    act(() => {
+      result.current.seedReviews([{ id: "v-0003", word: "test", meaning: "test", addedAt: "2026-01-01" }])
+    })
+    expect(result.current.wordReviews["v-0003"].lastReviewedAt).toBeNull()
+    expect(result.current.wordReviews["v-0003"].dueAt).toBe(dayKey())
+
+    // Đánh dấu "đã học" SAU KHI entry cold-seed đã tồn tại — vẫn phải đẩy lịch ôn ra xa (6 ngày),
+    // không được giữ nguyên "due hôm nay" của lượt cold-seed trước đó.
+    act(() => {
+      result.current.toggleLearned("v-0003")
+    })
+
+    expect(result.current.wordReviews["v-0003"].repetitions).toBe(2)
+    expect(result.current.wordReviews["v-0003"].dueAt).not.toBe(dayKey())
+  })
+
+  it("does not reset an already-graded word's real progress when marked learned", async () => {
+    const { result } = renderHook(() => useStudy())
+    await waitFor(() => expect(result.current.tasks).toEqual(DEFAULT_STUDY_STATE.tasks))
+
+    act(() => {
+      result.current.gradeWord("v-0004", "good")
+    })
+    const before = result.current.wordReviews["v-0004"]
+    expect(before.lastReviewedAt).not.toBeNull()
+
+    act(() => {
+      result.current.toggleLearned("v-0004")
+    })
+
+    expect(result.current.wordReviews["v-0004"]).toEqual(before)
+  })
 })

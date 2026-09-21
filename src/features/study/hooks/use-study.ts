@@ -52,10 +52,21 @@ function useStudy() {
   const toggleLearned = useCallback(
     (id: string) => {
       const current = stateRef.current
-      const learned = current.learned.includes(id)
-        ? current.learned.filter((entryId) => entryId !== id)
-        : [...current.learned, id]
-      persist({ ...current, learned })
+      const wasLearned = current.learned.includes(id)
+      const learned = wasLearned ? current.learned.filter((entryId) => entryId !== id) : [...current.learned, id]
+
+      // Đánh dấu MỚI "đã học" (không phải bỏ đánh dấu) cho 1 từ chưa từng thật sự được ôn qua SRS
+      // (entry cold-seed tự động của seedReviews, hoặc chưa có entry nào) — đẩy lịch ôn ra xa theo
+      // đúng seed "learned" (6 ngày), thay vì để nguyên "due hôm nay" từ lượt cold-seed ban đầu.
+      // Từ ĐÃ có tiến trình ôn thật (lastReviewedAt khác null, tức đã từng chấm điểm thật) thì giữ
+      // nguyên, không ghi đè tiến trình đã có.
+      const existing = current.wordReviews[id]
+      const shouldReseedAsLearned = !wasLearned && (!existing || existing.lastReviewedAt === null)
+      const wordReviews = shouldReseedAsLearned
+        ? { ...current.wordReviews, [id]: seedLearnedReviewState(id, dayKey()) }
+        : current.wordReviews
+
+      persist({ ...current, learned, wordReviews })
     },
     [persist]
   )
