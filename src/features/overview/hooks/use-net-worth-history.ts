@@ -20,15 +20,17 @@ function useNetWorthHistory() {
     setHistory(getStoredNetWorthHistory())
   }, [])
 
+  // Đọc trực tiếp `history` qua closure, KHÔNG dùng updater dạng hàm của setHistory — updater
+  // dạng hàm bị React StrictMode gọi 2 lần để dò side effect, mà setStoredNetWorthHistory (ghi
+  // localStorage) là side effect thật, phải nằm ngoài updater (cùng quy ước với use-study.ts).
   const recordSnapshot = useCallback(
     (net: number, savingsTotal: number) => {
-      setHistory((current) => {
-        const next = appendSnapshot(current, { date: dayKey(), net, savingsTotal })
-        if (next !== current) setStoredNetWorthHistory(next)
-        return next
-      })
+      const next = appendSnapshot(history, { date: dayKey(), net, savingsTotal })
+      if (next === history) return
+      setHistory(next)
+      setStoredNetWorthHistory(next)
     },
-    []
+    [history]
   )
 
   return { history, recordSnapshot }
