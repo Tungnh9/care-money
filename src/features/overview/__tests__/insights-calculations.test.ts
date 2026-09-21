@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest"
 
-import { detectSpendingAnomaly, detectTagAnomaly } from "../insights-calculations"
+import { detectSpendingAnomaly, detectTagAnomaly, detectMoodSpendingCorrelation } from "../insights-calculations"
 import type { Expense } from "@/features/budget/types"
+import type { JournalEntry } from "@/features/journal/types"
 
 function expense(id: number, dayKey: string, amount: number): Expense {
   return { id, dayKey, amount, tag: null }
@@ -91,5 +92,59 @@ describe("detectTagAnomaly", () => {
     const expenses = [taggedExpense(1, "2026-04-05", 1_000_000, "Du lịch")]
 
     expect(detectTagAnomaly(expenses, "2026-04")).toBeNull()
+  })
+})
+
+function moodEntry(id: number, score: number): JournalEntry {
+  return { id, text: "x", time: "09:00", date: "01/01", words: 1, mood: { emoji: "🙂", label: "x", tint: "#fff", score } }
+}
+
+describe("detectMoodSpendingCorrelation", () => {
+  const DAY_MS = 24 * 60 * 60 * 1000
+
+  it("returns null when there are fewer than 5 days in either group", () => {
+    const today = "2026-09-21"
+    const entries = [moodEntry(new Date(2026, 8, 20).getTime(), 1), moodEntry(new Date(2026, 8, 19).getTime(), 5)]
+    expect(detectMoodSpendingCorrelation([], entries, today)).toBeNull()
+  })
+
+  it("ignores entries with no score (saved before this feature existed)", () => {
+    const today = "2026-09-21"
+    const legacyEntry: JournalEntry = {
+      id: new Date(2026, 8, 20).getTime(),
+      text: "x",
+      time: "09:00",
+      date: "20/09",
+      words: 1,
+      mood: { emoji: "🙂", label: "x", tint: "#fff" } as JournalEntry["mood"],
+    }
+    expect(detectMoodSpendingCorrelation([], [legacyEntry], today)).toBeNull()
+  })
+
+  it("reports a correlation when low-mood days spend noticeably more than high-mood days", () => {
+    const today = new Date(2026, 8, 21)
+    const todayKey = "2026-09-21"
+    const entries: JournalEntry[] = []
+    const expenses: Expense[] = []
+
+    for (let i = 0; i < 5; i++) {
+      const lowDay = new Date(today.getTime() - i * DAY_MS)
+      entries.push(moodEntry(lowDay.getTime(), 1))
+      const lowDayKey = `2026-09-${String(21 - i).padStart(2, "0")}`
+      expenses.push(expense(100 + i, lowDayKey, 300_000))
+    }
+    for (let i = 5; i < 10; i++) {
+      const highDay = new Date(today.getTime() - i * DAY_MS)
+      entries.push(moodEntry(highDay.getTime(), 5))
+      const highDayKey = `2026-09-${String(21 - i).padStart(2, "0")}`
+      expenses.push(expense(200 + i, highDayKey, 100_000))
+    }
+
+    const insight = detectMoodSpendingCorrelation(expenses, entries, todayKey)
+
+    expect(insight).toEqual({
+      id: "mood-spending-2026-09",
+      text: "Trong 60 ngày qua, những ngày tâm trạng thấp bạn chi tiêu nhiều hơn khoảng 200% so với những ngày tâm trạng cao.",
+    })
   })
 })
