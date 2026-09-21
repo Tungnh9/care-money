@@ -115,4 +115,41 @@ describe("QuizGame", () => {
 
     expect(onFinish).not.toHaveBeenCalled()
   })
+
+  it("reports the correct word id and outcome via onWordReviewed for every question, including on timeout", () => {
+    const onWordReviewed = vi.fn()
+    render(<QuizGame vocab={VOCAB} onFinish={vi.fn()} onWordReviewed={onWordReviewed} />)
+
+    const heading = screen.getByRole("heading", { level: 3 })
+    const correctEntry = VOCAB.find((entry) => entry.word === heading.textContent)!
+    fireEvent.click(screen.getByRole("button", { name: correctEntry.meaning }))
+
+    expect(onWordReviewed).toHaveBeenCalledWith(correctEntry.id, true)
+
+    const nextHeading = screen.getByRole("heading", { level: 3 })
+    const nextCorrectEntry = VOCAB.find((entry) => entry.word === nextHeading.textContent)!
+    const wrongButton = screen
+      .getAllByRole("button")
+      .find((button) => button.textContent !== nextCorrectEntry.meaning)!
+    fireEvent.click(wrongButton)
+
+    expect(onWordReviewed).toHaveBeenCalledWith(nextCorrectEntry.id, false)
+  })
+
+  it("still reports onWordReviewed for the final question, not just the first 9", () => {
+    const onWordReviewed = vi.fn()
+    render(<QuizGame vocab={VOCAB} onFinish={vi.fn()} onWordReviewed={onWordReviewed} />)
+
+    for (let i = 0; i < 10; i++) {
+      fireEvent.click(screen.getAllByRole("button")[0])
+    }
+
+    expect(onWordReviewed).toHaveBeenCalledTimes(10)
+  })
+
+  it("does not crash when onWordReviewed is omitted", () => {
+    render(<QuizGame vocab={VOCAB} onFinish={vi.fn()} />)
+
+    expect(() => fireEvent.click(screen.getAllByRole("button")[0])).not.toThrow()
+  })
 })

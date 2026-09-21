@@ -15,6 +15,7 @@ const QUESTION_SECONDS = 10
 interface QuizGameProps {
   vocab: VocabEntry[]
   onFinish: (score: number, total: number) => void
+  onWordReviewed?: (wordId: string, correct: boolean) => void
 }
 
 interface QuizQuestion {
@@ -29,7 +30,7 @@ function buildQuestions(vocab: VocabEntry[]): QuizQuestion[] {
   }))
 }
 
-function QuizGame({ vocab, onFinish }: QuizGameProps) {
+function QuizGame({ vocab, onFinish, onWordReviewed }: QuizGameProps) {
   const [questions] = useState(() => buildQuestions(vocab))
   const [index, setIndex] = useState(0)
   const [score, setScore] = useState(0)
@@ -38,6 +39,7 @@ function QuizGame({ vocab, onFinish }: QuizGameProps) {
   const question = questions[index]
 
   function advance(gainedPoint: boolean) {
+    onWordReviewed?.(question.correct.id, gainedPoint)
     const nextScore = gainedPoint ? score + 1 : score
     if (index + 1 >= questions.length) {
       onFinish(nextScore, questions.length)
