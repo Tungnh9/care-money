@@ -1,5 +1,7 @@
 "use client"
 
+import { useEffect } from "react"
+
 import { summarizeFinance } from "@/features/finance/finance-calculations"
 import { useFinance } from "@/features/finance/hooks/use-finance"
 import { getGoals, useCarGoalFund } from "@/features/goals"
@@ -14,10 +16,19 @@ import { Monkey } from "@/components/ob/monkey"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { dayKey, longDate, monthKey } from "@/lib/date"
 import { formatMoney } from "@/lib/format"
+import { useNetWorthHistory } from "../hooks/use-net-worth-history"
+import {
+  detectMoodSpendingCorrelation,
+  detectSpendingAnomaly,
+  detectTagAnomaly,
+  forecastSavingsGoal,
+  type Insight,
+} from "../insights-calculations"
 import { splitGreeting } from "../overview-calculations"
 import { BudgetSummarySection } from "./budget-summary-section"
 import { FinanceSummarySection } from "./finance-summary-section"
 import { GoalsSummarySection } from "./goals-summary-section"
+import { InsightsSection } from "./insights-section"
 import { JournalSummarySection } from "./journal-summary-section"
 import { SectionHead } from "./section-head"
 import { StudySummarySection } from "./study-summary-section"
@@ -29,7 +40,7 @@ interface OverviewViewProps {
 
 function OverviewView({ vocab, grammar }: OverviewViewProps) {
   const { hidden } = useMoneyVisibility()
-  const { settings } = useSettings()
+  const { settings, dismissInsight } = useSettings()
   const { savings, cards, gold, goldStores, invests } = useFinance()
   const { entries } = useJournal()
   const { salaries, expenses, settlements } = useBudget()
@@ -64,6 +75,24 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
     },
     hidden
   )
+
+  const { history: netWorthHistory, recordSnapshot } = useNetWorthHistory()
+
+  useEffect(() => {
+    recordSnapshot(summary.net, summary.savingsTotal)
+  }, [recordSnapshot, summary.net, summary.savingsTotal])
+
+  const today = dayKey()
+  const savingsGoal = goals.find((g) => g.key === "savings")
+  const insights: Insight[] = [
+    enabled("chitieu") ? detectSpendingAnomaly(expenses, currentMonth, today) : null,
+    enabled("chitieu") ? detectTagAnomaly(expenses, currentMonth) : null,
+    enabled("chitieu") && enabled("nhatky") ? detectMoodSpendingCorrelation(expenses, entries, today) : null,
+    enabled("muctieu") && savingsGoal ? forecastSavingsGoal(netWorthHistory, savingsGoal.target, today) : null,
+  ]
+    .filter((i): i is Insight => i !== null)
+    .filter((i) => !settings.dismissedInsights.includes(i.id))
+
   const greeting = splitGreeting(settings.profile.greeting, settings.profile.displayName)
 
   return (
@@ -82,6 +111,8 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
           <p className="text-sm text-[var(--ob-color-text-subtle)]">{longDate()}</p>
         </div>
       </div>
+
+      <InsightsSection insights={insights} onDismiss={dismissInsight} />
 
       {enabled("taichinh") ? (
         <>

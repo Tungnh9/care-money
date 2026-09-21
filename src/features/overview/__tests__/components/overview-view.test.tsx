@@ -128,4 +128,34 @@ describe("OverviewView", () => {
     expect(carRow).not.toBeNull()
     expect(within(carRow as HTMLElement).getByText("30%")).toBeInTheDocument()
   })
+
+  it("shows a spending-anomaly insight and dismisses it correctly", async () => {
+    const { setStoredBudget } = await import("@/features/budget/budget-storage")
+    // Hôm nay là 2026-08-14 (beforeEach ở trên đã setSystemTime) → currentMonth = "2026-08",
+    // 3 tháng nền = 05/06/07. Nền KHÔNG được bằng nhau hệt nhau (std=0 → detectSpendingAnomaly
+    // luôn trả null) — dùng đúng 3 số đã kiểm chứng ở Task 7 (mean=1,000,000, std=100,000),
+    // tháng 8 vọt lên 5,000,000 → z=40, pct=400% → chắc chắn kích hoạt.
+    setStoredBudget({
+      salaries: [],
+      settlements: [],
+      expenses: [
+        { id: 1, dayKey: "2026-05-10", amount: 1_000_000, tag: null },
+        { id: 2, dayKey: "2026-06-10", amount: 1_100_000, tag: null },
+        { id: 3, dayKey: "2026-07-10", amount: 900_000, tag: null },
+        { id: 4, dayKey: "2026-08-10", amount: 5_000_000, tag: null },
+      ],
+    })
+
+    render(<OverviewView vocab={VOCAB} grammar={GRAMMAR} />)
+
+    await waitFor(() => expect(screen.getByText(/chi tiêu cao hơn/)).toBeInTheDocument())
+
+    // Dữ liệu này cũng khiến detectTagAnomaly kích hoạt song song (nhóm "chưa gắn thẻ" cũng
+    // vọt +400%) → có ≥2 nút "Ẩn gợi ý này" trên trang. Khoanh vùng đúng dòng insight chi tiêu
+    // bất thường trước khi bấm dismiss, tránh getByRole bị mơ hồ giữa nhiều nút cùng nhãn.
+    const insightRow = screen.getByText(/chi tiêu cao hơn/).closest("div") as HTMLElement
+    fireEvent.click(within(insightRow).getByRole("button", { name: "Ẩn gợi ý này" }))
+
+    await waitFor(() => expect(screen.queryByText(/chi tiêu cao hơn/)).not.toBeInTheDocument())
+  })
 })
