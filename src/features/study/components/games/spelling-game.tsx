@@ -22,6 +22,7 @@ const DANGER_PROGRESS = 0.8 // rơi quá 80% quãng đường thì cảnh báo s
 interface SpellingGameProps {
   vocab: VocabEntry[]
   onFinish: (score: number, total: number) => void
+  onWordReviewed?: (wordId: string, correct: boolean) => void
 }
 
 interface QueuedWord {
@@ -41,13 +42,16 @@ interface RoundState {
   lives: number
   destroyed: number
   missed: number
+  // Các entry.id vừa rơi hết giờ ở tick gần nhất — 1 effect riêng đọc rồi báo onWordReviewed,
+  // KHÔNG gọi trực tiếp trong updater setRound (tránh double-invoke dưới Strict Mode).
+  lastMissedIds: string[]
 }
 
 function initialRound(): RoundState {
-  return { fallingWords: [], queueIndex: 0, lastSpawnAt: -SPAWN_GAP_MS, lives: MAX_LIVES, destroyed: 0, missed: 0 }
+  return { fallingWords: [], queueIndex: 0, lastSpawnAt: -SPAWN_GAP_MS, lives: MAX_LIVES, destroyed: 0, missed: 0, lastMissedIds: [] }
 }
 
-function SpellingGame({ vocab, onFinish }: SpellingGameProps) {
+function SpellingGame({ vocab, onFinish, onWordReviewed }: SpellingGameProps) {
   // Vị trí ngang (xPercent) rút ngẫu nhiên 1 lần duy nhất lúc khởi tạo, qua lazy initializer của
   // useState — đây là chỗ duy nhất được phép gọi hàm impure (Math.random) trong component, React
   // đảm bảo chỉ chạy đúng 1 lần bất kể re-render.
@@ -102,17 +106,38 @@ function SpellingGame({ vocab, onFinish }: SpellingGameProps) {
         if (!missedNow.length) return { ...prev, fallingWords, queueIndex, lastSpawnAt }
 
         return {
+          ...prev,
           fallingWords,
           queueIndex,
           lastSpawnAt,
           lives: Math.max(0, prev.lives - missedNow.length),
           destroyed: prev.destroyed,
           missed: prev.missed + missedNow.length,
+          lastMissedIds: missedNow.map((w) => w.entry.id),
         }
       })
     }, TICK_MS)
     return () => clearInterval(id)
   }, [queue])
+
+  // Side effect thật sự (báo SRS từ nào vừa bị rơi/quên) tách hẳn khỏi updater ở effect trên,
+  // đặt trong effect riêng theo dõi round.lastMissedIds — đúng pattern đã dùng cho onFinish bên
+  // dưới (effect riêng phản ứng với state kết quả, không side-effect ngay trong updater).
+  // onWordReviewed CỐ Ý không nằm trong deps: StudyView truyền 1 arrow function inline (tạo mới
+  // mỗi lần StudyView re-render vì lý do bất kỳ, không chỉ vì SpellingGame) — nếu liệt kê đủ,
+  // effect sẽ chạy lại và báo lại đúng các id cũ mỗi khi component cha re-render, gây chấm điểm
+  // trùng. Closure vẫn luôn dùng đúng onWordReviewed mới nhất tại thời điểm lastMissedIds đổi.
+  useEffect(() => {
+    if (round.lastMissedIds.length > 0) {
+      round.lastMissedIds.forEach((id) => onWordReviewed?.(id, false))
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- đặt setState ở đây để xoá danh sách vừa báo, tránh báo lại khi component cha re-render
+      setRound((prev) => ({
+        ...prev,
+        lastMissedIds: [],
+      }))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [round.lastMissedIds])
 
   // Từ đang gõ dở bị rơi mất (chạm đáy) trước khi gõ xong — buffer đang gõ không còn khớp từ
   // nào trên màn nữa thì xoá, tránh giữ lại 1 chuỗi không còn ý nghĩa gì.
@@ -156,6 +181,7 @@ function SpellingGame({ vocab, onFinish }: SpellingGameProps) {
       }))
       setTyped("")
       speakWord(exact.entry.word)
+      onWordReviewed?.(exact.entry.id, true)
       return
     }
 
