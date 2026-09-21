@@ -25,7 +25,7 @@ function JournalView() {
   const moodEnabled = settings.modules.find((m) => m.key === "tamtrang")?.on ?? true
   const selectedMood = settings.moods.find((m) => m.label === mood)
   const selectedMoodSnapshot = selectedMood
-    ? { emoji: selectedMood.emoji, label: selectedMood.label, tint: selectedMood.tint }
+    ? { emoji: selectedMood.emoji, label: selectedMood.label, tint: selectedMood.tint, score: selectedMood.score }
     : null
   const onThisDay = findOnThisDay(entries)
 

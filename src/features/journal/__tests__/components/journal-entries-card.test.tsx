@@ -21,7 +21,7 @@ const LONG_ENTRY: JournalEntry = {
   time: "20:00",
   date: "11/08",
   words: 60,
-  mood: { emoji: "😌", label: "Bình yên", tint: "#E7F6EF" },
+  mood: { emoji: "😌", label: "Bình yên", tint: "#E7F6EF", score: 4 },
 }
 
 describe("JournalEntriesCard", () => {

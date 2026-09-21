@@ -89,7 +89,7 @@ describe("JournalEditor", () => {
 
   it("saves the current text, word count, and selected mood, then clears the editor", () => {
     const onSave = vi.fn()
-    const mood = { emoji: "🙂", label: "Vui", tint: "#FFE0C7" }
+    const mood = { emoji: "🙂", label: "Vui", tint: "#FFE0C7", score: 4 }
     render(<JournalEditor selectedMood={mood} onSave={onSave} />)
 
     const editor = screen.getByRole("textbox")
@@ -199,7 +199,7 @@ describe("JournalEditor", () => {
 
   it("calls onSave with the edited text when updating", () => {
     const onSave = vi.fn()
-    const mood = { emoji: "😌", label: "Bình yên", tint: "#E7F6EF" }
+    const mood = { emoji: "😌", label: "Bình yên", tint: "#E7F6EF", score: 4 }
     const entry: JournalEntry = {
       id: 1,
       text: "Bài viết cũ",

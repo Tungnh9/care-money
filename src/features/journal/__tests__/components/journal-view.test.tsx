@@ -183,4 +183,17 @@ describe("JournalView on-this-day card", () => {
     await screen.findByText("Chưa có bài nào")
     expect(screen.queryByText(/bạn đã viết/)).not.toBeInTheDocument()
   })
+
+  it("copies the selected mood's score into the saved journal snapshot", async () => {
+    render(<JournalView />)
+
+    fireEvent.click(screen.getByText("Vui")) // mood mặc định "on: true", score = 4
+    const editor = await screen.findByRole("textbox")
+    typeInto(editor, "Một ngày ổn")
+    fireEvent.click(screen.getByRole("button", { name: "Lưu vào nhật ký" }))
+
+    await waitFor(() => expect(screen.getByText("Đã lưu vào nhật ký")).toBeInTheDocument())
+    const stored = JSON.parse(window.localStorage.getItem("journal-entries") ?? "{}")
+    expect(stored.entries[0].mood.score).toBe(4)
+  })
 })

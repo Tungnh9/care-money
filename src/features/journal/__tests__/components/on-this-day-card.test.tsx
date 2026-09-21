@@ -14,7 +14,7 @@ describe("OnThisDayCard", () => {
         time: "20:15",
         date: "10/08",
         words: 8,
-        mood: { emoji: "🙂", label: "Vui", tint: "#FFE0C7" },
+        mood: { emoji: "🙂", label: "Vui", tint: "#FFE0C7", score: 4 },
       },
     }
     render(<OnThisDayCard result={result} />)

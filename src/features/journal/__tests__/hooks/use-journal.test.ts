@@ -78,7 +78,7 @@ describe("useJournal", () => {
       entry = result.current.saveEntry({ text: "Bài gốc", words: 2, mood: null })!
     })
 
-    const mood = { emoji: "🙂", label: "Vui", tint: "#FFE0C7" }
+    const mood = { emoji: "🙂", label: "Vui", tint: "#FFE0C7", score: 4 }
     act(() => {
       result.current.updateEntry(entry.id, { text: "Bài đã sửa", words: 3, mood })
     })
