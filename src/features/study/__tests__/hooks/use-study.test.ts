@@ -64,6 +64,7 @@ describe("useStudy", () => {
       learned: ["v-0009"],
       gameHighScores: { quiz: 0, match: 0, spelling: 0 },
       gameStreak: { count: 0, lastPlayedDayKey: null },
+      wordReviews: {},
     }
     act(() => {
       result.current.replaceStudy(restored)
