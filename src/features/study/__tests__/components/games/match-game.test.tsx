@@ -145,4 +145,36 @@ describe("MatchGame", () => {
     expect(() => act(() => vi.advanceTimersByTime(800))).not.toThrow()
     clearTimeoutSpy.mockRestore()
   })
+
+  it("reports onWordReviewed(vocabId, true) when a pair is matched", () => {
+    const onWordReviewed = vi.fn()
+    render(<MatchGame vocab={VOCAB} onFinish={vi.fn()} onWordReviewed={onWordReviewed} />)
+
+    const sorted = sortedByVocabId(screen.getAllByRole("button"))
+    fireEvent.click(sorted[0])
+    fireEvent.click(sorted[1]) // sorted[0]/[1] luôn là 1 cặp giống nhau
+
+    expect(onWordReviewed).toHaveBeenCalledWith(sorted[0].getAttribute("data-vocab-id"), true)
+  })
+
+  it("does NOT call onWordReviewed when a pair is mismatched", () => {
+    const onWordReviewed = vi.fn()
+    render(<MatchGame vocab={VOCAB} onFinish={vi.fn()} onWordReviewed={onWordReviewed} />)
+
+    const sorted = sortedByVocabId(screen.getAllByRole("button"))
+    fireEvent.click(sorted[0])
+    fireEvent.click(sorted[2]) // chắc chắn khác vocabId — chắc chắn lệch cặp
+
+    expect(onWordReviewed).not.toHaveBeenCalled()
+  })
+
+  it("does not crash when onWordReviewed is omitted", () => {
+    render(<MatchGame vocab={VOCAB} onFinish={vi.fn()} />)
+
+    const sorted = sortedByVocabId(screen.getAllByRole("button"))
+    expect(() => {
+      fireEvent.click(sorted[0])
+      fireEvent.click(sorted[1])
+    }).not.toThrow()
+  })
 })
