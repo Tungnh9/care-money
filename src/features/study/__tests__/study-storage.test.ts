@@ -65,4 +65,35 @@ describe("getStoredStudy", () => {
     expect(getStoredStudy().gameHighScores).toEqual({ quiz: 8, match: 6, spelling: 10 })
     expect(getStoredStudy().gameStreak).toEqual({ count: 4, lastPlayedDayKey: "2026-09-15" })
   })
+
+  it("backfills an empty wordReviews map for data saved before this feature existed", () => {
+    window.localStorage.setItem(
+      STUDY_STORAGE_KEY,
+      JSON.stringify({ tasks: DEFAULT_STUDY_STATE.tasks, learned: [] })
+    )
+
+    expect(getStoredStudy().wordReviews).toEqual({})
+  })
+
+  it("keeps valid wordReviews entries and drops only the malformed ones", () => {
+    const saved = {
+      ...DEFAULT_STUDY_STATE,
+      wordReviews: {
+        "v-1": {
+          wordId: "v-1",
+          easeFactor: 2.5,
+          intervalDays: 6,
+          repetitions: 2,
+          dueAt: "2026-01-01",
+          lastReviewedAt: null,
+        },
+        "v-2": { wordId: "v-2" }, // thiếu field bắt buộc
+      },
+    }
+    window.localStorage.setItem(STUDY_STORAGE_KEY, JSON.stringify(saved))
+
+    const state = getStoredStudy()
+    expect(state.wordReviews["v-1"]).toEqual(saved.wordReviews["v-1"])
+    expect(state.wordReviews["v-2" as keyof typeof state.wordReviews]).toBeUndefined()
+  })
 })
