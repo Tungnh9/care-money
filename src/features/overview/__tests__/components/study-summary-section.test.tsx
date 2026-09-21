@@ -12,6 +12,7 @@ const VOCAB: VocabEntry[] = Array.from({ length: 10 }, (_, i) => ({
   meaning: `nghĩa ${i}`,
   addedAt: "2026-08-14",
 }))
+const DUE_WORDS = VOCAB.slice(0, 5)
 
 const GRAMMAR: GrammarEntry[] = Array.from({ length: 5 }, (_, i) => ({
   id: `g-${i}`,
@@ -35,7 +36,7 @@ describe("StudySummarySection", () => {
     vi.useRealTimers()
   })
 
-  it("shows the task count, today's vocab words and grammar highlight", () => {
+  it("shows the task count, due vocab words and grammar highlight", () => {
     render(
       <StudySummarySection
         vocab={VOCAB}
@@ -43,33 +44,62 @@ describe("StudySummarySection", () => {
         tasks={TASKS}
         onToggleTask={vi.fn()}
         learned={[]}
+        dueWords={DUE_WORDS}
       />
     )
 
-    const key = dayKey()
-    const daily = pickDaily(VOCAB, 5, key, "vocab")
-    const dailyGrammar = pickDaily(GRAMMAR, 1, key, "grammar")[0]
+    const dailyGrammar = pickDaily(GRAMMAR, 1, dayKey(), "grammar")[0]
 
     expect(screen.getByText("1")).toBeInTheDocument()
-    for (const entry of daily) {
+    for (const entry of DUE_WORDS) {
       expect(screen.getByText(entry.word)).toBeInTheDocument()
     }
     expect(screen.getByText(dailyGrammar.title)).toBeInTheDocument()
   })
 
-  it("marks a learned word with a strikethrough and check icon", () => {
-    const daily = pickDaily(VOCAB, 5, dayKey(), "vocab")
+  it("shows at most 5 due words even when more are due", () => {
     render(
       <StudySummarySection
         vocab={VOCAB}
         grammar={GRAMMAR}
         tasks={TASKS}
         onToggleTask={vi.fn()}
-        learned={[daily[0].id]}
+        learned={[]}
+        dueWords={VOCAB}
       />
     )
 
-    expect(screen.getByText(daily[0].word)).toHaveClass("line-through")
+    expect(screen.getAllByRole("button", { name: "Phát âm từ" })).toHaveLength(5)
+  })
+
+  it("shows an empty-state message when nothing is due", () => {
+    render(
+      <StudySummarySection
+        vocab={VOCAB}
+        grammar={GRAMMAR}
+        tasks={TASKS}
+        onToggleTask={vi.fn()}
+        learned={[]}
+        dueWords={[]}
+      />
+    )
+
+    expect(screen.getByText("Không có từ nào cần ôn hôm nay 🎉")).toBeInTheDocument()
+  })
+
+  it("marks a learned word with a strikethrough and check icon", () => {
+    render(
+      <StudySummarySection
+        vocab={VOCAB}
+        grammar={GRAMMAR}
+        tasks={TASKS}
+        onToggleTask={vi.fn()}
+        learned={[DUE_WORDS[0].id]}
+        dueWords={DUE_WORDS}
+      />
+    )
+
+    expect(screen.getByText(DUE_WORDS[0].word)).toHaveClass("line-through")
   })
 
   it("calls onToggleTask with the task's index when clicked", () => {
@@ -81,6 +111,7 @@ describe("StudySummarySection", () => {
         tasks={TASKS}
         onToggleTask={onToggleTask}
         learned={[]}
+        dueWords={DUE_WORDS}
       />
     )
 
@@ -89,7 +120,7 @@ describe("StudySummarySection", () => {
     expect(onToggleTask).toHaveBeenCalledWith(1)
   })
 
-  describe("speak buttons on the daily words", () => {
+  describe("speak buttons on the due words", () => {
     let speakSpy: ReturnType<typeof vi.fn>
     let cancelSpy: ReturnType<typeof vi.fn>
 
@@ -107,7 +138,7 @@ describe("StudySummarySection", () => {
       vi.unstubAllGlobals()
     })
 
-    it("reads a daily word aloud when its speak button is clicked", () => {
+    it("reads a due word aloud when its speak button is clicked", () => {
       render(
         <StudySummarySection
           vocab={VOCAB}
@@ -115,20 +146,20 @@ describe("StudySummarySection", () => {
           tasks={TASKS}
           onToggleTask={vi.fn()}
           learned={[]}
+          dueWords={DUE_WORDS}
         />
       )
 
-      const daily = pickDaily(VOCAB, 5, dayKey(), "vocab")
       fireEvent.click(screen.getAllByRole("button", { name: "Phát âm từ" })[0])
 
       expect(cancelSpy).toHaveBeenCalled()
       expect(speakSpy).toHaveBeenCalledTimes(1)
       const utterance = speakSpy.mock.calls[0][0]
-      expect(utterance.text).toBe(daily[0].word)
+      expect(utterance.text).toBe(DUE_WORDS[0].word)
       expect(utterance.lang).toBe("en-US")
     })
 
-    it("renders one speak button per daily word", () => {
+    it("renders one speak button per due word", () => {
       render(
         <StudySummarySection
           vocab={VOCAB}
@@ -136,6 +167,7 @@ describe("StudySummarySection", () => {
           tasks={TASKS}
           onToggleTask={vi.fn()}
           learned={[]}
+          dueWords={DUE_WORDS}
         />
       )
 

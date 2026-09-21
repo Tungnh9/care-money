@@ -100,6 +100,16 @@ describe("OverviewView", () => {
     expect(screen.getAllByText(formatMoney(5_000_000)).length).toBeGreaterThan(0)
   })
 
+  it("shows the real SRS due-word count for Học tập, synced with the Study page", async () => {
+    render(<OverviewView vocab={VOCAB} grammar={GRAMMAR} />)
+
+    // Toàn bộ 10 từ đều "mới" (chưa từng ôn) nên đều tới hạn ngay hôm đầu tiên.
+    await waitFor(() => expect(screen.getByText("10 từ cần ôn")).toBeInTheDocument())
+    for (const entry of VOCAB.slice(0, 5)) {
+      expect(screen.getByText(entry.word)).toBeInTheDocument()
+    }
+  })
+
   it("shows the real car-goal progress in the Mục tiêu section once a savings fund is linked, matching /goals", async () => {
     setStoredFinance({
       ...DEFAULT_FINANCE_STATE,

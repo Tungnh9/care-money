@@ -1,6 +1,7 @@
 import { Check } from "lucide-react"
 
 import { pickDaily } from "@/features/study/daily-pick"
+import { DAILY_REVIEW_CAP } from "@/features/study/srs-calculations"
 import { GrammarHighlightCard } from "@/features/study/components/grammar-card"
 import type { GrammarEntry, Task, VocabEntry } from "@/features/study/types"
 import { Card } from "@/components/ui/card"
@@ -17,6 +18,9 @@ interface StudySummarySectionProps {
   tasks: Task[]
   onToggleTask: (index: number) => void
   learned: string[]
+  // Đã tính sẵn ở overview-view.tsx (getDueWords, giống hệt trang Học tập) — CHƯA cắt theo cap,
+  // component này tự cắt để hiển thị, giữ đúng ý nghĩa "tổng số thật" cho nơi gọi nếu cần dùng.
+  dueWords: VocabEntry[]
 }
 
 function VocabTeaserCard({ entry, learned }: { entry: VocabEntry; learned: boolean }) {
@@ -51,11 +55,11 @@ function VocabTeaserCard({ entry, learned }: { entry: VocabEntry; learned: boole
   )
 }
 
-function StudySummarySection({ vocab, grammar, tasks, onToggleTask, learned }: StudySummarySectionProps) {
+function StudySummarySection({ vocab, grammar, tasks, onToggleTask, learned, dueWords }: StudySummarySectionProps) {
   const key = dayKey()
-  const daily = pickDaily(vocab, 5, key, "vocab")
   const dailyGrammar = pickDaily(grammar, 1, key, "grammar")[0]
   const doneTasks = tasks.filter((task) => task.done).length
+  const shownDueWords = dueWords.slice(0, DAILY_REVIEW_CAP)
 
   return (
     <div className="ob-card-grid flex flex-wrap gap-5">
@@ -68,12 +72,16 @@ function StudySummarySection({ vocab, grammar, tasks, onToggleTask, learned }: S
         </div>
       </Card>
 
-      <Card label="5 từ hôm nay" className="min-w-0 flex-[1_1_360px]">
-        <div className="grid grid-cols-5 gap-[10px]">
-          {daily.map((entry) => (
-            <VocabTeaserCard key={entry.id} entry={entry} learned={learned.includes(entry.id)} />
-          ))}
-        </div>
+      <Card label="Từ cần ôn hôm nay" className="min-w-0 flex-[1_1_360px]">
+        {shownDueWords.length ? (
+          <div className="grid grid-cols-5 gap-[10px]">
+            {shownDueWords.map((entry) => (
+              <VocabTeaserCard key={entry.id} entry={entry} learned={learned.includes(entry.id)} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-[13px] text-[var(--ob-color-text-subtle)]">Không có từ nào cần ôn hôm nay 🎉</p>
+        )}
       </Card>
 
       {dailyGrammar ? <GrammarHighlightCard key={dailyGrammar.id} entry={dailyGrammar} vocab={vocab} /> : null}
