@@ -4,13 +4,14 @@ import { useCallback, useEffect, useState } from "react"
 
 import { dayKey } from "@/lib/date"
 import { nextStreak } from "../game-calculations"
+import { applyGrade, initialReviewState, seedLearnedReviewState } from "../srs-calculations"
 import {
   DEFAULT_STUDY_STATE,
   getStoredStudy,
   setStoredStudy,
   type StudyState,
 } from "../study-storage"
-import type { GameType } from "../types"
+import type { GameType, ReviewGrade } from "../types"
 
 function useStudy() {
   const [state, setState] = useState<StudyState>(DEFAULT_STUDY_STATE)
@@ -65,14 +66,36 @@ function useStudy() {
     [state, persist]
   )
 
+  const gradeWord = useCallback(
+    (wordId: string, grade: ReviewGrade) => {
+      const today = dayKey()
+      // Từ chưa từng có entry (chưa được ensureReviewStates chạm tới ở nơi hiển thị) được tạo
+      // ngay tại đây theo đúng loại seed (cold/learned) rồi chấm luôn trong 1 bước — không cần 1
+      // effect backfill riêng chạy trước, vì gradeWord luôn tự đủ dữ liệu để tạo entry còn thiếu.
+      const current =
+        state.wordReviews[wordId] ??
+        (state.learned.includes(wordId)
+          ? seedLearnedReviewState(wordId, today)
+          : initialReviewState(wordId, today))
+      const wordReviews = {
+        ...state.wordReviews,
+        [wordId]: applyGrade(current, grade, today, new Date().toISOString()),
+      }
+      persist({ ...state, wordReviews })
+    },
+    [state, persist]
+  )
+
   return {
     tasks: state.tasks,
     learned: state.learned,
     gameHighScores: state.gameHighScores,
     gameStreak: state.gameStreak,
+    wordReviews: state.wordReviews,
     toggleTask,
     toggleLearned,
     recordGameResult,
+    gradeWord,
     replaceStudy: persist,
   }
 }

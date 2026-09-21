@@ -128,4 +128,49 @@ describe("useStudy", () => {
     expect(result.current.gameStreak).toEqual({ count: 1, lastPlayedDayKey: dayKey() })
     expect(getStoredStudy().gameStreak).toEqual({ count: 1, lastPlayedDayKey: dayKey() })
   })
+
+  it("wordReviews starts empty and gradeWord creates a fresh entry for a never-graded word", async () => {
+    const { result } = renderHook(() => useStudy())
+    await waitFor(() => expect(result.current.tasks).toEqual(DEFAULT_STUDY_STATE.tasks))
+
+    expect(result.current.wordReviews).toEqual({})
+
+    act(() => {
+      result.current.gradeWord("v-0001", "good")
+    })
+
+    expect(result.current.wordReviews["v-0001"]).toBeDefined()
+    expect(result.current.wordReviews["v-0001"].repetitions).toBe(1)
+    expect(getStoredStudy().wordReviews["v-0001"].repetitions).toBe(1)
+  })
+
+  it("seeds an already-learned word with a 6-day head start before grading it", async () => {
+    const { result } = renderHook(() => useStudy())
+    await waitFor(() => expect(result.current.tasks).toEqual(DEFAULT_STUDY_STATE.tasks))
+
+    act(() => {
+      result.current.toggleLearned("v-0002")
+    })
+    act(() => {
+      result.current.gradeWord("v-0002", "good")
+    })
+
+    // Từ "learned" bắt đầu từ repetitions=2 (seedLearnedReviewState), chấm "good" 1 lần nữa → 3.
+    expect(result.current.wordReviews["v-0002"].repetitions).toBe(3)
+  })
+
+  it("updates an existing wordReviews entry via applyGrade instead of re-seeding it", async () => {
+    const { result } = renderHook(() => useStudy())
+    await waitFor(() => expect(result.current.tasks).toEqual(DEFAULT_STUDY_STATE.tasks))
+
+    act(() => {
+      result.current.gradeWord("v-0001", "good")
+    })
+    act(() => {
+      result.current.gradeWord("v-0001", "good")
+    })
+
+    expect(result.current.wordReviews["v-0001"].repetitions).toBe(2)
+    expect(result.current.wordReviews["v-0001"].intervalDays).toBe(6)
+  })
 })
