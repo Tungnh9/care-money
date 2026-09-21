@@ -34,29 +34,33 @@ describe("StudyView", () => {
     vi.useRealTimers()
   })
 
-  it("shows today's 5 vocab words and 1 grammar highlight on the Hôm nay tab", async () => {
+  it("shows up to 5 due words to review and 1 grammar highlight on the Hôm nay tab", async () => {
     render(<StudyView vocab={VOCAB} grammar={GRAMMAR} />)
 
     const key = dayKey()
-    const dailyWords = pickDaily(VOCAB, 5, key, "vocab")
     const dailyGrammar = pickDaily(GRAMMAR, 1, key, "grammar")[0]
 
-    for (const word of dailyWords) {
+    // Toàn bộ 10 từ đều "mới" (chưa từng ôn) nên đều tới hạn ngay hôm đầu tiên — cap hiển thị 5,
+    // thứ tự ổn định giữ đúng thứ tự gốc trong VOCAB khi cùng hạn ôn (sort ổn định, cùng dueAt).
+    for (const word of VOCAB.slice(0, 5)) {
       expect(screen.getByText(word.word)).toBeInTheDocument()
     }
     expect(screen.getByText(dailyGrammar.title)).toBeInTheDocument()
-    expect(screen.getByText("0/3 nhiệm vụ · 0/5 từ hôm nay · ngày 14/08")).toBeInTheDocument()
+    expect(screen.getByText("0/3 nhiệm vụ · 10 từ cần ôn · ngày 14/08")).toBeInTheDocument()
   })
 
-  it("marking a word as learned updates the progress card", async () => {
+  it("marking a word as learned on the Từ vựng tab updates the progress card", async () => {
     render(<StudyView vocab={VOCAB} grammar={GRAMMAR} />)
 
+    fireEvent.click(screen.getByRole("button", { name: "Từ vựng" }))
     const markButtons = screen.getAllByRole("button", { name: "Đánh dấu đã học" })
     fireEvent.click(markButtons[0])
 
     await waitFor(() =>
       expect(screen.getAllByRole("button", { name: "Bỏ đánh dấu đã học" })).toHaveLength(1)
     )
+    // LearnedProgressCard chỉ nằm ở tab "Hôm nay" — quay lại đó để đọc số liệu đã cập nhật.
+    fireEvent.click(screen.getByRole("button", { name: "Hôm nay" }))
     expect(screen.getByText("Thuộc 10% kho từ")).toBeInTheDocument()
   })
 
@@ -66,7 +70,7 @@ describe("StudyView", () => {
     fireEvent.click(screen.getByText("Ôn 20 từ vựng"))
 
     await waitFor(() =>
-      expect(screen.getByText("1/3 nhiệm vụ · 0/5 từ hôm nay · ngày 14/08")).toBeInTheDocument()
+      expect(screen.getByText("1/3 nhiệm vụ · 10 từ cần ôn · ngày 14/08")).toBeInTheDocument()
     )
   })
 
@@ -117,22 +121,6 @@ describe("StudyView", () => {
     expect(grammarSection.parentElement).toHaveClass("ob-card-grid")
   })
 
-  it("celebrates with confetti once all 5 daily words are learned", async () => {
-    render(<StudyView vocab={VOCAB} grammar={GRAMMAR} />)
-
-    for (let i = 0; i < 5; i++) {
-      const [button] = screen.getAllByRole("button", { name: "Đánh dấu đã học" })
-      fireEvent.click(button)
-      await waitFor(() =>
-        expect(screen.getAllByRole("button", { name: "Bỏ đánh dấu đã học" })).toHaveLength(i + 1)
-      )
-    }
-
-    const vocabCard = screen.getByText("5/5").closest("section")
-    expect(vocabCard).toHaveClass("ob-tada")
-    expect(vocabCard?.querySelector(".ob-conf")).toBeInTheDocument()
-  })
-
   it("renders the game menu when the Trò chơi tab is selected", () => {
     render(<StudyView vocab={VOCAB} grammar={GRAMMAR} />)
 
@@ -141,5 +129,21 @@ describe("StudyView", () => {
     expect(screen.getByText("Trắc nghiệm")).toBeInTheDocument()
     expect(screen.getByText("Ghép cặp")).toBeInTheDocument()
     expect(screen.getByText("Gõ từ")).toBeInTheDocument()
+  })
+
+  it("grading a due word from Hôm nay keeps its card visible but drops it out of the due count", async () => {
+    render(<StudyView vocab={VOCAB} grammar={GRAMMAR} />)
+
+    expect(screen.getByText("0/3 nhiệm vụ · 10 từ cần ôn · ngày 14/08")).toBeInTheDocument()
+
+    const revealButtons = screen.getAllByRole("button", { name: /Hiện nghĩa/ })
+    fireEvent.click(revealButtons[0])
+    fireEvent.click(screen.getByRole("button", { name: "Nhớ" }))
+
+    await waitFor(() =>
+      expect(screen.getByText("0/3 nhiệm vụ · 9 từ cần ôn · ngày 14/08")).toBeInTheDocument()
+    )
+    // Thẻ vừa chấm vẫn còn hiển thị (đóng băng theo phiên), không biến mất khỏi lưới.
+    expect(screen.getByText(VOCAB[0].word)).toBeInTheDocument()
   })
 })

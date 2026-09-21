@@ -5,12 +5,14 @@ import { useState } from "react"
 import { Tabs } from "@/components/ob/tabs"
 import { dayKey } from "@/lib/date"
 import { pickDaily } from "../daily-pick"
+import { ensureReviewStates, getDueWords } from "../srs-calculations"
 import { useStudy } from "../hooks/use-study"
 import type { GrammarEntry, VocabEntry } from "../types"
 import { GameTab } from "./games/game-tab"
 import { GrammarHighlightCard, GrammarListCard } from "./grammar-card"
 import { LearnedProgressCard } from "./learned-progress-card"
 import { Pomodoro } from "./pomodoro"
+import { ReviewDueCard } from "./review-due-card"
 import { TasksCard } from "./tasks-card"
 import { VocabCard } from "./vocab-card"
 
@@ -23,21 +25,30 @@ interface StudyViewProps {
 
 function StudyView({ vocab, grammar }: StudyViewProps) {
   const [tab, setTab] = useState(TABS[0])
-  const { tasks, learned, toggleTask, toggleLearned, gameHighScores, gameStreak, recordGameResult } = useStudy()
+  const {
+    tasks,
+    learned,
+    toggleTask,
+    toggleLearned,
+    gameHighScores,
+    gameStreak,
+    recordGameResult,
+    wordReviews,
+    gradeWord,
+  } = useStudy()
 
   const key = dayKey()
-  const daily = pickDaily(vocab, 5, key, "vocab")
   const dailyGrammar = pickDaily(grammar, 1, key, "grammar")[0]
+  const dueWords = getDueWords(ensureReviewStates(wordReviews, vocab, learned, key), vocab, key)
 
   const done = tasks.filter((t) => t.done).length
-  const learnedToday = daily.filter((v) => learned.includes(v.id)).length
   const [day, month] = key.split("-").reverse()
 
   return (
     <div>
       <h1 className="mb-1 [font:var(--ob-text-h2)] tracking-[var(--ob-track-heading)]">Học tập</h1>
       <p className="mb-5 text-sm text-[var(--ob-color-text-subtle)]">
-        {done}/{tasks.length} nhiệm vụ · {learnedToday}/5 từ hôm nay · ngày {day}/{month}
+        {done}/{tasks.length} nhiệm vụ · {dueWords.length} từ cần ôn · ngày {day}/{month}
       </p>
 
       <Tabs tabs={TABS} active={tab} onChange={setTab} />
@@ -47,21 +58,7 @@ function StudyView({ vocab, grammar }: StudyViewProps) {
           <div className="min-w-0 flex-[1_1_100%]">
             <Pomodoro />
           </div>
-          <VocabCard
-            label="5 từ vựng hôm nay"
-            action={
-              <span className="[font-family:var(--ob-font-num)] text-[12.5px] font-bold text-[var(--ob-color-text-subtle)]">
-                {learnedToday}/5
-              </span>
-            }
-            intro={`Bốc từ kho ${vocab.length} từ, cố định theo ngày — mai sẽ là bộ khác.`}
-            entries={daily}
-            learned={learned}
-            onToggleLearned={toggleLearned}
-            celebrate={learnedToday === 5}
-            className="min-w-0 flex-[1_1_100%]"
-            gridClassName="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
-          />
+          <ReviewDueCard dueWords={dueWords} onGrade={gradeWord} className="min-w-0 flex-[1_1_100%]" />
           {dailyGrammar ? <GrammarHighlightCard key={dailyGrammar.id} entry={dailyGrammar} vocab={vocab} /> : null}
           <TasksCard tasks={tasks} onToggle={toggleTask} className="min-w-0 flex-[1_1_300px]" />
           <LearnedProgressCard
