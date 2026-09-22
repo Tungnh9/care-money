@@ -2,7 +2,10 @@ import { describe, it, expect } from "vitest"
 
 import {
   dayKey,
+  daysBetween,
+  daysInMonth,
   formatDayKey,
+  formatDayKeyWithYear,
   formatMonthKey,
   monthKey,
   monthKeyFromDayKey,
@@ -102,5 +105,50 @@ describe("shiftDay", () => {
 
   it("rolls over across a year boundary backward", () => {
     expect(shiftDay("2026-01-01", -1)).toBe("2025-12-31")
+  })
+})
+
+describe("formatDayKeyWithYear", () => {
+  it("formats a yyyy-mm-dd key as weekday + zero-padded dd/mm/yyyy", () => {
+    // 2026-09-01 là Thứ Ba
+    expect(formatDayKeyWithYear("2026-09-01")).toBe("Thứ Ba, 01/09/2026")
+    // 2028-01-05 là Thứ Tư
+    expect(formatDayKeyWithYear("2028-01-05")).toBe("Thứ Tư, 05/01/2028")
+  })
+})
+
+describe("daysInMonth", () => {
+  it("returns 30 for a 30-day month", () => {
+    expect(daysInMonth("2026-04")).toBe(30)
+  })
+
+  it("returns 31 for a 31-day month", () => {
+    expect(daysInMonth("2026-08")).toBe(31)
+  })
+
+  it("returns 28 for February in a non-leap year", () => {
+    expect(daysInMonth("2026-02")).toBe(28)
+  })
+
+  it("returns 29 for February in a leap year", () => {
+    expect(daysInMonth("2028-02")).toBe(29)
+  })
+})
+
+describe("daysBetween", () => {
+  it("returns 0 for the same day", () => {
+    expect(daysBetween("2026-09-01", "2026-09-01")).toBe(0)
+  })
+
+  it("counts days forward within the same month", () => {
+    expect(daysBetween("2026-09-01", "2026-09-15")).toBe(14)
+  })
+
+  it("counts days across a month boundary", () => {
+    expect(daysBetween("2026-09-20", "2026-10-05")).toBe(15)
+  })
+
+  it("returns a negative count when `to` is before `from`", () => {
+    expect(daysBetween("2026-09-15", "2026-09-01")).toBe(-14)
   })
 })

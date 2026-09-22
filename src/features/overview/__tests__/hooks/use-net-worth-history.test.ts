@@ -24,9 +24,11 @@ describe("useNetWorthHistory", () => {
     expect(getStoredNetWorthHistory()).toHaveLength(1)
   })
 
-  it("does not record a second snapshot for the same day", async () => {
+  it("replaces (not duplicates) today's snapshot when called again with different values", () => {
+    // Lần gọi thứ 2 trong CÙNG 1 ngày với giá trị KHÁC phải ghi đè, không được cộng thêm bản
+    // ghi mới — đây chính là cơ chế "tự sửa" cho trường hợp lần gọi đầu trong ngày mang giá trị
+    // sai/chưa hydrate xong (net-worth-history-calculations.ts's appendSnapshot).
     const { result } = renderHook(() => useNetWorthHistory())
-    await waitFor(() => expect(result.current.history).toEqual([]))
 
     act(() => {
       result.current.recordSnapshot(10_000_000, 5_000_000)
@@ -36,7 +38,8 @@ describe("useNetWorthHistory", () => {
     })
 
     expect(result.current.history).toHaveLength(1)
-    expect(result.current.history[0].net).toBe(10_000_000)
+    expect(result.current.history[0].net).toBe(20_000_000)
+    expect(result.current.history[0].savingsTotal).toBe(9_000_000)
   })
 
   it("preserves and appends to pre-existing history when a consumer calls recordSnapshot from its own mount effect", async () => {

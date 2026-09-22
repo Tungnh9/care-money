@@ -1,4 +1,4 @@
-import { dayKey, formatDayKey, monthKeyFromDayKey, shiftDay, shiftMonth } from "@/lib/date"
+import { dayKey, daysBetween, daysInMonth, formatDayKeyWithYear, monthKeyFromDayKey, shiftDay, shiftMonth } from "@/lib/date"
 import { monthlyExpenseTotals, monthlyTagBreakdown, totalExpensesForMonth } from "@/features/budget/budget-calculations"
 import type { Expense } from "@/features/budget/types"
 import type { JournalEntry } from "@/features/journal/types"
@@ -18,6 +18,8 @@ const MOOD_LOW_SCORE_MAX = 2
 const MOOD_HIGH_SCORE_MIN = 4
 const MOOD_PCT_THRESHOLD = 0.2
 const FORECAST_MIN_POINTS = 14
+const FORECAST_MAX_DAYS = 5 * 365
+const ANOMALY_MONTH_COMPLETE_RATIO = 0.9
 
 function mean(values: number[]): number {
   return values.reduce((sum, v) => sum + v, 0) / values.length
@@ -28,6 +30,15 @@ function sampleStdDev(values: number[]): number {
   const m = mean(values)
   const variance = values.reduce((sum, v) => sum + (v - m) ** 2, 0) / (values.length - 1)
   return Math.sqrt(variance)
+}
+
+// Tháng chưa qua hết luôn có tổng chi tiêu-đến-nay THẤP hơn 1 tháng trọn vẹn — nếu so thẳng với
+// trung bình 3 tháng trước (luôn trọn vẹn), hướng "thấp hơn/giảm" sẽ báo sai suốt gần cả tháng
+// cho bất kỳ ai chi tiêu đều đặn. Hướng "cao hơn/tăng" vẫn hữu ích để cảnh báo sớm (chi vượt tốc
+// độ thường thấy), nên chỉ chặn hướng "thấp hơn/giảm" cho tới khi tháng gần kết thúc.
+function isMonthNearlyComplete(month: string, today: string): boolean {
+  const dayOfMonth = Number(today.slice(8, 10))
+  return dayOfMonth / daysInMonth(month) >= ANOMALY_MONTH_COMPLETE_RATIO
 }
 
 function detectSpendingAnomaly(expenses: Expense[], month: string, today: string): Insight | null {
@@ -49,6 +60,7 @@ function detectSpendingAnomaly(expenses: Expense[], month: string, today: string
 
   const z = (currentTotal - mean(priorTotals)) / std
   if (Math.abs(z) < ANOMALY_Z_SCORE_THRESHOLD) return null
+  if (z < 0 && !isMonthNearlyComplete(month, today)) return null
 
   const pct = Math.round((Math.abs(currentTotal - mean(priorTotals)) / mean(priorTotals)) * 100)
   const direction = z > 0 ? "cao hơn" : "thấp hơn"
@@ -58,7 +70,7 @@ function detectSpendingAnomaly(expenses: Expense[], month: string, today: string
   }
 }
 
-function detectTagAnomaly(expenses: Expense[], month: string): Insight | null {
+function detectTagAnomaly(expenses: Expense[], month: string, today: string): Insight | null {
   const priorMonths = Array.from({ length: ANOMALY_LOOKBACK_MONTHS }, (_, i) =>
     shiftMonth(month, -(ANOMALY_LOOKBACK_MONTHS - i))
   )
@@ -73,6 +85,7 @@ function detectTagAnomaly(expenses: Expense[], month: string): Insight | null {
     if (avgPrior === 0) continue
     const pct = (currentValue - avgPrior) / avgPrior
     if (Math.abs(pct) < TAG_ANOMALY_PCT_THRESHOLD) continue
+    if (pct < 0 && !isMonthNearlyComplete(month, today)) continue
     if (!worst || Math.abs(pct) > Math.abs(worst.pct)) {
       worst = { label: tagSeries.label, emoji: tagSeries.emoji, pct, direction: pct > 0 ? "tăng" : "giảm" }
     }
@@ -129,7 +142,11 @@ function forecastSavingsGoal(history: NetWorthSnapshot[], target: number, today:
   if (history.length < FORECAST_MIN_POINTS) return null
 
   const n = history.length
-  const xs = history.map((_, i) => i)
+  // Hồi quy theo SỐ NGÀY THỰC đã trôi qua kể từ điểm đầu tiên, KHÔNG theo chỉ số phần tử — snapshot
+  // chỉ được ghi khi người dùng mở app, nên có thể có khoảng trống (bỏ lỡ vài ngày không mở app).
+  // Nếu hồi quy theo chỉ số, độ dốc sẽ bị tính theo "đơn vị/lần ghi" thay vì "đơn vị/ngày", làm dự
+  // báo sai lệch (nhanh hơn thực tế) đúng theo tỷ lệ mật độ ghi thưa hay dày.
+  const xs = history.map((h) => daysBetween(history[0].date, h.date))
   const ys = history.map((h) => h.savingsTotal)
   const meanX = mean(xs)
   const meanY = mean(ys)
@@ -141,11 +158,14 @@ function forecastSavingsGoal(history: NetWorthSnapshot[], target: number, today:
   if (currentSavings >= target || slope <= 0) return null
 
   const daysToTarget = Math.ceil((target - currentSavings) / slope)
+  // Độ dốc nhỏ dương (gần như đi ngang) có thể ngoại suy ra hàng trăm/nghìn năm — 1 con số vô
+  // nghĩa với người dùng thật, chặn lại thay vì hiện 1 ngày xa không thực tế.
+  if (daysToTarget > FORECAST_MAX_DAYS) return null
   const targetDate = shiftDay(today, daysToTarget)
 
   return {
     id: "savings-forecast",
-    text: `Với nhịp tiết kiệm hiện tại, bạn có thể đạt mục tiêu tiết kiệm vào khoảng ${formatDayKey(targetDate)}.`,
+    text: `Với nhịp tiết kiệm hiện tại, bạn có thể đạt mục tiêu tiết kiệm vào khoảng ${formatDayKeyWithYear(targetDate)}.`,
   }
 }
 

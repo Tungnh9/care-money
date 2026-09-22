@@ -50,10 +50,32 @@ function formatMonthKey(month: string): string {
   return `Tháng ${m}, ${y}`
 }
 
+function formatDayKeyWithYear(key: string): string {
+  const [y, m, d] = key.split("-").map(Number)
+  const weekday = WEEKDAYS[new Date(y, m - 1, d).getDay()]
+  return `${weekday}, ${String(d).padStart(2, "0")}/${String(m).padStart(2, "0")}/${y}`
+}
+
+function daysInMonth(month: string): number {
+  const [y, m] = month.split("-").map(Number)
+  // Ngày 0 của tháng sau = ngày cuối tháng này — cách chuẩn để lấy số ngày trong tháng.
+  return new Date(y, m, 0).getDate()
+}
+
+function daysBetween(from: string, to: string): number {
+  const [y1, m1, d1] = from.split("-").map(Number)
+  const [y2, m2, d2] = to.split("-").map(Number)
+  const msPerDay = 24 * 60 * 60 * 1000
+  return Math.round((new Date(y2, m2 - 1, d2).getTime() - new Date(y1, m1 - 1, d1).getTime()) / msPerDay)
+}
+
 export {
   longDate,
   dayKey,
+  daysBetween,
+  daysInMonth,
   formatDayKey,
+  formatDayKeyWithYear,
   formatMonthKey,
   monthKey,
   monthKeyFromDayKey,

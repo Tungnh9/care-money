@@ -158,4 +158,25 @@ describe("OverviewView", () => {
 
     await waitFor(() => expect(screen.queryByText(/chi tiêu cao hơn/)).not.toBeInTheDocument())
   })
+
+  it("records today's net-worth snapshot with the real (hydrated) finance data, not zeros", async () => {
+    // Quy hồi test cho 1 bug thật: recordSnapshot chạy trong effect riêng của OverviewView, cùng
+    // 1 lượt passive-effects với effect hydrate của useFinance — nếu useFinance chưa hydrate xong
+    // tại thời điểm đó, `summary` (đóng gói từ closure của lượt render đó) vẫn là 0/0, và bản ghi
+    // đầu tiên trong ngày sẽ bị "khoá" ở giá trị sai đó suốt cả ngày.
+    const { getStoredNetWorthHistory } = await import("@/features/overview/net-worth-history-storage")
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      savings: [{ name: "Quỹ ABC", amount: 60_000_000, target: 100_000_000 }],
+    })
+
+    render(<OverviewView vocab={VOCAB} grammar={GRAMMAR} />)
+
+    await waitFor(() => expect(getStoredNetWorthHistory()[0]?.net).toBe(60_000_000))
+
+    const history = getStoredNetWorthHistory()
+    expect(history).toHaveLength(1)
+    expect(history[0].date).toBe("2026-08-14")
+    expect(history[0].savingsTotal).toBe(60_000_000)
+  })
 })

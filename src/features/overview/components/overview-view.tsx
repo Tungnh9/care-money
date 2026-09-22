@@ -86,8 +86,10 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
   const savingsGoal = goals.find((g) => g.key === "savings")
   const insights: Insight[] = [
     enabled("chitieu") ? detectSpendingAnomaly(expenses, currentMonth, today) : null,
-    enabled("chitieu") ? detectTagAnomaly(expenses, currentMonth) : null,
-    enabled("chitieu") && enabled("nhatky") ? detectMoodSpendingCorrelation(expenses, entries, today) : null,
+    enabled("chitieu") ? detectTagAnomaly(expenses, currentMonth, today) : null,
+    enabled("chitieu") && enabled("nhatky") && enabled("tamtrang")
+      ? detectMoodSpendingCorrelation(expenses, entries, today)
+      : null,
     enabled("muctieu") && savingsGoal ? forecastSavingsGoal(netWorthHistory, savingsGoal.target, today) : null,
   ]
     .filter((i): i is Insight => i !== null)
