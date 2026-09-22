@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { act, renderHook, waitFor } from "@testing-library/react"
 
 import { useFinance } from "../../hooks/use-finance"
-import { DEFAULT_FINANCE_STATE, FINANCE_STORAGE_KEY, getStoredFinance } from "../../finance-storage"
+import { DEFAULT_FINANCE_STATE, FINANCE_STORAGE_KEY, getStoredFinance, setStoredFinance } from "../../finance-storage"
 import { getCarGoalFundName, setCarGoalFundName } from "@/features/goals/car-goal-storage"
 import { DEFAULT_BUDGET_STATE, getStoredBudget, setStoredBudget } from "@/features/budget/budget-storage"
 import { toast } from "sonner"
@@ -27,6 +27,17 @@ describe("useFinance", () => {
     expect(result.current.gold).toEqual([])
     expect(result.current.goldStores).toEqual([])
     expect(result.current.invests).toEqual([])
+  })
+
+  it("reports hydrated once the real data loads", async () => {
+    // Cần cho các consumer (vd. OverviewView's net-worth-snapshot effect) biết được lúc nào
+    // dữ liệu tài chính đã tải xong THẬT, để không lỡ dùng giá trị mặc định (0đ) trước khi kịp
+    // hydrate — đúng mẫu `hydrated` đã có ở useStudy().
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ ABC", amount: 1, target: 2 }] })
+    const { result } = renderHook(() => useFinance())
+
+    await waitFor(() => expect(result.current.hydrated).toBe(true))
+    expect(result.current.savings).toHaveLength(1)
   })
 
   it("addSavingsFund appends a fund and persists it", async () => {

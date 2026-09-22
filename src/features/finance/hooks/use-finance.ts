@@ -16,11 +16,13 @@ import { nextId } from "@/lib/next-id"
 
 function useFinance() {
   const [state, setState] = useState<FinanceState>(DEFAULT_FINANCE_STATE)
+  const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
     // localStorage không có lúc SSR, chỉ đọc được thật sau khi mount trên client.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setState(getStoredFinance())
+    setHydrated(true)
   }, [])
 
   const persist = useCallback((next: FinanceState) => {
@@ -294,6 +296,7 @@ function useFinance() {
     gold: state.gold,
     goldStores: state.goldStores,
     invests: state.invests,
+    hydrated,
     addSavingsFund,
     updateSavingsFund,
     removeSavingsFund,

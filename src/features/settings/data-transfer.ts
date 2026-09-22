@@ -2,7 +2,8 @@ import { parseFinanceState, type FinanceState } from "@/features/finance/finance
 import { DEFAULT_JOURNAL_STATE, type JournalState } from "@/features/journal/journal-storage"
 import { parseStudyState, type StudyState } from "@/features/study/study-storage"
 import { parseBudgetState, type BudgetState } from "@/features/budget/budget-storage"
-import { DEFAULT_SETTINGS, type AppSettings } from "@/lib/settings-storage"
+import { parseNetWorthHistory, type NetWorthHistory } from "@/features/overview/net-worth-history-storage"
+import { DEFAULT_SETTINGS, type AppSettings, type Mood } from "@/lib/settings-storage"
 
 const EXPORT_VERSION = 1
 
@@ -12,6 +13,7 @@ interface ExportSnapshot {
   study: StudyState
   settings: AppSettings
   budget: BudgetState
+  netWorthHistory: NetWorthHistory
 }
 
 interface ExportPayload extends ExportSnapshot {
@@ -64,13 +66,27 @@ function parseImportPayload(raw: string): ImportResult {
 
   const budget: BudgetState = parseBudgetState(isObject(parsed.budget) ? parsed.budget : {})
 
+  // Field thêm sau (v1 chưa có) — backup cũ không có key này tự fallback về mảng rỗng, không
+  // cần bump EXPORT_VERSION, giống cách "budget" đã được thêm trước đó.
+  const netWorthHistory: NetWorthHistory = parseNetWorthHistory(parsed.netWorthHistory)
+
   const settingsOverride = isObject(parsed.settings) ? parsed.settings : {}
   const profileOverride = isObject(settingsOverride.profile) ? settingsOverride.profile : {}
   // Chỉ build đúng các field của AppSettings hiện tại — không spread nguyên settingsOverride,
   // để field cũ đã xoá khỏi type (vd. "budget") không theo file backup cũ sống lại.
+  // Mood cũ lưu trước tính năng insight thiếu hẳn `score` — backfill 3 (trung tính) cho từng
+  // phần tử thiếu, đúng quy tắc getStoredSettings() đã áp dụng. Không backfill ở đây thì mood
+  // thiếu score sống thẳng vào state trong bộ nhớ (import không reload trang), và bài nhật ký
+  // ghi trong phiên đó sẽ lưu `score: undefined` — bị JSON.stringify rụng mất vĩnh viễn.
+  const rawMoods = ensureArray(settingsOverride.moods, DEFAULT_SETTINGS.moods)
+  const moods = rawMoods.map((m: Partial<Mood>) => ({
+    ...m,
+    score: typeof m.score === "number" ? m.score : 3,
+  })) as Mood[]
+
   const settings: AppSettings = {
     profile: { ...DEFAULT_SETTINGS.profile, ...profileOverride },
-    moods: ensureArray(settingsOverride.moods, DEFAULT_SETTINGS.moods),
+    moods,
     modules: ensureArray(settingsOverride.modules, DEFAULT_SETTINGS.modules),
     tags: ensureArray(settingsOverride.tags, DEFAULT_SETTINGS.tags),
     dismissedInsights: ensureArray(settingsOverride.dismissedInsights, DEFAULT_SETTINGS.dismissedInsights),
@@ -78,7 +94,7 @@ function parseImportPayload(raw: string): ImportResult {
 
   const summary = `${journal.entries.length} bài nhật ký · ${finance.gold.length} lần mua vàng · đã khôi phục tiết kiệm, nợ thẻ, mục tiêu`
 
-  return { ok: true, data: { journal, finance, study, settings, budget }, summary }
+  return { ok: true, data: { journal, finance, study, settings, budget, netWorthHistory }, summary }
 }
 
 export {

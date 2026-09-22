@@ -163,12 +163,17 @@ describe("OverviewView", () => {
     // Quy hồi test cho 1 bug thật: recordSnapshot chạy trong effect riêng của OverviewView, cùng
     // 1 lượt passive-effects với effect hydrate của useFinance — nếu useFinance chưa hydrate xong
     // tại thời điểm đó, `summary` (đóng gói từ closure của lượt render đó) vẫn là 0/0, và bản ghi
-    // đầu tiên trong ngày sẽ bị "khoá" ở giá trị sai đó suốt cả ngày.
-    const { getStoredNetWorthHistory } = await import("@/features/overview/net-worth-history-storage")
+    // đầu tiên trong ngày sẽ bị "khoá" ở giá trị sai đó suốt cả ngày. Đã sửa bằng cách chờ
+    // `financeHydrated` trước khi ghi — test này xác nhận KHÔNG CÓ lần ghi nào (kể cả tạm thời)
+    // mang giá trị 0, không chỉ "tự sửa lại sau".
+    const { getStoredNetWorthHistory, NET_WORTH_HISTORY_KEY } = await import(
+      "@/features/overview/net-worth-history-storage"
+    )
     setStoredFinance({
       ...DEFAULT_FINANCE_STATE,
       savings: [{ name: "Quỹ ABC", amount: 60_000_000, target: 100_000_000 }],
     })
+    const setItemSpy = vi.spyOn(window.localStorage.__proto__, "setItem")
 
     render(<OverviewView vocab={VOCAB} grammar={GRAMMAR} />)
 
@@ -178,5 +183,16 @@ describe("OverviewView", () => {
     expect(history).toHaveLength(1)
     expect(history[0].date).toBe("2026-08-14")
     expect(history[0].savingsTotal).toBe(60_000_000)
+
+    // Mọi lần ghi vào key net-worth-history đều phải mang giá trị THẬT — không có lần ghi tạm
+    // thời nào với net/savingsTotal = 0 trước đó (chứng minh đã chờ hydrate xong mới ghi, thay
+    // vì ghi sai rồi tự sửa).
+    const netWorthWrites = setItemSpy.mock.calls.filter(([key]) => key === NET_WORTH_HISTORY_KEY)
+    expect(netWorthWrites.length).toBeGreaterThan(0)
+    for (const [, value] of netWorthWrites) {
+      const written = JSON.parse(value as string)
+      expect(written).toEqual([{ date: "2026-08-14", net: 60_000_000, savingsTotal: 60_000_000 }])
+    }
+    setItemSpy.mockRestore()
   })
 })

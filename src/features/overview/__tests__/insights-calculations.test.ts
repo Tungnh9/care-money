@@ -152,6 +152,18 @@ describe("detectTagAnomaly", () => {
       text: 'Chi tiêu cho "🛍️ Ăn uống" tháng này giảm 60% so với trung bình 3 tháng trước.',
     })
   })
+
+  it("ignores a tag that only has spending in 1 of the 3 prior months (not enough baseline yet)", () => {
+    // Người dùng mới bắt đầu ghi tag "Ăn uống" từ tháng 3 — tháng 1, 2 chưa có gì. Nếu tính
+    // trung bình thẳng trên cả 3 tháng (gồm 2 tháng = 0), trung bình bị pha loãng còn 500k/3 ≈
+    // 166,667, khiến 600k tháng 4 bị báo tăng ~260% dù thực tế chỉ tăng 20% so với tháng liền trước.
+    const expenses = [
+      taggedExpense(1, "2026-03-10", 500_000, "Ăn uống"),
+      taggedExpense(2, "2026-04-10", 600_000, "Ăn uống"),
+    ]
+
+    expect(detectTagAnomaly(expenses, "2026-04", "2026-04-20")).toBeNull()
+  })
 })
 
 function moodEntry(id: number, score: number): JournalEntry {
@@ -262,7 +274,7 @@ describe("forecastSavingsGoal", () => {
     // Điểm cuối: 5,000,000 + 13*100,000 = 6,300,000. Còn thiếu 3,700,000, tốc độ 100,000/ngày
     // → 37 ngày nữa. shiftDay("2026-09-14", 37) = "2026-10-21".
     expect(insight).toEqual({
-      id: "savings-forecast",
+      id: "savings-forecast-2026-09",
       text: expect.stringContaining("21/10"),
     })
   })
@@ -281,7 +293,7 @@ describe("forecastSavingsGoal", () => {
     // (không phải 200,000/ngày nếu tính sai theo chỉ số) → 24 ngày nữa.
     // shiftDay("2026-08-27", 24): còn 4 ngày hết tháng 8 (28-31) rồi +20 ngày sang tháng 9 → 20/09.
     expect(insight).toEqual({
-      id: "savings-forecast",
+      id: "savings-forecast-2026-08",
       text: expect.stringContaining("20/09"),
     })
   })

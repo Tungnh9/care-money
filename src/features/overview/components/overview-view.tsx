@@ -41,7 +41,7 @@ interface OverviewViewProps {
 function OverviewView({ vocab, grammar }: OverviewViewProps) {
   const { hidden } = useMoneyVisibility()
   const { settings, dismissInsight } = useSettings()
-  const { savings, cards, gold, goldStores, invests } = useFinance()
+  const { savings, cards, gold, goldStores, invests, hydrated: financeHydrated } = useFinance()
   const { entries } = useJournal()
   const { salaries, expenses, settlements } = useBudget()
   const { tasks, toggleTask, learned, wordReviews } = useStudy()
@@ -79,8 +79,14 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
   const { history: netWorthHistory, recordSnapshot } = useNetWorthHistory()
 
   useEffect(() => {
+    // Chờ useFinance hydrate xong thật sự — nếu không, lượt effect ĐẦU TIÊN (chạy cùng lượt với
+    // effect hydrate của useFinance, trước khi nó kịp set dữ liệu thật) sẽ ghi snapshot hôm nay
+    // với net/savingsTotal = 0 (giá trị mặc định), rồi tự sửa lại ở lượt effect kế tiếp — mỗi lần
+    // sửa lại đều gọi setStoredNetWorthHistory (ghi localStorage + notifyDataChanged), nghĩa là
+    // MỞ trang Tổng quan thôi cũng vô tình lên lịch đồng bộ cloud dù người dùng không đổi gì.
+    if (!financeHydrated) return
     recordSnapshot(summary.net, summary.savingsTotal)
-  }, [recordSnapshot, summary.net, summary.savingsTotal])
+  }, [financeHydrated, recordSnapshot, summary.net, summary.savingsTotal])
 
   const today = dayKey()
   const savingsGoal = goals.find((g) => g.key === "savings")

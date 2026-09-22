@@ -4,6 +4,7 @@ import { DEFAULT_FINANCE_STATE } from "@/features/finance/finance-storage"
 import { DEFAULT_JOURNAL_STATE } from "@/features/journal/journal-storage"
 import { DEFAULT_STUDY_STATE } from "@/features/study/study-storage"
 import { DEFAULT_BUDGET_STATE } from "@/features/budget/budget-storage"
+import { DEFAULT_NET_WORTH_HISTORY } from "@/features/overview/net-worth-history-storage"
 import { DEFAULT_SETTINGS } from "@/lib/settings-storage"
 import {
   EXPORT_VERSION,
@@ -21,6 +22,7 @@ describe("buildExportPayload", () => {
         study: DEFAULT_STUDY_STATE,
         settings: DEFAULT_SETTINGS,
         budget: DEFAULT_BUDGET_STATE,
+        netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
       },
       "2026-08-14T09:00:00.000Z"
     )
@@ -59,6 +61,61 @@ describe("parseImportPayload", () => {
       expect(result.data.study).toEqual(DEFAULT_STUDY_STATE)
       expect(result.data.settings).toEqual(DEFAULT_SETTINGS)
       expect(result.data.budget).toEqual(DEFAULT_BUDGET_STATE)
+      expect(result.data.netWorthHistory).toEqual(DEFAULT_NET_WORTH_HISTORY)
+    }
+  })
+
+  it("restores a valid net-worth-history section from the file (v1 backups lack this field)", () => {
+    const raw = JSON.stringify({
+      version: EXPORT_VERSION,
+      netWorthHistory: [
+        { date: "2026-09-01", net: 10_000_000, savingsTotal: 5_000_000 },
+        { date: "2026-09-02", net: 10_100_000, savingsTotal: 5_100_000 },
+      ],
+    })
+
+    const result = parseImportPayload(raw)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.netWorthHistory).toHaveLength(2)
+      expect(result.data.netWorthHistory[1].savingsTotal).toBe(5_100_000)
+    }
+  })
+
+  it("drops only the malformed net-worth-history entries, keeping the valid ones", () => {
+    const raw = JSON.stringify({
+      version: EXPORT_VERSION,
+      netWorthHistory: [
+        { date: "2026-09-01", net: 10_000_000, savingsTotal: 5_000_000 },
+        { date: "not-a-date", net: 1, savingsTotal: 1 },
+      ],
+    })
+
+    const result = parseImportPayload(raw)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.netWorthHistory).toHaveLength(1)
+      expect(result.data.netWorthHistory[0].date).toBe("2026-09-01")
+    }
+  })
+
+  it("backfills a neutral score onto moods imported from a backup saved before mood scores existed", () => {
+    const raw = JSON.stringify({
+      version: EXPORT_VERSION,
+      settings: {
+        ...DEFAULT_SETTINGS,
+        moods: [{ label: "Vui", emoji: "🙂", desc: "Vui vẻ", tint: "#fff", on: true }],
+      },
+    })
+
+    const result = parseImportPayload(raw)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.settings.moods).toHaveLength(1)
+      expect(result.data.settings.moods[0].score).toBe(3)
     }
   })
 

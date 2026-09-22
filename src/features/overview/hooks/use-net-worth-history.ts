@@ -38,7 +38,13 @@ function useNetWorthHistory() {
     setStoredNetWorthHistory(next)
   }, [])
 
-  return { history, recordSnapshot }
+  const replaceHistory = useCallback((next: NetWorthHistory) => {
+    historyRef.current = next
+    setHistory(next)
+    setStoredNetWorthHistory(next)
+  }, [])
+
+  return { history, recordSnapshot, replaceHistory }
 }
 
 export { useNetWorthHistory }

@@ -5,6 +5,7 @@ import { DEFAULT_FINANCE_STATE, setStoredFinance } from "@/features/finance/fina
 import { DEFAULT_JOURNAL_STATE, setStoredJournal } from "@/features/journal/journal-storage"
 import { DEFAULT_STUDY_STATE } from "@/features/study/study-storage"
 import { DEFAULT_BUDGET_STATE } from "@/features/budget/budget-storage"
+import { DEFAULT_NET_WORTH_HISTORY } from "@/features/overview/net-worth-history-storage"
 import { DEFAULT_SETTINGS } from "@/lib/settings-storage"
 import { EXPORT_VERSION } from "../../data-transfer"
 import { useDataManagement } from "../../hooks/use-data-management"
@@ -22,6 +23,7 @@ function renderDataManagement() {
   const onReplaceStudy = vi.fn()
   const onReplaceSettings = vi.fn()
   const onReplaceBudget = vi.fn()
+  const onReplaceNetWorthHistory = vi.fn()
   const { result } = renderHook(() =>
     useDataManagement({
       onReplaceJournal,
@@ -29,9 +31,18 @@ function renderDataManagement() {
       onReplaceStudy,
       onReplaceSettings,
       onReplaceBudget,
+      onReplaceNetWorthHistory,
     })
   )
-  return { result, onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceSettings, onReplaceBudget }
+  return {
+    result,
+    onReplaceJournal,
+    onReplaceFinance,
+    onReplaceStudy,
+    onReplaceSettings,
+    onReplaceBudget,
+    onReplaceNetWorthHistory,
+  }
 }
 
 describe("useDataManagement", () => {
@@ -58,8 +69,15 @@ describe("useDataManagement", () => {
   })
 
   it("importData reports the restored data to each domain's replace callback", async () => {
-    const { result, onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceSettings, onReplaceBudget } =
-      renderDataManagement()
+    const {
+      result,
+      onReplaceJournal,
+      onReplaceFinance,
+      onReplaceStudy,
+      onReplaceSettings,
+      onReplaceBudget,
+      onReplaceNetWorthHistory,
+    } = renderDataManagement()
 
     const journal = {
       entries: [{ id: 1, text: "Bài 1", time: "09:00", date: "10/08", words: 2, mood: null }],
@@ -67,7 +85,16 @@ describe("useDataManagement", () => {
     const finance = { ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ A", amount: 1, target: 2 }] }
     const settings = { ...DEFAULT_SETTINGS, profile: { ...DEFAULT_SETTINGS.profile, displayName: "Khôi phục" } }
     const budget = { ...DEFAULT_BUDGET_STATE, salaries: [{ month: "2026-09", amount: 20_000_000 }] }
-    const payload = { version: EXPORT_VERSION, journal, finance, study: DEFAULT_STUDY_STATE, settings, budget }
+    const netWorthHistory = [{ date: "2026-09-01", net: 1_000_000, savingsTotal: 500_000 }]
+    const payload = {
+      version: EXPORT_VERSION,
+      journal,
+      finance,
+      study: DEFAULT_STUDY_STATE,
+      settings,
+      budget,
+      netWorthHistory,
+    }
     const file = new File([JSON.stringify(payload)], "backup.json", { type: "application/json" })
 
     await act(async () => {
@@ -79,6 +106,7 @@ describe("useDataManagement", () => {
     expect(onReplaceStudy).toHaveBeenCalledWith(DEFAULT_STUDY_STATE)
     expect(onReplaceSettings).toHaveBeenCalledWith(settings)
     expect(onReplaceBudget).toHaveBeenCalledWith(budget)
+    expect(onReplaceNetWorthHistory).toHaveBeenCalledWith(netWorthHistory)
     expect(result.current.imported).toEqual({
       ok: true,
       file: "backup.json",
@@ -87,8 +115,15 @@ describe("useDataManagement", () => {
   })
 
   it("importData reports an error and calls no replace callback when the file is invalid", async () => {
-    const { result, onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceSettings, onReplaceBudget } =
-      renderDataManagement()
+    const {
+      result,
+      onReplaceJournal,
+      onReplaceFinance,
+      onReplaceStudy,
+      onReplaceSettings,
+      onReplaceBudget,
+      onReplaceNetWorthHistory,
+    } = renderDataManagement()
 
     const file = new File(["not json"], "bad.json", { type: "application/json" })
     await act(async () => {
@@ -101,11 +136,12 @@ describe("useDataManagement", () => {
     expect(onReplaceStudy).not.toHaveBeenCalled()
     expect(onReplaceSettings).not.toHaveBeenCalled()
     expect(onReplaceBudget).not.toHaveBeenCalled()
+    expect(onReplaceNetWorthHistory).not.toHaveBeenCalled()
   })
 
-  it("wipeData replaces journal/finance/study/budget with empty defaults but keeps the gold stores", () => {
+  it("wipeData replaces journal/finance/study/budget/net-worth-history with empty defaults but keeps the gold stores", () => {
     setStoredFinance({ ...DEFAULT_FINANCE_STATE, goldStores: [{ name: "SJC", price: "935.000" }] })
-    const { result, onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceBudget } =
+    const { result, onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceBudget, onReplaceNetWorthHistory } =
       renderDataManagement()
 
     act(() => {
@@ -122,6 +158,7 @@ describe("useDataManagement", () => {
     })
     expect(onReplaceStudy).toHaveBeenCalledWith(DEFAULT_STUDY_STATE)
     expect(onReplaceBudget).toHaveBeenCalledWith(DEFAULT_BUDGET_STATE)
+    expect(onReplaceNetWorthHistory).toHaveBeenCalledWith(DEFAULT_NET_WORTH_HISTORY)
   })
 
   it("pushToCloud sends a snapshot of every feature's storage and reports the result", async () => {
@@ -144,6 +181,7 @@ describe("useDataManagement", () => {
         study: DEFAULT_STUDY_STATE,
         settings: DEFAULT_SETTINGS,
         budget: DEFAULT_BUDGET_STATE,
+        netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
       })
     )
     expect(result.current.syncResult).toEqual({ ok: true, summary: "Đã tải lên" })
@@ -151,13 +189,21 @@ describe("useDataManagement", () => {
   })
 
   it("pullFromCloud reports the restored data to each domain's replace callback", async () => {
-    const { result, onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceSettings, onReplaceBudget } =
-      renderDataManagement()
+    const {
+      result,
+      onReplaceJournal,
+      onReplaceFinance,
+      onReplaceStudy,
+      onReplaceSettings,
+      onReplaceBudget,
+      onReplaceNetWorthHistory,
+    } = renderDataManagement()
 
     const journal = {
       entries: [{ id: 1, text: "Bài 1", time: "09:00", date: "10/08", words: 2, mood: null }],
     }
     const budget = { ...DEFAULT_BUDGET_STATE, salaries: [{ month: "2026-09", amount: 20_000_000 }] }
+    const netWorthHistory = [{ date: "2026-09-01", net: 1_000_000, savingsTotal: 500_000 }]
     vi.mocked(pullSnapshot).mockResolvedValue({
       ok: true,
       data: {
@@ -166,6 +212,7 @@ describe("useDataManagement", () => {
         study: DEFAULT_STUDY_STATE,
         settings: DEFAULT_SETTINGS,
         budget,
+        netWorthHistory,
       },
       summary: "5 bài nhật ký",
     })
@@ -180,12 +227,20 @@ describe("useDataManagement", () => {
     expect(onReplaceStudy).toHaveBeenCalledWith(DEFAULT_STUDY_STATE)
     expect(onReplaceSettings).toHaveBeenCalledWith(DEFAULT_SETTINGS)
     expect(onReplaceBudget).toHaveBeenCalledWith(budget)
+    expect(onReplaceNetWorthHistory).toHaveBeenCalledWith(netWorthHistory)
     expect(result.current.syncResult).toEqual({ ok: true, summary: "5 bài nhật ký" })
   })
 
   it("pullFromCloud reports an error and calls no replace callback when it fails", async () => {
-    const { result, onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceSettings, onReplaceBudget } =
-      renderDataManagement()
+    const {
+      result,
+      onReplaceJournal,
+      onReplaceFinance,
+      onReplaceStudy,
+      onReplaceSettings,
+      onReplaceBudget,
+      onReplaceNetWorthHistory,
+    } = renderDataManagement()
     vi.mocked(pullSnapshot).mockResolvedValue({ ok: false, error: "Sai secret đồng bộ." })
 
     await act(async () => {
@@ -198,5 +253,6 @@ describe("useDataManagement", () => {
     expect(onReplaceStudy).not.toHaveBeenCalled()
     expect(onReplaceSettings).not.toHaveBeenCalled()
     expect(onReplaceBudget).not.toHaveBeenCalled()
+    expect(onReplaceNetWorthHistory).not.toHaveBeenCalled()
   })
 })

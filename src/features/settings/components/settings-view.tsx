@@ -4,6 +4,7 @@ import { useFinance } from "@/features/finance/hooks/use-finance"
 import { useJournal } from "@/features/journal/hooks/use-journal"
 import { useStudy } from "@/features/study/hooks/use-study"
 import { useBudget } from "@/features/budget/hooks/use-budget"
+import { useNetWorthHistory } from "@/features/overview/hooks/use-net-worth-history"
 import { splitGreeting } from "@/features/overview/overview-calculations"
 import { ProfileCard } from "./profile-card"
 import { ModulesCard } from "./modules-card"
@@ -29,6 +30,7 @@ function SettingsView() {
   const { savings, cards, gold, invests, replaceFinance } = useFinance()
   const { tasks, learned, replaceStudy } = useStudy()
   const { expenses, replaceBudget } = useBudget()
+  const { replaceHistory: replaceNetWorthHistory } = useNetWorthHistory()
   const {
     exported,
     imported,
@@ -45,6 +47,7 @@ function SettingsView() {
     onReplaceStudy: replaceStudy,
     onReplaceSettings: replaceSettings,
     onReplaceBudget: replaceBudget,
+    onReplaceNetWorthHistory: replaceNetWorthHistory,
   })
 
   const counts = [

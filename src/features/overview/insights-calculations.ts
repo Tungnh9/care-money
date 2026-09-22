@@ -81,8 +81,11 @@ function detectTagAnomaly(expenses: Expense[], month: string, today: string): In
   for (const tagSeries of series) {
     const priorValues = tagSeries.data.slice(0, ANOMALY_LOOKBACK_MONTHS)
     const currentValue = tagSeries.data[ANOMALY_LOOKBACK_MONTHS]
+    // Cần CẢ 3 tháng nền đều có chi tiêu thật cho tag này — nếu chỉ 1-2 tháng có (tag mới thêm
+    // gần đây, hoặc người dùng mới), trung bình bị pha loãng bởi các tháng = 0, khiến % lệch báo
+    // ra bị thổi phồng sai lệch (vd. tag chỉ có ở 1/3 tháng, tăng nhẹ thật vẫn báo tăng gấp 3 lần).
+    if (priorValues.some((v) => v === 0)) continue
     const avgPrior = mean(priorValues)
-    if (avgPrior === 0) continue
     const pct = (currentValue - avgPrior) / avgPrior
     if (Math.abs(pct) < TAG_ANOMALY_PCT_THRESHOLD) continue
     if (pct < 0 && !isMonthNearlyComplete(month, today)) continue
@@ -164,7 +167,10 @@ function forecastSavingsGoal(history: NetWorthSnapshot[], target: number, today:
   const targetDate = shiftDay(today, daysToTarget)
 
   return {
-    id: "savings-forecast",
+    // Theo tháng (không cố định) — nếu người dùng ẩn đi, gợi ý chỉ ẩn tới hết tháng đó, sang
+    // tháng mới sẽ tự hiện lại nếu vẫn còn đúng điều kiện (giống 3 loại gợi ý còn lại), thay vì
+    // ẩn vĩnh viễn dù sau này mục tiêu/ngày dự báo đã thay đổi hoàn toàn.
+    id: `savings-forecast-${monthKeyFromDayKey(today)}`,
     text: `Với nhịp tiết kiệm hiện tại, bạn có thể đạt mục tiêu tiết kiệm vào khoảng ${formatDayKeyWithYear(targetDate)}.`,
   }
 }

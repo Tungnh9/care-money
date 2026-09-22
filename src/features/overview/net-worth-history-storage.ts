@@ -14,7 +14,7 @@ const NET_WORTH_HISTORY_KEY = "net-worth-history"
 const DEFAULT_NET_WORTH_HISTORY: NetWorthHistory = []
 
 const netWorthSnapshotSchema: z.ZodType<NetWorthSnapshot> = z.object({
-  date: z.string(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   net: z.number(),
   savingsTotal: z.number(),
 })
@@ -26,11 +26,17 @@ function safeArray<T>(schema: z.ZodType<T>, value: unknown): T[] {
   return value.filter((item): item is T => schema.safeParse(item).success)
 }
 
+// Tách riêng để data-transfer.ts (import/export/đồng bộ cloud) dùng lại đúng 1 quy tắc lọc
+// từng phần tử, thay vì tự viết lại logic validate ở nơi khác.
+function parseNetWorthHistory(value: unknown): NetWorthHistory {
+  return safeArray(netWorthSnapshotSchema, value)
+}
+
 function getStoredNetWorthHistory(): NetWorthHistory {
   try {
     const raw = window.localStorage.getItem(NET_WORTH_HISTORY_KEY)
     if (!raw) return DEFAULT_NET_WORTH_HISTORY
-    return safeArray(netWorthSnapshotSchema, JSON.parse(raw))
+    return parseNetWorthHistory(JSON.parse(raw))
   } catch {
     return DEFAULT_NET_WORTH_HISTORY
   }
@@ -46,6 +52,7 @@ export {
   DEFAULT_NET_WORTH_HISTORY,
   getStoredNetWorthHistory,
   setStoredNetWorthHistory,
+  parseNetWorthHistory,
   type NetWorthSnapshot,
   type NetWorthHistory,
 }
