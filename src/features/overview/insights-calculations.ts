@@ -1,5 +1,10 @@
 import { dayKey, daysBetween, daysInMonth, formatDayKeyWithYear, monthKeyFromDayKey, shiftDay, shiftMonth } from "@/lib/date"
-import { monthlyExpenseTotals, monthlyTagBreakdown, totalExpensesForMonth } from "@/features/budget/budget-calculations"
+import {
+  monthlyExpenseTotals,
+  monthlyTagBreakdown,
+  totalExpensesForMonth,
+  UNTAGGED_LABEL,
+} from "@/features/budget/budget-calculations"
 import type { Expense } from "@/features/budget/types"
 import type { JournalEntry } from "@/features/journal/types"
 import type { NetWorthSnapshot } from "./net-worth-history-storage"
@@ -18,6 +23,7 @@ const MOOD_LOW_SCORE_MAX = 2
 const MOOD_HIGH_SCORE_MIN = 4
 const MOOD_PCT_THRESHOLD = 0.2
 const FORECAST_MIN_POINTS = 14
+const FORECAST_MIN_SPAN_DAYS = 30
 const FORECAST_MAX_DAYS = 5 * 365
 const ANOMALY_MONTH_COMPLETE_RATIO = 0.9
 
@@ -43,17 +49,17 @@ function isMonthNearlyComplete(month: string, today: string): boolean {
 
 function detectSpendingAnomaly(expenses: Expense[], month: string, today: string): Insight | null {
   if (!expenses.length) return null
-  const earliestMonth = expenses.reduce(
-    (min, e) => (monthKeyFromDayKey(e.dayKey) < min ? monthKeyFromDayKey(e.dayKey) : min),
-    monthKeyFromDayKey(expenses[0].dayKey)
-  )
-  const requiredEarliest = shiftMonth(month, -ANOMALY_LOOKBACK_MONTHS)
-  if (earliestMonth > requiredEarliest) return null
 
   const priorMonths = Array.from({ length: ANOMALY_LOOKBACK_MONTHS }, (_, i) =>
     shiftMonth(month, -(ANOMALY_LOOKBACK_MONTHS - i))
   )
   const priorTotals = monthlyExpenseTotals(expenses, priorMonths).map((p) => p.total)
+  // Cần CẢ 3 tháng nền đều có chi tiêu thật — nếu chỉ 1-2 tháng có (tài khoản mới, hoặc có tháng
+  // không ghi gì), trung bình bị pha loãng bởi các tháng = 0, khiến % lệch báo ra bị thổi phồng
+  // sai lệch (cùng lớp lỗi đã sửa ở detectTagAnomaly — ví dụ 1 tháng thật + 2 tháng rỗng khiến
+  // tăng thật 20% bị báo thành tăng 260%).
+  if (priorTotals.some((v) => v === 0)) return null
+
   const currentTotal = totalExpensesForMonth(expenses, month)
   const std = sampleStdDev(priorTotals)
   if (std === 0) return null
@@ -79,6 +85,11 @@ function detectTagAnomaly(expenses: Expense[], month: string, today: string): In
 
   let worst: { label: string; emoji: string; pct: number; direction: string } | null = null
   for (const tagSeries of series) {
+    // "Không gắn thẻ" là nhóm gộp tự động (không phải 1 tag người dùng thật chọn) — báo bất
+    // thường cho nó vừa đọc kỳ lạ ("chi tiêu cho Không gắn thẻ"), vừa trùng lặp với insight chi
+    // tiêu bất thường tổng (detectSpendingAnomaly) khi hầu hết chi tiêu chưa gắn thẻ, lại thường
+    // là nhóm ồn nhất nên hay "thắng" và che mất 1 tag thật sự đáng chú ý hơn.
+    if (tagSeries.label === UNTAGGED_LABEL) continue
     const priorValues = tagSeries.data.slice(0, ANOMALY_LOOKBACK_MONTHS)
     const currentValue = tagSeries.data[ANOMALY_LOOKBACK_MONTHS]
     // Cần CẢ 3 tháng nền đều có chi tiêu thật cho tag này — nếu chỉ 1-2 tháng có (tag mới thêm
@@ -102,7 +113,9 @@ function detectTagAnomaly(expenses: Expense[], month: string, today: string): In
 }
 
 function detectMoodSpendingCorrelation(expenses: Expense[], entries: JournalEntry[], today: string): Insight | null {
-  const windowStart = shiftDay(today, -MOOD_WINDOW_DAYS)
+  // -(MOOD_WINDOW_DAYS - 1) chứ không phải -MOOD_WINDOW_DAYS — khoảng [windowStart, today] gồm
+  // CẢ 2 đầu mút, nên trừ đi (N-1) mới cho đúng N ngày, khớp với câu chữ "trong 60 ngày qua".
+  const windowStart = shiftDay(today, -(MOOD_WINDOW_DAYS - 1))
   const moodByDay = new Map<string, number[]>()
   for (const entry of entries) {
     if (entry.mood?.score === undefined) continue
@@ -145,6 +158,12 @@ function forecastSavingsGoal(history: NetWorthSnapshot[], target: number, today:
   if (history.length < FORECAST_MIN_POINTS) return null
 
   const n = history.length
+  // Tiết kiệm thường dồn theo lương (1 lần/tháng), không đều mỗi ngày — nếu khoảng dữ liệu còn
+  // quá ngắn (vd. chỉ 13-14 ngày), 1 lần nhận lương rơi đúng giữa khoảng đó có thể làm độ dốc bị
+  // thổi phồng rất nhiều (trông như tiết kiệm nhanh hơn hẳn thực tế). Cần ít nhất 1 chu kỳ lương
+  // thật (~30 ngày) đã trôi qua mới đủ tin cậy để dự báo.
+  if (daysBetween(history[0].date, history[n - 1].date) < FORECAST_MIN_SPAN_DAYS) return null
+
   // Hồi quy theo SỐ NGÀY THỰC đã trôi qua kể từ điểm đầu tiên, KHÔNG theo chỉ số phần tử — snapshot
   // chỉ được ghi khi người dùng mở app, nên có thể có khoảng trống (bỏ lỡ vài ngày không mở app).
   // Nếu hồi quy theo chỉ số, độ dốc sẽ bị tính theo "đơn vị/lần ghi" thay vì "đơn vị/ngày", làm dự

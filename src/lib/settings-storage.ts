@@ -114,7 +114,7 @@ function getStoredSettings(): AppSettings {
     const raw = window.localStorage.getItem(SETTINGS_STORAGE_KEY)
     if (!raw) return DEFAULT_SETTINGS
     const parsed = JSON.parse(raw) as Partial<AppSettings>
-    // Chỉ đọc đúng 3 field của AppSettings hiện tại — không spread nguyên `parsed`,
+    // Chỉ đọc đúng các field của AppSettings hiện tại — không spread nguyên `parsed`,
     // để field cũ đã xoá khỏi type (vd. "budget") tự rụng thay vì sống mãi trong storage.
     const profile =
       parsed.profile && typeof parsed.profile === "object"

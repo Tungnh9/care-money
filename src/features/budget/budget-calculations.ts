@@ -138,6 +138,7 @@ export {
   monthlyExpenseTotals,
   monthlyTagBreakdown,
   CHART_PALETTE,
+  UNTAGGED_LABEL,
   type TagBreakdownEntry,
   type DayGroup,
   type MonthlyExpensePoint,

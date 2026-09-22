@@ -78,6 +78,15 @@ describe("detectSpendingAnomaly", () => {
       text: "Tháng này bạn chi tiêu thấp hơn khoảng 50% so với trung bình 3 tháng gần đây.",
     })
   })
+
+  it("ignores a month where only 1 of the 3 baseline months has real spending (diluted average)", () => {
+    // Chỉ tháng 3 có chi tiêu thật (3,000,000), tháng 1-2 chưa có gì (tài khoản mới bắt đầu ghi
+    // từ tháng 3). Tháng 4 tăng thật 20% (3,600,000) — nếu tính trung bình thẳng trên cả 3 tháng
+    // (gồm 2 tháng = 0, trung bình còn 1,000,000), % lệch báo ra sẽ bị thổi phồng thành ~260%.
+    const expenses = [expense(1, "2026-03-15", 3_000_000), expense(2, "2026-04-15", 3_600_000)]
+
+    expect(detectSpendingAnomaly(expenses, "2026-04", "2026-04-20")).toBeNull()
+  })
 })
 
 function taggedExpense(id: number, dayKey: string, amount: number, label: string): Expense {
@@ -163,6 +172,29 @@ describe("detectTagAnomaly", () => {
     ]
 
     expect(detectTagAnomaly(expenses, "2026-04", "2026-04-20")).toBeNull()
+  })
+
+  it("skips the untagged (Không gắn thẻ) bucket even when it deviates far more than any real tag", () => {
+    // Chi tiêu chưa gắn thẻ vọt +400% (mạnh hơn nhiều so với "Ăn uống" chỉ +60%) — nhưng
+    // "Không gắn thẻ" không phải 1 tag người dùng thật chọn, không nên bị báo như 1 tag, và
+    // không được che mất tag thật sự có bất thường bên dưới.
+    const expenses = [
+      expense(1, "2026-01-10", 1_000_000),
+      expense(2, "2026-02-10", 1_000_000),
+      expense(3, "2026-03-10", 1_000_000),
+      expense(4, "2026-04-10", 5_000_000),
+      taggedExpense(5, "2026-01-12", 500_000, "Ăn uống"),
+      taggedExpense(6, "2026-02-12", 520_000, "Ăn uống"),
+      taggedExpense(7, "2026-03-12", 480_000, "Ăn uống"),
+      taggedExpense(8, "2026-04-12", 800_000, "Ăn uống"),
+    ]
+
+    const insight = detectTagAnomaly(expenses, "2026-04", "2026-04-20")
+
+    expect(insight).toEqual({
+      id: "tag-anomaly-2026-04",
+      text: 'Chi tiêu cho "🛍️ Ăn uống" tháng này tăng 60% so với trung bình 3 tháng trước.',
+    })
   })
 })
 
@@ -255,43 +287,59 @@ describe("forecastSavingsGoal", () => {
     expect(forecastSavingsGoal(history, 10_000_000, "2026-09-10")).toBeNull()
   })
 
+  it("returns null when fewer than 30 real days have passed, even with ≥14 points", () => {
+    // Tiết kiệm dồn theo lương (1 lần/tháng), không đều mỗi ngày — nếu khoảng dữ liệu còn quá
+    // ngắn, 1 lần nhận lương rơi đúng giữa khoảng đó có thể thổi phồng tốc độ tính ra rất nhiều.
+    // 14 điểm/ngày liên tiếp (7 ngày đầu 5tr, 7 ngày sau vọt lên 15tr — mô phỏng 1 lần lương giữa
+    // khoảng) chỉ span 13 ngày < 30 ngày tối thiểu — phải chặn lại dù đủ 14 điểm. Mục tiêu để
+    // 100 triệu (khớp mục tiêu tiết kiệm thật trong app) — nếu KHÔNG có điều kiện 30 ngày, hồi quy
+    // trên dữ liệu này ra độ dốc ~1,077,000đ/ngày → dự báo đạt mục tiêu chỉ trong ~79 ngày, một kết
+    // luận lạc quan sai lệch chỉ vì 1 lần lương rơi đúng giữa cửa sổ ngắn.
+    const history = [
+      ...linearHistory("2026-09-01", 7, 0, 5_000_000),
+      ...linearHistory("2026-09-08", 7, 0, 15_000_000),
+    ]
+    expect(forecastSavingsGoal(history, 100_000_000, "2026-09-14")).toBeNull()
+  })
+
   it("returns null when the trend is flat or decreasing", () => {
-    const history = linearHistory("2026-09-01", 14, 0, 5_000_000)
+    const history = linearHistory("2026-08-15", 31, 0, 5_000_000)
     expect(forecastSavingsGoal(history, 10_000_000, "2026-09-14")).toBeNull()
   })
 
   it("returns null when the target is already reached", () => {
-    const history = linearHistory("2026-09-01", 14, 100_000, 9_500_000)
+    const history = linearHistory("2026-08-15", 31, 100_000, 9_500_000)
     expect(forecastSavingsGoal(history, 10_000_000, "2026-09-14")).toBeNull()
   })
 
   it("forecasts the correct target date for a steady upward trend", () => {
-    const history = linearHistory("2026-09-01", 14, 100_000, 5_000_000)
+    const history = linearHistory("2026-08-15", 31, 100_000, 5_000_000)
     const today = "2026-09-14"
 
     const insight = forecastSavingsGoal(history, 10_000_000, today)
 
-    // Điểm cuối: 5,000,000 + 13*100,000 = 6,300,000. Còn thiếu 3,700,000, tốc độ 100,000/ngày
-    // → 37 ngày nữa. shiftDay("2026-09-14", 37) = "2026-10-21".
+    // Điểm cuối (i=30): 5,000,000 + 30*100,000 = 8,000,000. Còn thiếu 2,000,000, tốc độ
+    // 100,000/ngày → 20 ngày nữa. shiftDay("2026-09-14", 20): còn 16 ngày hết tháng 9 (15-30)
+    // rồi +4 ngày sang tháng 10 → "2026-10-04".
     expect(insight).toEqual({
       id: "savings-forecast-2026-09",
-      text: expect.stringContaining("21/10"),
+      text: expect.stringContaining("04/10"),
     })
   })
 
   it("regresses on actual elapsed days, not snapshot index, when snapshots have gaps", () => {
-    // 14 điểm, cách nhau 2 ngày thực (tổng 26 ngày), tốc độ tiết kiệm THẬT là 100,000/ngày. Nếu
+    // 16 điểm, cách nhau 2 ngày thực (tổng 30 ngày), tốc độ tiết kiệm THẬT là 100,000/ngày. Nếu
     // hồi quy theo chỉ số phần tử (0,1,2,...) thay vì số ngày thực đã trôi qua, độ dốc sẽ bị tính
     // gấp đôi (200,000/"lần ghi", hiểu nhầm thành /ngày) — dự báo sẽ về đích sớm hơn ~2 lần so
     // với thực tế.
-    const history = linearHistoryWithGaps("2026-08-01", 14, 2, 100_000, 5_000_000)
-    const today = "2026-08-27" // = điểm ghi cuối cùng (2026-08-01 + 26 ngày)
+    const history = linearHistoryWithGaps("2026-08-01", 16, 2, 100_000, 5_000_000)
+    const today = "2026-08-31" // = điểm ghi cuối cùng (2026-08-01 + 30 ngày)
 
     const insight = forecastSavingsGoal(history, 10_000_000, today)
 
-    // Điểm cuối: 5,000,000 + 26*100,000 = 7,600,000. Còn thiếu 2,400,000, tốc độ thật 100,000/ngày
-    // (không phải 200,000/ngày nếu tính sai theo chỉ số) → 24 ngày nữa.
-    // shiftDay("2026-08-27", 24): còn 4 ngày hết tháng 8 (28-31) rồi +20 ngày sang tháng 9 → 20/09.
+    // Điểm cuối (i=15): 5,000,000 + 30*100,000 = 8,000,000. Còn thiếu 2,000,000, tốc độ thật
+    // 100,000/ngày (không phải 200,000/ngày nếu tính sai theo chỉ số) → 20 ngày nữa.
+    // shiftDay("2026-08-31", 20): tháng 8 hết ngay tại 31, +20 ngày sang tháng 9 → "2026-09-20".
     expect(insight).toEqual({
       id: "savings-forecast-2026-08",
       text: expect.stringContaining("20/09"),
@@ -302,7 +350,7 @@ describe("forecastSavingsGoal", () => {
     // Độ dốc dương nhưng cực nhỏ (50đ/ngày) so với khoảng cách còn lại (5 triệu) sẽ ngoại suy ra
     // hàng chục nghìn ngày (~hàng trăm năm) — 1 con số vô nghĩa với người dùng, phải chặn lại
     // thay vì hiện 1 ngày xa viển vông.
-    const history = linearHistory("2026-09-01", 14, 50, 5_000_000)
+    const history = linearHistory("2026-08-15", 31, 50, 5_000_000)
     expect(forecastSavingsGoal(history, 10_000_000, "2026-09-14")).toBeNull()
   })
 })
