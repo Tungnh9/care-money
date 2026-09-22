@@ -1,6 +1,5 @@
 import { MoneyVisibilityProvider } from "@/components/money-visibility-provider"
 import { Toaster } from "@/components/ui/sonner"
-import { AutoBackup } from "@/features/settings"
 import { Sidebar } from "./_components/sidebar"
 
 interface AppLayoutProps {
@@ -17,7 +16,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
         </main>
       </div>
       <Toaster />
-      <AutoBackup />
+      {/* <AutoBackup /> — tạm ngưng (2026-09-22): 2 thiết bị dùng chung 1 SYNC_SECRET nhưng tự
+          động tải lên hiện chỉ ghi đè toàn bộ snapshot, không tự động tải xuống hay gộp dữ liệu
+          — máy nào tải lên sau sẽ âm thầm xoá thay đổi máy kia chưa kịp lấy về. Chỉ bật lại sau
+          khi có cơ chế tải xuống tự động (hoặc gộp) để tránh mất dữ liệu tương tự. Đồng bộ thủ
+          công (nút "Tải lên"/"Tải xuống" trong Cài đặt) không bị ảnh hưởng, vẫn dùng được. */}
     </MoneyVisibilityProvider>
   )
 }

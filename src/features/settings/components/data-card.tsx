@@ -143,23 +143,21 @@ function DataCard({
         </p>
         {autoBackup ? (
           <p className="mb-[14px] text-[13px] leading-[1.5] text-[var(--ob-color-text-subtle)]">
-            {secret ? (
-              <>
-                Tự động sao lưu: <strong className="font-semibold text-[var(--ob-color-text-muted)]">bật</strong> ·{" "}
-                {autoBackup.lastSyncedAt
-                  ? `lần cuối ${formatAutoBackupTime(autoBackup.lastSyncedAt)}`
-                  : "chưa có lần nào"}
-                {autoBackup.lastError ? (
-                  <span className="mt-1 block text-[var(--ob-color-expense)]">
-                    Lần gần nhất lỗi: {autoBackup.lastError}
-                  </span>
-                ) : null}
-              </>
-            ) : (
-              <>
-                Tự động sao lưu: <strong className="font-semibold">tắt</strong> — nhập secret bên dưới để bật
-              </>
-            )}
+            {/* Tạm ngưng tự động tải lên (2026-09-22) — nghi ngờ 2 máy ghi đè dữ liệu của nhau vì
+                cơ chế hiện tại chỉ tự động TẢI LÊN, không tự động tải xuống hay gộp dữ liệu, nên
+                máy nào tải lên sau sẽ âm thầm xoá mất thay đổi máy kia chưa kịp tải xuống. Trước
+                khi bật lại: xác nhận đã có tải xuống tự động (hoặc gộp dữ liệu) để tránh mất dữ
+                liệu tương tự. */}
+            Tự động sao lưu: <strong className="font-semibold">tạm ngưng</strong> — dùng nút &quot;Tải
+            lên&quot;/&quot;Tải xuống&quot; bên dưới để đồng bộ thủ công.
+            {autoBackup.lastSyncedAt ? (
+              <> Lần tự động gần nhất: {formatAutoBackupTime(autoBackup.lastSyncedAt)}.</>
+            ) : null}
+            {autoBackup.lastError ? (
+              <span className="mt-1 block text-[var(--ob-color-expense)]">
+                Lần gần nhất lỗi: {autoBackup.lastError}
+              </span>
+            ) : null}
           </p>
         ) : null}
         <Field
