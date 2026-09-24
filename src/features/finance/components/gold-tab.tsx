@@ -29,6 +29,8 @@ import { GoldStoresCard } from "./gold-stores-card"
 import { GoldTransactionsCards } from "./gold-transactions-cards"
 import { GoldTransactionsTable } from "./gold-transactions-table"
 
+const GOLD_LIST_PAGE_SIZE = 5
+
 interface GoldTabProps {
   summary: FinanceSummary
   stores: GoldStore[]
@@ -79,6 +81,10 @@ function GoldTab({
   const [editingId, setEditingId] = useState<number | null>(null)
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const deletingPurchase = gold.find((p) => p.id === deletingId) ?? null
+  // Danh sách giao dịch có thể rất dài — chỉ hiện dần từng đợt, tránh 1 bảng dài vô tận ngay khi mở tab.
+  const [visibleGoldCount, setVisibleGoldCount] = useState(GOLD_LIST_PAGE_SIZE)
+  const visibleGold = sortedGold.slice(0, visibleGoldCount)
+  const isGoldListExpanded = visibleGoldCount >= sortedGold.length
 
   const stats = [
     ["Đang giữ", `${goldPhan} phân`],
@@ -124,7 +130,7 @@ function GoldTab({
             <div>
               <div className="mb-[7px] flex items-baseline justify-between gap-3">
                 <span className="[font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
-                  Giá trị nay
+                  Giá hiện tại
                 </span>
                 <span className="text-[13.5px] font-bold [font-family:var(--ob-font-num)] tabular-nums">
                   {formatMoney(goldValue, hidden)}
@@ -184,7 +190,7 @@ function GoldTab({
         ) : null}
         <div className="hidden lg:block">
           <GoldTransactionsTable
-            gold={sortedGold}
+            gold={visibleGold}
             stores={stores}
             onRemove={setDeletingId}
             onEdit={(purchase) => setEditingId(purchase.id)}
@@ -192,12 +198,29 @@ function GoldTab({
         </div>
         <div className="lg:hidden">
           <GoldTransactionsCards
-            gold={sortedGold}
+            gold={visibleGold}
             stores={stores}
             onRemove={setDeletingId}
             onEdit={(purchase) => setEditingId(purchase.id)}
           />
         </div>
+        {sortedGold.length > GOLD_LIST_PAGE_SIZE ? (
+          <div className="mt-3 text-center">
+            <button
+              type="button"
+              onClick={() =>
+                setVisibleGoldCount(
+                  isGoldListExpanded
+                    ? GOLD_LIST_PAGE_SIZE
+                    : Math.min(visibleGoldCount + GOLD_LIST_PAGE_SIZE, sortedGold.length)
+                )
+              }
+              className="text-[12.5px] font-semibold text-[var(--ob-color-action-strong)]"
+            >
+              {isGoldListExpanded ? "Thu gọn" : "Xem thêm"}
+            </button>
+          </div>
+        ) : null}
         {storeSummaries.length ? (
           <div className="mt-5">
             <div className="ob-wave-divider mb-4" />

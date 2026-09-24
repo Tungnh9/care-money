@@ -69,7 +69,7 @@ describe("GoldTab", () => {
     expect(screen.getByText(phanToChi(10))).toBeInTheDocument()
     // Giá vốn (bar)
     expect(screen.getByText(formatMoney(8_000_000))).toBeInTheDocument()
-    // Giá trị nay (bar)
+    // Giá hiện tại (bar)
     expect(screen.getByText(formatMoney(8_800_000))).toBeInTheDocument()
     // Giá vốn bình quân stat (8.000.000 / 10 phân)
     expect(screen.getByText(`${formatMoney(800_000)} / phân`)).toBeInTheDocument()
@@ -342,6 +342,78 @@ describe("GoldTab", () => {
     )
 
     expect(dates).toEqual(["28/07/2026", "03/06/2026", "05/05/2026"])
+  })
+
+  it("shows only the first 5 purchases with a Xem thêm button when there are more", () => {
+    const purchases = Array.from({ length: 8 }, (_, i) => ({
+      id: i + 1,
+      date: `${String(i + 1).padStart(2, "0")}/01/2026`,
+      phan: 1,
+      buy: 1_000_000,
+      store: "SJC",
+    }))
+    render(
+      <GoldTab
+        summary={ZERO_SUMMARY}
+        stores={[{ name: "SJC", price: "1.000.000" }]}
+        gold={purchases}
+        {...noopHandlers}
+      />
+    )
+
+    const table = document.querySelector("table") as HTMLTableElement
+    expect(table.querySelectorAll("tbody tr")).toHaveLength(5)
+    expect(screen.getByRole("button", { name: "Xem thêm" })).toBeInTheDocument()
+  })
+
+  it("reveals more purchases each time Xem thêm is clicked, then switches to Thu gọn once all are shown", () => {
+    const purchases = Array.from({ length: 8 }, (_, i) => ({
+      id: i + 1,
+      date: `${String(i + 1).padStart(2, "0")}/01/2026`,
+      phan: 1,
+      buy: 1_000_000,
+      store: "SJC",
+    }))
+    render(
+      <GoldTab
+        summary={ZERO_SUMMARY}
+        stores={[{ name: "SJC", price: "1.000.000" }]}
+        gold={purchases}
+        {...noopHandlers}
+      />
+    )
+    const table = document.querySelector("table") as HTMLTableElement
+
+    fireEvent.click(screen.getByRole("button", { name: "Xem thêm" }))
+
+    expect(table.querySelectorAll("tbody tr")).toHaveLength(8)
+    expect(screen.getByRole("button", { name: "Thu gọn" })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: "Thu gọn" }))
+
+    expect(table.querySelectorAll("tbody tr")).toHaveLength(5)
+    expect(screen.getByRole("button", { name: "Xem thêm" })).toBeInTheDocument()
+  })
+
+  it("hides the Xem thêm button entirely when there are 5 or fewer purchases", () => {
+    const purchases = Array.from({ length: 5 }, (_, i) => ({
+      id: i + 1,
+      date: `${String(i + 1).padStart(2, "0")}/01/2026`,
+      phan: 1,
+      buy: 1_000_000,
+      store: "SJC",
+    }))
+    render(
+      <GoldTab
+        summary={ZERO_SUMMARY}
+        stores={[{ name: "SJC", price: "1.000.000" }]}
+        gold={purchases}
+        {...noopHandlers}
+      />
+    )
+
+    expect(screen.queryByRole("button", { name: "Xem thêm" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Thu gọn" })).not.toBeInTheDocument()
   })
 
   it("omits the count suffix and the win/loss summary when there are no purchases", () => {

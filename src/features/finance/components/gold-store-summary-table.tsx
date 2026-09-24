@@ -11,7 +11,7 @@ interface GoldStoreSummaryTableProps {
   total: GoldStoreSummary
 }
 
-const HEADERS = ["Cửa hàng", "Khối lượng", "Giá mua", "Giá vốn", "Giá trị nay", "Lãi lỗ"]
+const HEADERS = ["Cửa hàng", "Khối lượng", "Giá mua", "Giá vốn", "Giá hiện tại", "Lãi lỗ"]
 
 function GoldStoreSummaryTable({ summaries, total }: GoldStoreSummaryTableProps) {
   const { hidden } = useMoneyVisibility()
