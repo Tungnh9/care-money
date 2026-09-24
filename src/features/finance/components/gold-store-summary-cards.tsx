@@ -55,7 +55,7 @@ function StatGrid({ phan, avgBuy, cost, value, hidden, tone }: StatRow) {
       </div>
       <div>
         <div className="mb-1 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
-          Giá trị nay
+          Giá hiện tại
         </div>
         <div
           className="text-[13px] font-semibold [font-family:var(--ob-font-num)] tabular-nums"

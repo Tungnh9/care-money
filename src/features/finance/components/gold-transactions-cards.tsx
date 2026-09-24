@@ -96,7 +96,7 @@ function GoldTransactionsCards({
               </div>
               <div>
                 <div className="mb-1 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
-                  Giá trị nay
+                  Giá hiện tại
                 </div>
                 <div className="text-[13px] [font-family:var(--ob-font-num)] tabular-nums">
                   {formatMoney(value, hidden)}

@@ -22,7 +22,7 @@ const HEADERS = [
   "Khối lượng",
   "Giá mua",
   "Giá vốn",
-  "Giá trị nay",
+  "Giá hiện tại",
   "Lãi lỗ",
   "",
 ]
