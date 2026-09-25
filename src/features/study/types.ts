@@ -27,6 +27,15 @@ interface Task {
 
 type GameType = "quiz" | "match" | "spelling"
 
+// chosenMeaning = null nghĩa là hết giờ mà chưa chọn đáp án nào.
+interface GameMistake {
+  // Kho từ vựng có từ trùng chữ khác nghĩa (vd. "pay") — định danh bằng id, không bằng word.
+  wordId: string
+  word: string
+  correctMeaning: string
+  chosenMeaning: string | null
+}
+
 interface GameHighScores {
   quiz: number
   match: number
@@ -49,4 +58,4 @@ interface WordReviewState {
   lastReviewedAt: string | null
 }
 
-export type { VocabEntry, GrammarEntry, Task, GameType, GameHighScores, GameStreak, ReviewGrade, WordReviewState }
+export type { VocabEntry, GrammarEntry, Task, GameType, GameMistake, GameHighScores, GameStreak, ReviewGrade, WordReviewState }

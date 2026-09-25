@@ -8,13 +8,13 @@ import { Empty } from "@/components/ob/empty"
 import { Progress } from "@/components/ui/progress"
 import { QUIZ_QUESTION_COUNT } from "../../game-config"
 import { pickQuizOptions, pickRandomSet } from "../../game-calculations"
-import type { VocabEntry } from "../../types"
+import type { GameMistake, VocabEntry } from "../../types"
 
 const QUESTION_SECONDS = 10
 
 interface QuizGameProps {
   vocab: VocabEntry[]
-  onFinish: (score: number, total: number) => void
+  onFinish: (score: number, total: number, mistakes: GameMistake[]) => void
   onWordReviewed?: (wordId: string, correct: boolean) => void
 }
 
@@ -34,18 +34,27 @@ function QuizGame({ vocab, onFinish, onWordReviewed }: QuizGameProps) {
   const [questions] = useState(() => buildQuestions(vocab))
   const [index, setIndex] = useState(0)
   const [score, setScore] = useState(0)
+  const [mistakes, setMistakes] = useState<GameMistake[]>([])
   const [secondsLeft, setSecondsLeft] = useState(QUESTION_SECONDS)
 
   const question = questions[index]
 
-  function advance(gainedPoint: boolean) {
+  function advance(chosen: VocabEntry | null) {
+    const gainedPoint = chosen?.id === question.correct.id
     onWordReviewed?.(question.correct.id, gainedPoint)
     const nextScore = gainedPoint ? score + 1 : score
+    const nextMistakes = gainedPoint
+      ? mistakes
+      : [
+          ...mistakes,
+          { wordId: question.correct.id, word: question.correct.word, correctMeaning: question.correct.meaning, chosenMeaning: chosen?.meaning ?? null },
+        ]
     if (index + 1 >= questions.length) {
-      onFinish(nextScore, questions.length)
+      onFinish(nextScore, questions.length, nextMistakes)
       return
     }
     setScore(nextScore)
+    setMistakes(nextMistakes)
     setIndex(index + 1)
   }
 
@@ -70,13 +79,13 @@ function QuizGame({ vocab, onFinish, onWordReviewed }: QuizGameProps) {
     if (!questions.length || secondsLeft > 0) return
     // eslint-disable-next-line react-hooks/set-state-in-effect -- chỉ chạy đúng lúc hết giờ, không phải mỗi lần effect chạy
     setSecondsLeft(QUESTION_SECONDS)
-    advance(false)
+    advance(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [secondsLeft, questions.length])
 
-  function handleSelect(optionId: string) {
+  function handleSelect(option: VocabEntry) {
     setSecondsLeft(QUESTION_SECONDS)
-    advance(optionId === question.correct.id)
+    advance(option)
   }
 
   if (!question) {
@@ -99,7 +108,7 @@ function QuizGame({ vocab, onFinish, onWordReviewed }: QuizGameProps) {
             key={option.id}
             type="button"
             variant="outline"
-            onClick={() => handleSelect(option.id)}
+            onClick={() => handleSelect(option)}
             className="w-full justify-start rounded-[var(--ob-radius-md)] px-[18px] py-[13px] text-left text-[14.5px] font-semibold"
           >
             {option.meaning}

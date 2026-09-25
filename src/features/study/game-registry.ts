@@ -4,7 +4,7 @@ import { GAME_ICONS, GAME_LABELS, GAME_MAX_SCORES } from "./game-config"
 import { MatchGame } from "./components/games/match-game"
 import { QuizGame } from "./components/games/quiz-game"
 import { SpellingGame } from "./components/games/spelling-game"
-import type { GameType, VocabEntry } from "./types"
+import type { GameMistake, GameType, VocabEntry } from "./types"
 
 interface GameDefinition {
   type: GameType
@@ -13,7 +13,7 @@ interface GameDefinition {
   maxScore: number
   Component: ComponentType<{
     vocab: VocabEntry[]
-    onFinish: (score: number, total?: number) => void
+    onFinish: (score: number, total?: number, mistakes?: GameMistake[]) => void
     onWordReviewed?: (wordId: string, correct: boolean) => void
   }>
 }
