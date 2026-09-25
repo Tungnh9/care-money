@@ -128,4 +128,21 @@ describe("GameTab", () => {
 
     expect(() => fireEvent.click(screen.getByText("Ghép cặp"))).not.toThrow()
   })
+  it("shows the quiz's wrong answers on the result screen after a round with mistakes", () => {
+    render(
+      <GameTab vocab={VOCAB} highScores={HIGH_SCORES} streak={STREAK} onFinish={vi.fn(() => ({ isNewHighScore: false }))} />
+    )
+
+    fireEvent.click(screen.getByText("Trắc nghiệm"))
+    for (let i = 0; i < 10; i++) {
+      const word = screen.getByRole("heading", { level: 3 }).textContent
+      const correct = VOCAB.find((entry) => entry.word === word)!
+      const wrong = screen
+        .getAllByRole("button")
+        .find((b) => b.textContent !== "Về màn chọn" && b.textContent !== correct.meaning)!
+      fireEvent.click(wrong)
+    }
+
+    expect(screen.getByText("Các câu làm sai")).toBeInTheDocument()
+  })
 })

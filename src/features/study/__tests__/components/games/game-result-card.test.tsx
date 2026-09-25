@@ -82,4 +82,75 @@ describe("GameResultCard", () => {
     expect(onPlayAgain).toHaveBeenCalled()
     expect(onBackToMenu).toHaveBeenCalled()
   })
+  it("lists each mistake with the word, the wrongly chosen meaning and the correct meaning", () => {
+    render(
+      <GameResultCard
+        type="quiz"
+        score={8}
+        total={10}
+        isNewHighScore={false}
+        mistakes={[
+          { wordId: "a", word: "apple", correctMeaning: "quả táo", chosenMeaning: "quả cam" },
+          { wordId: "r", word: "river", correctMeaning: "dòng sông", chosenMeaning: null },
+        ]}
+        onPlayAgain={vi.fn()}
+        onBackToMenu={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText("Các câu làm sai")).toBeInTheDocument()
+    expect(screen.getByText("apple")).toBeInTheDocument()
+    expect(screen.getByText("quả cam")).toHaveClass("line-through")
+    expect(screen.getByText("quả táo")).toBeInTheDocument()
+    expect(screen.getByText("river")).toBeInTheDocument()
+    expect(screen.getByText("Hết giờ")).toBeInTheDocument()
+    expect(screen.getByText("dòng sông")).toBeInTheDocument()
+  })
+
+  it("shows a perfect-round message instead of a list when there are no mistakes", () => {
+    render(
+      <GameResultCard
+        type="quiz"
+        score={10}
+        total={10}
+        isNewHighScore={false}
+        mistakes={[]}
+        onPlayAgain={vi.fn()}
+        onBackToMenu={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText("Chính xác tuyệt đối 🎉")).toBeInTheDocument()
+    expect(screen.queryByText("Các câu làm sai")).not.toBeInTheDocument()
+  })
+
+  it("shows no mistakes section at all for games that don't report mistakes", () => {
+    render(
+      <GameResultCard type="match" score={6} total={10} isNewHighScore={false} onPlayAgain={vi.fn()} onBackToMenu={vi.fn()} />
+    )
+
+    expect(screen.queryByText("Các câu làm sai")).not.toBeInTheDocument()
+    expect(screen.queryByText("Chính xác tuyệt đối 🎉")).not.toBeInTheDocument()
+  })
+  it("renders two mistakes that share the same word (different vocab entries) without a React key clash", () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
+    render(
+      <GameResultCard
+        type="quiz"
+        score={8}
+        total={10}
+        isNewHighScore={false}
+        mistakes={[
+          { wordId: "pay-1", word: "pay", correctMeaning: "trả tiền", chosenMeaning: "quả cam" },
+          { wordId: "pay-2", word: "pay", correctMeaning: "tiền lương", chosenMeaning: null },
+        ]}
+        onPlayAgain={vi.fn()}
+        onBackToMenu={vi.fn()}
+      />
+    )
+
+    expect(screen.getAllByText("pay")).toHaveLength(2)
+    expect(consoleError.mock.calls.some((c) => String(c[0]).includes("same key"))).toBe(false)
+    consoleError.mockRestore()
+  })
 })

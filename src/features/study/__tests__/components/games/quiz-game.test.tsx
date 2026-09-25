@@ -35,7 +35,7 @@ describe("QuizGame", () => {
       fireEvent.click(screen.getAllByRole("button")[0])
     }
 
-    expect(onFinish).toHaveBeenCalledWith(expect.any(Number), 10)
+    expect(onFinish).toHaveBeenCalledWith(expect.any(Number), 10, expect.any(Array))
   })
 
   it("scores 10/10 when the correct meaning is clicked for every question", () => {
@@ -51,7 +51,7 @@ describe("QuizGame", () => {
       fireEvent.click(correctButton)
     }
 
-    expect(onFinish).toHaveBeenCalledWith(10, 10)
+    expect(onFinish).toHaveBeenCalledWith(10, 10, [])
   })
 
   it("scores 0/10 when a wrong meaning is clicked for every question", () => {
@@ -70,7 +70,7 @@ describe("QuizGame", () => {
       fireEvent.click(wrongButton!)
     }
 
-    expect(onFinish).toHaveBeenCalledWith(0, 10)
+    expect(onFinish).toHaveBeenCalledWith(0, 10, expect.any(Array))
   })
 
   it("auto-advances to the next question when the 10-second timer runs out", () => {
@@ -98,7 +98,7 @@ describe("QuizGame", () => {
     }
 
     expect(onFinish).toHaveBeenCalledTimes(1)
-    expect(onFinish).toHaveBeenCalledWith(0, 10)
+    expect(onFinish).toHaveBeenCalledWith(0, 10, expect.any(Array))
   })
 
   it("shows an empty-state message and never calls onFinish when there is no vocab", () => {
@@ -165,5 +165,40 @@ describe("QuizGame", () => {
     render(<QuizGame vocab={VOCAB} onFinish={vi.fn()} />)
 
     expect(() => fireEvent.click(screen.getAllByRole("button")[0])).not.toThrow()
+  })
+  it("reports every wrong answer with the word, its correct meaning and the meaning that was picked", () => {
+    const onFinish = vi.fn()
+    render(<QuizGame vocab={VOCAB} onFinish={onFinish} />)
+
+    const expected: { wordId: string; word: string; correctMeaning: string; chosenMeaning: string }[] = []
+    for (let i = 0; i < 10; i++) {
+      const heading = screen.getByRole("heading", { level: 3 })
+      const correctEntry = VOCAB.find((entry) => entry.word === heading.textContent)!
+      const wrongButton = screen.getAllByRole("button").find((button) => button.textContent !== correctEntry.meaning)!
+      expected.push({ wordId: correctEntry.id, word: correctEntry.word, correctMeaning: correctEntry.meaning, chosenMeaning: wrongButton.textContent! })
+      fireEvent.click(wrongButton)
+    }
+
+    expect(onFinish).toHaveBeenCalledWith(0, 10, expected)
+  })
+
+  it("records a timed-out question as a mistake with no chosen meaning", () => {
+    const onFinish = vi.fn()
+    render(<QuizGame vocab={VOCAB} onFinish={onFinish} />)
+
+    const firstWord = screen.getByRole("heading", { level: 3 }).textContent
+    act(() => {
+      vi.advanceTimersByTime(10_000)
+    })
+    for (let i = 1; i < 10; i++) {
+      const heading = screen.getByRole("heading", { level: 3 })
+      const correctEntry = VOCAB.find((entry) => entry.word === heading.textContent)!
+      fireEvent.click(screen.getByRole("button", { name: correctEntry.meaning }))
+    }
+
+    const correctFirst = VOCAB.find((entry) => entry.word === firstWord)!
+    expect(onFinish).toHaveBeenCalledWith(9, 10, [
+      { wordId: correctFirst.id, word: correctFirst.word, correctMeaning: correctFirst.meaning, chosenMeaning: null },
+    ])
   })
 })
