@@ -92,9 +92,22 @@ function parseImportPayload(raw: string): ImportResult {
     dismissedInsights: ensureArray(settingsOverride.dismissedInsights, DEFAULT_SETTINGS.dismissedInsights),
   }
 
-  const summary = `${journal.entries.length} bài nhật ký · ${finance.gold.length} lần mua vàng · đã khôi phục tiết kiệm, nợ thẻ, mục tiêu`
+  const data = { journal, finance, study, settings, budget, netWorthHistory }
+  return { ok: true, data, summary: restoredSummary(data) }
+}
 
-  return { ok: true, data: { journal, finance, study, settings, budget, netWorthHistory }, summary }
+const UNCOUNTED_SECTIONS = "tiết kiệm, nợ thẻ, mục tiêu"
+
+function snapshotCounts(snapshot: ExportSnapshot): string {
+  return `${snapshot.journal.entries.length} bài nhật ký · ${snapshot.finance.gold.length} lần mua vàng · ${snapshot.study.learned.length} từ đã học`
+}
+
+function restoredSummary(snapshot: ExportSnapshot): string {
+  return `${snapshotCounts(snapshot)} · đã khôi phục ${UNCOUNTED_SECTIONS}`
+}
+
+function uploadedSummary(snapshot: ExportSnapshot): string {
+  return `${snapshotCounts(snapshot)} · đã tải lên ${UNCOUNTED_SECTIONS}`
 }
 
 export {
@@ -102,6 +115,7 @@ export {
   buildExportPayload,
   exportFileName,
   parseImportPayload,
+  uploadedSummary,
   type ExportPayload,
   type ExportSnapshot,
   type ImportResult,

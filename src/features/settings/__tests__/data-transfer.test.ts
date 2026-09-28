@@ -165,7 +165,23 @@ describe("parseImportPayload", () => {
       expect(result.data.finance.goldStores).toEqual(DEFAULT_FINANCE_STATE.goldStores)
       expect(result.data.study).toEqual(DEFAULT_STUDY_STATE)
       expect(result.summary).toBe(
-        "1 bài nhật ký · 0 lần mua vàng · đã khôi phục tiết kiệm, nợ thẻ, mục tiêu"
+        "1 bài nhật ký · 0 lần mua vàng · 0 từ đã học · đã khôi phục tiết kiệm, nợ thẻ, mục tiêu"
+      )
+    }
+  })
+
+  it("counts the learned words from the study section in the summary", () => {
+    const raw = JSON.stringify({
+      version: EXPORT_VERSION,
+      study: { ...DEFAULT_STUDY_STATE, learned: ["v-1", "v-2", "v-42"] },
+    })
+
+    const result = parseImportPayload(raw)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.summary).toBe(
+        "0 bài nhật ký · 0 lần mua vàng · 3 từ đã học · đã khôi phục tiết kiệm, nợ thẻ, mục tiêu"
       )
     }
   })
@@ -184,7 +200,7 @@ describe("parseImportPayload", () => {
       expect(result.data.journal.entries).toEqual(DEFAULT_JOURNAL_STATE.entries)
       expect(result.data.finance.gold).toEqual(DEFAULT_FINANCE_STATE.gold)
       expect(result.summary).toBe(
-        "0 bài nhật ký · 0 lần mua vàng · đã khôi phục tiết kiệm, nợ thẻ, mục tiêu"
+        "0 bài nhật ký · 0 lần mua vàng · 0 từ đã học · đã khôi phục tiết kiệm, nợ thẻ, mục tiêu"
       )
     }
   })

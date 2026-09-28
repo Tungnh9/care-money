@@ -109,6 +109,7 @@ describe("/api/sync", () => {
 
     expect(response.status).toBe(200)
     expect(json.ok).toBe(true)
+    expect(json.summary).toBe("0 bài nhật ký · 0 lần mua vàng · 0 từ đã học · đã tải lên tiết kiệm, nợ thẻ, mục tiêu")
     expect(put).toHaveBeenCalledWith(
       "sync/snapshot.json",
       JSON.stringify(VALID_PAYLOAD),

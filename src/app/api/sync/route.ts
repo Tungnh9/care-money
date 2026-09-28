@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { get, put } from "@vercel/blob"
 
-import { parseImportPayload } from "@/features/settings/data-transfer"
+import { parseImportPayload, uploadedSummary } from "@/features/settings/data-transfer"
 
 const SYNC_PATHNAME = "sync/snapshot.json"
 
@@ -54,7 +54,7 @@ async function POST(request: NextRequest) {
     contentType: "application/json",
   })
 
-  return NextResponse.json({ ok: true, summary: result.summary })
+  return NextResponse.json({ ok: true, summary: uploadedSummary(result.data) })
 }
 
 export { GET, POST }
