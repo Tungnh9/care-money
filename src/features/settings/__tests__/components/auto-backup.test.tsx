@@ -5,6 +5,7 @@ import { setStoredFinance, DEFAULT_FINANCE_STATE } from "@/features/finance/fina
 import { setStoredJournal, DEFAULT_JOURNAL_STATE } from "@/features/journal/journal-storage"
 import { setStoredBudget, DEFAULT_BUDGET_STATE } from "@/features/budget/budget-storage"
 import { setSyncSecret } from "@/lib/sync-secret-storage"
+import { setCarGoalFundName } from "@/features/goals/car-goal-storage"
 import { getAutoBackupStatus } from "../../auto-backup-storage"
 import { EXPORT_VERSION } from "../../data-transfer"
 import { AutoBackup } from "../../components/auto-backup"
@@ -74,6 +75,20 @@ describe("AutoBackup", () => {
       expect.objectContaining({
         budget: expect.objectContaining({ salaries: [{ month: "2026-09", amount: 20_000_000 }] }),
       })
+    )
+  })
+
+  it("pushes when the car-goal fund link changes, and includes the link in the snapshot", async () => {
+    setSyncSecret("my-secret")
+    vi.mocked(pushSnapshot).mockResolvedValue({ ok: true, summary: "ok" })
+    render(<AutoBackup />)
+
+    setCarGoalFundName("Quỹ mua xe")
+    await vi.advanceTimersByTimeAsync(DEBOUNCE_MS)
+
+    expect(pushSnapshot).toHaveBeenCalledWith(
+      "my-secret",
+      expect.objectContaining({ goals: { carFundName: "Quỹ mua xe" } })
     )
   })
 

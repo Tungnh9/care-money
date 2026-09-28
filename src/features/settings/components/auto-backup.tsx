@@ -8,6 +8,7 @@ import { getStoredJournal } from "@/features/journal/journal-storage"
 import { getStoredStudy } from "@/features/study/study-storage"
 import { getStoredBudget } from "@/features/budget/budget-storage"
 import { getStoredNetWorthHistory } from "@/features/overview/net-worth-history-storage"
+import { getCarGoalFundName } from "@/features/goals/car-goal-storage"
 import { getStoredSettings } from "@/lib/settings-storage"
 import { getSyncSecret } from "@/lib/sync-secret-storage"
 import { pushSnapshot } from "../api"
@@ -36,6 +37,7 @@ function AutoBackup() {
             settings: getStoredSettings(),
             budget: getStoredBudget(),
             netWorthHistory: getStoredNetWorthHistory(),
+            goals: { carFundName: getCarGoalFundName() },
           },
           new Date().toISOString()
         )

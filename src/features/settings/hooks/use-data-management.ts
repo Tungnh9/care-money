@@ -11,6 +11,7 @@ import {
   getStoredNetWorthHistory,
   type NetWorthHistory,
 } from "@/features/overview/net-worth-history-storage"
+import { getCarGoalFundName, setCarGoalFundName } from "@/features/goals/car-goal-storage"
 import { getStoredSettings, type AppSettings } from "@/lib/settings-storage"
 import { pushSnapshot, pullSnapshot } from "../api"
 import { buildExportPayload, exportFileName, parseImportPayload } from "../data-transfer"
@@ -56,6 +57,7 @@ function useDataManagement({
         settings: getStoredSettings(),
         budget: getStoredBudget(),
         netWorthHistory: getStoredNetWorthHistory(),
+        goals: { carFundName: getCarGoalFundName() },
       },
       new Date().toISOString()
     )
@@ -75,6 +77,7 @@ function useDataManagement({
         onReplaceSettings(result.data.settings)
         onReplaceBudget(result.data.budget)
         onReplaceNetWorthHistory(result.data.netWorthHistory)
+        if (result.data.goals) setCarGoalFundName(result.data.goals.carFundName)
         setSyncResult({ ok: true, summary: result.summary })
       } else {
         setSyncResult({ ok: false, error: result.error })
@@ -94,6 +97,7 @@ function useDataManagement({
         settings: getStoredSettings(),
         budget: getStoredBudget(),
         netWorthHistory: getStoredNetWorthHistory(),
+        goals: { carFundName: getCarGoalFundName() },
       },
       now.toISOString()
     )
@@ -125,6 +129,7 @@ function useDataManagement({
         onReplaceSettings(result.data.settings)
         onReplaceBudget(result.data.budget)
         onReplaceNetWorthHistory(result.data.netWorthHistory)
+        if (result.data.goals) setCarGoalFundName(result.data.goals.carFundName)
         setImported({ ok: true, file: file.name, summary: result.summary })
       } else {
         setImported({ ok: false, error: result.error })
@@ -141,6 +146,7 @@ function useDataManagement({
     onReplaceStudy(DEFAULT_STUDY_STATE)
     onReplaceBudget(DEFAULT_BUDGET_STATE)
     onReplaceNetWorthHistory(DEFAULT_NET_WORTH_HISTORY)
+    setCarGoalFundName(null)
     setExported(null)
     setImported(null)
   }, [onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceBudget, onReplaceNetWorthHistory])

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest"
 
+import { onDataChanged } from "@/lib/data-change-bus"
 import { getCarGoalFundName, setCarGoalFundName } from "../car-goal-storage"
 
 describe("car-goal-storage", () => {
@@ -30,5 +31,15 @@ describe("car-goal-storage", () => {
     expect(getCarGoalFundName()).toBeNull()
 
     spy.mockRestore()
+  })
+  it("notifies data-change listeners on every save, like the other storages", () => {
+    const listener = vi.fn()
+    const unsubscribe = onDataChanged(listener)
+
+    setCarGoalFundName("Quỹ mua xe")
+    setCarGoalFundName(null)
+
+    expect(listener).toHaveBeenCalledTimes(2)
+    unsubscribe()
   })
 })

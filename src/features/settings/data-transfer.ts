@@ -14,7 +14,17 @@ interface ExportSnapshot {
   settings: AppSettings
   budget: BudgetState
   netWorthHistory: NetWorthHistory
+  goals: GoalsSnapshot
 }
+
+interface GoalsSnapshot {
+  carFundName: string | null
+}
+
+// Bản nhập vào (file hoặc cloud) có thể thiếu `goals` nếu được tạo trước khi có mục này — lúc đó
+// `goals` là undefined, nghĩa là "giữ nguyên liên kết đang có trên máy", khác với carFundName null
+// ("không gắn quỹ nào").
+type ImportedSnapshot = Omit<ExportSnapshot, "goals"> & { goals?: GoalsSnapshot }
 
 interface ExportPayload extends ExportSnapshot {
   version: typeof EXPORT_VERSION
@@ -30,7 +40,7 @@ function exportFileName(exportedAt: string): string {
 }
 
 type ImportResult =
-  | { ok: true; data: ExportSnapshot; summary: string }
+  | { ok: true; data: ImportedSnapshot; summary: string }
   | { ok: false; error: string }
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -39,6 +49,13 @@ function isObject(value: unknown): value is Record<string, unknown> {
 
 function ensureArray<T>(value: unknown, fallback: T[]): T[] {
   return Array.isArray(value) ? (value as T[]) : fallback
+}
+
+function parseGoalsSnapshot(value: unknown): GoalsSnapshot | undefined {
+  if (!isObject(value)) return undefined
+  const { carFundName } = value
+  if (carFundName === null || typeof carFundName === "string") return { carFundName }
+  return undefined
 }
 
 function parseImportPayload(raw: string): ImportResult {
@@ -92,21 +109,23 @@ function parseImportPayload(raw: string): ImportResult {
     dismissedInsights: ensureArray(settingsOverride.dismissedInsights, DEFAULT_SETTINGS.dismissedInsights),
   }
 
-  const data = { journal, finance, study, settings, budget, netWorthHistory }
+  const goals = parseGoalsSnapshot(parsed.goals)
+
+  const data: ImportedSnapshot = { journal, finance, study, settings, budget, netWorthHistory, goals }
   return { ok: true, data, summary: restoredSummary(data) }
 }
 
 const UNCOUNTED_SECTIONS = "tiết kiệm, nợ thẻ, mục tiêu"
 
-function snapshotCounts(snapshot: ExportSnapshot): string {
+function snapshotCounts(snapshot: ImportedSnapshot): string {
   return `${snapshot.journal.entries.length} bài nhật ký · ${snapshot.finance.gold.length} lần mua vàng · ${snapshot.study.learned.length} từ đã học`
 }
 
-function restoredSummary(snapshot: ExportSnapshot): string {
+function restoredSummary(snapshot: ImportedSnapshot): string {
   return `${snapshotCounts(snapshot)} · đã khôi phục ${UNCOUNTED_SECTIONS}`
 }
 
-function uploadedSummary(snapshot: ExportSnapshot): string {
+function uploadedSummary(snapshot: ImportedSnapshot): string {
   return `${snapshotCounts(snapshot)} · đã tải lên ${UNCOUNTED_SECTIONS}`
 }
 

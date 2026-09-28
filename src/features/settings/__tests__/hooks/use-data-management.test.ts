@@ -7,6 +7,7 @@ import { DEFAULT_STUDY_STATE } from "@/features/study/study-storage"
 import { DEFAULT_BUDGET_STATE } from "@/features/budget/budget-storage"
 import { DEFAULT_NET_WORTH_HISTORY } from "@/features/overview/net-worth-history-storage"
 import { DEFAULT_SETTINGS } from "@/lib/settings-storage"
+import { getCarGoalFundName, setCarGoalFundName } from "@/features/goals/car-goal-storage"
 import { EXPORT_VERSION } from "../../data-transfer"
 import { useDataManagement } from "../../hooks/use-data-management"
 
@@ -182,6 +183,7 @@ describe("useDataManagement", () => {
         settings: DEFAULT_SETTINGS,
         budget: DEFAULT_BUDGET_STATE,
         netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
+        goals: { carFundName: null },
       })
     )
     expect(result.current.syncResult).toEqual({ ok: true, summary: "Đã tải lên" })
@@ -254,5 +256,167 @@ describe("useDataManagement", () => {
     expect(onReplaceSettings).not.toHaveBeenCalled()
     expect(onReplaceBudget).not.toHaveBeenCalled()
     expect(onReplaceNetWorthHistory).not.toHaveBeenCalled()
+  })
+  describe("car-goal fund link", () => {
+    function backupFile(extra: Record<string, unknown>) {
+      return new File([JSON.stringify({ version: EXPORT_VERSION, ...extra })], "backup.json", { type: "application/json" })
+    }
+
+    it("exportData writes the current car-goal link into the exported file", async () => {
+      setCarGoalFundName("Quỹ mua xe")
+      const { result } = renderDataManagement()
+
+      act(() => {
+        result.current.exportData()
+      })
+
+      const blob = vi.mocked(URL.createObjectURL).mock.calls[0][0] as Blob
+      const text = await new Promise<string>((resolve) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.readAsText(blob)
+      })
+      const exported = JSON.parse(text)
+      expect(exported.goals).toEqual({ carFundName: "Quỹ mua xe" })
+    })
+
+    it("pushToCloud sends the current car-goal link", async () => {
+      setCarGoalFundName("Quỹ mua xe")
+      vi.mocked(pushSnapshot).mockResolvedValue({ ok: true, summary: "ok" })
+      const { result } = renderDataManagement()
+
+      await act(async () => {
+        await result.current.pushToCloud("my-secret")
+      })
+
+      expect(pushSnapshot).toHaveBeenCalledWith("my-secret", expect.objectContaining({ goals: { carFundName: "Quỹ mua xe" } }))
+    })
+
+    it("importData restores the link from a backup that has a goals section", async () => {
+      setCarGoalFundName("Quỹ cũ")
+      const { result } = renderDataManagement()
+
+      await act(async () => {
+        await result.current.importData(backupFile({ goals: { carFundName: "Quỹ mua xe" } }))
+      })
+
+      expect(getCarGoalFundName()).toBe("Quỹ mua xe")
+    })
+
+    it("importData clears the link when the backup explicitly has no fund chosen", async () => {
+      setCarGoalFundName("Quỹ cũ")
+      const { result } = renderDataManagement()
+
+      await act(async () => {
+        await result.current.importData(backupFile({ goals: { carFundName: null } }))
+      })
+
+      expect(getCarGoalFundName()).toBeNull()
+    })
+
+    it("importData keeps this device's link when the backup predates the goals section", async () => {
+      setCarGoalFundName("Quỹ mua xe")
+      const { result } = renderDataManagement()
+
+      await act(async () => {
+        await result.current.importData(backupFile({}))
+      })
+
+      expect(getCarGoalFundName()).toBe("Quỹ mua xe")
+    })
+
+    it("pullFromCloud restores the link from the cloud snapshot", async () => {
+      setCarGoalFundName("Quỹ cũ")
+      vi.mocked(pullSnapshot).mockResolvedValue({
+        ok: true,
+        data: {
+          journal: DEFAULT_JOURNAL_STATE,
+          finance: DEFAULT_FINANCE_STATE,
+          study: DEFAULT_STUDY_STATE,
+          settings: DEFAULT_SETTINGS,
+          budget: DEFAULT_BUDGET_STATE,
+          netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
+          goals: { carFundName: "Quỹ mua xe" },
+        },
+        summary: "ok",
+      })
+      const { result } = renderDataManagement()
+
+      await act(async () => {
+        await result.current.pullFromCloud("my-secret")
+      })
+
+      expect(getCarGoalFundName()).toBe("Quỹ mua xe")
+    })
+
+    it("pullFromCloud clears the link when the cloud snapshot explicitly has no fund chosen", async () => {
+      setCarGoalFundName("Quỹ cũ")
+      vi.mocked(pullSnapshot).mockResolvedValue({
+        ok: true,
+        data: {
+          journal: DEFAULT_JOURNAL_STATE,
+          finance: DEFAULT_FINANCE_STATE,
+          study: DEFAULT_STUDY_STATE,
+          settings: DEFAULT_SETTINGS,
+          budget: DEFAULT_BUDGET_STATE,
+          netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
+          goals: { carFundName: null },
+        },
+        summary: "ok",
+      })
+      const { result } = renderDataManagement()
+
+      await act(async () => {
+        await result.current.pullFromCloud("my-secret")
+      })
+
+      expect(getCarGoalFundName()).toBeNull()
+    })
+
+    it("pullFromCloud keeps this device's link when the cloud snapshot predates the goals section", async () => {
+      setCarGoalFundName("Quỹ mua xe")
+      vi.mocked(pullSnapshot).mockResolvedValue({
+        ok: true,
+        data: {
+          journal: DEFAULT_JOURNAL_STATE,
+          finance: DEFAULT_FINANCE_STATE,
+          study: DEFAULT_STUDY_STATE,
+          settings: DEFAULT_SETTINGS,
+          budget: DEFAULT_BUDGET_STATE,
+          netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
+        },
+        summary: "ok",
+      })
+      const { result } = renderDataManagement()
+
+      await act(async () => {
+        await result.current.pullFromCloud("my-secret")
+      })
+
+      expect(getCarGoalFundName()).toBe("Quỹ mua xe")
+    })
+
+    it("pullFromCloud leaves the link untouched when the pull fails", async () => {
+      setCarGoalFundName("Quỹ mua xe")
+      vi.mocked(pullSnapshot).mockResolvedValue({ ok: false, error: "Sai secret đồng bộ." })
+      const { result } = renderDataManagement()
+
+      await act(async () => {
+        await result.current.pullFromCloud("wrong-secret")
+      })
+
+      expect(getCarGoalFundName()).toBe("Quỹ mua xe")
+    })
+
+    it("wipeData removes the link along with the savings funds it pointed to", () => {
+      setCarGoalFundName("Quỹ mua xe")
+      const { result } = renderDataManagement()
+
+      act(() => {
+        result.current.wipeData()
+      })
+
+      expect(getCarGoalFundName()).toBeNull()
+    })
   })
 })

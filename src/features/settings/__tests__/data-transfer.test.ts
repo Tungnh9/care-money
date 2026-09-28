@@ -23,6 +23,7 @@ describe("buildExportPayload", () => {
         settings: DEFAULT_SETTINGS,
         budget: DEFAULT_BUDGET_STATE,
         netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
+        goals: { carFundName: "Quỹ mua xe" },
       },
       "2026-08-14T09:00:00.000Z"
     )
@@ -62,6 +63,30 @@ describe("parseImportPayload", () => {
       expect(result.data.settings).toEqual(DEFAULT_SETTINGS)
       expect(result.data.budget).toEqual(DEFAULT_BUDGET_STATE)
       expect(result.data.netWorthHistory).toEqual(DEFAULT_NET_WORTH_HISTORY)
+      expect(result.data.goals).toBeUndefined()
+    }
+  })
+
+  it("restores the car-goal fund link from the goals section", () => {
+    const result = parseImportPayload(JSON.stringify({ version: EXPORT_VERSION, goals: { carFundName: "Quỹ mua xe" } }))
+
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(result.data.goals).toEqual({ carFundName: "Quỹ mua xe" })
+  })
+
+  it("keeps an explicit null link (no fund chosen) distinct from a missing goals section", () => {
+    const result = parseImportPayload(JSON.stringify({ version: EXPORT_VERSION, goals: { carFundName: null } }))
+
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(result.data.goals).toEqual({ carFundName: null })
+  })
+
+  it("treats a wrong-typed goals section as missing rather than guessing a link", () => {
+    for (const goals of ["x", { carFundName: 123 }, { carFundName: ["a"] }, {}]) {
+      const result = parseImportPayload(JSON.stringify({ version: EXPORT_VERSION, goals }))
+
+      expect(result.ok).toBe(true)
+      if (result.ok) expect(result.data.goals).toBeUndefined()
     }
   })
 
