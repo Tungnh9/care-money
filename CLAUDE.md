@@ -51,6 +51,7 @@ src/
           └── [name]-form.test.tsx
   ```
 - Dùng ở ≥ 2 feature → đưa lên `src/components/` hoặc `src/lib/` ở gốc `src/`, không để trong 1 feature.
+- **Hook đọc/ghi localStorage** (`use-finance`, `use-budget`, `use-journal`, `use-study`, `use-settings`, `use-net-worth-history`, `use-car-goal-fund`...): (1) gọi `useStorageSync(KEY, reload)` từ `@/lib/use-storage-sync` để tự đọc lại khi tab khác hoặc nơi khác trong app ghi cùng key — `reload` phải ổn định (`useCallback(..., [])` hoặc hàm cấp module) và chỉ đọc, không bao giờ ghi; (2) mỗi lần ghi dựng từ bản đọc tươi `getStored*()` (hoặc ref được `reload` cập nhật đồng bộ), không dựng từ `state` trong closure; (3) mọi lần ghi localStorage đi qua `setStored*()` (đã gọi `notifyDataChanged()`) — ghi thẳng `localStorage.setItem` thì phải tự gọi `notifyDataChanged()` ngay sau.
 - Layout/sidebar dùng chung toàn app (route group `(app)`) không phải "feature" — không áp dụng quy tắc này.
 
 ## 4. Component Rules
