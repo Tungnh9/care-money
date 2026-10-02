@@ -23,7 +23,7 @@
 - So khớp tên quỹ/thẻ là so CHÍNH XÁC sau khi trim — đúng như cửa hàng vàng đang làm và đúng như mọi thao tác phía sau (`find`/`map`/`filter` theo `name ===`).
 - Test đặt trong `__tests__/` mirror cấu trúc, theo đúng pattern file bên cạnh (`vi.mock("sonner", ...)`, `vi.useFakeTimers({ shouldAdvanceTime: true })`, `renderHook` + `waitFor` chờ hydrate). Mô phỏng "tab khác ghi" = `window.localStorage.setItem(...)` rồi `window.dispatchEvent(new StorageEvent("storage", { key }))` trong `act`; mô phỏng "khoảng hở trước khi kịp đọc lại" = chỉ `setItem`, KHÔNG bắn sự kiện.
 - Chạy từng file test bằng `npx vitest run <path>`; full suite, lint, tsc chỉ ở Task 11.
-- Task 1–6 và 8 (đồng bộ/parse dữ liệu, không đổi thao tác của người dùng) commit ngay khi xanh. Task 7, 9, 10 đổi thứ người dùng thấy trên form/màn hình: làm xong + test của task xanh thì **dừng**, báo chủ repo bấm thử đúng mục tương ứng ở "Kiểm tra tay" (Task 11), chỉ commit khi chủ repo xác nhận, rồi mới sang task kế (quy ước "review before commit" của chủ repo — không chồng 2 task chưa commit). Nhánh chỉ merge vào `developer` sau khi chủ repo chạy xong toàn bộ "Kiểm tra tay" ở Task 11 và duyệt.
+- Mọi task commit ngay khi test của task xanh và đã tự review `git diff` — **không dừng giữa plan** chờ chủ repo. Các task đổi thứ người dùng thấy được kiểm lại ở "Kiểm tra tay" của task checkpoint cuối; nếu chủ repo thấy sai thì sửa tiếp trên chính nhánh này. Nhánh chỉ merge vào `developer` sau khi chủ repo chạy xong toàn bộ "Kiểm tra tay" và duyệt.
 
 ## Quyết định cần duyệt
 
@@ -1829,9 +1829,9 @@ và trong `onChange` của `Field` (dòng 35-38) đổi `setName(e.target.value)
 Run: `npx vitest run src/features/settings/__tests__/components/profile-card.test.tsx src/features/settings/__tests__/components/settings-view.test.tsx`
 Expected: PASS toàn bộ (kể cả "saves a new display name, keeping the greeting prefix and persisting both to localStorage" của SettingsView: sau Lưu, ô hiện tên mới lấy từ store)
 
-- [ ] **Step 5: Dừng cho chủ repo kiểm tra, rồi commit**
+- [ ] **Step 5: Commit**
 
-Task này đổi ô nhập trên màn Cài đặt — chưa commit. Báo chủ repo chạy 2 gạch đầu dòng cuối của mục **4** ở "Kiểm tra tay" (Task 11; nhớ bước xuất file sao lưu ở đầu và mục 9 ở cuối); khi chủ repo xác nhận đúng mới chạy:
+Tự review `git diff` của task rồi commit (2 gạch đầu dòng cuối của mục **4** ở "Kiểm tra tay" của Task 11 sẽ kiểm lại thay đổi này trước khi merge):
 
 ```bash
 git add src/features/settings/components/profile-card.tsx src/features/settings/__tests__/components/profile-card.test.tsx
@@ -2518,9 +2518,9 @@ và trong `<EditCreditCardModal ...>` thêm prop ngay sau dòng `card={cards.fin
 Run: `npx vitest run src/features/finance/__tests__/components/savings-tab.test.tsx src/features/finance/__tests__/components/edit-savings-fund-modal.test.tsx src/features/finance/__tests__/components/credit-cards-tab.test.tsx src/features/finance/__tests__/components/edit-credit-card-modal.test.tsx src/features/finance/__tests__/components/finance-view.test.tsx`
 Expected: PASS toàn bộ
 
-- [ ] **Step 7: Dừng cho chủ repo kiểm tra, rồi commit**
+- [ ] **Step 7: Commit**
 
-Task này đổi thao tác trên 4 form quỹ/thẻ — chưa commit. Báo chủ repo chạy mục **5** ở "Kiểm tra tay" (Task 11; nhớ bước xuất file sao lưu ở đầu và mục 9 ở cuối); khi chủ repo xác nhận đúng mới chạy:
+Tự review `git diff` của task rồi commit (mục **5** ở "Kiểm tra tay" của Task 11 sẽ kiểm lại thay đổi này trước khi merge):
 
 ```bash
 git add src/features/finance/components/add-savings-fund-form.tsx src/features/finance/components/edit-savings-fund-modal.tsx src/features/finance/components/savings-tab.tsx src/features/finance/components/add-credit-card-form.tsx src/features/finance/components/edit-credit-card-modal.tsx src/features/finance/components/credit-cards-tab.tsx src/features/finance/__tests__/components/savings-tab.test.tsx src/features/finance/__tests__/components/edit-savings-fund-modal.test.tsx src/features/finance/__tests__/components/credit-cards-tab.test.tsx src/features/finance/__tests__/components/edit-credit-card-modal.test.tsx
@@ -2730,9 +2730,9 @@ Thay `addSavingsFund`, `updateSavingsFund`, `removeSavingsFund` (bản sau Task 
 Run: `npx vitest run src/features/finance/__tests__/hooks/use-finance.test.ts src/features/goals/__tests__/components/goals-view.test.tsx src/features/overview/__tests__/components/overview-view.test.tsx`
 Expected: PASS toàn bộ (kể cả "updateSavingsFund does not touch the car-goal link when renaming an unrelated fund" và "updateSavingsFund cascades a rename into historical budget settlements")
 
-- [ ] **Step 5: Dừng cho chủ repo kiểm tra, rồi commit**
+- [ ] **Step 5: Commit**
 
-Task này đổi liên kết mục tiêu mua xe mà người dùng thấy ở trang Mục tiêu — chưa commit. Báo chủ repo chạy mục **7** ở "Kiểm tra tay" (Task 11; nhớ bước xuất file sao lưu ở đầu và mục 9 ở cuối); khi chủ repo xác nhận đúng mới chạy:
+Tự review `git diff` của task rồi commit (mục **7** ở "Kiểm tra tay" của Task 11 sẽ kiểm lại thay đổi này trước khi merge):
 
 ```bash
 git add src/features/finance/hooks/use-finance.ts src/features/finance/__tests__/hooks/use-finance.test.ts

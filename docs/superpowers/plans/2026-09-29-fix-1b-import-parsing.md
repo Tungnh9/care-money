@@ -24,7 +24,7 @@
 - Test đặt trong `__tests__/` mirror cấu trúc, theo đúng pattern file bên cạnh (`renderHook` + `act`, `vi.mock("../../api")`, `window.localStorage.clear()` trong `beforeEach`). Mô phỏng "tab khác" = ghi thẳng `window.localStorage` rồi `window.dispatchEvent(new StorageEvent("storage", { key }))` trong `act`.
 - Chạy từng file test bằng `npx vitest run <path>`; full suite, lint, tsc chỉ ở Task 10.
 - Next.js 16 có breaking changes — plan này không dùng API Next nào mới (chỉ `next/navigation` sẵn có ở sidebar và mock sẵn có trong test); nếu buộc phải đụng API Next khác, đọc `node_modules/next/dist/docs/` trước.
-- Task 1–6 (parse/độ bền, không đổi thao tác của người dùng) commit ngay khi xanh. Task 7, 8, 9 đổi thao tác người dùng nhìn thấy: làm xong + test của task xanh thì **dừng**, báo chủ repo bấm thử đúng mục tương ứng ở "Kiểm tra tay" (Task 10), chỉ commit khi chủ repo xác nhận, rồi mới sang task kế (quy ước "review before commit" của chủ repo — Task 9 sửa lại file của Task 8 nên không được chồng 2 task chưa commit).
+- Mọi task commit ngay khi test của task xanh và đã tự review `git diff` — **không dừng giữa plan** chờ chủ repo. Các task đổi thứ người dùng thấy được kiểm lại ở "Kiểm tra tay" của task checkpoint cuối; nếu chủ repo thấy sai thì sửa tiếp trên chính nhánh này. Nhánh chỉ merge vào `developer` sau khi chủ repo chạy xong toàn bộ "Kiểm tra tay" và duyệt.
 
 ## Quyết định cần duyệt
 
@@ -1393,9 +1393,9 @@ bằng
 Run: `npx vitest run src/features/finance/__tests__/components/gold-tab.test.tsx src/features/finance/__tests__/components/edit-gold-purchase-modal.test.tsx`
 Expected: PASS toàn bộ (kể cả "keeps the add-purchase Thêm button disabled when khối lượng is zero or negative" và "disables Lưu when khối lượng is zero or negative" sẵn có)
 
-- [ ] **Step 5: Dừng cho chủ repo bấm thử, rồi commit**
+- [ ] **Step 5: Commit**
 
-Task này đổi thao tác trên form — chưa commit. Báo chủ repo chạy mục **A.5** ở "Kiểm tra tay" (Task 10); khi chủ repo xác nhận đúng mới chạy:
+Tự review `git diff` của task rồi commit (mục **A.5** ở "Kiểm tra tay" của Task 10 sẽ kiểm lại thay đổi này trước khi merge):
 
 ```bash
 git add src/features/finance/components/add-gold-form.tsx src/features/finance/components/edit-gold-purchase-modal.tsx src/features/finance/__tests__/components/gold-tab.test.tsx src/features/finance/__tests__/components/edit-gold-purchase-modal.test.tsx
@@ -2141,9 +2141,9 @@ Trong `src/features/settings/components/settings-view.tsx`: thêm `pendingRestor
 Run: `npx vitest run src/features/settings/__tests__/data-transfer.test.ts src/features/settings/__tests__/hooks/use-data-management.test.ts src/features/settings/__tests__/components/data-card.test.tsx src/features/settings/__tests__/components/settings-view.test.tsx src/app/api/sync/__tests__/route.test.ts src/features/settings/__tests__/components/auto-backup.test.tsx`
 Expected: PASS toàn bộ
 
-- [ ] **Step 10: Dừng cho chủ repo bấm thử, rồi commit**
+- [ ] **Step 10: Commit**
 
-Task này đổi luồng nạp dữ liệu — chưa commit. Báo chủ repo chạy mục **B** ở "Kiểm tra tay" (Task 10); khi chủ repo xác nhận đúng mới chạy:
+Tự review `git diff` của task rồi commit (mục **B** ở "Kiểm tra tay" của Task 10 sẽ kiểm lại thay đổi này trước khi merge):
 
 ```bash
 git add src/features/settings/data-transfer.ts src/features/settings/hooks/use-data-management.ts src/features/settings/components/data-card.tsx src/features/settings/components/settings-view.tsx src/features/settings/__tests__/data-transfer.test.ts src/features/settings/__tests__/hooks/use-data-management.test.ts src/features/settings/__tests__/components/data-card.test.tsx src/features/settings/__tests__/components/settings-view.test.tsx
@@ -2319,9 +2319,9 @@ export { SYNC_SECRET_STORAGE_KEY, getSyncSecret, setSyncSecret, clearSyncSecret 
 Run: `npx vitest run "src/app/(app)/_components/__tests__/sidebar.test.tsx" src/features/settings/__tests__/hooks/use-data-management.test.ts src/features/settings/__tests__/components/data-card.test.tsx src/features/settings/__tests__/components/settings-view.test.tsx src/features/settings/__tests__/components/auto-backup.test.tsx`
 Expected: PASS toàn bộ (kể cả "preloads a secret already saved on this device and persists edits" sẵn có — gõ secret không bị đọc lại đè)
 
-- [ ] **Step 5: Dừng cho chủ repo bấm thử, rồi commit**
+- [ ] **Step 5: Commit**
 
-Task này đổi thao tác đăng xuất/xoá dữ liệu — chưa commit. Báo chủ repo chạy mục **C** ở "Kiểm tra tay" (Task 10); khi chủ repo xác nhận đúng mới chạy:
+Tự review `git diff` của task rồi commit (mục **C** ở "Kiểm tra tay" của Task 10 sẽ kiểm lại thay đổi này trước khi merge):
 
 ```bash
 git add src/lib/sync-secret-storage.ts "src/app/(app)/_components/sidebar.tsx" src/features/settings/hooks/use-data-management.ts src/features/settings/components/data-card.tsx "src/app/(app)/_components/__tests__/sidebar.test.tsx" src/features/settings/__tests__/hooks/use-data-management.test.ts src/features/settings/__tests__/components/data-card.test.tsx
