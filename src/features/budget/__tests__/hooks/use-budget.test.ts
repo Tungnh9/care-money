@@ -3,7 +3,7 @@ import { act, renderHook, waitFor } from "@testing-library/react"
 import { toast } from "sonner"
 
 import { useBudget } from "../../hooks/use-budget"
-import { DEFAULT_BUDGET_STATE, getStoredBudget } from "../../budget-storage"
+import { BUDGET_STORAGE_KEY, DEFAULT_BUDGET_STATE, getStoredBudget, setStoredBudget } from "../../budget-storage"
 import { DEFAULT_FINANCE_STATE, setStoredFinance } from "@/features/finance/finance-storage"
 
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
@@ -162,5 +162,68 @@ describe("useBudget", () => {
 
       expect(result.current.settlements).toHaveLength(2)
     })
+  })
+})
+
+describe("useBudget — dữ liệu do nơi khác ghi", () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it("keeps the salary and expenses another tab saved when adding an expense here, with a fresh id", async () => {
+    const { result } = renderHook(() => useBudget())
+    await waitFor(() => expect(result.current.expenses).toEqual([]))
+
+    // Ghi thẳng, KHÔNG bắn sự kiện — khoảng hở trước khi hook kịp đọc lại.
+    window.localStorage.setItem(
+      BUDGET_STORAGE_KEY,
+      JSON.stringify({
+        ...DEFAULT_BUDGET_STATE,
+        salaries: [{ month: "2026-09", amount: 20_000_000 }],
+        expenses: [{ id: 1, dayKey: "2026-09-01", amount: 50_000, tag: null }],
+      })
+    )
+    act(() => {
+      result.current.addExpense({ dayKey: "2026-09-02", amount: 10_000, tag: null })
+    })
+
+    expect(getStoredBudget().salaries).toEqual([{ month: "2026-09", amount: 20_000_000 }])
+    expect(getStoredBudget().expenses.map((e) => e.id).sort((a, b) => a - b)).toEqual([1, 2])
+  })
+
+  it("shows expenses another tab added without reloading the page", async () => {
+    const { result } = renderHook(() => useBudget())
+    await waitFor(() => expect(result.current.expenses).toEqual([]))
+
+    act(() => {
+      window.localStorage.setItem(
+        BUDGET_STORAGE_KEY,
+        JSON.stringify({
+          ...DEFAULT_BUDGET_STATE,
+          expenses: [{ id: 1, dayKey: "2026-09-01", amount: 50_000, tag: null }],
+        })
+      )
+      window.dispatchEvent(new StorageEvent("storage", { key: BUDGET_STORAGE_KEY }))
+    })
+
+    expect(result.current.expenses).toHaveLength(1)
+  })
+
+  it("shows budget data written after this page mounted, e.g. a cloud pull that finished late", async () => {
+    const { result } = renderHook(() => useBudget())
+    await waitFor(() => expect(result.current.salaries).toEqual([]))
+
+    // Trang Cài đặt đã unmount nhưng lần ghi của "Tải xuống" vẫn đi qua setStoredBudget (có notifyDataChanged).
+    act(() => {
+      setStoredBudget({ ...DEFAULT_BUDGET_STATE, salaries: [{ month: "2026-09", amount: 20_000_000 }] })
+    })
+
+    expect(result.current.salaries).toEqual([{ month: "2026-09", amount: 20_000_000 }])
   })
 })

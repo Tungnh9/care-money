@@ -5,7 +5,14 @@ import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 import { applySavingsFundDelta } from "@/features/finance/finance-storage"
 import { nextId } from "@/lib/next-id"
-import { DEFAULT_BUDGET_STATE, getStoredBudget, setStoredBudget, type BudgetState } from "../budget-storage"
+import { useStorageSync } from "@/lib/use-storage-sync"
+import {
+  BUDGET_STORAGE_KEY,
+  DEFAULT_BUDGET_STATE,
+  getStoredBudget,
+  setStoredBudget,
+  type BudgetState,
+} from "../budget-storage"
 import type { Expense, Settlement, SettlementDirection } from "../types"
 
 interface AddExpenseInput {
@@ -30,66 +37,77 @@ function useBudget() {
     setState(getStoredBudget())
   }, [])
 
+  // Tab khác thêm khoản chi, hay 1 lần tải xuống/nhập file ghi budget-data sau khi trang này đã mở.
+  const reload = useCallback(() => setState(getStoredBudget()), [])
+  useStorageSync(BUDGET_STORAGE_KEY, reload)
+
   const persist = useCallback((next: BudgetState) => {
     setStoredBudget(next)
     setState(next)
   }, [])
 
+  // Mọi thao tác ghi dựng từ getStoredBudget() đọc tươi, không từ `state` trong closure — kể cả
+  // nextId, để khoản chi mới không trùng id với khoản tab khác vừa thêm.
+
   const setSalary = useCallback(
     (month: string, amount: number) => {
+      const current = getStoredBudget()
       try {
-        const exists = state.salaries.some((s) => s.month === month)
+        const exists = current.salaries.some((s) => s.month === month)
         persist({
-          ...state,
+          ...current,
           salaries: exists
-            ? state.salaries.map((s) => (s.month === month ? { ...s, amount } : s))
-            : [...state.salaries, { month, amount }],
+            ? current.salaries.map((s) => (s.month === month ? { ...s, amount } : s))
+            : [...current.salaries, { month, amount }],
         })
         toast.success(`Đã lưu lương tháng ${month}`)
       } catch {
         toast.error("Không thể lưu lương. Vui lòng thử lại.")
       }
     },
-    [state, persist]
+    [persist]
   )
 
   const addExpense = useCallback(
     (input: AddExpenseInput) => {
+      const current = getStoredBudget()
       try {
-        const expense: Expense = { ...input, id: nextId(state.expenses) }
-        persist({ ...state, expenses: [expense, ...state.expenses] })
+        const expense: Expense = { ...input, id: nextId(current.expenses) }
+        persist({ ...current, expenses: [expense, ...current.expenses] })
       } catch {
         toast.error("Không thể ghi khoản chi. Vui lòng thử lại.")
       }
     },
-    [state, persist]
+    [persist]
   )
 
   const updateExpense = useCallback(
     (id: number, input: UpdateExpenseInput) => {
+      const current = getStoredBudget()
       try {
         persist({
-          ...state,
-          expenses: state.expenses.map((e) => (e.id === id ? { ...e, ...input } : e)),
+          ...current,
+          expenses: current.expenses.map((e) => (e.id === id ? { ...e, ...input } : e)),
         })
         toast.success("Đã cập nhật khoản chi")
       } catch {
         toast.error("Không thể cập nhật khoản chi. Vui lòng thử lại.")
       }
     },
-    [state, persist]
+    [persist]
   )
 
   const removeExpense = useCallback(
     (id: number) => {
+      const current = getStoredBudget()
       try {
-        persist({ ...state, expenses: state.expenses.filter((e) => e.id !== id) })
+        persist({ ...current, expenses: current.expenses.filter((e) => e.id !== id) })
         toast.success("Đã xoá khoản chi")
       } catch {
         toast.error("Không thể xoá khoản chi. Vui lòng thử lại.")
       }
     },
-    [state, persist]
+    [persist]
   )
 
   const confirmSettlement = useCallback(
@@ -104,9 +122,10 @@ function useBudget() {
         return
       }
 
+      const current = getStoredBudget()
       try {
         const settlement: Settlement = {
-          id: nextId(state.settlements),
+          id: nextId(current.settlements),
           month,
           at: new Date().toISOString(),
           direction,
@@ -115,13 +134,13 @@ function useBudget() {
           fundAmountBefore: result.before,
           fundAmountAfter: result.after,
         }
-        persist({ ...state, settlements: [...state.settlements, settlement] })
+        persist({ ...current, settlements: [...current.settlements, settlement] })
         toast.success("Đã tất toán tháng")
       } catch {
         toast.error("Không thể ghi lại lịch sử tất toán. Vui lòng thử lại.")
       }
     },
-    [state, persist]
+    [persist]
   )
 
   return {
