@@ -25,7 +25,11 @@ const useSettingsStore = create<SettingsStore>((set) => ({
   settings: DEFAULT_SETTINGS,
   setSettings: (next) => {
     setStoredSettings(next)
-    set({ settings: next })
+    // Nạp lại từ storage thay vì đặt thẳng `next`: getStoredSettings() chuẩn hoá dữ liệu (vd. gộp
+    // đủ module mặc định theo đúng thứ tự khi bản nhập từ file cũ còn thiếu module) và mọi thao
+    // tác ghi bên dưới dựng từ chính bản đọc đó — store phải bằng đúng thứ chúng đọc, nếu không
+    // chỉ số hàng trên màn hình (lấy từ store) lệch với chỉ số trong storage.
+    set({ settings: getStoredSettings() })
   },
 }))
 

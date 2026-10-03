@@ -237,4 +237,28 @@ describe("useSettings", () => {
     expect(getStoredSettings().modules[0].on).toBe(false)
     expect(getStoredSettings().tags[0].on).toBe(false)
   })
+
+  it("toggles the module shown on screen after restoring a backup made before a newer module existed", async () => {
+    const { result } = renderHook(() => useSettings())
+    await waitFor(() => expect(result.current.settings).toEqual(DEFAULT_SETTINGS))
+
+    // Bản sao lưu từ trước khi có module "chitieu": thiếu 1 module so với danh sách mặc định hiện tại.
+    const olderModules = DEFAULT_SETTINGS.modules.filter((m) => m.key !== "chitieu")
+    act(() => {
+      result.current.replaceSettings({ ...DEFAULT_SETTINGS, modules: olderModules })
+    })
+
+    // Store phải bằng đúng thứ các thao tác ghi đọc ra — nếu không, chỉ số hàng trên màn hình
+    // (lấy từ store) lệch với chỉ số trong storage (đã gộp đủ module mặc định).
+    expect(result.current.settings.modules).toEqual(getStoredSettings().modules)
+
+    const nhatkyRow = result.current.settings.modules.findIndex((m) => m.key === "nhatky")
+    act(() => {
+      result.current.toggleModule(nhatkyRow)
+    })
+
+    const modules = getStoredSettings().modules
+    expect(modules.find((m) => m.key === "nhatky")?.on).toBe(false)
+    expect(modules.find((m) => m.key === "chitieu")?.on).toBe(true)
+  })
 })
