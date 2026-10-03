@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import { act, renderHook, waitFor } from "@testing-library/react"
 
-import { getCarGoalFundName } from "../../car-goal-storage"
+import { getCarGoalFundName, setCarGoalFundName } from "../../car-goal-storage"
 import { useCarGoalFund } from "../../hooks/use-car-goal-fund"
 
 describe("useCarGoalFund", () => {
@@ -41,5 +41,29 @@ describe("useCarGoalFund", () => {
 
     expect(result.current.fundName).toBeNull()
     expect(getCarGoalFundName()).toBeNull()
+  })
+
+  it("follows a link changed elsewhere in this tab, e.g. a fund rename on the Tài chính page", async () => {
+    const { result } = renderHook(() => useCarGoalFund())
+    await waitFor(() => expect(result.current.fundName).toBeNull())
+
+    act(() => {
+      setCarGoalFundName("Quỹ mua xe")
+    })
+
+    expect(result.current.fundName).toBe("Quỹ mua xe")
+  })
+
+  it("follows a link another tab removed", async () => {
+    window.localStorage.setItem("car-goal-fund-name", "Quỹ cũ")
+    const { result } = renderHook(() => useCarGoalFund())
+    await waitFor(() => expect(result.current.fundName).toBe("Quỹ cũ"))
+
+    act(() => {
+      window.localStorage.removeItem("car-goal-fund-name")
+      window.dispatchEvent(new StorageEvent("storage", { key: "car-goal-fund-name" }))
+    })
+
+    expect(result.current.fundName).toBeNull()
   })
 })

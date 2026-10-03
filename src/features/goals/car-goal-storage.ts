@@ -16,4 +16,4 @@ function setCarGoalFundName(name: string | null) {
   notifyDataChanged()
 }
 
-export { getCarGoalFundName, setCarGoalFundName }
+export { CAR_GOAL_FUND_KEY, getCarGoalFundName, setCarGoalFundName }

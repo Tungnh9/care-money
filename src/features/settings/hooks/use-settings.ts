@@ -5,6 +5,7 @@ import { create } from "zustand"
 
 import {
   DEFAULT_SETTINGS,
+  SETTINGS_STORAGE_KEY,
   TINT_PALETTE,
   getStoredSettings,
   setStoredSettings,
@@ -12,6 +13,7 @@ import {
   type Mood,
   type Profile,
 } from "@/lib/settings-storage"
+import { useStorageSync } from "@/lib/use-storage-sync"
 import { toast } from "sonner"
 
 interface SettingsStore {
@@ -27,6 +29,12 @@ const useSettingsStore = create<SettingsStore>((set) => ({
   },
 }))
 
+// Hàm cấp module (không phải closure) nên luôn ổn định — useStorageSync không phải đăng ký lại
+// mỗi lần render. Chỉ đọc storage rồi nạp vào store dùng chung, không ghi gì.
+function reloadSettingsFromStorage() {
+  useSettingsStore.setState({ settings: getStoredSettings() })
+}
+
 function useSettings() {
   const settings = useSettingsStore((s) => s.settings)
   const setSettings = useSettingsStore((s) => s.setSettings)
@@ -35,80 +43,93 @@ function useSettings() {
     // localStorage không có lúc SSR, chỉ đọc được thật sau khi mount trên client.
     // Không gate "chỉ hydrate 1 lần": mỗi component mount (sidebar, settings,
     // tổng quan...) đều tự đồng bộ store dùng chung theo giá trị mới nhất.
-    useSettingsStore.setState({ settings: getStoredSettings() })
+    reloadSettingsFromStorage()
   }, [])
+
+  // Tab khác đổi cài đặt (hay 1 lần nhập file/tải xuống) → nạp lại store dùng chung.
+  useStorageSync(SETTINGS_STORAGE_KEY, reloadSettingsFromStorage)
 
   const persist = useCallback((next: AppSettings) => setSettings(next), [setSettings])
 
+  // Mọi thao tác ghi dựng từ getStoredSettings() đọc tươi, không từ `settings` của lần render
+  // hiện tại — tab khác có thể vừa đổi module/mood/nhãn mà tab này chưa kịp nhận sự kiện.
+
   const updateProfile = useCallback(
     (profile: Partial<Profile>) => {
-      persist({ ...settings, profile: { ...settings.profile, ...profile } })
+      const current = getStoredSettings()
+      persist({ ...current, profile: { ...current.profile, ...profile } })
     },
-    [settings, persist]
+    [persist]
   )
 
   const toggleModule = useCallback(
     (index: number) => {
+      const current = getStoredSettings()
       persist({
-        ...settings,
-        modules: settings.modules.map((m, i) => (i === index ? { ...m, on: !m.on } : m)),
+        ...current,
+        modules: current.modules.map((m, i) => (i === index ? { ...m, on: !m.on } : m)),
       })
     },
-    [settings, persist]
+    [persist]
   )
 
   const toggleMood = useCallback(
     (index: number) => {
+      const current = getStoredSettings()
       persist({
-        ...settings,
-        moods: settings.moods.map((m, i) => (i === index ? { ...m, on: !m.on } : m)),
+        ...current,
+        moods: current.moods.map((m, i) => (i === index ? { ...m, on: !m.on } : m)),
       })
     },
-    [settings, persist]
+    [persist]
   )
 
   const removeMood = useCallback(
     (index: number) => {
-      const label = settings.moods[index]?.label
+      const current = getStoredSettings()
+      const label = current.moods[index]?.label
       try {
-        persist({ ...settings, moods: settings.moods.filter((_, i) => i !== index) })
+        persist({ ...current, moods: current.moods.filter((_, i) => i !== index) })
         toast.success(label ? `Đã xoá tâm trạng "${label}"` : "Đã xoá tâm trạng")
       } catch {
         toast.error("Không thể xoá tâm trạng. Vui lòng thử lại.")
       }
     },
-    [settings, persist]
+    [persist]
   )
 
   const addMood = useCallback(
     (mood: Omit<Mood, "tint" | "on" | "score">) => {
+      const current = getStoredSettings()
       try {
-        const tint = TINT_PALETTE[settings.moods.length % TINT_PALETTE.length]
-        persist({ ...settings, moods: [...settings.moods, { ...mood, tint, on: true, score: 3 }] })
+        const tint = TINT_PALETTE[current.moods.length % TINT_PALETTE.length]
+        persist({ ...current, moods: [...current.moods, { ...mood, tint, on: true, score: 3 }] })
         toast.success(`Đã thêm tâm trạng "${mood.label}"`)
       } catch {
         toast.error(`Không thể thêm tâm trạng "${mood.label}". Vui lòng thử lại.`)
       }
     },
-    [settings, persist]
+    [persist]
   )
 
   const toggleTag = useCallback(
     (index: number) => {
+      const current = getStoredSettings()
       persist({
-        ...settings,
-        tags: settings.tags.map((t, i) => (i === index ? { ...t, on: !t.on } : t)),
+        ...current,
+        tags: current.tags.map((t, i) => (i === index ? { ...t, on: !t.on } : t)),
       })
     },
-    [settings, persist]
+    [persist]
   )
 
   const dismissInsight = useCallback(
     (id: string) => {
-      if (settings.dismissedInsights.includes(id)) return
-      persist({ ...settings, dismissedInsights: [...settings.dismissedInsights, id] })
+      const current = getStoredSettings()
+      if (current.dismissedInsights.includes(id)) return
+      persist({ ...current, dismissedInsights: [...current.dismissedInsights, id] })
     },
-    [settings, persist]
+    [persist]
   )
 
   return {

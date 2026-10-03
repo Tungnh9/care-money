@@ -207,4 +207,34 @@ describe("useSettings", () => {
 
     expect(result.current.settings.dismissedInsights).toEqual(["savings-forecast"])
   })
+
+  it("reloads the shared settings when another tab changes them", async () => {
+    const { result } = renderHook(() => useSettings())
+    await waitFor(() => expect(result.current.settings).toEqual(DEFAULT_SETTINGS))
+
+    act(() => {
+      window.localStorage.setItem(
+        SETTINGS_STORAGE_KEY,
+        JSON.stringify({ ...DEFAULT_SETTINGS, profile: { displayName: "Tùng", greeting: "Chào buổi sáng, Tùng" } })
+      )
+      window.dispatchEvent(new StorageEvent("storage", { key: SETTINGS_STORAGE_KEY }))
+    })
+
+    expect(result.current.settings.profile.displayName).toBe("Tùng")
+  })
+
+  it("keeps a module another tab turned off when this tab toggles a tag before it has re-read", async () => {
+    const { result } = renderHook(() => useSettings())
+    await waitFor(() => expect(result.current.settings).toEqual(DEFAULT_SETTINGS))
+
+    // Ghi thẳng, KHÔNG bắn sự kiện — khoảng hở trước khi hook kịp đọc lại.
+    const modules = DEFAULT_SETTINGS.modules.map((m, i) => (i === 0 ? { ...m, on: false } : m))
+    window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ ...DEFAULT_SETTINGS, modules }))
+    act(() => {
+      result.current.toggleTag(0)
+    })
+
+    expect(getStoredSettings().modules[0].on).toBe(false)
+    expect(getStoredSettings().tags[0].on).toBe(false)
+  })
 })
