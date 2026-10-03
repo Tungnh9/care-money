@@ -197,6 +197,49 @@ describe("useBudget — dữ liệu do nơi khác ghi", () => {
     expect(getStoredBudget().expenses.map((e) => e.id).sort((a, b) => a - b)).toEqual([1, 2])
   })
 
+  it("keeps the expense and settlement another tab saved when confirming a settlement here, with a fresh id", async () => {
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      savings: [{ name: "Quỹ A", amount: 100_000, target: 500_000 }],
+    })
+    const { result } = renderHook(() => useBudget())
+    await waitFor(() => expect(result.current.settlements).toEqual([]))
+
+    // Ghi thẳng, KHÔNG bắn sự kiện — khoảng hở trước khi hook kịp đọc lại.
+    window.localStorage.setItem(
+      BUDGET_STORAGE_KEY,
+      JSON.stringify({
+        ...DEFAULT_BUDGET_STATE,
+        expenses: [{ id: 1, dayKey: "2026-09-01", amount: 50_000, tag: null }],
+        settlements: [
+          {
+            id: 1,
+            month: "2026-08",
+            at: "2026-08-31T00:00:00.000Z",
+            direction: "deposit",
+            amount: 20_000,
+            fundName: "Quỹ A",
+            fundAmountBefore: 80_000,
+            fundAmountAfter: 100_000,
+          },
+        ],
+      })
+    )
+    act(() => {
+      result.current.confirmSettlement("2026-09", "Quỹ A", "deposit", 50_000)
+    })
+
+    const stored = getStoredBudget()
+    expect(stored.expenses.map((e) => e.id)).toEqual([1])
+    expect(stored.settlements.map((s) => s.id)).toEqual([1, 2])
+    expect(stored.settlements[1]).toMatchObject({
+      month: "2026-09",
+      fundName: "Quỹ A",
+      fundAmountBefore: 100_000,
+      fundAmountAfter: 150_000,
+    })
+  })
+
   it("shows expenses another tab added without reloading the page", async () => {
     const { result } = renderHook(() => useBudget())
     await waitFor(() => expect(result.current.expenses).toEqual([]))
