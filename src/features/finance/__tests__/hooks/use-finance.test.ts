@@ -2,7 +2,13 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { act, renderHook, waitFor } from "@testing-library/react"
 
 import { useFinance } from "../../hooks/use-finance"
-import { DEFAULT_FINANCE_STATE, FINANCE_STORAGE_KEY, getStoredFinance, setStoredFinance } from "../../finance-storage"
+import {
+  DEFAULT_FINANCE_STATE,
+  FINANCE_STORAGE_KEY,
+  applySavingsFundDelta,
+  getStoredFinance,
+  setStoredFinance,
+} from "../../finance-storage"
 import { getCarGoalFundName, setCarGoalFundName } from "@/features/goals/car-goal-storage"
 import { DEFAULT_BUDGET_STATE, getStoredBudget, setStoredBudget } from "@/features/budget/budget-storage"
 import { toast } from "sonner"
@@ -1216,5 +1222,82 @@ describe("useFinance toast notifications", () => {
     expect(toast.error).toHaveBeenCalledWith(
       'Không thể xoá "SJC" vì vẫn còn giao dịch mua vàng gắn với cửa hàng này.'
     )
+  })
+})
+
+describe("useFinance — dữ liệu do nơi khác ghi", () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it("shows a purchase another tab added and keeps it when this tab edits a store price", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.hydrated).toBe(true))
+
+    // Tab khác ghi thẳng vào localStorage, trình duyệt bắn sự kiện "storage" sang tab này.
+    act(() => {
+      window.localStorage.setItem(
+        FINANCE_STORAGE_KEY,
+        JSON.stringify({
+          ...DEFAULT_FINANCE_STATE,
+          gold: [{ id: 1, date: "10/08/2026", phan: 10, buy: 9_000_000, store: "SJC" }],
+          goldStores: [{ name: "SJC", price: "" }],
+        })
+      )
+      window.dispatchEvent(new StorageEvent("storage", { key: FINANCE_STORAGE_KEY }))
+    })
+    expect(result.current.gold).toHaveLength(1)
+
+    act(() => {
+      result.current.setGoldStorePrice("SJC", "9.100.000")
+    })
+
+    expect(getStoredFinance().gold).toHaveLength(1)
+    expect(getStoredFinance().goldStores).toEqual([{ name: "SJC", price: "9.100.000" }])
+  })
+
+  it("shows a fund deposit made by a budget settlement and keeps it when a card is paid afterwards", async () => {
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      savings: [{ name: "Quỹ A", amount: 10_000_000, target: 50_000_000 }],
+      cards: [{ name: "Thẻ A", balance: 2_000_000, min: 200_000, limit: 10_000_000, due: "15" }],
+    })
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.savings).toHaveLength(1))
+
+    // Trang Chi tiêu tất toán tháng: applySavingsFundDelta ghi thẳng finance-data.
+    act(() => {
+      applySavingsFundDelta("Quỹ A", "deposit", 2_000_000)
+    })
+    expect(result.current.savings[0].amount).toBe(12_000_000)
+
+    act(() => {
+      result.current.payCard("Thẻ A", 500_000)
+    })
+
+    expect(getStoredFinance().savings[0].amount).toBe(12_000_000)
+    expect(getStoredFinance().cards[0].balance).toBe(1_500_000)
+  })
+
+  it("builds each write from the latest stored data, even before it has re-read", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.hydrated).toBe(true))
+
+    // Ghi thẳng, KHÔNG bắn sự kiện — mô phỏng khoảng hở trước khi hook kịp đọc lại.
+    window.localStorage.setItem(
+      FINANCE_STORAGE_KEY,
+      JSON.stringify({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ tab khác", amount: 1, target: 2 }] })
+    )
+    act(() => {
+      result.current.addCard({ name: "Thẻ A", balance: 1, min: 1, limit: 1, due: "1" })
+    })
+
+    expect(getStoredFinance().savings).toEqual([{ name: "Quỹ tab khác", amount: 1, target: 2 }])
+    expect(getStoredFinance().cards).toHaveLength(1)
   })
 })

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 
 import {
   DEFAULT_FINANCE_STATE,
+  FINANCE_STORAGE_KEY,
   getStoredFinance,
   setStoredFinance,
   type FinanceState,
@@ -13,6 +14,7 @@ import { toast } from "sonner"
 import { getCarGoalFundName, setCarGoalFundName } from "@/features/goals/car-goal-storage"
 import { renameFundInSettlements } from "@/features/budget/budget-storage"
 import { nextId } from "@/lib/next-id"
+import { useStorageSync } from "@/lib/use-storage-sync"
 
 function useFinance() {
   const [state, setState] = useState<FinanceState>(DEFAULT_FINANCE_STATE)
@@ -25,29 +27,40 @@ function useFinance() {
     setHydrated(true)
   }, [])
 
+  // Tab khác, 1 lần tải xuống/nhập file vừa xong, hay applySavingsFundDelta (tất toán ngân sách)
+  // ghi finance-data → đọc lại để màn hình không hiện số dư cũ.
+  const reload = useCallback(() => setState(getStoredFinance()), [])
+  useStorageSync(FINANCE_STORAGE_KEY, reload)
+
   const persist = useCallback((next: FinanceState) => {
     setStoredFinance(next)
     setState(next)
   }, [])
 
+  // Mọi thao tác ghi bên dưới dựng từ getStoredFinance() đọc TƯƠI ngay lúc gọi (đúng cách
+  // applySavingsFundDelta vẫn làm), không từ `state` trong closure: giữa 2 lần render, 1 tab khác
+  // hay 1 lần tất toán ngân sách có thể vừa ghi finance-data — dựng từ bản cũ sẽ ghi đè mất nó.
+
   const addSavingsFund = useCallback(
     (fund: SavingsFund) => {
+      const current = getStoredFinance()
       try {
-        persist({ ...state, savings: [...state.savings, fund] })
+        persist({ ...current, savings: [...current.savings, fund] })
         toast.success(`Đã thêm quỹ tiết kiệm "${fund.name}"`)
       } catch {
         toast.error(`Không thể thêm quỹ tiết kiệm "${fund.name}". Vui lòng thử lại.`)
       }
     },
-    [state, persist]
+    [persist]
   )
 
   const updateSavingsFund = useCallback(
     (originalName: string, fund: SavingsFund) => {
+      const current = getStoredFinance()
       try {
         persist({
-          ...state,
-          savings: state.savings.map((f) => (f.name === originalName ? fund : f)),
+          ...current,
+          savings: current.savings.map((f) => (f.name === originalName ? fund : f)),
         })
         // Mục tiêu "mua xe" link theo tên quỹ (không có id) — đổi tên quỹ đang link
         // thì phải đổi luôn tên lưu ở car-goal-storage, nếu không link sẽ bị mồ côi.
@@ -64,39 +77,42 @@ function useFinance() {
         toast.error(`Không thể cập nhật quỹ tiết kiệm "${fund.name}". Vui lòng thử lại.`)
       }
     },
-    [state, persist]
+    [persist]
   )
 
   const removeSavingsFund = useCallback(
     (name: string) => {
+      const current = getStoredFinance()
       try {
-        persist({ ...state, savings: state.savings.filter((f) => f.name !== name) })
+        persist({ ...current, savings: current.savings.filter((f) => f.name !== name) })
         toast.success(`Đã xoá quỹ tiết kiệm "${name}"`)
       } catch {
         toast.error(`Không thể xoá quỹ tiết kiệm "${name}". Vui lòng thử lại.`)
       }
     },
-    [state, persist]
+    [persist]
   )
 
   const addCard = useCallback(
     (card: CreditCard) => {
+      const current = getStoredFinance()
       try {
-        persist({ ...state, cards: [...state.cards, card] })
+        persist({ ...current, cards: [...current.cards, card] })
         toast.success(`Đã thêm thẻ tín dụng "${card.name}"`)
       } catch {
         toast.error(`Không thể thêm thẻ tín dụng "${card.name}". Vui lòng thử lại.`)
       }
     },
-    [state, persist]
+    [persist]
   )
 
   const payCard = useCallback(
     (name: string, amount: number) => {
+      const current = getStoredFinance()
       try {
         persist({
-          ...state,
-          cards: state.cards.map((card) =>
+          ...current,
+          cards: current.cards.map((card) =>
             card.name === name ? { ...card, balance: Math.max(card.balance - amount, 0) } : card
           ),
         })
@@ -105,189 +121,201 @@ function useFinance() {
         toast.error("Không thể ghi nhận thanh toán. Vui lòng thử lại.")
       }
     },
-    [state, persist]
+    [persist]
   )
 
   const updateCard = useCallback(
     (originalName: string, card: CreditCard) => {
+      const current = getStoredFinance()
       try {
         persist({
-          ...state,
-          cards: state.cards.map((c) => (c.name === originalName ? card : c)),
+          ...current,
+          cards: current.cards.map((c) => (c.name === originalName ? card : c)),
         })
         toast.success(`Đã cập nhật thẻ tín dụng "${card.name}"`)
       } catch {
         toast.error(`Không thể cập nhật thẻ tín dụng "${card.name}". Vui lòng thử lại.`)
       }
     },
-    [state, persist]
+    [persist]
   )
 
   const removeCard = useCallback(
     (name: string) => {
+      const current = getStoredFinance()
       try {
-        persist({ ...state, cards: state.cards.filter((c) => c.name !== name) })
+        persist({ ...current, cards: current.cards.filter((c) => c.name !== name) })
         toast.success(`Đã xoá thẻ tín dụng "${name}"`)
       } catch {
         toast.error(`Không thể xoá thẻ tín dụng "${name}". Vui lòng thử lại.`)
       }
     },
-    [state, persist]
+    [persist]
   )
 
   const addGoldStore = useCallback(
     (store: GoldStore) => {
-      if (state.goldStores.some((s) => s.name === store.name)) {
+      const current = getStoredFinance()
+      if (current.goldStores.some((s) => s.name === store.name)) {
         toast.error(`Đã có cửa hàng tên "${store.name}". Vui lòng chọn tên khác.`)
         return
       }
       try {
-        persist({ ...state, goldStores: [...state.goldStores, store] })
+        persist({ ...current, goldStores: [...current.goldStores, store] })
         toast.success(`Đã thêm cửa hàng "${store.name}"`)
       } catch {
         toast.error(`Không thể thêm cửa hàng "${store.name}". Vui lòng thử lại.`)
       }
     },
-    [state, persist]
+    [persist]
   )
 
   const setGoldStorePrice = useCallback(
     (name: string, price: string) => {
+      const current = getStoredFinance()
       // Gõ trực tiếp từng phím, không phải submit 1 lần — không toast để tránh spam,
       // chỉ chặn throw khi ghi storage lỗi (khác payCard/updateCard là hành động rời rạc).
       try {
         persist({
-          ...state,
-          goldStores: state.goldStores.map((s) => (s.name === name ? { ...s, price } : s)),
+          ...current,
+          goldStores: current.goldStores.map((s) => (s.name === name ? { ...s, price } : s)),
         })
       } catch {
         // im lặng bỏ qua, giữ nguyên giá trị hiển thị cũ
       }
     },
-    [state, persist]
+    [persist]
   )
 
   const updateGoldStore = useCallback(
     (originalName: string, store: GoldStore) => {
-      if (store.name !== originalName && state.goldStores.some((s) => s.name === store.name)) {
+      const current = getStoredFinance()
+      if (store.name !== originalName && current.goldStores.some((s) => s.name === store.name)) {
         toast.error(`Đã có cửa hàng tên "${store.name}". Vui lòng chọn tên khác.`)
         return
       }
       try {
         persist({
-          ...state,
-          goldStores: state.goldStores.map((s) => (s.name === originalName ? store : s)),
+          ...current,
+          goldStores: current.goldStores.map((s) => (s.name === originalName ? store : s)),
           // Purchase tham chiếu cửa hàng theo tên (sống, không snapshot) — đổi tên phải
           // cascade luôn, nếu không sẽ mồ côi giống bug car-goal-fund đã fix trước đó.
           gold:
             store.name !== originalName
-              ? state.gold.map((p) => (p.store === originalName ? { ...p, store: store.name } : p))
-              : state.gold,
+              ? current.gold.map((p) => (p.store === originalName ? { ...p, store: store.name } : p))
+              : current.gold,
         })
         toast.success(`Đã cập nhật cửa hàng "${store.name}"`)
       } catch {
         toast.error(`Không thể cập nhật cửa hàng "${store.name}". Vui lòng thử lại.`)
       }
     },
-    [state, persist]
+    [persist]
   )
 
   const removeGoldStore = useCallback(
     (name: string) => {
+      const current = getStoredFinance()
       // Chặn xoá khi còn purchase tham chiếu — không cascade-xoá purchase hay âm thầm
       // gán lại cửa hàng khác, tránh lặp lại lớp bug "orphan reference" theo hướng ngược.
-      if (state.gold.some((p) => p.store === name)) {
+      if (current.gold.some((p) => p.store === name)) {
         toast.error(`Không thể xoá "${name}" vì vẫn còn giao dịch mua vàng gắn với cửa hàng này.`)
         return
       }
       try {
-        persist({ ...state, goldStores: state.goldStores.filter((s) => s.name !== name) })
+        persist({ ...current, goldStores: current.goldStores.filter((s) => s.name !== name) })
         toast.success(`Đã xoá cửa hàng "${name}"`)
       } catch {
         toast.error(`Không thể xoá cửa hàng "${name}". Vui lòng thử lại.`)
       }
     },
-    [state, persist]
+    [persist]
   )
 
   const addGold = useCallback(
     (purchase: Omit<GoldPurchase, "id">) => {
+      const current = getStoredFinance()
       try {
-        persist({ ...state, gold: [{ ...purchase, id: nextId(state.gold) }, ...state.gold] })
+        persist({ ...current, gold: [{ ...purchase, id: nextId(current.gold) }, ...current.gold] })
         toast.success(`Đã thêm lần mua vàng ngày ${purchase.date}`)
       } catch {
         toast.error("Không thể thêm lần mua vàng. Vui lòng thử lại.")
       }
     },
-    [state, persist]
+    [persist]
   )
 
   const updateGold = useCallback(
     (id: number, purchase: Omit<GoldPurchase, "id">) => {
+      const current = getStoredFinance()
       try {
         persist({
-          ...state,
-          gold: state.gold.map((p) => (p.id === id ? { ...purchase, id } : p)),
+          ...current,
+          gold: current.gold.map((p) => (p.id === id ? { ...purchase, id } : p)),
         })
         toast.success(`Đã cập nhật giao dịch vàng ngày ${purchase.date}`)
       } catch {
         toast.error("Không thể cập nhật giao dịch vàng. Vui lòng thử lại.")
       }
     },
-    [state, persist]
+    [persist]
   )
 
   const removeGold = useCallback(
     (id: number) => {
-      const date = state.gold.find((purchase) => purchase.id === id)?.date
+      const current = getStoredFinance()
+      const date = current.gold.find((purchase) => purchase.id === id)?.date
       try {
-        persist({ ...state, gold: state.gold.filter((purchase) => purchase.id !== id) })
+        persist({ ...current, gold: current.gold.filter((purchase) => purchase.id !== id) })
         toast.success(date ? `Đã xoá giao dịch vàng ngày ${date}` : "Đã xoá giao dịch vàng")
       } catch {
         toast.error("Không thể xoá giao dịch vàng. Vui lòng thử lại.")
       }
     },
-    [state, persist]
+    [persist]
   )
 
   const addInvest = useCallback(
     (invest: Omit<Investment, "id">) => {
+      const current = getStoredFinance()
       try {
-        persist({ ...state, invests: [...state.invests, { ...invest, id: nextId(state.invests) }] })
+        persist({ ...current, invests: [...current.invests, { ...invest, id: nextId(current.invests) }] })
         toast.success(`Đã thêm khoản đầu tư "${invest.name}"`)
       } catch {
         toast.error("Không thể thêm khoản đầu tư. Vui lòng thử lại.")
       }
     },
-    [state, persist]
+    [persist]
   )
 
   const updateInvest = useCallback(
     (id: number, invest: Omit<Investment, "id">) => {
+      const current = getStoredFinance()
       try {
         persist({
-          ...state,
-          invests: state.invests.map((i) => (i.id === id ? { ...invest, id } : i)),
+          ...current,
+          invests: current.invests.map((i) => (i.id === id ? { ...invest, id } : i)),
         })
         toast.success(`Đã cập nhật khoản đầu tư "${invest.name}"`)
       } catch {
         toast.error("Không thể cập nhật khoản đầu tư. Vui lòng thử lại.")
       }
     },
-    [state, persist]
+    [persist]
   )
 
   const removeInvest = useCallback(
     (id: number) => {
-      const name = state.invests.find((i) => i.id === id)?.name
+      const current = getStoredFinance()
+      const name = current.invests.find((i) => i.id === id)?.name
       try {
-        persist({ ...state, invests: state.invests.filter((i) => i.id !== id) })
+        persist({ ...current, invests: current.invests.filter((i) => i.id !== id) })
         toast.success(name ? `Đã xoá khoản đầu tư "${name}"` : "Đã xoá khoản đầu tư")
       } catch {
         toast.error("Không thể xoá khoản đầu tư. Vui lòng thử lại.")
       }
     },
-    [state, persist]
+    [persist]
   )
 
   return {
