@@ -1438,6 +1438,21 @@ describe("useFinance — liên kết mục tiêu mua xe khi xoá/tạo quỹ", (
     expect(getCarGoalFundName()).toBeNull()
   })
 
+  it("addSavingsFund refuses a name the linked fund already has and leaves the car-goal link alone", async () => {
+    // Bị chặn vì trùng tên quỹ ĐANG tồn tại — khác liên kết mồ côi ở trên: việc gỡ liên kết chỉ được
+    // chạy sau khi qua chốt chặn trùng tên, không thì 1 lần thêm bị từ chối vẫn làm mất liên kết thật.
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ mua xe", amount: 1, target: 2 }] })
+    setCarGoalFundName("Quỹ mua xe")
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.savings).toHaveLength(1))
+
+    act(() => result.current.addSavingsFund({ name: "Quỹ mua xe", amount: 9, target: 9 }))
+
+    expect(result.current.savings).toEqual([{ name: "Quỹ mua xe", amount: 1, target: 2 }])
+    expect(getStoredFinance().savings).toEqual([{ name: "Quỹ mua xe", amount: 1, target: 2 }])
+    expect(getCarGoalFundName()).toBe("Quỹ mua xe")
+  })
+
   it("updateSavingsFund does not let a renamed fund inherit a car-goal link left over from a deleted fund", async () => {
     setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ khác", amount: 1, target: 2 }] })
     setCarGoalFundName("Quỹ mua xe")
@@ -1447,6 +1462,25 @@ describe("useFinance — liên kết mục tiêu mua xe khi xoá/tạo quỹ", (
     act(() => result.current.updateSavingsFund("Quỹ khác", { name: "Quỹ mua xe", amount: 1, target: 2 }))
 
     expect(getCarGoalFundName()).toBeNull()
+  })
+
+  it("updateSavingsFund refuses to rename onto the linked fund's name and leaves the car-goal link alone", async () => {
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      savings: [
+        { name: "Quỹ mua xe", amount: 1, target: 2 },
+        { name: "Quỹ khác", amount: 3, target: 4 },
+      ],
+    })
+    setCarGoalFundName("Quỹ mua xe")
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.savings).toHaveLength(2))
+
+    act(() => result.current.updateSavingsFund("Quỹ khác", { name: "Quỹ mua xe", amount: 3, target: 4 }))
+
+    expect(result.current.savings.map((f) => f.name)).toEqual(["Quỹ mua xe", "Quỹ khác"])
+    expect(getStoredFinance().savings.map((f) => f.name)).toEqual(["Quỹ mua xe", "Quỹ khác"])
+    expect(getCarGoalFundName()).toBe("Quỹ mua xe")
   })
 
   it("addSavingsFund keeps a car-goal link that points at an existing fund", async () => {
