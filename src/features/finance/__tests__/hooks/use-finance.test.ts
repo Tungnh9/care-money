@@ -84,13 +84,14 @@ describe("useFinance", () => {
   })
 
   it("updateSavingsFund keeps the car-goal link pointed at the fund when it's renamed", async () => {
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      savings: [{ name: "Quỹ dự phòng", amount: 5_000_000, target: 20_000_000 }],
+    })
     setCarGoalFundName("Quỹ dự phòng")
     const { result } = renderHook(() => useFinance())
-    await waitFor(() => expect(result.current.savings).toEqual([]))
+    await waitFor(() => expect(result.current.savings).toHaveLength(1))
 
-    act(() => {
-      result.current.addSavingsFund({ name: "Quỹ dự phòng", amount: 5_000_000, target: 20_000_000 })
-    })
     act(() => {
       result.current.updateSavingsFund("Quỹ dự phòng", {
         name: "Quỹ khẩn cấp",
@@ -1385,5 +1386,90 @@ describe("useFinance — tên quỹ và thẻ không được trùng", () => {
       ["Master", 3],
     ])
     expect(toast.error).toHaveBeenCalledWith('Đã có thẻ tín dụng tên "Visa". Vui lòng chọn tên khác.')
+  })
+})
+
+describe("useFinance — liên kết mục tiêu mua xe khi xoá/tạo quỹ", () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it("removeSavingsFund unlinks the car goal from the deleted fund", async () => {
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ mua xe", amount: 1, target: 2 }] })
+    setCarGoalFundName("Quỹ mua xe")
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.savings).toHaveLength(1))
+
+    act(() => result.current.removeSavingsFund("Quỹ mua xe"))
+
+    expect(getCarGoalFundName()).toBeNull()
+  })
+
+  it("removeSavingsFund leaves the car-goal link alone when deleting another fund", async () => {
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      savings: [
+        { name: "Quỹ mua xe", amount: 1, target: 2 },
+        { name: "Quỹ khác", amount: 1, target: 2 },
+      ],
+    })
+    setCarGoalFundName("Quỹ mua xe")
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.savings).toHaveLength(2))
+
+    act(() => result.current.removeSavingsFund("Quỹ khác"))
+
+    expect(getCarGoalFundName()).toBe("Quỹ mua xe")
+  })
+
+  it("addSavingsFund does not let a new fund inherit a car-goal link left over from a deleted fund", async () => {
+    // Liên kết mồ côi: quỹ "Quỹ mua xe" đã bị xoá từ trước bản sửa này (hay đến từ 1 file sao lưu cũ).
+    setCarGoalFundName("Quỹ mua xe")
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.hydrated).toBe(true))
+
+    act(() => result.current.addSavingsFund({ name: "Quỹ mua xe", amount: 1, target: 2 }))
+
+    expect(getCarGoalFundName()).toBeNull()
+  })
+
+  it("updateSavingsFund does not let a renamed fund inherit a car-goal link left over from a deleted fund", async () => {
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ khác", amount: 1, target: 2 }] })
+    setCarGoalFundName("Quỹ mua xe")
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.savings).toHaveLength(1))
+
+    act(() => result.current.updateSavingsFund("Quỹ khác", { name: "Quỹ mua xe", amount: 1, target: 2 }))
+
+    expect(getCarGoalFundName()).toBeNull()
+  })
+
+  it("addSavingsFund keeps a car-goal link that points at an existing fund", async () => {
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ mua xe", amount: 1, target: 2 }] })
+    setCarGoalFundName("Quỹ mua xe")
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.savings).toHaveLength(1))
+
+    act(() => result.current.addSavingsFund({ name: "Quỹ khác", amount: 1, target: 2 }))
+
+    expect(getCarGoalFundName()).toBe("Quỹ mua xe")
+  })
+
+  it("updateSavingsFund keeps the car-goal link when the linked fund is updated without being renamed", async () => {
+    // Điều chỉnh số dư (modal giữ nguyên tên) là lần cập nhật quỹ thường gặp nhất — không được gỡ liên kết.
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ mua xe", amount: 1, target: 2 }] })
+    setCarGoalFundName("Quỹ mua xe")
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.savings).toHaveLength(1))
+
+    act(() => result.current.updateSavingsFund("Quỹ mua xe", { name: "Quỹ mua xe", amount: 5, target: 2 }))
+
+    expect(result.current.savings[0].amount).toBe(5)
+    expect(getCarGoalFundName()).toBe("Quỹ mua xe")
   })
 })

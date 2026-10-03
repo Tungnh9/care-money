@@ -51,6 +51,10 @@ function useFinance() {
       }
       try {
         persist({ ...current, savings: [...current.savings, fund] })
+        // Chưa quỹ nào mang tên này (vừa chặn ở trên) nên liên kết mục tiêu "mua xe" đang trỏ đúng
+        // tên này chỉ có thể là liên kết mồ côi của 1 quỹ đã xoá — gỡ đi, không để quỹ mới âm thầm
+        // bị gắn vào mục tiêu mà người dùng không hề chọn.
+        if (getCarGoalFundName() === fund.name) setCarGoalFundName(null)
         toast.success(`Đã thêm quỹ tiết kiệm "${fund.name}"`)
       } catch {
         toast.error(`Không thể thêm quỹ tiết kiệm "${fund.name}". Vui lòng thử lại.`)
@@ -75,6 +79,10 @@ function useFinance() {
         // thì phải đổi luôn tên lưu ở car-goal-storage, nếu không link sẽ bị mồ côi.
         if (fund.name !== originalName && getCarGoalFundName() === originalName) {
           setCarGoalFundName(fund.name)
+        } else if (fund.name !== originalName && getCarGoalFundName() === fund.name) {
+          // Tên mới đang bị 1 liên kết mồ côi (quỹ đã xoá từ trước) trỏ tới — gỡ, không để quỹ vừa
+          // đổi tên âm thầm bị gắn vào mục tiêu.
+          setCarGoalFundName(null)
         }
         // Lịch sử tất toán ngân sách cũng tham chiếu quỹ theo tên — cascade tương tự
         // để lịch sử vẫn hiển thị đúng tên hiện tại của quỹ.
@@ -94,6 +102,10 @@ function useFinance() {
       const current = getStoredFinance()
       try {
         persist({ ...current, savings: current.savings.filter((f) => f.name !== name) })
+        // Mục tiêu "mua xe" đang gắn đúng quỹ này thì gỡ luôn — nếu không, 1 quỹ tạo sau trùng tên
+        // sẽ âm thầm bị gắn vào mục tiêu (đổi tên đã cascade tương tự ở updateSavingsFund).
+        // Settlement giữ nguyên tên cũ: chỉ là lịch sử đã đóng băng (xem budget-storage.ts).
+        if (getCarGoalFundName() === name) setCarGoalFundName(null)
         toast.success(`Đã xoá quỹ tiết kiệm "${name}"`)
       } catch {
         toast.error(`Không thể xoá quỹ tiết kiệm "${name}". Vui lòng thử lại.`)
