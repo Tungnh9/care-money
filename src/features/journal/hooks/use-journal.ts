@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useState } from "react"
 
 import { toast } from "sonner"
+import { useStorageSync } from "@/lib/use-storage-sync"
 import {
   DEFAULT_JOURNAL_STATE,
+  JOURNAL_STORAGE_KEY,
   getStoredJournal,
   setStoredJournal,
   type JournalState,
@@ -26,10 +28,17 @@ function useJournal() {
     setState(getStoredJournal())
   }, [])
 
+  // Bài lưu ở tab khác (hay từ 1 lần nhập file/tải xuống) hiện ra ngay, không đợi tải lại trang.
+  const reload = useCallback(() => setState(getStoredJournal()), [])
+  useStorageSync(JOURNAL_STORAGE_KEY, reload)
+
   const persist = useCallback((next: JournalState) => {
     setStoredJournal(next)
     setState(next)
   }, [])
+
+  // Lưu/sửa/xoá đều dựng từ getStoredJournal() đọc tươi — nếu dựng từ `state` đã tải lúc mở trang,
+  // bài vừa lưu ở tab khác sẽ bị ghi đè mất, mà bài nhật ký thì không viết lại được.
 
   const saveEntry = useCallback(
     (input: SaveEntryInput): JournalEntry | null => {
@@ -43,23 +52,25 @@ function useJournal() {
         mood: input.mood,
       }
 
+      const current = getStoredJournal()
       try {
-        persist({ entries: [entry, ...state.entries] })
+        persist({ entries: [entry, ...current.entries] })
         return entry
       } catch {
         toast.error("Không thể lưu bài viết. Vui lòng thử lại.")
         return null
       }
     },
-    [state, persist]
+    [persist]
   )
 
   const updateEntry = useCallback(
     (id: number, input: SaveEntryInput) => {
+      const current = getStoredJournal()
       try {
         persist({
-          ...state,
-          entries: state.entries.map((entry) =>
+          ...current,
+          entries: current.entries.map((entry) =>
             entry.id === id
               ? { ...entry, text: input.text, words: input.words, mood: input.mood }
               : entry
@@ -70,19 +81,20 @@ function useJournal() {
         toast.error("Không thể cập nhật bài viết. Vui lòng thử lại.")
       }
     },
-    [state, persist]
+    [persist]
   )
 
   const deleteEntry = useCallback(
     (id: number) => {
+      const current = getStoredJournal()
       try {
-        persist({ ...state, entries: state.entries.filter((entry) => entry.id !== id) })
+        persist({ ...current, entries: current.entries.filter((entry) => entry.id !== id) })
         toast.success("Đã xoá bài viết")
       } catch {
         toast.error("Không thể xoá bài viết. Vui lòng thử lại.")
       }
     },
-    [state, persist]
+    [persist]
   )
 
   return {

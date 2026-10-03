@@ -246,4 +246,36 @@ describe("useJournal", () => {
 
     setItemSpy.mockRestore()
   })
+
+  it("keeps an entry saved in another tab when saving one here", async () => {
+    vi.setSystemTime(new Date(2026, 7, 10, 9, 30))
+    const { result } = renderHook(() => useJournal())
+    await waitFor(() => expect(result.current.entries).toEqual([]))
+
+    // Ghi thẳng, KHÔNG bắn sự kiện — khoảng hở trước khi hook kịp đọc lại.
+    window.localStorage.setItem(
+      JOURNAL_STORAGE_KEY,
+      JSON.stringify({ entries: [{ id: 1, text: "Bài tab B", time: "09:00", date: "10/08", words: 3, mood: null }] })
+    )
+    act(() => {
+      result.current.saveEntry({ text: "Bài tab A", words: 3, mood: null })
+    })
+
+    expect(getStoredJournal().entries.map((e) => e.text)).toEqual(["Bài tab A", "Bài tab B"])
+  })
+
+  it("shows an entry saved in another tab without reloading the page", async () => {
+    const { result } = renderHook(() => useJournal())
+    await waitFor(() => expect(result.current.entries).toEqual([]))
+
+    act(() => {
+      window.localStorage.setItem(
+        JOURNAL_STORAGE_KEY,
+        JSON.stringify({ entries: [{ id: 1, text: "Bài tab B", time: "09:00", date: "10/08", words: 3, mood: null }] })
+      )
+      window.dispatchEvent(new StorageEvent("storage", { key: JOURNAL_STORAGE_KEY }))
+    })
+
+    expect(result.current.entries).toHaveLength(1)
+  })
 })
