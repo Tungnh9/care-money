@@ -13,14 +13,19 @@ interface ProfileCardProps {
 }
 
 function ProfileCard({ displayName, onSave }: ProfileCardProps) {
-  const [name, setName] = useState(displayName)
+  // null = người dùng chưa gõ gì → ô luôn hiện đúng tên đang lưu, kể cả khi tên đổi sau lúc mount
+  // (store settings hydrate xong sau lượt render đầu, nhập file, tải xuống, tab khác đổi tên).
+  // Chỉ khi đang gõ dở mới giữ bản nháp, để 1 lần nạp lại dữ liệu không xoá chữ đang gõ.
+  const [draft, setDraft] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
 
+  const name = draft ?? displayName
   const trimmed = name.trim()
   const disabled = !trimmed || trimmed === displayName
 
   function handleSave() {
     onSave(trimmed)
+    setDraft(null)
     setSaved(true)
   }
 
@@ -33,7 +38,7 @@ function ProfileCard({ displayName, onSave }: ProfileCardProps) {
         label="Tên hiển thị"
         value={name}
         onChange={(e) => {
-          setName(e.target.value)
+          setDraft(e.target.value)
           setSaved(false)
         }}
       />

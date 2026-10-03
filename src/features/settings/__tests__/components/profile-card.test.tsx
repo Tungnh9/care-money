@@ -48,4 +48,39 @@ describe("ProfileCard", () => {
 
     expect(screen.getByText("Đã lưu")).toBeInTheDocument()
   })
+
+  it("shows the saved name once it arrives after the first render (hydration, import, pull)", () => {
+    const { rerender } = render(<ProfileCard displayName="Tungnh2k1" onSave={vi.fn()} />)
+
+    rerender(<ProfileCard displayName="Tùng" onSave={vi.fn()} />)
+
+    expect(screen.getByLabelText("Tên hiển thị", { exact: false })).toHaveValue("Tùng")
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
+  })
+
+  it("keeps what the user is typing when the saved name changes underneath", () => {
+    const { rerender } = render(<ProfileCard displayName="Tùng" onSave={vi.fn()} />)
+    fireEvent.change(screen.getByLabelText("Tên hiển thị", { exact: false }), {
+      target: { value: "Tùng đang gõ" },
+    })
+
+    rerender(<ProfileCard displayName="Tên từ tab khác" onSave={vi.fn()} />)
+
+    expect(screen.getByLabelText("Tên hiển thị", { exact: false })).toHaveValue("Tùng đang gõ")
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeEnabled()
+  })
+
+  it("follows the saved name again right after saving", () => {
+    const { rerender } = render(<ProfileCard displayName="Tùng" onSave={vi.fn()} />)
+    fireEvent.change(screen.getByLabelText("Tên hiển thị", { exact: false }), {
+      target: { value: "  Tùng mới " },
+    })
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
+
+    rerender(<ProfileCard displayName="Tùng mới" onSave={vi.fn()} />)
+
+    expect(screen.getByLabelText("Tên hiển thị", { exact: false })).toHaveValue("Tùng mới")
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
+    expect(screen.getByText("Đã lưu")).toBeInTheDocument()
+  })
 })
