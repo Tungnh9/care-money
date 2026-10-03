@@ -36,6 +36,19 @@ describe("ProfileCard", () => {
     expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
   })
 
+  it("keeps the field empty and Save disabled when the user clears it completely", () => {
+    render(<ProfileCard displayName="Tungnh2k1" onSave={vi.fn()} />)
+
+    fireEvent.change(screen.getByLabelText("Tên hiển thị", { exact: false }), {
+      target: { value: "" },
+    })
+
+    // Chuỗi rỗng không được coi như "chưa gõ gì" — nếu không ô tự điền lại tên đang lưu ngay khi người
+    // dùng xoá hết chữ, không thể gõ tên mới từ đầu.
+    expect(screen.getByLabelText("Tên hiển thị", { exact: false })).toHaveValue("")
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
+  })
+
   it("shows a brief 'Đã lưu' confirmation after saving", () => {
     render(<ProfileCard displayName="Tungnh2k1" onSave={vi.fn()} />)
 
@@ -82,5 +95,20 @@ describe("ProfileCard", () => {
     expect(screen.getByLabelText("Tên hiển thị", { exact: false })).toHaveValue("Tùng mới")
     expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
     expect(screen.getByText("Đã lưu")).toBeInTheDocument()
+  })
+
+  it("keeps following the saved name after a later rename from another tab", () => {
+    const { rerender } = render(<ProfileCard displayName="Tùng" onSave={vi.fn()} />)
+    fireEvent.change(screen.getByLabelText("Tên hiển thị", { exact: false }), {
+      target: { value: "  Tùng mới " },
+    })
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
+    rerender(<ProfileCard displayName="Tùng mới" onSave={vi.fn()} />)
+
+    rerender(<ProfileCard displayName="Tên từ tab khác" onSave={vi.fn()} />)
+
+    // Sau khi lưu, bản nháp phải được bỏ (không giữ lại chữ vừa lưu) để ô vẫn theo tên đang lưu.
+    expect(screen.getByLabelText("Tên hiển thị", { exact: false })).toHaveValue("Tên từ tab khác")
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
   })
 })
