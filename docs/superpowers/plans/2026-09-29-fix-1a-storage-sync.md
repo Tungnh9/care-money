@@ -80,7 +80,7 @@ Các plan 1b, 2, 3, 4, 5, 6a, 6b chạy sau khi plan này đã merge. Mọi th�
 - `useStudy`: có `reload` cập nhật `stateRef.current` rồi `setState`; mọi mutation vẫn đọc `stateRef.current`. **Plan 3** (`area-study#4` reset nhiệm vụ mỗi ngày, `area-study#10` bỏ "đã học") phải giữ `reload` + `stateRef` đồng bộ, và KHÔNG được ghi storage từ trong `reload` (listener chỉ đọc) — việc reset theo ngày nên làm lúc parse/đọc, hoặc ở effect hydrate/mutation.
 - `useNetWorthHistory`: có `reload` cập nhật `historyRef.current` rồi `setHistory`; `recordSnapshot` vẫn đọc `historyRef`. Cơ chế chống race hydrate cũ giữ nguyên.
 - Khác biệt có chủ đích giữa 2 nhóm: `useStudy`/`useNetWorthHistory` dựng lần ghi từ ref chứ không đọc tươi storage, nên chỉ còn 1 khe vài mili-giây (tab khác vừa ghi, sự kiện `storage` chưa kịp tới tab này) — đổi sang đọc tươi sẽ phải viết lại thứ tự `persist` (hiện `setState` chạy trước `setStoredStudy`) và cơ chế ref chống race cùng tick, nằm ngoài phạm vi 1a. Plan sau nào viết lại 2 hook này thì có thể chuyển hẳn sang đọc tươi.
-- `useSettings`: thêm hàm cấp module `reloadSettingsFromStorage()` (dùng cho cả effect hydrate lẫn `useStorageSync(SETTINGS_STORAGE_KEY, reloadSettingsFromStorage)`); mọi mutation dựng từ `getStoredSettings()` đọc tươi, deps `[persist]`. **Plan 6a** (`area-settings-sync#8`, chặn mood trùng tên) kiểm trên `current.moods` của bản đọc tươi. **Plan 6b** (`area-settings-sync#11`, chuyển `useSettings` sang `src/lib/`) phải mang theo cả `reloadSettingsFromStorage`, `useStorageSync` và cách đọc tươi.
+- `useSettings`: thêm hàm cấp module `reloadSettingsFromStorage()` (dùng cho cả effect hydrate lẫn `useStorageSync(SETTINGS_STORAGE_KEY, reloadSettingsFromStorage)`); mọi mutation dựng từ `getStoredSettings()` đọc tươi, deps `[persist]`; **sau khi ghi, `setSettings` nạp store bằng `getStoredSettings()` (KHÔNG phải `set({ settings: next })`)** — bản sửa sau review cuối (commit f7b4efe): bản nhập từ sao lưu cũ có danh sách module chưa qua `mergeModules`, nếu đưa thẳng vào store thì chỉ số hàng trên màn hình lệch với danh sách mà mutation đọc, bật/tắt nhầm module. Plan sau nào sửa/di chuyển `use-settings.ts` phải giữ đúng điều này. **Plan 6a** (`area-settings-sync#8`, chặn mood trùng tên) kiểm trên `current.moods` của bản đọc tươi. **Plan 6b** (`area-settings-sync#11`, chuyển `useSettings` sang `src/lib/`) phải mang theo cả `reloadSettingsFromStorage`, `useStorageSync` và cách đọc tươi.
 - `useCarGoalFund`: đọc lại qua `useStorageSync(CAR_GOAL_FUND_KEY, reload)`; `car-goal-storage.ts` export thêm `CAR_GOAL_FUND_KEY`.
 
 **Parse/lưu trữ**
@@ -2796,6 +2796,10 @@ Chạy `npm run dev`, đăng nhập như thường. Trước khi bắt đầu, v
    - "Nợ thẻ tín dụng": làm lại 2 bước trên với tên thẻ (chưa đủ 2 thẻ thì thêm tạm 1 thẻ thử — mục 9 trả lại) → chữ đỏ "Đã có thẻ tên này — chọn tên khác".
 6. **Dữ liệu trùng tên có sẵn (file sao lưu)**
    - Mở file JSON vừa xuất, trong `finance.savings` nhân đôi 1 quỹ (copy nguyên object, giữ đúng tên) rồi sửa `"amount"` của bản sao thành `1`, lưu thành file mới. **Cài đặt → Nhập từ file** chọn file mới: ở `/finance` quỹ gốc giữ tên và số dư cũ, bản sao hiện tên "… (2)" với số dư 1 ₫; sửa/xoá quỹ "… (2)" không đụng quỹ gốc.
+6b. **Sao lưu cũ thiếu module (bản sửa sau review cuối)**
+   - Mở lại bản sao file JSON (từ mục 6, hoặc copy file gốc), trong `settings.modules` xoá nguyên object có `"key": "chitieu"`, lưu thành file mới. **Cài đặt → Nhập từ file** chọn file đó.
+   - Vẫn ở `/settings` (KHÔNG tải lại): danh sách module vẫn đủ 6 hàng, có "Chi tiêu". Tắt "Nhật ký": chỉ "Nhật ký" tắt, "Chi tiêu" vẫn bật; sidebar chỉ mất mục Nhật ký (trước bản sửa: "Chi tiêu" bị tắt thay cho "Nhật ký"). Bật lại "Nhật ký".
+
 7. **Mục tiêu mua xe khi xoá quỹ**
    - Tạo quỹ "Quỹ thử xe". `/goals` → mục tiêu mua xe → chọn "Quỹ thử xe".
    - `/finance` xoá "Quỹ thử xe". `/goals`: mục tiêu mua xe hiện "Chưa gắn quỹ tiết kiệm nào. Chọn 1 quỹ bên dưới để bắt đầu theo dõi."
