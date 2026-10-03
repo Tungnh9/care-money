@@ -72,3 +72,35 @@ describe("EditSavingsFundModal", () => {
     expect(screen.getByLabelText("Ghi chú", { exact: false })).toHaveValue("")
   })
 })
+
+describe("EditSavingsFundModal — tên quỹ trùng", () => {
+  it("disables Lưu and explains why when renaming to another fund's name", () => {
+    render(
+      <EditSavingsFundModal
+        fund={FUND}
+        existingNames={["Quỹ du lịch", "Quỹ khẩn cấp"]}
+        onOpenChange={vi.fn()}
+        onSave={vi.fn()}
+      />
+    )
+
+    fireEvent.change(screen.getByLabelText("Tên quỹ"), { target: { value: "Quỹ khẩn cấp" } })
+
+    expect(screen.getByText("Đã có quỹ tên này — chọn tên khác")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
+  })
+
+  it("still allows saving under the fund's own current name", () => {
+    render(
+      <EditSavingsFundModal
+        fund={FUND}
+        existingNames={["Quỹ du lịch", "Quỹ khẩn cấp"]}
+        onOpenChange={vi.fn()}
+        onSave={vi.fn()}
+      />
+    )
+
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeEnabled()
+    expect(screen.queryByText("Đã có quỹ tên này — chọn tên khác")).not.toBeInTheDocument()
+  })
+})

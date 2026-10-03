@@ -8,9 +8,11 @@ import type { CreditCard } from "../types"
 
 interface AddCreditCardFormProps {
   onAdd: (card: CreditCard) => void
+  // Tên các thẻ đang có — thẻ được định danh bằng tên (trả thẻ, sửa, xoá), nên chặn trùng ngay ở form.
+  existingNames?: string[]
 }
 
-function AddCreditCardForm({ onAdd }: AddCreditCardFormProps) {
+function AddCreditCardForm({ onAdd, existingNames = [] }: AddCreditCardFormProps) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState("")
   const [balance, setBalance] = useState("")
@@ -39,6 +41,8 @@ function AddCreditCardForm({ onAdd }: AddCreditCardFormProps) {
     )
   }
 
+  const duplicate = existingNames.includes(name.trim())
+
   return (
     <div className="mt-[18px] border-t border-[var(--ob-color-border)] pt-[18px]">
       <div className="mb-3 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
@@ -51,6 +55,8 @@ function AddCreditCardForm({ onAdd }: AddCreditCardFormProps) {
           placeholder="Nhập tên thẻ"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          invalid={duplicate}
+          hint={duplicate ? "Đã có thẻ tên này — chọn tên khác" : undefined}
           prefix={
             <input
               type="color"
@@ -104,7 +110,7 @@ function AddCreditCardForm({ onAdd }: AddCreditCardFormProps) {
           variant="primary"
           size="sm"
           type="button"
-          disabled={!name.trim() || !balance.trim() || !limit.trim() || !due.trim()}
+          disabled={duplicate || !name.trim() || !balance.trim() || !limit.trim() || !due.trim()}
           onClick={() => {
             onAdd({
               name: name.trim(),

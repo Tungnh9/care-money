@@ -34,6 +34,7 @@ function CreditCardsTab({
   const [payCard, setPayCard] = useState("")
   const [editingCard, setEditingCard] = useState("")
   const [deletingCard, setDeletingCard] = useState("")
+  const cardNames = cards.map((card) => card.name)
 
   function startEdit(card: CreditCard) {
     setPayCard("")
@@ -129,7 +130,7 @@ function CreditCardsTab({
           </p>
         </Card>
       </div>
-      <AddCreditCardForm onAdd={onAddCard} />
+      <AddCreditCardForm onAdd={onAddCard} existingNames={cardNames} />
       <PayCreditCardModal
         card={cards.find((c) => c.name === payCard) ?? null}
         onOpenChange={(open) => !open && setPayCard("")}
@@ -140,6 +141,7 @@ function CreditCardsTab({
       />
       <EditCreditCardModal
         card={cards.find((c) => c.name === editingCard) ?? null}
+        existingNames={cardNames}
         onOpenChange={(open) => !open && setEditingCard("")}
         onSave={(updated) => {
           if (editingCard) onUpdateCard(editingCard, updated)

@@ -86,3 +86,17 @@ describe("EditCreditCardModal", () => {
     expect(screen.getByLabelText("Tên thẻ", { exact: false })).toHaveValue("Vietcombank Visa")
   })
 })
+
+describe("EditCreditCardModal — tên thẻ trùng", () => {
+  it("blocks renaming to another card's name but still allows the card's own name", () => {
+    render(
+      <EditCreditCardModal card={CARD} existingNames={[CARD.name, "VIB"]} onOpenChange={vi.fn()} onSave={vi.fn()} />
+    )
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeEnabled()
+
+    fireEvent.change(screen.getByLabelText("Tên thẻ", { exact: false }), { target: { value: "VIB" } })
+
+    expect(screen.getByText("Đã có thẻ tên này — chọn tên khác")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
+  })
+})

@@ -448,3 +448,68 @@ describe("AddCreditCardForm", () => {
     })
   })
 })
+
+describe("CreditCardsTab — tên thẻ trùng", () => {
+  it("blocks adding a card whose name is already taken", () => {
+    const onAddCard = vi.fn()
+    render(
+      <CreditCardsTab
+        cards={[CARD]}
+        onAddCard={onAddCard}
+        onPayCard={vi.fn()}
+        onUpdateCard={vi.fn()}
+        onRemoveCard={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Thêm thẻ tín dụng" }))
+    fireEvent.change(screen.getByLabelText("Tên thẻ", { exact: false }), { target: { value: CARD.name } })
+
+    expect(screen.getByText("Đã có thẻ tên này — chọn tên khác")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Thêm" })).toBeDisabled()
+  })
+
+  it("disables Thêm for the duplicate name alone, compared after trim, once every other field is filled in", () => {
+    render(
+      <CreditCardsTab
+        cards={[CARD]}
+        onAddCard={vi.fn()}
+        onPayCard={vi.fn()}
+        onUpdateCard={vi.fn()}
+        onRemoveCard={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Thêm thẻ tín dụng" }))
+    fireEvent.change(screen.getByLabelText("Dư nợ hiện tại", { exact: false }), { target: { value: "2000000" } })
+    fireEvent.change(screen.getByLabelText("Hạn mức", { exact: false }), { target: { value: "15000000" } })
+    fireEvent.change(screen.getByLabelText("Ngày đến hạn", { exact: false }), { target: { value: "20 hàng tháng" } })
+
+    fireEvent.change(screen.getByLabelText("Tên thẻ", { exact: false }), { target: { value: `  ${CARD.name} ` } })
+    expect(screen.getByText("Đã có thẻ tên này — chọn tên khác")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Thêm" })).toBeDisabled()
+
+    fireEvent.change(screen.getByLabelText("Tên thẻ", { exact: false }), { target: { value: "VPBank Mastercard" } })
+    expect(screen.queryByText("Đã có thẻ tên này — chọn tên khác")).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Thêm" })).toBeEnabled()
+  })
+
+  it("blocks renaming a card to another card's name from the Sửa form", () => {
+    const OTHER: CreditCard = { ...CARD, name: "Vietcombank Visa" }
+    render(
+      <CreditCardsTab
+        cards={[CARD, OTHER]}
+        onAddCard={vi.fn()}
+        onPayCard={vi.fn()}
+        onUpdateCard={vi.fn()}
+        onRemoveCard={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: `Sửa thẻ ${CARD.name}` }))
+    fireEvent.change(screen.getByLabelText("Tên thẻ", { exact: false }), { target: { value: OTHER.name } })
+
+    expect(screen.getByText("Đã có thẻ tên này — chọn tên khác")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
+  })
+})

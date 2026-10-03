@@ -9,11 +9,13 @@ import type { SavingsFund } from "../types"
 
 interface EditSavingsFundModalProps {
   fund: SavingsFund | null
+  // Tên mọi quỹ đang có (tên hiện tại của chính quỹ đang sửa luôn được giữ).
+  existingNames?: string[]
   onOpenChange: (open: boolean) => void
   onSave: (fund: SavingsFund) => void
 }
 
-function EditSavingsFundModal({ fund, onOpenChange, onSave }: EditSavingsFundModalProps) {
+function EditSavingsFundModal({ fund, existingNames = [], onOpenChange, onSave }: EditSavingsFundModalProps) {
   const [name, setName] = useState("")
   const [amount, setAmount] = useState("")
   const [target, setTarget] = useState("")
@@ -33,7 +35,9 @@ function EditSavingsFundModal({ fund, onOpenChange, onSave }: EditSavingsFundMod
 
   if (!fund) return null
 
-  const disabled = !name.trim() || !amount.trim() || !target.trim()
+  const trimmedName = name.trim()
+  const duplicate = trimmedName !== fund.name && existingNames.includes(trimmedName)
+  const disabled = duplicate || !trimmedName || !amount.trim() || !target.trim()
 
   function handleSave() {
     const updated: SavingsFund = {
@@ -59,6 +63,8 @@ function EditSavingsFundModal({ fund, onOpenChange, onSave }: EditSavingsFundMod
           placeholder="vd: Quỹ khẩn cấp"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          invalid={duplicate}
+          hint={duplicate ? "Đã có quỹ tên này — chọn tên khác" : undefined}
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"

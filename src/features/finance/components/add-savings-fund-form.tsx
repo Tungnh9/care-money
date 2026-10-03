@@ -8,9 +8,12 @@ import type { SavingsFund } from "../types"
 
 interface AddSavingsFundFormProps {
   onAdd: (fund: SavingsFund) => void
+  // Tên các quỹ đang có — quỹ được định danh bằng tên (sửa, xoá, tất toán, mục tiêu mua xe), nên
+  // chặn trùng ngay ở form: nếu để hook từ chối, form vẫn reset và mất chữ người dùng đã gõ.
+  existingNames?: string[]
 }
 
-function AddSavingsFundForm({ onAdd }: AddSavingsFundFormProps) {
+function AddSavingsFundForm({ onAdd, existingNames = [] }: AddSavingsFundFormProps) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState("")
   const [amount, setAmount] = useState("")
@@ -35,6 +38,8 @@ function AddSavingsFundForm({ onAdd }: AddSavingsFundFormProps) {
     )
   }
 
+  const duplicate = existingNames.includes(name.trim())
+
   return (
     <div className="mt-[18px] border-t border-[var(--ob-color-border)] pt-[18px]">
       <div className="mb-3 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
@@ -47,6 +52,8 @@ function AddSavingsFundForm({ onAdd }: AddSavingsFundFormProps) {
           placeholder="vd: Quỹ khẩn cấp"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          invalid={duplicate}
+          hint={duplicate ? "Đã có quỹ tên này — chọn tên khác" : undefined}
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"
@@ -81,7 +88,7 @@ function AddSavingsFundForm({ onAdd }: AddSavingsFundFormProps) {
           variant="primary"
           size="sm"
           type="button"
-          disabled={!name.trim() || !amount.trim() || !target.trim()}
+          disabled={duplicate || !name.trim() || !amount.trim() || !target.trim()}
           onClick={() => {
             const fund: SavingsFund = {
               name: name.trim(),

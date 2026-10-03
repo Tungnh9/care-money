@@ -9,11 +9,13 @@ import type { CreditCard } from "../types"
 
 interface EditCreditCardModalProps {
   card: CreditCard | null
+  // Tên mọi thẻ đang có (tên hiện tại của chính thẻ đang sửa luôn được giữ).
+  existingNames?: string[]
   onOpenChange: (open: boolean) => void
   onSave: (card: CreditCard) => void
 }
 
-function EditCreditCardModal({ card, onOpenChange, onSave }: EditCreditCardModalProps) {
+function EditCreditCardModal({ card, existingNames = [], onOpenChange, onSave }: EditCreditCardModalProps) {
   const [name, setName] = useState("")
   const [balance, setBalance] = useState("")
   const [min, setMin] = useState("")
@@ -37,7 +39,9 @@ function EditCreditCardModal({ card, onOpenChange, onSave }: EditCreditCardModal
 
   if (!card) return null
 
-  const disabled = !name.trim() || !balance.trim() || !limit.trim() || !due.trim()
+  const trimmedName = name.trim()
+  const duplicate = trimmedName !== card.name && existingNames.includes(trimmedName)
+  const disabled = duplicate || !trimmedName || !balance.trim() || !limit.trim() || !due.trim()
 
   function handleSave() {
     onSave({
@@ -64,6 +68,8 @@ function EditCreditCardModal({ card, onOpenChange, onSave }: EditCreditCardModal
           placeholder="Nhập tên thẻ"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          invalid={duplicate}
+          hint={duplicate ? "Đã có thẻ tên này — chọn tên khác" : undefined}
           prefix={
             <input
               type="color"

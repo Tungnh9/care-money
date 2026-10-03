@@ -296,3 +296,49 @@ describe("SavingsTab", () => {
     expect(screen.getByLabelText("Tên quỹ")).toHaveValue("Quỹ du lịch")
   })
 })
+
+describe("SavingsTab — tên quỹ trùng", () => {
+  it("blocks adding a fund whose name is already taken and keeps what was typed", () => {
+    const onAddSavingsFund = vi.fn()
+    render(
+      <SavingsTab
+        savings={[{ name: "Quỹ khẩn cấp", amount: 5_000_000, target: 20_000_000 }]}
+        onAddSavingsFund={onAddSavingsFund}
+        onUpdateSavingsFund={vi.fn()}
+        onRemoveSavingsFund={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Thêm quỹ tiết kiệm" }))
+    fireEvent.change(screen.getByLabelText("Tên quỹ"), { target: { value: "  Quỹ khẩn cấp " } })
+    fireEvent.change(screen.getByLabelText("Số tiền hiện có", { exact: false }), { target: { value: "500000" } })
+    fireEvent.change(screen.getByLabelText("Mục tiêu", { exact: false }), { target: { value: "2000000" } })
+
+    expect(screen.getByText("Đã có quỹ tên này — chọn tên khác")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Thêm" })).toBeDisabled()
+    fireEvent.click(screen.getByRole("button", { name: "Thêm" }))
+    expect(onAddSavingsFund).not.toHaveBeenCalled()
+    // Label giờ kèm cả dòng hint nên phải khớp không-chính-xác.
+    expect(screen.getByLabelText("Tên quỹ", { exact: false })).toHaveValue("  Quỹ khẩn cấp ")
+  })
+
+  it("blocks renaming a fund to another fund's name from the Sửa form", () => {
+    render(
+      <SavingsTab
+        savings={[
+          { name: "Quỹ du lịch", amount: 2_000_000, target: 10_000_000 },
+          { name: "Quỹ khẩn cấp", amount: 5_000_000, target: 20_000_000 },
+        ]}
+        onAddSavingsFund={vi.fn()}
+        onUpdateSavingsFund={vi.fn()}
+        onRemoveSavingsFund={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Sửa Quỹ du lịch" }))
+    fireEvent.change(screen.getByLabelText("Tên quỹ"), { target: { value: "Quỹ khẩn cấp" } })
+
+    expect(screen.getByText("Đã có quỹ tên này — chọn tên khác")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
+  })
+})

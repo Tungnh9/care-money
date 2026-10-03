@@ -31,6 +31,7 @@ function SavingsTab({
   const [deletingName, setDeletingName] = useState<string | null>(null)
   const [adjustingName, setAdjustingName] = useState<string | null>(null)
   const savingsTotal = savings.reduce((sum, fund) => sum + fund.amount, 0)
+  const fundNames = savings.map((fund) => fund.name)
 
   return (
     <Card label={`Tiết kiệm · ${formatMoney(savingsTotal, hidden)}`}>
@@ -87,7 +88,7 @@ function SavingsTab({
           Chưa có quỹ tiết kiệm nào. Thêm quỹ đầu tiên để bắt đầu theo dõi mục tiêu.
         </p>
       )}
-      <AddSavingsFundForm onAdd={onAddSavingsFund} />
+      <AddSavingsFundForm onAdd={onAddSavingsFund} existingNames={fundNames} />
       <AdjustSavingsFundModal
         key={adjustingName}
         open={!!adjustingName}
@@ -97,6 +98,7 @@ function SavingsTab({
       />
       <EditSavingsFundModal
         fund={savings.find((f) => f.name === editingName) ?? null}
+        existingNames={fundNames}
         onOpenChange={(open) => !open && setEditingName(null)}
         onSave={(updated) => {
           if (editingName) onUpdateSavingsFund(editingName, updated)
