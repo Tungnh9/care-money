@@ -73,6 +73,28 @@ function safeField<T>(schema: z.ZodType<T>, value: unknown, fallback: T): T {
   return result.success ? result.data : fallback
 }
 
+// Quỹ và thẻ được định danh bằng TÊN ở mọi nơi (sửa, xoá, trả thẻ, tất toán ngân sách, liên kết
+// mục tiêu mua xe, React key) — 2 mục trùng tên thì thao tác trên 1 mục sẽ đè/xoá luôn mục kia.
+// Bản lưu cũ (hay file sao lưu cũ) lỡ có trùng: giữ nguyên tên mục ĐẦU TIÊN (đúng mục mà find() ở
+// FundPicker/getGoals/applySavingsFundDelta vốn đang chọn), đổi các mục sau thành "Tên (2)",
+// "Tên (3)"... — không mất số dư nào, người dùng tự đổi lại tên cho đúng ý.
+function dedupeNames<T extends { name: string }>(items: T[]): T[] {
+  const taken = new Set(items.map((item) => item.name))
+  const seen = new Set<string>()
+  return items.map((item) => {
+    if (!seen.has(item.name)) {
+      seen.add(item.name)
+      return item
+    }
+    let n = 2
+    while (taken.has(`${item.name} (${n})`)) n++
+    const name = `${item.name} (${n})`
+    taken.add(name)
+    seen.add(name)
+    return { ...item, name }
+  })
+}
+
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null
 }
@@ -104,8 +126,8 @@ function parseFinanceState(value: unknown): FinanceState {
   const parsed = (value ?? {}) as Record<string, unknown>
   const migrated = migrateGoldShape(parsed)
   return {
-    savings: safeField(z.array(savingsFundSchema), parsed.savings, DEFAULT_FINANCE_STATE.savings),
-    cards: safeField(z.array(creditCardSchema), parsed.cards, DEFAULT_FINANCE_STATE.cards),
+    savings: dedupeNames(safeField(z.array(savingsFundSchema), parsed.savings, DEFAULT_FINANCE_STATE.savings)),
+    cards: dedupeNames(safeField(z.array(creditCardSchema), parsed.cards, DEFAULT_FINANCE_STATE.cards)),
     gold: safeField(z.array(goldPurchaseSchema), migrated.gold, DEFAULT_FINANCE_STATE.gold),
     goldStores: safeField(z.array(goldStoreSchema), migrated.goldStores, DEFAULT_FINANCE_STATE.goldStores),
     invests: safeField(z.array(investmentSchema), parsed.invests, DEFAULT_FINANCE_STATE.invests),

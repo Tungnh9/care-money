@@ -44,6 +44,11 @@ function useFinance() {
   const addSavingsFund = useCallback(
     (fund: SavingsFund) => {
       const current = getStoredFinance()
+      // Quỹ định danh bằng tên ở mọi nơi — trùng tên thì sửa/xoá/tất toán 1 quỹ sẽ đè luôn quỹ kia.
+      if (current.savings.some((f) => f.name === fund.name)) {
+        toast.error(`Đã có quỹ tiết kiệm tên "${fund.name}". Vui lòng chọn tên khác.`)
+        return
+      }
       try {
         persist({ ...current, savings: [...current.savings, fund] })
         toast.success(`Đã thêm quỹ tiết kiệm "${fund.name}"`)
@@ -57,6 +62,10 @@ function useFinance() {
   const updateSavingsFund = useCallback(
     (originalName: string, fund: SavingsFund) => {
       const current = getStoredFinance()
+      if (fund.name !== originalName && current.savings.some((f) => f.name === fund.name)) {
+        toast.error(`Đã có quỹ tiết kiệm tên "${fund.name}". Vui lòng chọn tên khác.`)
+        return
+      }
       try {
         persist({
           ...current,
@@ -96,6 +105,11 @@ function useFinance() {
   const addCard = useCallback(
     (card: CreditCard) => {
       const current = getStoredFinance()
+      // Thẻ định danh bằng tên (trả thẻ, sửa, xoá) — trùng tên thì trả 1 thẻ sẽ trừ nợ cả 2.
+      if (current.cards.some((c) => c.name === card.name)) {
+        toast.error(`Đã có thẻ tín dụng tên "${card.name}". Vui lòng chọn tên khác.`)
+        return
+      }
       try {
         persist({ ...current, cards: [...current.cards, card] })
         toast.success(`Đã thêm thẻ tín dụng "${card.name}"`)
@@ -127,6 +141,10 @@ function useFinance() {
   const updateCard = useCallback(
     (originalName: string, card: CreditCard) => {
       const current = getStoredFinance()
+      if (card.name !== originalName && current.cards.some((c) => c.name === card.name)) {
+        toast.error(`Đã có thẻ tín dụng tên "${card.name}". Vui lòng chọn tên khác.`)
+        return
+      }
       try {
         persist({
           ...current,

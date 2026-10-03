@@ -1301,3 +1301,89 @@ describe("useFinance — dữ liệu do nơi khác ghi", () => {
     expect(getStoredFinance().cards).toHaveLength(1)
   })
 })
+
+describe("useFinance — tên quỹ và thẻ không được trùng", () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it("addSavingsFund refuses a name another fund already has", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.hydrated).toBe(true))
+
+    act(() => result.current.addSavingsFund({ name: "Quỹ A", amount: 100, target: 1_000 }))
+    act(() => result.current.addSavingsFund({ name: "Quỹ A", amount: 999, target: 9_999 }))
+
+    expect(result.current.savings).toEqual([{ name: "Quỹ A", amount: 100, target: 1_000 }])
+    expect(getStoredFinance().savings).toHaveLength(1)
+    expect(toast.error).toHaveBeenCalledWith('Đã có quỹ tiết kiệm tên "Quỹ A". Vui lòng chọn tên khác.')
+  })
+
+  it("updateSavingsFund refuses to rename onto another fund and touches neither the car goal nor settlements", async () => {
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      savings: [
+        { name: "Quỹ A", amount: 100, target: 1_000 },
+        { name: "Quỹ B", amount: 200, target: 2_000 },
+      ],
+    })
+    setCarGoalFundName("Quỹ B")
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      settlements: [
+        {
+          id: 1,
+          month: "2026-09",
+          at: "2026-09-30T00:00:00.000Z",
+          direction: "deposit",
+          amount: 50_000,
+          fundName: "Quỹ B",
+          fundAmountBefore: 0,
+          fundAmountAfter: 50_000,
+        },
+      ],
+    })
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.savings).toHaveLength(2))
+
+    act(() => result.current.updateSavingsFund("Quỹ B", { name: "Quỹ A", amount: 200, target: 2_000 }))
+
+    expect(result.current.savings.map((f) => f.name)).toEqual(["Quỹ A", "Quỹ B"])
+    expect(getStoredFinance().savings.map((f) => f.amount)).toEqual([100, 200])
+    expect(getCarGoalFundName()).toBe("Quỹ B")
+    expect(getStoredBudget().settlements[0].fundName).toBe("Quỹ B")
+    expect(toast.error).toHaveBeenCalledWith('Đã có quỹ tiết kiệm tên "Quỹ A". Vui lòng chọn tên khác.')
+  })
+
+  it("updateSavingsFund still saves when the name is kept (e.g. the balance-adjust modal)", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.hydrated).toBe(true))
+
+    act(() => result.current.addSavingsFund({ name: "Quỹ A", amount: 100, target: 1_000 }))
+    act(() => result.current.updateSavingsFund("Quỹ A", { name: "Quỹ A", amount: 150, target: 1_000 }))
+
+    expect(result.current.savings).toEqual([{ name: "Quỹ A", amount: 150, target: 1_000 }])
+  })
+
+  it("addCard and updateCard refuse a name another card already has", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.hydrated).toBe(true))
+
+    act(() => result.current.addCard({ name: "Visa", balance: 1, min: 1, limit: 10, due: "5" }))
+    act(() => result.current.addCard({ name: "Visa", balance: 2, min: 2, limit: 20, due: "6" }))
+    act(() => result.current.addCard({ name: "Master", balance: 3, min: 3, limit: 30, due: "7" }))
+    act(() => result.current.updateCard("Master", { name: "Visa", balance: 3, min: 3, limit: 30, due: "7" }))
+
+    expect(result.current.cards.map((c) => [c.name, c.balance])).toEqual([
+      ["Visa", 1],
+      ["Master", 3],
+    ])
+    expect(toast.error).toHaveBeenCalledWith('Đã có thẻ tín dụng tên "Visa". Vui lòng chọn tên khác.')
+  })
+})

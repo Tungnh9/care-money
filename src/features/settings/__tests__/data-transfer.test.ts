@@ -335,4 +335,34 @@ describe("parseImportPayload", () => {
       expect(result.data.settings).toEqual(DEFAULT_SETTINGS)
     }
   })
+
+  it("renames duplicate fund and card names from a backup so each keeps its own balance", () => {
+    const raw = JSON.stringify({
+      version: EXPORT_VERSION,
+      finance: {
+        savings: [
+          { name: "Quỹ A", amount: 100, target: 1_000 },
+          { name: "Quỹ A", amount: 5_000, target: 9_000 },
+        ],
+        cards: [
+          { name: "Visa", balance: 1, min: 1, limit: 10, due: "5" },
+          { name: "Visa", balance: 2, min: 2, limit: 20, due: "6" },
+        ],
+      },
+    })
+
+    const result = parseImportPayload(raw)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.finance.savings.map((f) => [f.name, f.amount])).toEqual([
+        ["Quỹ A", 100],
+        ["Quỹ A (2)", 5_000],
+      ])
+      expect(result.data.finance.cards.map((c) => [c.name, c.balance])).toEqual([
+        ["Visa", 1],
+        ["Visa (2)", 2],
+      ])
+    }
+  })
 })

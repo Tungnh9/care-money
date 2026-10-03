@@ -171,3 +171,62 @@ describe("applySavingsFundDelta", () => {
     expect(result).toEqual({ ok: true, before: 9_000, after: 10_000 })
   })
 })
+
+describe("parseFinanceState — tên quỹ/thẻ trùng đã lưu", () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+
+  it("renames later savings funds and cards that share a name so each one can be edited on its own", () => {
+    window.localStorage.setItem(
+      FINANCE_STORAGE_KEY,
+      JSON.stringify({
+        ...DEFAULT_FINANCE_STATE,
+        savings: [
+          { name: "Quỹ A", amount: 100, target: 1_000 },
+          { name: "Quỹ A", amount: 5_000, target: 9_000 },
+          { name: "Quỹ A (2)", amount: 7, target: 8 },
+        ],
+        cards: [
+          { name: "Visa", balance: 1, min: 1, limit: 10, due: "5" },
+          { name: "Visa", balance: 2, min: 2, limit: 20, due: "6" },
+        ],
+      })
+    )
+
+    const state = getStoredFinance()
+
+    // Mục đầu giữ tên (là mục FundPicker/mục tiêu xe/tất toán vốn đang chọn); "Quỹ A (2)" đã có sẵn
+    // nên bản trùng thứ 2 nhận "Quỹ A (3)". Không số dư nào bị mất.
+    expect(state.savings.map((f) => [f.name, f.amount])).toEqual([
+      ["Quỹ A", 100],
+      ["Quỹ A (3)", 5_000],
+      ["Quỹ A (2)", 7],
+    ])
+    expect(state.cards.map((c) => [c.name, c.balance])).toEqual([
+      ["Visa", 1],
+      ["Visa (2)", 2],
+    ])
+  })
+
+  it("deposits a settlement into one fund only, even when the stored data had two funds with that name", () => {
+    window.localStorage.setItem(
+      FINANCE_STORAGE_KEY,
+      JSON.stringify({
+        ...DEFAULT_FINANCE_STATE,
+        savings: [
+          { name: "Quỹ A", amount: 100, target: 1_000 },
+          { name: "Quỹ A", amount: 5_000, target: 9_000 },
+        ],
+      })
+    )
+
+    const result = applySavingsFundDelta("Quỹ A", "deposit", 10)
+
+    expect(result).toEqual({ ok: true, before: 100, after: 110 })
+    expect(getStoredFinance().savings.map((f) => [f.name, f.amount])).toEqual([
+      ["Quỹ A", 110],
+      ["Quỹ A (2)", 5_000],
+    ])
+  })
+})
