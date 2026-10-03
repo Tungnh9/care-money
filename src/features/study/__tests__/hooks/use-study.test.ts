@@ -256,4 +256,22 @@ describe("useStudy", () => {
 
     expect(result.current.wordReviews["v-0004"]).toEqual(before)
   })
+
+  it("keeps a word another tab marked as learned when grading a word here", async () => {
+    const { result } = renderHook(() => useStudy())
+    await waitFor(() => expect(result.current.hydrated).toBe(true))
+
+    act(() => {
+      window.localStorage.setItem(STUDY_STORAGE_KEY, JSON.stringify({ ...DEFAULT_STUDY_STATE, learned: ["v-0007"] }))
+      window.dispatchEvent(new StorageEvent("storage", { key: STUDY_STORAGE_KEY }))
+    })
+    expect(result.current.learned).toEqual(["v-0007"])
+
+    act(() => {
+      result.current.gradeWord("v-0001", "good")
+    })
+
+    expect(getStoredStudy().learned).toEqual(["v-0007"])
+    expect(getStoredStudy().wordReviews["v-0001"]).toBeDefined()
+  })
 })

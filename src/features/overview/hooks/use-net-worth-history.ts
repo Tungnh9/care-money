@@ -3,9 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import { dayKey } from "@/lib/date"
+import { useStorageSync } from "@/lib/use-storage-sync"
 import { appendSnapshot } from "../net-worth-history-calculations"
 import {
   DEFAULT_NET_WORTH_HISTORY,
+  NET_WORTH_HISTORY_KEY,
   getStoredNetWorthHistory,
   setStoredNetWorthHistory,
   type NetWorthHistory,
@@ -28,6 +30,15 @@ function useNetWorthHistory() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setHistory(loaded)
   }, [])
+
+  // Tab khác ghi snapshot (hay 1 lần nhập file/tải xuống) → đọc lại, cập nhật historyRef trước để
+  // recordSnapshot kế tiếp nối tiếp đúng lịch sử mới nhất thay vì ghi đè nó.
+  const reload = useCallback(() => {
+    const loaded = getStoredNetWorthHistory()
+    historyRef.current = loaded
+    setHistory(loaded)
+  }, [])
+  useStorageSync(NET_WORTH_HISTORY_KEY, reload)
 
   const recordSnapshot = useCallback((net: number, savingsTotal: number) => {
     const current = historyRef.current

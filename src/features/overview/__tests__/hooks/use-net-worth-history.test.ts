@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach } from "vitest"
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { useEffect } from "react"
 import { act, renderHook, waitFor } from "@testing-library/react"
 
 import { useNetWorthHistory } from "../../hooks/use-net-worth-history"
-import { getStoredNetWorthHistory, setStoredNetWorthHistory } from "../../net-worth-history-storage"
+import { NET_WORTH_HISTORY_KEY, getStoredNetWorthHistory, setStoredNetWorthHistory } from "../../net-worth-history-storage"
 
 describe("useNetWorthHistory", () => {
   beforeEach(() => {
@@ -73,6 +73,41 @@ describe("useNetWorthHistory", () => {
       { date: "2026-09-18", net: 1, savingsTotal: 1 },
       { date: "2026-09-19", net: 2, savingsTotal: 2 },
       { date: "2026-09-20", net: 3, savingsTotal: 3 },
+    ])
+  })
+})
+
+describe("useNetWorthHistory — dữ liệu do tab khác ghi", () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    vi.setSystemTime(new Date(2026, 8, 20, 9, 0))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it("builds on a snapshot another tab recorded instead of overwriting it", async () => {
+    const { result } = renderHook(() => useNetWorthHistory())
+    await waitFor(() => expect(result.current.history).toEqual([]))
+
+    act(() => {
+      window.localStorage.setItem(
+        NET_WORTH_HISTORY_KEY,
+        JSON.stringify([{ date: "2026-09-19", net: 1, savingsTotal: 1 }])
+      )
+      window.dispatchEvent(new StorageEvent("storage", { key: NET_WORTH_HISTORY_KEY }))
+    })
+    expect(result.current.history).toHaveLength(1)
+
+    act(() => {
+      result.current.recordSnapshot(5, 5)
+    })
+
+    expect(getStoredNetWorthHistory()).toEqual([
+      { date: "2026-09-19", net: 1, savingsTotal: 1 },
+      { date: "2026-09-20", net: 5, savingsTotal: 5 },
     ])
   })
 })

@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import { dayKey } from "@/lib/date"
+import { useStorageSync } from "@/lib/use-storage-sync"
 import { nextStreak } from "../game-calculations"
 import { applyGrade, ensureReviewStates, initialReviewState, seedLearnedReviewState } from "../srs-calculations"
 import {
   DEFAULT_STUDY_STATE,
+  STUDY_STORAGE_KEY,
   getStoredStudy,
   setStoredStudy,
   type StudyState,
@@ -31,6 +33,15 @@ function useStudy() {
     setState(loaded)
     setHydrated(true)
   }, [])
+
+  // Tab khác (hay 1 lần nhập file/tải xuống) ghi study-progress → đọc lại. Cập nhật stateRef TRƯỚC
+  // setState, cùng lý do stateRef tồn tại: action gọi ngay sau đó phải thấy dữ liệu mới nhất.
+  const reload = useCallback(() => {
+    const loaded = getStoredStudy()
+    stateRef.current = loaded
+    setState(loaded)
+  }, [])
+  useStorageSync(STUDY_STORAGE_KEY, reload)
 
   const persist = useCallback((next: StudyState) => {
     stateRef.current = next
