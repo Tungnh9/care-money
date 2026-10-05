@@ -4,7 +4,12 @@ import { toast } from "sonner"
 
 import { useBudget } from "../../hooks/use-budget"
 import { BUDGET_STORAGE_KEY, DEFAULT_BUDGET_STATE, getStoredBudget, setStoredBudget } from "../../budget-storage"
-import { DEFAULT_FINANCE_STATE, setStoredFinance } from "@/features/finance/finance-storage"
+import {
+  DEFAULT_FINANCE_STATE,
+  FINANCE_STORAGE_KEY,
+  getStoredFinance,
+  setStoredFinance,
+} from "@/features/finance/finance-storage"
 
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
@@ -161,6 +166,108 @@ describe("useBudget", () => {
       act(() => result.current.confirmSettlement("2026-09", "Quỹ A", "deposit", 20_000))
 
       expect(result.current.settlements).toHaveLength(2)
+    })
+
+    it("reports whether the settlement went through", async () => {
+      const { result } = renderHook(() => useBudget())
+      await waitFor(() => expect(result.current.settlements).toEqual([]))
+
+      const outcomes: boolean[] = []
+      act(() => {
+        outcomes.push(result.current.confirmSettlement("2026-09", "Quỹ A", "deposit", 50_000))
+        outcomes.push(result.current.confirmSettlement("2026-09", "Quỹ không tồn tại", "deposit", 50_000))
+        outcomes.push(result.current.confirmSettlement("2026-09", "Quỹ A", "withdraw", 999_999))
+      })
+
+      expect(outcomes).toEqual([true, false, false])
+    })
+
+    it("takes a deposit back out of the fund when the settlement history cannot be saved, so a retry cannot deposit twice", async () => {
+      const { result } = renderHook(() => useBudget())
+      await waitFor(() => expect(result.current.settlements).toEqual([]))
+
+      const realSetItem = Storage.prototype.setItem
+      const spy = vi.spyOn(Storage.prototype, "setItem").mockImplementation((key: string, value: string) => {
+        if (key === BUDGET_STORAGE_KEY) throw new Error("QuotaExceededError")
+        realSetItem.call(window.localStorage, key, value)
+      })
+      let ok: boolean | undefined
+      act(() => {
+        ok = result.current.confirmSettlement("2026-09", "Quỹ A", "deposit", 50_000)
+      })
+      spy.mockRestore()
+
+      expect(ok).toBe(false)
+      expect(getStoredFinance().savings[0].amount).toBe(100_000)
+      expect(getStoredBudget().settlements).toEqual([])
+      expect(toast.error).toHaveBeenCalledWith(
+        "Không thể ghi lại lịch sử tất toán — số dư quỹ vẫn giữ nguyên. Vui lòng thử lại."
+      )
+    })
+
+    it("puts a withdrawal back when the settlement history cannot be saved", async () => {
+      const { result } = renderHook(() => useBudget())
+      await waitFor(() => expect(result.current.settlements).toEqual([]))
+
+      const realSetItem = Storage.prototype.setItem
+      const spy = vi.spyOn(Storage.prototype, "setItem").mockImplementation((key: string, value: string) => {
+        if (key === BUDGET_STORAGE_KEY) throw new Error("QuotaExceededError")
+        realSetItem.call(window.localStorage, key, value)
+      })
+      let ok: boolean | undefined
+      act(() => {
+        ok = result.current.confirmSettlement("2026-09", "Quỹ A", "withdraw", 30_000)
+      })
+      spy.mockRestore()
+
+      expect(ok).toBe(false)
+      expect(getStoredFinance().savings[0].amount).toBe(100_000)
+      expect(getStoredBudget().settlements).toEqual([])
+    })
+
+    it("tells the user to check the fund when neither the history nor the fund rollback can be saved", async () => {
+      const { result } = renderHook(() => useBudget())
+      await waitFor(() => expect(result.current.settlements).toEqual([]))
+
+      const realSetItem = Storage.prototype.setItem
+      let financeWrites = 0
+      const spy = vi.spyOn(Storage.prototype, "setItem").mockImplementation((key: string, value: string) => {
+        if (key === BUDGET_STORAGE_KEY) throw new Error("QuotaExceededError")
+        // Lần ghi quỹ đầu (áp tiền) qua được, lần thứ 2 (trả lại) cũng lỗi.
+        if (key === FINANCE_STORAGE_KEY && ++financeWrites > 1) throw new Error("QuotaExceededError")
+        realSetItem.call(window.localStorage, key, value)
+      })
+      let ok: boolean | undefined
+      act(() => {
+        ok = result.current.confirmSettlement("2026-09", "Quỹ A", "deposit", 50_000)
+      })
+      spy.mockRestore()
+
+      expect(ok).toBe(false)
+      expect(toast.error).toHaveBeenCalledWith(
+        'Không thể ghi lại lịch sử tất toán và không trả lại được số dư quỹ "Quỹ A". Kiểm tra lại số dư ở màn Tài chính.'
+      )
+      expect(getStoredFinance().savings[0].amount).toBe(150_000)
+    })
+
+    it("shows an error instead of throwing when the fund balance itself cannot be saved", async () => {
+      const { result } = renderHook(() => useBudget())
+      await waitFor(() => expect(result.current.settlements).toEqual([]))
+
+      // Lần setItem đầu tiên trong confirmSettlement là lần ghi quỹ của applySavingsFundDelta.
+      const spy = vi.spyOn(Storage.prototype, "setItem").mockImplementationOnce(() => {
+        throw new Error("QuotaExceededError")
+      })
+      let ok: boolean | undefined
+      act(() => {
+        ok = result.current.confirmSettlement("2026-09", "Quỹ A", "deposit", 50_000)
+      })
+      spy.mockRestore()
+
+      expect(ok).toBe(false)
+      expect(toast.error).toHaveBeenCalledWith('Không thể cập nhật số dư quỹ "Quỹ A". Vui lòng thử lại.')
+      expect(getStoredFinance().savings[0].amount).toBe(100_000)
+      expect(getStoredBudget().settlements).toEqual([])
     })
   })
 })

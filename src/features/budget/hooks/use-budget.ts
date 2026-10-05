@@ -28,6 +28,20 @@ interface UpdateExpenseInput {
   tag: Expense["tag"]
 }
 
+// applySavingsFundDelta ghi thẳng finance-data nên có thể ném (localStorage đầy) — gói lại để
+// confirmSettlement luôn tự báo lỗi bằng toast thay vì để lỗi văng ra khỏi click handler.
+function applyFundDeltaSafely(
+  fundName: string,
+  direction: SettlementDirection,
+  amount: number
+): ReturnType<typeof applySavingsFundDelta> | null {
+  try {
+    return applySavingsFundDelta(fundName, direction, amount)
+  } catch {
+    return null
+  }
+}
+
 function useBudget() {
   const [state, setState] = useState<BudgetState>(DEFAULT_BUDGET_STATE)
 
@@ -110,16 +124,22 @@ function useBudget() {
     [persist]
   )
 
+  // Trả true khi CẢ số dư quỹ lẫn lịch sử tất toán đã ghi xong — SettleMonthModal chỉ đóng khi true.
+  // Mọi nhánh lỗi đã tự báo toast.
   const confirmSettlement = useCallback(
-    (month: string, fundName: string, direction: SettlementDirection, amount: number) => {
-      const result = applySavingsFundDelta(fundName, direction, amount)
+    (month: string, fundName: string, direction: SettlementDirection, amount: number): boolean => {
+      const result = applyFundDeltaSafely(fundName, direction, amount)
+      if (!result) {
+        toast.error(`Không thể cập nhật số dư quỹ "${fundName}". Vui lòng thử lại.`)
+        return false
+      }
       if (!result.ok) {
         toast.error(
           result.reason === "fund-not-found"
             ? `Không tìm thấy quỹ "${fundName}".`
             : `Quỹ "${fundName}" không đủ số dư để rút ${amount.toLocaleString("vi-VN")} đ.`
         )
-        return
+        return false
       }
 
       const current = getStoredBudget()
@@ -135,10 +155,19 @@ function useBudget() {
           fundAmountAfter: result.after,
         }
         persist({ ...current, settlements: [...current.settlements, settlement] })
-        toast.success("Đã tất toán tháng")
       } catch {
-        toast.error("Không thể ghi lại lịch sử tất toán. Vui lòng thử lại.")
+        // Quỹ đã đổi mà lịch sử không ghi được: số còn phải tất toán không đổi, nút vẫn sáng — bấm lại
+        // sẽ cộng/trừ quỹ thêm 1 lần nữa. Đảo lại đúng số tiền vừa áp để quỹ về như trước.
+        const reverted = applyFundDeltaSafely(fundName, direction === "deposit" ? "withdraw" : "deposit", amount)
+        toast.error(
+          reverted?.ok
+            ? "Không thể ghi lại lịch sử tất toán — số dư quỹ vẫn giữ nguyên. Vui lòng thử lại."
+            : `Không thể ghi lại lịch sử tất toán và không trả lại được số dư quỹ "${fundName}". Kiểm tra lại số dư ở màn Tài chính.`
+        )
+        return false
       }
+      toast.success("Đã tất toán tháng")
+      return true
     },
     [persist]
   )
