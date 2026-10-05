@@ -1,9 +1,13 @@
-import { describe, it, expect, vi } from "vitest"
-import { render, screen, fireEvent } from "@testing-library/react"
+import { describe, it, expect, vi, beforeEach } from "vitest"
+import { act, render, screen, fireEvent, waitFor } from "@testing-library/react"
 
+import { MoneyVisibilityProvider } from "@/components/money-visibility-provider"
 import { SalaryCard } from "../../components/salary-card"
 
 describe("SalaryCard", () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
   it("shows the current month's salary pre-filled", () => {
     render(<SalaryCard month="2026-09" salary={20_000_000} onSave={vi.fn()} />)
 
@@ -43,5 +47,21 @@ describe("SalaryCard", () => {
     fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
 
     expect(onSave).toHaveBeenCalledWith("2026-09", 20_000_000)
+  })
+
+  it("masks the pre-filled salary while money is hidden, and shows it only while the field is focused", async () => {
+    window.localStorage.setItem("hide-money", "1")
+    render(
+      <MoneyVisibilityProvider>
+        <SalaryCard month="2026-09" salary={20_000_000} onSave={vi.fn()} />
+      </MoneyVisibilityProvider>
+    )
+    const input = screen.getByLabelText("Số tiền", { exact: false })
+
+    await waitFor(() => expect(input).toHaveValue(""))
+    expect(input).toHaveAttribute("placeholder", "••••••••")
+
+    act(() => input.focus())
+    expect(input).toHaveValue("20.000.000")
   })
 })

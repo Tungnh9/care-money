@@ -1,6 +1,7 @@
-import { describe, it, expect, vi } from "vitest"
-import { render, screen, fireEvent } from "@testing-library/react"
+import { describe, it, expect, vi, beforeEach } from "vitest"
+import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 
+import { MoneyVisibilityProvider } from "@/components/money-visibility-provider"
 import { SettleMonthModal } from "../../components/settle-month-modal"
 import type { SavingsFund } from "@/features/finance/types"
 
@@ -10,6 +11,9 @@ const SAVINGS: SavingsFund[] = [
 ]
 
 describe("SettleMonthModal", () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
   it("frames a positive remaining as a surplus and pre-fills the full amount", () => {
     render(
       <SettleMonthModal open onOpenChange={vi.fn()} month="2026-09" remaining={200_000} savings={SAVINGS} onConfirm={vi.fn()} />
@@ -149,5 +153,25 @@ describe("SettleMonthModal", () => {
     fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }))
 
     expect(onOpenChange).toHaveBeenCalledWith(false)
+  })
+
+  it("masks the pre-filled amount while money is hidden, like the sentence above it", async () => {
+    window.localStorage.setItem("hide-money", "1")
+    render(
+      <MoneyVisibilityProvider>
+        <SettleMonthModal
+          open
+          onOpenChange={vi.fn()}
+          month="2026-09"
+          remaining={200_000}
+          savings={SAVINGS}
+          onConfirm={vi.fn()}
+        />
+      </MoneyVisibilityProvider>
+    )
+
+    await waitFor(() => expect(screen.getByLabelText("Số tiền", { exact: false })).toHaveValue(""))
+    expect(screen.getByLabelText("Số tiền", { exact: false })).toHaveAttribute("placeholder", "••••••••")
+    expect(screen.queryByText(/200\.000/)).not.toBeInTheDocument()
   })
 })

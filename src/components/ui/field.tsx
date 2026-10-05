@@ -16,7 +16,12 @@ interface FieldProps
   group?: boolean
   value?: string | number
   invalid?: boolean
+  // Đang bật "Ẩn số tiền": ô đã điền sẵn chỉ hiện "••••••••"; bấm vào ô (focus) mới hiện số thật để
+  // sửa, rời ô (blur) thì che lại. Ô rỗng vẫn hiện placeholder của nơi dùng.
+  masked?: boolean
 }
+
+const MASKED_PLACEHOLDER = "••••••••"
 
 function Field({
   className,
@@ -28,10 +33,17 @@ function Field({
   group,
   value,
   invalid,
+  masked,
+  placeholder,
   onChange,
+  onFocus,
+  onBlur,
   ...props
 }: FieldProps) {
-  const shown = group ? groupVN(value) : value
+  const [focused, setFocused] = React.useState(false)
+  const formatted = group ? groupVN(value) : value
+  const masking = !!masked && !focused && String(formatted ?? "") !== ""
+  const shown = masking ? "" : formatted
   const handleChange =
     group && onChange
       ? (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,6 +70,15 @@ function Field({
         <Input
           value={shown}
           onChange={handleChange}
+          onFocus={(e) => {
+            setFocused(true)
+            onFocus?.(e)
+          }}
+          onBlur={(e) => {
+            setFocused(false)
+            onBlur?.(e)
+          }}
+          placeholder={masking ? MASKED_PLACEHOLDER : placeholder}
           inputMode={numeric ? "numeric" : undefined}
           aria-invalid={invalid || undefined}
           className={cn(

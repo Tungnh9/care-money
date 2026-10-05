@@ -78,6 +78,7 @@ function SettleMonthModal({ open, onOpenChange, month, remaining, savings, onCon
             numeric
             group
             suffix="đ"
+            masked={hidden}
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
           />

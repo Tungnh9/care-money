@@ -6,6 +6,7 @@ import { Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Field } from "@/components/ui/field"
+import { useMoneyVisibility } from "@/components/money-visibility-provider"
 
 interface SalaryCardProps {
   month: string
@@ -14,6 +15,7 @@ interface SalaryCardProps {
 }
 
 function SalaryCard({ month, salary, onSave }: SalaryCardProps) {
+  const { hidden } = useMoneyVisibility()
   const [amount, setAmount] = useState(String(salary || ""))
   const [saved, setSaved] = useState(false)
 
@@ -41,6 +43,7 @@ function SalaryCard({ month, salary, onSave }: SalaryCardProps) {
         group
         suffix="đ"
         placeholder="0"
+        masked={hidden}
         value={amount}
         onChange={(e) => {
           setAmount(e.target.value)
