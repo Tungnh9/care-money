@@ -20,6 +20,7 @@ import {
 import { CAR_GOAL_FUND_KEY, getCarGoalFundName, setCarGoalFundName } from "@/features/goals/car-goal-storage"
 import { notifyDataChanged } from "@/lib/data-change-bus"
 import { SETTINGS_STORAGE_KEY, getStoredSettings, type AppSettings } from "@/lib/settings-storage"
+import { clearSyncSecret } from "@/lib/sync-secret-storage"
 import { pushSnapshot, pullSnapshot } from "../api"
 import {
   buildExportPayload,
@@ -245,6 +246,8 @@ function useDataManagement({
     onReplaceBudget(DEFAULT_BUDGET_STATE)
     onReplaceNetWorthHistory(DEFAULT_NET_WORTH_HISTORY)
     setCarGoalFundName(null)
+    // "Làm lại từ đầu" trên máy này — không giữ lại credential đồng bộ.
+    clearSyncSecret()
     setExported(null)
     setImported(null)
   }, [onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceBudget, onReplaceNetWorthHistory])

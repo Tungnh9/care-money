@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { fireEvent, render, screen, within } from "@testing-library/react"
+import { act, fireEvent, render, screen, within } from "@testing-library/react"
 
 import { DEFAULT_BUDGET_STATE } from "@/features/budget/budget-storage"
 import { DEFAULT_FINANCE_STATE } from "@/features/finance/finance-storage"
@@ -7,7 +7,7 @@ import { DEFAULT_JOURNAL_STATE } from "@/features/journal/journal-storage"
 import { DEFAULT_STUDY_STATE } from "@/features/study/study-storage"
 import { DEFAULT_NET_WORTH_HISTORY } from "@/features/overview/net-worth-history-storage"
 import { DEFAULT_SETTINGS } from "@/lib/settings-storage"
-import { setSyncSecret } from "@/lib/sync-secret-storage"
+import { clearSyncSecret, setSyncSecret } from "@/lib/sync-secret-storage"
 import type { PendingRestore } from "../../hooks/use-data-management"
 import { setAutoBackupStatus } from "../../auto-backup-storage"
 import { DataCard } from "../../components/data-card"
@@ -254,5 +254,33 @@ describe("DataCard", () => {
     render(<DataCard {...BASE_PROPS} />)
 
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument()
+  })
+
+  it("empties the secret field when the saved secret is removed from this device", () => {
+    setSyncSecret("saved-secret")
+    render(<DataCard {...BASE_PROPS} />)
+    expect(screen.getByLabelText("Secret đồng bộ", { exact: false })).toHaveValue("saved-secret")
+
+    act(() => {
+      clearSyncSecret()
+    })
+
+    expect(screen.getByLabelText("Secret đồng bộ", { exact: false })).toHaveValue("")
+    expect(screen.getByRole("button", { name: "Tải xuống" })).toBeDisabled()
+    expect(screen.getByRole("button", { name: "Copy secret" })).toBeDisabled()
+  })
+
+  it("empties a secret typed on this page when another tab logs out and removes it", () => {
+    render(<DataCard {...BASE_PROPS} />)
+    fireEvent.change(screen.getByLabelText("Secret đồng bộ", { exact: false }), {
+      target: { value: "typed-secret" },
+    })
+
+    act(() => {
+      window.localStorage.removeItem("sync-secret")
+      window.dispatchEvent(new StorageEvent("storage", { key: "sync-secret" }))
+    })
+
+    expect(screen.getByLabelText("Secret đồng bộ", { exact: false })).toHaveValue("")
   })
 })

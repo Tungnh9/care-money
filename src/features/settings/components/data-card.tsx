@@ -7,6 +7,7 @@ import { AlertDialog } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Field } from "@/components/ui/field"
+import { onDataChanged } from "@/lib/data-change-bus"
 import { getSyncSecret, setSyncSecret } from "@/lib/sync-secret-storage"
 import { getAutoBackupStatus, type AutoBackupStatus } from "../auto-backup-storage"
 import type { ExportedInfo, ImportedInfo, PendingRestore, SyncResult } from "../hooks/use-data-management"
@@ -64,6 +65,23 @@ function DataCard({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSecret(getSyncSecret())
     setAutoBackup(getAutoBackupStatus())
+  }, [])
+
+  useEffect(() => {
+    // Đăng xuất (kể cả ở tab khác) hay xoá toàn bộ dữ liệu đều gỡ secret khỏi máy — ô nhập phải
+    // trống theo, không giữ bản cũ trong state để còn bấm "Tải lên"/"Copy" được. Luôn đọc lại thay
+    // vì dùng useStorageSync: gõ trong ô này (setSyncSecret) cố ý không báo data-change-bus, nên
+    // mốc "chuỗi thô lần trước" của useStorageSync sẽ cũ. Đọc lại khi đang gõ vẫn vô hại — storage
+    // luôn giữ đúng chữ vừa gõ.
+    function reloadSecret() {
+      setSecret(getSyncSecret())
+    }
+    const unsubscribe = onDataChanged(reloadSecret)
+    window.addEventListener("storage", reloadSecret)
+    return () => {
+      unsubscribe()
+      window.removeEventListener("storage", reloadSecret)
+    }
   }, [])
 
   function handleSecretChange(value: string) {

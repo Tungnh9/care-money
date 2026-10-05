@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 
 import { MoneyVisibilityProvider } from "@/components/money-visibility-provider"
+import { setStoredUser } from "@/lib/auth"
+import { setSyncSecret } from "@/lib/sync-secret-storage"
 import { Sidebar } from "../sidebar"
 
 vi.mock("next/navigation", () => ({
@@ -76,5 +78,16 @@ describe("Sidebar", () => {
 
     expect(screen.getAllByLabelText("Máy tính").length).toBeGreaterThan(0)
     expect(screen.getAllByLabelText("Ẩn số tiền").length).toBeGreaterThan(0)
+  })
+
+  it("forgets the sync secret saved on this device when logging out", () => {
+    setStoredUser({ email: "owner@example.com" })
+    setSyncSecret("real-secret")
+    render(<Sidebar />)
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Đăng xuất" })[0])
+
+    expect(window.localStorage.getItem("auth-user")).toBeNull()
+    expect(window.localStorage.getItem("sync-secret")).toBeNull()
   })
 })

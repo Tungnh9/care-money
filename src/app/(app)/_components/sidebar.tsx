@@ -20,6 +20,7 @@ import {
 
 import { cn } from "@/lib/utils"
 import { clearStoredUser } from "@/lib/auth"
+import { clearSyncSecret } from "@/lib/sync-secret-storage"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { useSettings } from "@/features/settings/hooks/use-settings"
 import { CalculatorModal } from "@/features/calc"
@@ -81,6 +82,9 @@ function Sidebar() {
   const showMoneyTools = isModuleOn("taichinh")
 
   function handleLogout() {
+    // Secret đồng bộ là credential thật của /api/sync (đọc/ghi được từ bất cứ đâu) — không để lại
+    // cho người dùng sau trên cùng trình duyệt. Dữ liệu trên máy vẫn giữ như thiết kế mock login.
+    clearSyncSecret()
     clearStoredUser()
     router.push("/login")
   }

@@ -13,6 +13,7 @@ import { BUDGET_STORAGE_KEY, DEFAULT_BUDGET_STATE } from "@/features/budget/budg
 import { DEFAULT_NET_WORTH_HISTORY, NET_WORTH_HISTORY_KEY } from "@/features/overview/net-worth-history-storage"
 import { onDataChanged } from "@/lib/data-change-bus"
 import { DEFAULT_SETTINGS, SETTINGS_STORAGE_KEY } from "@/lib/settings-storage"
+import { setSyncSecret } from "@/lib/sync-secret-storage"
 import { CAR_GOAL_FUND_KEY, getCarGoalFundName, setCarGoalFundName } from "@/features/goals/car-goal-storage"
 import { EXPORT_VERSION } from "../../data-transfer"
 import { useDataManagement } from "../../hooks/use-data-management"
@@ -227,6 +228,17 @@ describe("useDataManagement", () => {
     expect(onReplaceStudy).toHaveBeenCalledWith(DEFAULT_STUDY_STATE)
     expect(onReplaceBudget).toHaveBeenCalledWith(DEFAULT_BUDGET_STATE)
     expect(onReplaceNetWorthHistory).toHaveBeenCalledWith(DEFAULT_NET_WORTH_HISTORY)
+  })
+
+  it("wipeData also forgets the sync secret saved on this device", () => {
+    setSyncSecret("real-secret")
+    const { result } = renderDataManagement()
+
+    act(() => {
+      result.current.wipeData()
+    })
+
+    expect(window.localStorage.getItem("sync-secret")).toBeNull()
   })
 
   it("pushToCloud sends a snapshot of every feature's storage and reports the result", async () => {
