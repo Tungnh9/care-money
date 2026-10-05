@@ -2,7 +2,7 @@
 
 import { useEffect } from "react"
 
-import { summarizeFinance } from "@/features/finance/finance-calculations"
+import { goldReferencePricePerPhan, summarizeFinance } from "@/features/finance/finance-calculations"
 import { useFinance } from "@/features/finance/hooks/use-finance"
 import { getGoals, useCarGoalFund } from "@/features/goals"
 import { useJournal } from "@/features/journal/hooks/use-journal"
@@ -62,9 +62,7 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
   // 2 trang phải khớp cùng 1 khái niệm "hôm nay cần ôn từ nào" thay vì mỗi nơi tính 1 kiểu.
   const dueWords = getDueWords(ensureReviewStates(wordReviews, vocab, learned, dayKey()), vocab, dayKey())
 
-  // Nhiều cửa hàng nay có nhiều giá khác nhau — dùng giá bình quân theo tỷ trọng vàng
-  // đang giữ (goldValue/goldPhan) làm đại diện, thay vì 1 giá chung duy nhất như trước.
-  const goldPricePerPhan = summary.goldPhan > 0 ? summary.goldValue / summary.goldPhan : 0
+  const goldPricePerPhan = goldReferencePricePerPhan(summary, goldStores)
   const { goals, avg: avgGoal } = getGoals(
     {
       savingsTotal: summary.savingsTotal,

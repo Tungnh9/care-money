@@ -74,4 +74,29 @@ describe("GoalsView", () => {
       expect(screen.getByText(`Còn 16 chỉ · tương đương ${formatMoney(144_000_000)}`)).toBeInTheDocument()
     )
   })
+
+  it("estimates the gold still to buy from today's store prices when no gold is owned yet", async () => {
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      goldStores: [
+        { name: "SJC", price: "1.000.000" },
+        { name: "PNJ", price: "800.000" },
+      ],
+    })
+
+    render(<GoalsView />)
+
+    // Chưa giữ phân nào → giá bình quân 2 cửa hàng = 900.000/phân; còn đủ 180 phân (18 chỉ).
+    await waitFor(() =>
+      expect(screen.getByText(`Còn 18 chỉ · tương đương ${formatMoney(162_000_000)}`)).toBeInTheDocument()
+    )
+  })
+
+  it("leaves out the value estimate while no store has a price yet", async () => {
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, goldStores: [{ name: "SJC", price: "" }] })
+
+    render(<GoalsView />)
+
+    await waitFor(() => expect(screen.getByText("Còn 18 chỉ")).toBeInTheDocument())
+  })
 })

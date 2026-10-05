@@ -132,12 +132,26 @@ function summarizeFinance(state: FinanceState): FinanceSummary {
   }
 }
 
+// Giá quy đổi 1 phân vàng cho mục tiêu "18 chỉ" (Mục tiêu và Tổng quan dùng chung). Đang giữ vàng →
+// bình quân theo tỷ trọng vàng đang giữ ở từng cửa hàng (goldValue/goldPhan). Chưa giữ phân nào →
+// bình quân giá hôm nay của các cửa hàng đã nhập giá, thay vì 0 (từng làm mục tiêu hiện "tương
+// đương 0 ₫"). Không cửa hàng nào có giá → 0, getGoals bỏ hẳn phần "tương đương".
+function goldReferencePricePerPhan(
+  summary: Pick<FinanceSummary, "goldPhan" | "goldValue">,
+  stores: GoldStore[]
+): number {
+  if (summary.goldPhan > 0) return summary.goldValue / summary.goldPhan
+  const prices = stores.map((store) => parseGoldPrice(store.price)).filter((price) => price > 0)
+  return prices.length ? prices.reduce((sum, price) => sum + price, 0) / prices.length : 0
+}
+
 export {
   phanToChi,
   signedMoney,
   pct1,
   parseGoldPrice,
   summarizeFinance,
+  goldReferencePricePerPhan,
   goldPurchasePL,
   goldStorePrice,
   parseGoldDate,

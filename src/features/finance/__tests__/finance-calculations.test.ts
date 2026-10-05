@@ -5,6 +5,7 @@ import {
   pct1,
   parseGoldPrice,
   summarizeFinance,
+  goldReferencePricePerPhan,
   goldPurchasePL,
   goldStorePrice,
   parseGoldDate,
@@ -288,5 +289,26 @@ describe("summarizeGoldByStore", () => {
     expect(byStore.reduce((sum, s) => sum + s.cost, 0)).toBe(summary.goldCost)
     expect(byStore.reduce((sum, s) => sum + s.value, 0)).toBe(summary.goldValue)
     expect(byStore.reduce((sum, s) => sum + s.pl, 0)).toBe(summary.goldPL)
+  })
+})
+
+describe("goldReferencePricePerPhan", () => {
+  const STORES = [
+    { name: "SJC", price: "1.000.000" },
+    { name: "PNJ", price: "800.000" },
+    { name: "DOJI", price: "" },
+  ]
+
+  it("uses the holdings-weighted price while some gold is held", () => {
+    expect(goldReferencePricePerPhan({ goldPhan: 20, goldValue: 19_000_000 }, STORES)).toBe(950_000)
+  })
+
+  it("falls back to the average price of the stores that have one when no gold is held yet", () => {
+    expect(goldReferencePricePerPhan({ goldPhan: 0, goldValue: 0 }, STORES)).toBe(900_000)
+  })
+
+  it("returns 0 when no gold is held and no store has a price", () => {
+    expect(goldReferencePricePerPhan({ goldPhan: 0, goldValue: 0 }, [{ name: "DOJI", price: "" }])).toBe(0)
+    expect(goldReferencePricePerPhan({ goldPhan: 0, goldValue: 0 }, [])).toBe(0)
   })
 })
