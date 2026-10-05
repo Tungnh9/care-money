@@ -37,6 +37,10 @@ function AddGoldForm({ stores, onAdd }: AddGoldFormProps) {
     )
   }
 
+  // Number("1e400") = Infinity vẫn > 0, nhưng JSON.stringify lưu nó thành null và lần đọc sau purchase
+  // bị bỏ — chỉ nhận số hữu hạn.
+  const phanValid = Number.isFinite(Number(phan)) && Number(phan) > 0
+
   return (
     <div className="mt-[18px] border-t border-[var(--ob-color-border)] pt-[18px]">
       <div className="mb-3 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
@@ -78,7 +82,7 @@ function AddGoldForm({ stores, onAdd }: AddGoldFormProps) {
           variant="primary"
           size="sm"
           type="button"
-          disabled={!date.trim() || !(Number(phan) > 0) || !buy.trim() || !store}
+          disabled={!date.trim() || !phanValid || !buy.trim() || !store}
           onClick={() => {
             onAdd({
               date: date.trim(),

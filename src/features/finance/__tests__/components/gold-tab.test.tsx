@@ -181,6 +181,25 @@ describe("GoldTab", () => {
     expect(screen.getByRole("button", { name: "Thêm" })).toBeDisabled()
   })
 
+  it("keeps the add-purchase Thêm button disabled when khối lượng is not a finite number", () => {
+    render(<GoldTab summary={ZERO_SUMMARY} stores={[SJC]} gold={[]} {...noopHandlers} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Thêm lần mua vàng" }))
+    fireEvent.click(screen.getByRole("button", { name: "SJC" }))
+    fireEvent.change(screen.getByLabelText("Ngày mua", { exact: false }), {
+      target: { value: "10/08/2026" },
+    })
+    fireEvent.change(screen.getByLabelText("Giá mua (mỗi phân)", { exact: false }), {
+      target: { value: "900000" },
+    })
+    // Number("1e400") = Infinity: vẫn > 0, nhưng JSON lưu thành null và lần đọc sau purchase biến mất.
+    fireEvent.change(screen.getByLabelText("Khối lượng (phân)", { exact: false }), {
+      target: { value: "1e400" },
+    })
+
+    expect(screen.getByRole("button", { name: "Thêm" })).toBeDisabled()
+  })
+
   it("stagger-animates its stacked cards in via the shared ob-card-grid wrapper", () => {
     render(<GoldTab summary={ZERO_SUMMARY} stores={[]} gold={[]} {...noopHandlers} />)
 

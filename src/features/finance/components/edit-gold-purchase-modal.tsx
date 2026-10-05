@@ -36,7 +36,10 @@ function EditGoldPurchaseModal({ purchase, stores, onOpenChange, onSave }: EditG
   if (!purchase) return null
 
   const currentId = purchase.id
-  const disabled = !date.trim() || !(Number(phan) > 0) || !buy.trim() || !store
+  // Number("1e400") = Infinity vẫn > 0, nhưng JSON.stringify lưu nó thành null và lần đọc sau purchase
+  // bị bỏ — chỉ nhận số hữu hạn.
+  const phanValid = Number.isFinite(Number(phan)) && Number(phan) > 0
+  const disabled = !date.trim() || !phanValid || !buy.trim() || !store
 
   function handleSave() {
     onSave(currentId, {
