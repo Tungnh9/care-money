@@ -1,21 +1,34 @@
 import { describe, it, expect } from "vitest"
+import { z } from "zod"
 
 import { getGrammar, getVocab, parseJsonl } from "../content-loader"
 
+const idSchema = z.object({ id: z.string() })
+
 describe("parseJsonl", () => {
   it("parses every valid line into an object", () => {
-    const result = parseJsonl<{ id: string }>('{"id":"a"}\n{"id":"b"}', "test.jsonl")
+    const result = parseJsonl('{"id":"a"}\n{"id":"b"}', "test.jsonl", idSchema)
     expect(result).toEqual([{ id: "a" }, { id: "b" }])
   })
 
   it("skips blank lines", () => {
-    const result = parseJsonl<{ id: string }>('{"id":"a"}\n\n   \n{"id":"b"}', "test.jsonl")
+    const result = parseJsonl('{"id":"a"}\n\n   \n{"id":"b"}', "test.jsonl", idSchema)
     expect(result).toEqual([{ id: "a" }, { id: "b" }])
   })
 
   it("throws an error naming the file and 1-indexed line number when a line is malformed", () => {
     const raw = '{"id":"a"}\nNOT JSON\n{"id":"c"}'
-    expect(() => parseJsonl(raw, "vocabulary.jsonl")).toThrow(/vocabulary\.jsonl:2/)
+    expect(() => parseJsonl(raw, "vocabulary.jsonl", idSchema)).toThrow(/vocabulary\.jsonl:2/)
+  })
+
+  it("throws naming the file, line and field when a line is missing a required field", () => {
+    const schema = z.object({ id: z.string(), word: z.string(), meaning: z.string(), addedAt: z.string() })
+    // Dòng 2 gõ nhầm "Word" thay cho "word" — trước đây lọt qua build rồi làm sập /study, /overview.
+    const raw =
+      '{"id":"v-1","word":"a","meaning":"m","addedAt":"2026-01-01"}\n' +
+      '{"id":"v-2","Word":"b","meaning":"m","addedAt":"2026-01-01"}'
+
+    expect(() => parseJsonl(raw, "vocabulary.jsonl", schema)).toThrow(/vocabulary\.jsonl:2: .*word/)
   })
 })
 
