@@ -59,14 +59,6 @@ const investmentSchema: z.ZodType<Investment> = z.object({
   value: z.number(),
 })
 
-const financeStateSchema = z.object({
-  savings: z.array(savingsFundSchema),
-  cards: z.array(creditCardSchema),
-  gold: z.array(goldPurchaseSchema),
-  goldStores: z.array(goldStoreSchema),
-  invests: z.array(investmentSchema),
-})
-
 // Quỹ và thẻ được định danh bằng TÊN ở mọi nơi (sửa, xoá, trả thẻ, tất toán ngân sách, liên kết
 // mục tiêu mua xe, React key) — 2 mục trùng tên thì thao tác trên 1 mục sẽ đè/xoá luôn mục kia.
 // Bản lưu cũ (hay file sao lưu cũ) lỡ có trùng: giữ nguyên tên mục ĐẦU TIÊN (đúng mục mà find() ở
@@ -178,7 +170,6 @@ export {
   setStoredFinance,
   applySavingsFundDelta,
   parseFinanceState,
-  financeStateSchema,
   savingsFundSchema,
   creditCardSchema,
   goldStoreSchema,
