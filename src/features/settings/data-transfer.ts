@@ -3,7 +3,7 @@ import { parseJournalState, type JournalState } from "@/features/journal/journal
 import { parseStudyState, type StudyState } from "@/features/study/study-storage"
 import { parseBudgetState, type BudgetState } from "@/features/budget/budget-storage"
 import { parseNetWorthHistory, type NetWorthHistory } from "@/features/overview/net-worth-history-storage"
-import { DEFAULT_SETTINGS, type AppSettings, type Mood } from "@/lib/settings-storage"
+import { parseAppSettings, type AppSettings } from "@/lib/settings-storage"
 
 const EXPORT_VERSION = 1
 
@@ -47,10 +47,6 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null
 }
 
-function ensureArray<T>(value: unknown, fallback: T[]): T[] {
-  return Array.isArray(value) ? (value as T[]) : fallback
-}
-
 function parseGoalsSnapshot(value: unknown): GoalsSnapshot | undefined {
   if (!isObject(value)) return undefined
   const { carFundName } = value
@@ -84,27 +80,9 @@ function parseImportPayload(raw: string): ImportResult {
   // cần bump EXPORT_VERSION, giống cách "budget" đã được thêm trước đó.
   const netWorthHistory: NetWorthHistory = parseNetWorthHistory(parsed.netWorthHistory)
 
-  const settingsOverride = isObject(parsed.settings) ? parsed.settings : {}
-  const profileOverride = isObject(settingsOverride.profile) ? settingsOverride.profile : {}
-  // Chỉ build đúng các field của AppSettings hiện tại — không spread nguyên settingsOverride,
-  // để field cũ đã xoá khỏi type (vd. "budget") không theo file backup cũ sống lại.
-  // Mood cũ lưu trước tính năng insight thiếu hẳn `score` — backfill 3 (trung tính) cho từng
-  // phần tử thiếu, đúng quy tắc getStoredSettings() đã áp dụng. Không backfill ở đây thì mood
-  // thiếu score sống thẳng vào state trong bộ nhớ (import không reload trang), và bài nhật ký
-  // ghi trong phiên đó sẽ lưu `score: undefined` — bị JSON.stringify rụng mất vĩnh viễn.
-  const rawMoods = ensureArray(settingsOverride.moods, DEFAULT_SETTINGS.moods)
-  const moods = rawMoods.map((m: Partial<Mood>) => ({
-    ...m,
-    score: typeof m.score === "number" ? m.score : 3,
-  })) as Mood[]
-
-  const settings: AppSettings = {
-    profile: { ...DEFAULT_SETTINGS.profile, ...profileOverride },
-    moods,
-    modules: ensureArray(settingsOverride.modules, DEFAULT_SETTINGS.modules),
-    tags: ensureArray(settingsOverride.tags, DEFAULT_SETTINGS.tags),
-    dismissedInsights: ensureArray(settingsOverride.dismissedInsights, DEFAULT_SETTINGS.dismissedInsights),
-  }
+  // Cùng 1 bộ parse với getStoredSettings (lọc từng mood/tag, gộp module theo DEFAULT_MODULES) —
+  // bản nhập vào không reload trang, nên phải sạch ngay trong bộ nhớ chứ không đợi lần đọc sau.
+  const settings: AppSettings = parseAppSettings(parsed.settings)
 
   const goals = parseGoalsSnapshot(parsed.goals)
 

@@ -157,4 +157,48 @@ describe("getStoredSettings", () => {
 
     expect(getStoredSettings().dismissedInsights).toEqual(["spending-anomaly-2026-08"])
   })
+
+  it("drops a null mood instead of throwing away every stored setting", () => {
+    const vui = DEFAULT_SETTINGS.moods[1]
+    window.localStorage.setItem(
+      SETTINGS_STORAGE_KEY,
+      JSON.stringify({
+        ...DEFAULT_SETTINGS,
+        profile: { displayName: "Tùng", greeting: "Chào buổi sáng, Tùng" },
+        moods: [null, vui],
+      })
+    )
+
+    const settings = getStoredSettings()
+
+    expect(settings.profile.displayName).toBe("Tùng")
+    expect(settings.moods).toEqual([vui])
+  })
+
+  it("drops a null or label-less tag but keeps the valid ones", () => {
+    const custom = { label: "Riêng", emoji: "✨", desc: "", tint: "#FFF0B8", on: true }
+    window.localStorage.setItem(
+      SETTINGS_STORAGE_KEY,
+      JSON.stringify({ ...DEFAULT_SETTINGS, tags: [null, { emoji: "❓" }, custom] })
+    )
+
+    expect(getStoredSettings().tags).toEqual([custom])
+  })
+
+  it("keeps the profile and falls back to the default modules when modules is not an array", () => {
+    window.localStorage.setItem(
+      SETTINGS_STORAGE_KEY,
+      JSON.stringify({
+        ...DEFAULT_SETTINGS,
+        profile: { displayName: "Tùng", greeting: "Chào buổi sáng, Tùng" },
+        modules: "x",
+      })
+    )
+
+    const settings = getStoredSettings()
+
+    expect(settings.profile.displayName).toBe("Tùng")
+    expect(settings.modules).toEqual(DEFAULT_MODULES)
+    expect(settings.tags).toEqual(DEFAULT_TAGS)
+  })
 })

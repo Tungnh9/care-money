@@ -381,4 +381,41 @@ describe("parseImportPayload", () => {
       )
     }
   })
+
+  it("drops null moods and tags from an imported backup instead of throwing", () => {
+    const vui = DEFAULT_SETTINGS.moods[1]
+    const raw = JSON.stringify({
+      version: EXPORT_VERSION,
+      settings: { ...DEFAULT_SETTINGS, moods: [null, vui], tags: [null] },
+    })
+
+    const result = parseImportPayload(raw)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.settings.moods).toEqual([vui])
+      expect(result.data.settings.tags).toEqual([])
+    }
+  })
+
+  it("merges imported modules with the current module list, keeping only each one's on/off", () => {
+    const raw = JSON.stringify({
+      version: EXPORT_VERSION,
+      settings: {
+        modules: [
+          { key: "taichinh", label: "Nhãn cũ", hint: "", on: false },
+          { key: "chuoingay", label: "Chuỗi ngày", hint: "", on: true },
+        ],
+      },
+    })
+
+    const result = parseImportPayload(raw)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.settings.modules).toEqual(
+        DEFAULT_SETTINGS.modules.map((m) => (m.key === "taichinh" ? { ...m, on: false } : m))
+      )
+    }
+  })
 })

@@ -1,4 +1,7 @@
+import { z } from "zod"
+
 import { notifyDataChanged } from "./data-change-bus"
+import { safeArray } from "./safe-array"
 
 interface Profile {
   displayName: string
@@ -99,37 +102,72 @@ const TINT_PALETTE = [
 
 const EMOJI_PICKER = ["😄", "🙂", "😌", "😐", "😴", "😟", "😔", "😣", "🥳", "🤯", "🤒", "😍"]
 
-function mergeModules(stored: ModuleToggle[] | undefined): ModuleToggle[] {
+// Mọi phần tử mood/tag đi qua schema riêng: phần tử hỏng (vd. null trong 1 file sao lưu sửa tay)
+// chỉ bị bỏ riêng nó — trước đây 1 mood null làm getStoredSettings ném lỗi rồi rơi về
+// DEFAULT_SETTINGS (mất luôn hồ sơ, nhãn, module), còn 1 tag null lọt vào làm TagsCard sập.
+// Field phụ thiếu thì điền mặc định; label/emoji là định danh nên bắt buộc.
+const moodSchema: z.ZodType<Mood> = z.object({
+  label: z.string(),
+  emoji: z.string(),
+  desc: z.string().catch(""),
+  tint: z.string().catch(TINT_PALETTE[0]),
+  on: z.boolean().catch(true),
+  // Mood cũ lưu trước tính năng insight thiếu hẳn `score` — điền 3 (trung tính).
+  score: z.number().catch(3),
+})
+
+const tagSchema: z.ZodType<BudgetTag> = z.object({
+  label: z.string(),
+  emoji: z.string(),
+  desc: z.string().catch(""),
+  tint: z.string().catch(TINT_PALETTE[0]),
+  on: z.boolean().catch(true),
+})
+
+// mergeModules chỉ lấy key/on từ bản lưu — label/hint luôn theo DEFAULT_MODULES.
+const storedModuleSchema = z.object({ key: z.string(), on: z.boolean() })
+
+function mergeModules(stored: Pick<ModuleToggle, "key" | "on">[]): ModuleToggle[] {
   // label/hint luôn lấy từ DEFAULT_MODULES (nguồn) — chỉ "on" lấy từ storage.
   // Nếu lưu cả object storage sẽ giữ nguyên bản cũ mãi mãi mỗi khi thêm/sửa module mới,
   // người đang dùng không bao giờ thấy module mới (vd. "chuoingay") xuất hiện.
   return DEFAULT_MODULES.map((def) => {
-    const hit = stored?.find((m) => m.key === def.key)
+    const hit = stored.find((m) => m.key === def.key)
     return hit ? { ...def, on: hit.on } : def
   })
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null
+}
+
+// Dùng chung cho đọc localStorage và cho data-transfer.ts (nhập file / tải xuống từ cloud), để 2
+// đường vào luôn cùng 1 quy tắc — bản nhập vào không reload trang nên phải sạch ngay trong bộ nhớ.
+// Chỉ đọc đúng các field của AppSettings hiện tại — field cũ đã xoá khỏi type (vd. "budget") tự
+// rụng thay vì sống mãi trong storage.
+function parseAppSettings(value: unknown): AppSettings {
+  const parsed = isRecord(value) ? value : {}
+  const rawProfile = isRecord(parsed.profile) ? parsed.profile : {}
+  const profile: Profile = {
+    displayName: typeof rawProfile.displayName === "string" ? rawProfile.displayName : DEFAULT_PROFILE.displayName,
+    greeting: typeof rawProfile.greeting === "string" ? rawProfile.greeting : DEFAULT_PROFILE.greeting,
+  }
+  return {
+    profile,
+    moods: Array.isArray(parsed.moods) ? safeArray(moodSchema, parsed.moods) : DEFAULT_MOODS,
+    modules: mergeModules(safeArray(storedModuleSchema, parsed.modules)),
+    tags: Array.isArray(parsed.tags) ? safeArray(tagSchema, parsed.tags) : DEFAULT_TAGS,
+    dismissedInsights: Array.isArray(parsed.dismissedInsights)
+      ? parsed.dismissedInsights.filter((id): id is string => typeof id === "string")
+      : [],
+  }
 }
 
 function getStoredSettings(): AppSettings {
   try {
     const raw = window.localStorage.getItem(SETTINGS_STORAGE_KEY)
     if (!raw) return DEFAULT_SETTINGS
-    const parsed = JSON.parse(raw) as Partial<AppSettings>
-    // Chỉ đọc đúng các field của AppSettings hiện tại — không spread nguyên `parsed`,
-    // để field cũ đã xoá khỏi type (vd. "budget") tự rụng thay vì sống mãi trong storage.
-    const profile =
-      parsed.profile && typeof parsed.profile === "object"
-        ? { ...DEFAULT_SETTINGS.profile, ...parsed.profile }
-        : DEFAULT_SETTINGS.profile
-    // Mood cũ lưu trước tính năng insight thiếu hẳn `score` — backfill 3 (trung tính) cho
-    // từng phần tử thiếu, không làm mất cả mảng như 1 validate toàn phần sẽ làm.
-    const rawMoods = Array.isArray(parsed.moods) ? parsed.moods : DEFAULT_SETTINGS.moods
-    const moods = rawMoods.map((m: Partial<Mood>) => ({
-      ...m,
-      score: typeof m.score === "number" ? m.score : 3,
-    })) as Mood[]
-    const tags = Array.isArray(parsed.tags) ? parsed.tags : DEFAULT_SETTINGS.tags
-    const dismissedInsights = Array.isArray(parsed.dismissedInsights) ? parsed.dismissedInsights : []
-    return { profile, moods, modules: mergeModules(parsed.modules), tags, dismissedInsights }
+    return parseAppSettings(JSON.parse(raw))
   } catch {
     return DEFAULT_SETTINGS
   }
@@ -149,6 +187,7 @@ export {
   EMOJI_PICKER,
   getStoredSettings,
   setStoredSettings,
+  parseAppSettings,
   type AppSettings,
   type Profile,
   type Mood,
