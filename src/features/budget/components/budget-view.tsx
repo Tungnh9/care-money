@@ -16,6 +16,7 @@ import {
   monthlyTagBreakdown,
   remainingToSettle,
   salaryForMonth,
+  totalExpensesForMonth,
 } from "../budget-calculations"
 import { SalaryCard } from "./salary-card"
 import { ExpenseEntryForm } from "./expense-entry-form"
@@ -47,6 +48,10 @@ function BudgetView() {
   const currentMonth = monthKey()
 
   const salary = salaryForMonth(salaries, currentMonth)
+  // "đã chi" là tổng khoản chi của tháng — KHÔNG suy ra từ salary - remaining: remaining đã trừ cả
+  // các lần tất toán (gửi/rút quỹ), nên cách đó cộng tiền gửi quỹ vào "đã chi". Cùng công thức với
+  // thẻ "Chi tiêu tháng này" ở Tổng quan.
+  const spent = totalExpensesForMonth(expenses, currentMonth)
   const monthExpenses = expenses.filter((e) => monthKeyFromDayKey(e.dayKey) === currentMonth)
   const remaining = remainingToSettle(salaries, expenses, settlements, currentMonth)
   const tagBreakdown = breakdownByTag(expenses, currentMonth)
@@ -68,7 +73,7 @@ function BudgetView() {
     <div>
       <h1 className="mb-1 [font:var(--ob-text-h2)] tracking-[var(--ob-track-heading)]">Chi tiêu</h1>
       <p className="mb-5 text-sm text-[var(--ob-color-text-subtle)]">
-        Lương {formatMoney(salary, hidden)} · đã chi {formatMoney(salary - remaining, hidden)} tháng này
+        Lương {formatMoney(salary, hidden)} · đã chi {formatMoney(spent, hidden)} tháng này
       </p>
       <div className="ob-card-grid flex flex-col gap-5">
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">

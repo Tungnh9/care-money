@@ -5,6 +5,21 @@ import { setStoredFinance, DEFAULT_FINANCE_STATE, getStoredFinance } from "@/fea
 import { formatMoney } from "@/lib/format"
 import { setStoredBudget, DEFAULT_BUDGET_STATE } from "../../budget-storage"
 import { BudgetView } from "../../components/budget-view"
+import type { Settlement } from "../../types"
+
+function settlement(overrides: Partial<Settlement>): Settlement {
+  return {
+    id: 1,
+    month: "2026-09",
+    at: "2026-09-10T00:00:00.000Z",
+    direction: "deposit",
+    amount: 100_000,
+    fundName: "Quỹ A",
+    fundAmountBefore: 0,
+    fundAmountAfter: 100_000,
+    ...overrides,
+  }
+}
 
 function stubChartMeasurement() {
   vi.stubGlobal(
@@ -140,5 +155,37 @@ describe("BudgetView", () => {
     fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }))
 
     await waitFor(() => expect(getStoredFinance().savings[0].amount).toBe(900_000))
+  })
+
+  it("counts only this month's expenses as 'đã chi' in the header, even after a deposit settlement", async () => {
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [{ month: "2026-09", amount: 1_000_000 }],
+      expenses: [{ id: 1, dayKey: "2026-09-01", amount: 200_000, tag: null }],
+      settlements: [settlement({ direction: "deposit", amount: 300_000, fundAmountAfter: 300_000 })],
+    })
+
+    render(<BudgetView />)
+
+    expect(
+      await screen.findByText(`Lương ${formatMoney(1_000_000)} · đã chi ${formatMoney(200_000)} tháng này`)
+    ).toBeInTheDocument()
+  })
+
+  it("counts only this month's expenses as 'đã chi' in the header after a withdraw settlement too", async () => {
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [{ month: "2026-09", amount: 500_000 }],
+      expenses: [{ id: 1, dayKey: "2026-09-01", amount: 800_000, tag: null }],
+      settlements: [
+        settlement({ direction: "withdraw", amount: 300_000, fundAmountBefore: 1_000_000, fundAmountAfter: 700_000 }),
+      ],
+    })
+
+    render(<BudgetView />)
+
+    expect(
+      await screen.findByText(`Lương ${formatMoney(500_000)} · đã chi ${formatMoney(800_000)} tháng này`)
+    ).toBeInTheDocument()
   })
 })
