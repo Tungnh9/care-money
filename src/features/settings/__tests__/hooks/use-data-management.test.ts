@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { act, renderHook } from "@testing-library/react"
 
-import { DEFAULT_FINANCE_STATE, setStoredFinance } from "@/features/finance/finance-storage"
-import { DEFAULT_JOURNAL_STATE, setStoredJournal } from "@/features/journal/journal-storage"
+import { DEFAULT_FINANCE_STATE, FINANCE_STORAGE_KEY, setStoredFinance } from "@/features/finance/finance-storage"
+import { DEFAULT_JOURNAL_STATE, getStoredJournal, setStoredJournal } from "@/features/journal/journal-storage"
 import { DEFAULT_STUDY_STATE } from "@/features/study/study-storage"
 import { DEFAULT_BUDGET_STATE } from "@/features/budget/budget-storage"
 import { DEFAULT_NET_WORTH_HISTORY } from "@/features/overview/net-worth-history-storage"
@@ -17,6 +17,13 @@ vi.mock("../../api", () => ({
 }))
 
 import { pushSnapshot, pullSnapshot } from "../../api"
+
+const WRITE_FAILED =
+  "Không ghi được dữ liệu vào máy (bộ nhớ trình duyệt có thể đã đầy). Dữ liệu trên máy vẫn giữ nguyên như trước."
+
+const LOCAL_JOURNAL = {
+  entries: [{ id: 9, text: "Bài trên máy", time: "08:00", date: "01/08", words: 3, mood: null }],
+}
 
 function renderDataManagement() {
   const onReplaceJournal = vi.fn()
@@ -257,6 +264,87 @@ describe("useDataManagement", () => {
     expect(onReplaceBudget).not.toHaveBeenCalled()
     expect(onReplaceNetWorthHistory).not.toHaveBeenCalled()
   })
+
+  it("importData reports an error instead of rejecting when the file cannot be read", async () => {
+    const { result, onReplaceJournal } = renderDataManagement()
+    const file = new File(["{}"], "backup.json", { type: "application/json" })
+    Object.defineProperty(file, "text", { value: () => Promise.reject(new Error("NotReadableError")) })
+
+    await act(async () => {
+      await result.current.importData(file)
+    })
+
+    expect(result.current.imported).toEqual({ ok: false, error: "Không đọc được nội dung file." })
+    expect(onReplaceJournal).not.toHaveBeenCalled()
+  })
+
+  it("importData puts every section back and reports an error when a write fails half-way through", async () => {
+    setStoredJournal(LOCAL_JOURNAL)
+    const { result, onReplaceJournal, onReplaceFinance, onReplaceStudy } = renderDataManagement()
+    // Journal rồi finance ghi thật xuống storage, sau đó finance ném lỗi như khi localStorage hết dung
+    // lượng giữa chừng. finance-data trước đó chưa có nên phải bị gỡ lại, không để lại bản dở dang.
+    onReplaceJournal.mockImplementation((journal) => setStoredJournal(journal))
+    onReplaceFinance.mockImplementation((finance) => {
+      setStoredFinance(finance)
+      throw new Error("QuotaExceededError")
+    })
+    const payload = {
+      version: EXPORT_VERSION,
+      journal: { entries: [{ id: 1, text: "Bài từ file", time: "09:00", date: "10/08", words: 3, mood: null }] },
+    }
+    const file = new File([JSON.stringify(payload)], "backup.json", { type: "application/json" })
+
+    await act(async () => {
+      await result.current.importData(file)
+    })
+
+    expect(getStoredJournal()).toEqual(LOCAL_JOURNAL)
+    expect(window.localStorage.getItem(FINANCE_STORAGE_KEY)).toBeNull()
+    expect(onReplaceStudy).not.toHaveBeenCalled()
+    expect(result.current.imported).toEqual({ ok: false, error: WRITE_FAILED })
+  })
+
+  it("pullFromCloud clears 'syncing' and reports an error even when the request itself throws", async () => {
+    const { result } = renderDataManagement()
+    vi.mocked(pullSnapshot).mockRejectedValue(new Error("boom"))
+
+    await act(async () => {
+      await result.current.pullFromCloud("my-secret")
+    })
+
+    expect(result.current.syncing).toBe(false)
+    expect(result.current.syncResult).toEqual({ ok: false, error: "Không kết nối được máy chủ đồng bộ." })
+  })
+
+  it("pullFromCloud puts every section back, reports an error and stops syncing when a write fails half-way through", async () => {
+    setStoredJournal(LOCAL_JOURNAL)
+    const { result, onReplaceJournal, onReplaceFinance } = renderDataManagement()
+    onReplaceJournal.mockImplementation((journal) => setStoredJournal(journal))
+    onReplaceFinance.mockImplementation(() => {
+      throw new Error("QuotaExceededError")
+    })
+    vi.mocked(pullSnapshot).mockResolvedValue({
+      ok: true,
+      data: {
+        journal: { entries: [{ id: 1, text: "Bài từ cloud", time: "09:00", date: "10/08", words: 3, mood: null }] },
+        finance: DEFAULT_FINANCE_STATE,
+        study: DEFAULT_STUDY_STATE,
+        settings: DEFAULT_SETTINGS,
+        budget: DEFAULT_BUDGET_STATE,
+        netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
+      },
+      summary: "1 bài nhật ký",
+    })
+
+    await act(async () => {
+      await result.current.pullFromCloud("my-secret")
+    })
+
+    expect(getStoredJournal()).toEqual(LOCAL_JOURNAL)
+    expect(result.current.syncResult).toEqual({ ok: false, error: WRITE_FAILED })
+    expect(result.current.syncing).toBe(false)
+  })
+
   describe("car-goal fund link", () => {
     function backupFile(extra: Record<string, unknown>) {
       return new File([JSON.stringify({ version: EXPORT_VERSION, ...extra })], "backup.json", { type: "application/json" })

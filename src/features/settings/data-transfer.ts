@@ -113,4 +113,5 @@ export {
   type ExportPayload,
   type ExportSnapshot,
   type ImportResult,
+  type ImportedSnapshot,
 }

@@ -2,19 +2,26 @@
 
 import { useCallback, useState } from "react"
 
-import { getStoredFinance, type FinanceState } from "@/features/finance/finance-storage"
-import { DEFAULT_JOURNAL_STATE, getStoredJournal, type JournalState } from "@/features/journal/journal-storage"
-import { DEFAULT_STUDY_STATE, getStoredStudy, type StudyState } from "@/features/study/study-storage"
-import { DEFAULT_BUDGET_STATE, getStoredBudget, type BudgetState } from "@/features/budget/budget-storage"
+import { FINANCE_STORAGE_KEY, getStoredFinance, type FinanceState } from "@/features/finance/finance-storage"
+import {
+  DEFAULT_JOURNAL_STATE,
+  JOURNAL_STORAGE_KEY,
+  getStoredJournal,
+  type JournalState,
+} from "@/features/journal/journal-storage"
+import { DEFAULT_STUDY_STATE, STUDY_STORAGE_KEY, getStoredStudy, type StudyState } from "@/features/study/study-storage"
+import { BUDGET_STORAGE_KEY, DEFAULT_BUDGET_STATE, getStoredBudget, type BudgetState } from "@/features/budget/budget-storage"
 import {
   DEFAULT_NET_WORTH_HISTORY,
+  NET_WORTH_HISTORY_KEY,
   getStoredNetWorthHistory,
   type NetWorthHistory,
 } from "@/features/overview/net-worth-history-storage"
-import { getCarGoalFundName, setCarGoalFundName } from "@/features/goals/car-goal-storage"
-import { getStoredSettings, type AppSettings } from "@/lib/settings-storage"
+import { CAR_GOAL_FUND_KEY, getCarGoalFundName, setCarGoalFundName } from "@/features/goals/car-goal-storage"
+import { notifyDataChanged } from "@/lib/data-change-bus"
+import { SETTINGS_STORAGE_KEY, getStoredSettings, type AppSettings } from "@/lib/settings-storage"
 import { pushSnapshot, pullSnapshot } from "../api"
-import { buildExportPayload, exportFileName, parseImportPayload } from "../data-transfer"
+import { buildExportPayload, exportFileName, parseImportPayload, type ImportedSnapshot } from "../data-transfer"
 
 interface ExportedInfo {
   file: string
@@ -34,6 +41,47 @@ interface UseDataManagementOptions {
   onReplaceNetWorthHistory: (history: NetWorthHistory) => void
 }
 
+// Mọi key mà 1 lần nạp bản sao ghi đè — chụp lại chuỗi thô trước khi ghi để trả về nguyên trạng
+// nếu 1 lần ghi giữa chừng lỗi (vd. hết dung lượng localStorage), thay vì để máy nửa cũ nửa mới.
+const RESTORE_KEYS = [
+  JOURNAL_STORAGE_KEY,
+  FINANCE_STORAGE_KEY,
+  STUDY_STORAGE_KEY,
+  SETTINGS_STORAGE_KEY,
+  BUDGET_STORAGE_KEY,
+  NET_WORTH_HISTORY_KEY,
+  CAR_GOAL_FUND_KEY,
+]
+
+const RESTORE_WRITE_ERROR =
+  "Không ghi được dữ liệu vào máy (bộ nhớ trình duyệt có thể đã đầy). Dữ liệu trên máy vẫn giữ nguyên như trước."
+
+function readRawBackup(): Map<string, string | null> {
+  const backup = new Map<string, string | null>()
+  for (const key of RESTORE_KEYS) {
+    try {
+      backup.set(key, window.localStorage.getItem(key))
+    } catch {
+      // Không đọc được key này thì cũng không ghi đè lại nó lúc khôi phục.
+    }
+  }
+  return backup
+}
+
+// Trả từng key về đúng chuỗi thô trước khi nạp, rồi báo 1 lần để mọi hook đang mở đọc lại storage
+// (Plan 1a) — kể cả những phần đã kịp setState bản mới trước khi lần ghi kế tiếp lỗi.
+function restoreRawBackup(backup: Map<string, string | null>) {
+  backup.forEach((raw, key) => {
+    try {
+      if (raw === null) window.localStorage.removeItem(key)
+      else window.localStorage.setItem(key, raw)
+    } catch {
+      // Ghi lại bản cũ cũng lỗi thì không còn cách nào khác — để nguyên key đó.
+    }
+  })
+  notifyDataChanged()
+}
+
 function useDataManagement({
   onReplaceJournal,
   onReplaceFinance,
@@ -46,6 +94,25 @@ function useDataManagement({
   const [imported, setImported] = useState<ImportedInfo | null>(null)
   const [syncing, setSyncing] = useState(false)
   const [syncResult, setSyncResult] = useState<SyncResult | null>(null)
+
+  const applySnapshot = useCallback(
+    (data: ImportedSnapshot) => {
+      const backup = readRawBackup()
+      try {
+        onReplaceJournal(data.journal)
+        onReplaceFinance(data.finance)
+        onReplaceStudy(data.study)
+        onReplaceSettings(data.settings)
+        onReplaceBudget(data.budget)
+        onReplaceNetWorthHistory(data.netWorthHistory)
+        if (data.goals) setCarGoalFundName(data.goals.carFundName)
+      } catch (error) {
+        restoreRawBackup(backup)
+        throw error
+      }
+    },
+    [onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceSettings, onReplaceBudget, onReplaceNetWorthHistory]
+  )
 
   const pushToCloud = useCallback(async (secret: string) => {
     setSyncing(true)
@@ -69,22 +136,26 @@ function useDataManagement({
   const pullFromCloud = useCallback(
     async (secret: string) => {
       setSyncing(true)
-      const result = await pullSnapshot(secret)
-      if (result.ok) {
-        onReplaceJournal(result.data.journal)
-        onReplaceFinance(result.data.finance)
-        onReplaceStudy(result.data.study)
-        onReplaceSettings(result.data.settings)
-        onReplaceBudget(result.data.budget)
-        onReplaceNetWorthHistory(result.data.netWorthHistory)
-        if (result.data.goals) setCarGoalFundName(result.data.goals.carFundName)
+      try {
+        const result = await pullSnapshot(secret)
+        if (!result.ok) {
+          setSyncResult({ ok: false, error: result.error })
+          return
+        }
+        try {
+          applySnapshot(result.data)
+        } catch {
+          setSyncResult({ ok: false, error: RESTORE_WRITE_ERROR })
+          return
+        }
         setSyncResult({ ok: true, summary: result.summary })
-      } else {
-        setSyncResult({ ok: false, error: result.error })
+      } catch {
+        setSyncResult({ ok: false, error: "Không kết nối được máy chủ đồng bộ." })
+      } finally {
+        setSyncing(false)
       }
-      setSyncing(false)
     },
-    [onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceSettings, onReplaceBudget, onReplaceNetWorthHistory]
+    [applySnapshot]
   )
 
   const exportData = useCallback(() => {
@@ -120,23 +191,26 @@ function useDataManagement({
 
   const importData = useCallback(
     async (file: File) => {
-      const result = parseImportPayload(await file.text())
-
-      if (result.ok) {
-        onReplaceJournal(result.data.journal)
-        onReplaceFinance(result.data.finance)
-        onReplaceStudy(result.data.study)
-        onReplaceSettings(result.data.settings)
-        onReplaceBudget(result.data.budget)
-        onReplaceNetWorthHistory(result.data.netWorthHistory)
-        if (result.data.goals) setCarGoalFundName(result.data.goals.carFundName)
-        setImported({ ok: true, file: file.name, summary: result.summary })
-      } else {
-        setImported({ ok: false, error: result.error })
-      }
       setExported(null)
+      const raw = await file.text().catch(() => null)
+      if (raw === null) {
+        setImported({ ok: false, error: "Không đọc được nội dung file." })
+        return
+      }
+      const result = parseImportPayload(raw)
+      if (!result.ok) {
+        setImported({ ok: false, error: result.error })
+        return
+      }
+      try {
+        applySnapshot(result.data)
+      } catch {
+        setImported({ ok: false, error: RESTORE_WRITE_ERROR })
+        return
+      }
+      setImported({ ok: true, file: file.name, summary: result.summary })
     },
-    [onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceSettings, onReplaceBudget, onReplaceNetWorthHistory]
+    [applySnapshot]
   )
 
   const wipeData = useCallback(() => {
