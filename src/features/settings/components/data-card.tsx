@@ -125,7 +125,13 @@ function DataCard({
           <Button variant="secondary" size="sm" type="button" onClick={onExport}>
             Xuất file JSON
           </Button>
-          <Button variant="ghost" size="sm" type="button" onClick={() => fileRef.current?.click()}>
+          <Button
+            variant="ghost"
+            size="sm"
+            type="button"
+            disabled={syncing}
+            onClick={() => fileRef.current?.click()}
+          >
             Nhập từ file
           </Button>
         </div>

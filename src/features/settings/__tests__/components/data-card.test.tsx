@@ -146,6 +146,15 @@ describe("DataCard", () => {
     syncButtons.forEach((button) => expect(button).toBeDisabled())
   })
 
+  it("keeps Nhập từ file disabled while a cloud sync is running", () => {
+    // Một bản đám mây về muộn sẽ thế chỗ bản từ file đang chờ xác nhận ngay dưới hộp thoại.
+    const { rerender } = render(<DataCard {...BASE_PROPS} syncing />)
+    expect(screen.getByRole("button", { name: "Nhập từ file" })).toBeDisabled()
+
+    rerender(<DataCard {...BASE_PROPS} syncing={false} />)
+    expect(screen.getByRole("button", { name: "Nhập từ file" })).toBeEnabled()
+  })
+
   it("copies the current secret to the clipboard and shows a brief confirmation", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined)
     Object.assign(navigator, { clipboard: { writeText } })
