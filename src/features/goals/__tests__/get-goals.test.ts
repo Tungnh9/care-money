@@ -46,6 +46,26 @@ describe("getGoals", () => {
     const goldGoal = goals.find((g) => g.key === "gold")
     expect(goldGoal?.percent).toBe(100)
     expect(goldGoal?.done).toBe(true)
+    expect(goldGoal?.note).toBe("Đã đạt mục tiêu 18 chỉ")
+  })
+
+  it("says the gold goal is reached instead of showing a zero or negative remainder, from exactly 18 chỉ up", () => {
+    for (const goldPhan of [180, 185]) {
+      const goldGoal = getGoals({ ...GOALS_INPUT, goldPhan }).goals.find((g) => g.key === "gold")
+      expect(goldGoal?.note).toBe("Đã đạt mục tiêu 18 chỉ")
+    }
+  })
+
+  it("estimates the value of the gold still to buy when a price is known", () => {
+    const goldGoal = getGoals(GOALS_INPUT).goals.find((g) => g.key === "gold")
+
+    expect(goldGoal?.note).toBe(`Còn 12 chỉ · tương đương ${formatMoney(120 * 935_000)}`)
+  })
+
+  it("leaves out the value estimate when no gold price is known", () => {
+    const goldGoal = getGoals({ ...GOALS_INPUT, goldPricePerPhan: 0 }).goals.find((g) => g.key === "gold")
+
+    expect(goldGoal?.note).toBe("Còn 12 chỉ")
   })
 
   it("defaults the car goal to zeroed placeholder when no fund is linked", () => {
@@ -80,6 +100,31 @@ describe("getGoals", () => {
 
     const carGoal = goals.find((g) => g.key === "car")
     expect(carGoal).toMatchObject({ now: 0, target: 1, percent: 0, linked: false })
+  })
+
+  it("shows 0% and not done for a linked car fund with no target, without turning the average into NaN", () => {
+    const { goals, avg } = getGoals({
+      ...GOALS_INPUT,
+      savings: [{ name: "Quỹ mua xe", amount: 0, target: 0 }],
+      carFundName: "Quỹ mua xe",
+    })
+
+    const carGoal = goals.find((g) => g.key === "car")
+    expect(carGoal).toMatchObject({ percent: 0, done: false, linked: true })
+    expect(carGoal?.note).toBe(
+      'Quỹ "Quỹ mua xe" chưa có mục tiêu. Đặt mục tiêu cho quỹ ở màn Tài chính để theo dõi tiến độ.'
+    )
+    expect(avg).toBe(26)
+  })
+
+  it("does not mark a car fund that holds money but has no target as done", () => {
+    const { goals } = getGoals({
+      ...GOALS_INPUT,
+      savings: [{ name: "Quỹ mua xe", amount: 5_000_000, target: 0 }],
+      carFundName: "Quỹ mua xe",
+    })
+
+    expect(goals.find((g) => g.key === "car")).toMatchObject({ percent: 0, done: false })
   })
 })
 

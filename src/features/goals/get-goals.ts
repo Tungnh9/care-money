@@ -1,3 +1,4 @@
+import type { SavingsFund } from "@/features/finance/types"
 import { formatMoney } from "@/lib/format"
 
 import type { Goal, GoalsInput } from "./types"
@@ -10,16 +11,34 @@ function formatChi(phan: number): string {
   return `${chi} chỉ${rest ? ` ${rest} phân` : ""}`
 }
 
+// Đủ (hoặc vượt) mục tiêu thì báo đã đạt — không bao giờ in "Còn -2 chỉ · tương đương -… ₫". Chưa
+// biết giá quy đổi (<= 0: chưa cửa hàng nào có giá) thì bỏ phần "tương đương" thay vì in "0 ₫".
 function goldRemainingNote(goldPhan: number, target: number, goldPricePerPhan: number, hidden: boolean): string {
   const remaining = target - goldPhan
+  if (remaining <= 0) return `Đã đạt mục tiêu ${formatChi(target)}`
   const remainingChi =
     remaining % 10 === 0 ? String(remaining / 10) : (remaining / 10).toFixed(1).replace(".", ",")
+  if (goldPricePerPhan <= 0) return `Còn ${remainingChi} chỉ`
   return `Còn ${remainingChi} chỉ · tương đương ${formatMoney(remaining * goldPricePerPhan, hidden)}`
 }
 
+function carGoalNote(fund: SavingsFund | undefined): string {
+  if (!fund) return "Chưa gắn quỹ tiết kiệm nào. Chọn 1 quỹ bên dưới để bắt đầu theo dõi."
+  if (fund.target <= 0) {
+    return `Quỹ "${fund.name}" chưa có mục tiêu. Đặt mục tiêu cho quỹ ở màn Tài chính để theo dõi tiến độ.`
+  }
+  return `Đang gắn với quỹ "${fund.name}" ở màn Tài chính`
+}
+
+// Tỉ lệ hoàn thành 0..1. Mục tiêu <= 0 (vd. quỹ mua xe để mục tiêu 0 — form quỹ nhận "0") không có
+// tiến độ nào để đo: coi là 0, thay vì 0/0 = NaN (NaN% ở mọi chỗ hiện %, kể cả số trung bình) hay
+// x/0 = Infinity (tick "đã đạt" kèm pháo giấy).
+function progressRatio(now: number, target: number): number {
+  return target > 0 ? Math.min(now / target, 1) : 0
+}
+
 function withPercent(now: number, target: number) {
-  const percent = Math.min(Math.round((now / target) * 100), 100)
-  return { percent, done: now >= target }
+  return { percent: Math.round(progressRatio(now, target) * 100), done: target > 0 && now >= target }
 }
 
 function getGoals(data: GoalsInput, hidden = false): { goals: Goal[]; avg: number } {
@@ -59,9 +78,7 @@ function getGoals(data: GoalsInput, hidden = false): { goals: Goal[]; avg: numbe
       now: carFund ? carFund.amount : 0,
       target: carFund ? carFund.target : 1,
       format: (n: number) => formatMoney(n, hidden),
-      note: carFund
-        ? `Đang gắn với quỹ "${carFund.name}" ở màn Tài chính`
-        : "Chưa gắn quỹ tiết kiệm nào. Chọn 1 quỹ bên dưới để bắt đầu theo dõi.",
+      note: carGoalNote(carFund),
       tone: "action" as const,
       linked: !!carFund,
     },
@@ -69,7 +86,7 @@ function getGoals(data: GoalsInput, hidden = false): { goals: Goal[]; avg: numbe
 
   const goals: Goal[] = defs.map((g) => ({ ...g, ...withPercent(g.now, g.target) }))
   const avg = Math.round(
-    (goals.reduce((sum, g) => sum + Math.min(g.now / g.target, 1), 0) / goals.length) * 100
+    (goals.reduce((sum, g) => sum + progressRatio(g.now, g.target), 0) / goals.length) * 100
   )
 
   return { goals, avg }
