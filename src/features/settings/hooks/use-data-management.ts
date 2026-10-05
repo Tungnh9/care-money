@@ -166,6 +166,10 @@ function useDataManagement({
 
   const pullFromCloud = useCallback(async (secret: string) => {
     setSyncing(true)
+    // Banner của lần đồng bộ trước phải biến mất ngay khi lần kéo mới bắt đầu — không còn trong lúc
+    // "Đang đồng bộ…", dưới hộp thoại xác nhận, hay sau khi bấm "Huỷ" (chưa ghi gì). Lỗi mới tự ghi đè
+    // ở nhánh lỗi.
+    setSyncResult(null)
     try {
       const result = await pullSnapshot(secret)
       if (result.ok) {
@@ -204,6 +208,9 @@ function useDataManagement({
 
   const importData = useCallback(async (file: File) => {
     setExported(null)
+    // Như pullFromCloud: banner của lần nạp trước phải biến mất ngay khi chọn file mới — không còn dưới
+    // hộp thoại xác nhận hay sau khi bấm "Huỷ" (chưa ghi gì). Lỗi mới tự ghi đè ở các nhánh lỗi bên dưới.
+    setImported(null)
     const raw = await file.text().catch(() => null)
     if (raw === null) {
       setImported({ ok: false, error: "Không đọc được nội dung file." })

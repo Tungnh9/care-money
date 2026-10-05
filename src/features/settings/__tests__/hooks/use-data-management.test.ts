@@ -208,6 +208,32 @@ describe("useDataManagement", () => {
     expect(onReplaceNetWorthHistory).not.toHaveBeenCalled()
   })
 
+  it("importData clears an old result banner as soon as a new file is staged", async () => {
+    const { result } = renderDataManagement()
+
+    await act(async () => {
+      await result.current.importData(new File(["not json"], "bad.json", { type: "application/json" }))
+    })
+    expect(result.current.imported).toEqual({ ok: false, error: "File không phải JSON hợp lệ." })
+
+    await act(async () => {
+      await result.current.importData(
+        new File([JSON.stringify({ version: EXPORT_VERSION })], "backup.json", { type: "application/json" })
+      )
+    })
+
+    // Hộp thoại xác nhận đang mở cho file mới — không được còn banner lỗi của file trước dưới nó, và
+    // cũng không còn sau khi bấm "Huỷ" (người dùng chưa nạp gì cả).
+    expect(result.current.pendingRestore).not.toBeNull()
+    expect(result.current.imported).toBeNull()
+
+    act(() => {
+      result.current.cancelRestore()
+    })
+
+    expect(result.current.imported).toBeNull()
+  })
+
   it("wipeData replaces journal/finance/study/budget/net-worth-history with empty defaults but keeps the gold stores", () => {
     setStoredFinance({ ...DEFAULT_FINANCE_STATE, goldStores: [{ name: "SJC", price: "935.000" }] })
     const { result, onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceBudget, onReplaceNetWorthHistory } =
@@ -384,6 +410,44 @@ describe("useDataManagement", () => {
     expect(onReplaceSettings).not.toHaveBeenCalled()
     expect(onReplaceBudget).not.toHaveBeenCalled()
     expect(onReplaceNetWorthHistory).not.toHaveBeenCalled()
+  })
+
+  it("pullFromCloud clears an old sync result as soon as a new pull starts", async () => {
+    const { result } = renderDataManagement()
+    vi.mocked(pullSnapshot).mockResolvedValueOnce({ ok: false, error: "Sai secret đồng bộ." })
+    vi.mocked(pullSnapshot).mockResolvedValueOnce({
+      ok: true,
+      data: {
+        journal: DEFAULT_JOURNAL_STATE,
+        finance: DEFAULT_FINANCE_STATE,
+        study: DEFAULT_STUDY_STATE,
+        settings: DEFAULT_SETTINGS,
+        budget: DEFAULT_BUDGET_STATE,
+        netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
+      },
+      summary: "ok",
+      exportedAt: null,
+    })
+
+    await act(async () => {
+      await result.current.pullFromCloud("wrong-secret")
+    })
+    expect(result.current.syncResult).toEqual({ ok: false, error: "Sai secret đồng bộ." })
+
+    await act(async () => {
+      await result.current.pullFromCloud("my-secret")
+    })
+
+    // Hộp thoại xác nhận đang mở cho bản mới — không được còn banner lỗi của lần kéo trước dưới nó, và
+    // cũng không còn sau khi bấm "Huỷ" (người dùng chưa nạp gì cả).
+    expect(result.current.pendingRestore).not.toBeNull()
+    expect(result.current.syncResult).toBeNull()
+
+    act(() => {
+      result.current.cancelRestore()
+    })
+
+    expect(result.current.syncResult).toBeNull()
   })
 
   it("importData reports an error instead of rejecting when the file cannot be read", async () => {
