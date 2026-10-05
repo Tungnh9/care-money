@@ -112,4 +112,42 @@ describe("SettleMonthModal", () => {
 
     expect(onConfirm).toHaveBeenCalledWith("Quỹ A", "withdraw", 50_000)
   })
+
+  it("stays open when onConfirm reports that the settlement failed", () => {
+    const onOpenChange = vi.fn()
+    render(
+      <SettleMonthModal
+        open
+        onOpenChange={onOpenChange}
+        month="2026-09"
+        remaining={200_000}
+        savings={SAVINGS}
+        onConfirm={() => false}
+      />
+    )
+    fireEvent.click(screen.getByRole("button", { name: "Quỹ A" }))
+
+    fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }))
+
+    expect(onOpenChange).not.toHaveBeenCalled()
+  })
+
+  it("closes once onConfirm reports that the settlement went through", () => {
+    const onOpenChange = vi.fn()
+    render(
+      <SettleMonthModal
+        open
+        onOpenChange={onOpenChange}
+        month="2026-09"
+        remaining={200_000}
+        savings={SAVINGS}
+        onConfirm={() => true}
+      />
+    )
+    fireEvent.click(screen.getByRole("button", { name: "Quỹ A" }))
+
+    fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }))
+
+    expect(onOpenChange).toHaveBeenCalledWith(false)
+  })
 })

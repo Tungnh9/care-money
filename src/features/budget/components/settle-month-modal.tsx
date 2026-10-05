@@ -18,7 +18,9 @@ interface SettleMonthModalProps {
   month: string
   remaining: number
   savings: SavingsFund[]
-  onConfirm: (fundName: string, direction: SettlementDirection, amount: number) => void
+  // true = đã tất toán xong (quỹ + lịch sử). false = bị từ chối hoặc ghi lỗi — hook đã tự báo toast,
+  // modal giữ nguyên để chọn quỹ khác hoặc sửa số tiền.
+  onConfirm: (fundName: string, direction: SettlementDirection, amount: number) => boolean
 }
 
 function SettleMonthModal({ open, onOpenChange, month, remaining, savings, onConfirm }: SettleMonthModalProps) {
@@ -49,8 +51,7 @@ function SettleMonthModal({ open, onOpenChange, month, remaining, savings, onCon
 
   function handleConfirm() {
     if (!fund || disabled) return
-    onConfirm(fund.name, direction, delta)
-    onOpenChange(false)
+    if (onConfirm(fund.name, direction, delta)) onOpenChange(false)
   }
 
   return (

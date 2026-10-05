@@ -1,9 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { render, screen, waitFor, fireEvent, within } from "@testing-library/react"
 
-import { setStoredFinance, DEFAULT_FINANCE_STATE, getStoredFinance } from "@/features/finance/finance-storage"
+import {
+  setStoredFinance,
+  DEFAULT_FINANCE_STATE,
+  FINANCE_STORAGE_KEY,
+  getStoredFinance,
+} from "@/features/finance/finance-storage"
 import { formatMoney } from "@/lib/format"
-import { setStoredBudget, DEFAULT_BUDGET_STATE } from "../../budget-storage"
+import { setStoredBudget, DEFAULT_BUDGET_STATE, getStoredBudget } from "../../budget-storage"
 import { BudgetView } from "../../components/budget-view"
 import type { Settlement } from "../../types"
 
@@ -187,5 +192,64 @@ describe("BudgetView", () => {
     expect(
       await screen.findByText(`Lương ${formatMoney(500_000)} · đã chi ${formatMoney(800_000)} tháng này`)
     ).toBeInTheDocument()
+  })
+
+  it("previews a second settlement from the balance the first one left, without reloading the page", async () => {
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      savings: [{ name: "Quỹ A", amount: 100_000, target: 5_000_000 }],
+    })
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [{ month: "2026-09", amount: 1_000_000 }],
+      expenses: [{ id: 1, dayKey: "2026-09-01", amount: 200_000, tag: null }],
+    })
+
+    render(<BudgetView />)
+    await waitFor(() => expect(screen.getByRole("button", { name: "Tất toán tháng" })).not.toBeDisabled())
+
+    // Lần 1: gửi 300.000 trong số 800.000 đang dư → quỹ còn 400.000.
+    fireEvent.click(screen.getByRole("button", { name: "Tất toán tháng" }))
+    let modal = screen.getByRole("dialog")
+    fireEvent.click(within(modal).getByRole("button", { name: "Quỹ A" }))
+    fireEvent.change(within(modal).getByLabelText("Số tiền", { exact: false }), { target: { value: "300000" } })
+    fireEvent.click(within(modal).getByRole("button", { name: "Xác nhận" }))
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
+
+    // Lần 2: còn dư 500.000 → gửi tiếp vào quỹ đang có 400.000 (không phải 100.000 lúc mở trang).
+    fireEvent.click(screen.getByRole("button", { name: "Tất toán tháng" }))
+    modal = screen.getByRole("dialog")
+    fireEvent.click(within(modal).getByRole("button", { name: "Quỹ A" }))
+
+    expect(within(modal).getByText(formatMoney(900_000))).toBeInTheDocument()
+  })
+
+  it("keeps the settle modal open when the fund turns out to be short at confirm time", async () => {
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      savings: [{ name: "Quỹ B", amount: 3_000_000, target: 5_000_000 }],
+    })
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [{ month: "2026-09", amount: 500_000 }],
+      expenses: [{ id: 1, dayKey: "2026-09-01", amount: 2_500_000, tag: null }],
+    })
+
+    render(<BudgetView />)
+    await waitFor(() => expect(screen.getByRole("button", { name: "Tất toán tháng" })).not.toBeDisabled())
+
+    // Tab khác vừa rút hết quỹ mà trang này chưa kịp đọc lại (ghi thẳng, KHÔNG bắn sự kiện).
+    window.localStorage.setItem(
+      FINANCE_STORAGE_KEY,
+      JSON.stringify({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ B", amount: 0, target: 5_000_000 }] })
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Tất toán tháng" }))
+    fireEvent.click(screen.getByRole("button", { name: "Quỹ B" }))
+    fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }))
+
+    expect(screen.getByRole("dialog")).toBeInTheDocument()
+    expect(getStoredBudget().settlements).toEqual([])
+    expect(getStoredFinance().savings[0].amount).toBe(0)
   })
 })
