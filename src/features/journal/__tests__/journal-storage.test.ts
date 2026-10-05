@@ -1,6 +1,13 @@
 import { describe, it, expect, beforeEach } from "vitest"
 
-import { DEFAULT_JOURNAL_STATE, JOURNAL_STORAGE_KEY, getStoredJournal, parseJournalState } from "../journal-storage"
+import {
+  DEFAULT_JOURNAL_STATE,
+  JOURNAL_STORAGE_KEY,
+  getStoredJournal,
+  parseJournalState,
+  setStoredJournal,
+} from "../journal-storage"
+import type { JournalEntry } from "../types"
 
 const VALID = { id: 1, text: "Bài 1", time: "09:00", date: "10/08", words: 2, mood: null }
 
@@ -40,6 +47,34 @@ describe("getStoredJournal", () => {
     window.localStorage.setItem(JOURNAL_STORAGE_KEY, JSON.stringify({ entries: [VALID], streak: 4 }))
 
     expect(getStoredJournal()).toEqual({ entries: [VALID] })
+  })
+
+  it("keeps every field of a valid entry, including the mood score, through a stored round trip", () => {
+    // Đọc trả về bản đã qua schema (field lạ bị bỏ) — field nào thiếu khỏi schema sẽ âm thầm rụng ở lần
+    // ghi kế tiếp, nên mọi field của JournalEntry, kể cả mood.score, phải sống sót qua 1 vòng ghi/đọc.
+    const entry: JournalEntry = {
+      id: 7,
+      text: "Hôm nay vui lắm",
+      time: "21:30",
+      date: "12/09",
+      words: 4,
+      mood: { emoji: "🙂", label: "Vui", tint: "#FFE0C7", score: 4 },
+    }
+
+    setStoredJournal({ entries: [entry] })
+
+    expect(getStoredJournal()).toEqual({ entries: [entry] })
+  })
+
+  it("drops an entry whose id is not a number and turns a malformed mood into null", () => {
+    window.localStorage.setItem(
+      JOURNAL_STORAGE_KEY,
+      JSON.stringify({
+        entries: [VALID, { ...VALID, id: "x" }, { ...VALID, id: 3, mood: { emoji: 1 } }],
+      })
+    )
+
+    expect(getStoredJournal().entries).toEqual([VALID, { ...VALID, id: 3, mood: null }])
   })
 })
 

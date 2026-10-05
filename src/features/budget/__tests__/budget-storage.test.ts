@@ -7,6 +7,7 @@ import {
   setStoredBudget,
   renameFundInSettlements,
 } from "../budget-storage"
+import type { Expense } from "../types"
 
 describe("getStoredBudget", () => {
   beforeEach(() => {
@@ -96,6 +97,23 @@ describe("getStoredBudget", () => {
     window.localStorage.setItem(BUDGET_STORAGE_KEY, JSON.stringify({ ...DEFAULT_BUDGET_STATE, expenses: [expense] }))
 
     expect(getStoredBudget().expenses).toEqual([expense])
+  })
+
+  it("keeps every field of an expense, including the note and tag, through a stored round trip", () => {
+    // Đọc trả về bản đã qua schema (field lạ bị bỏ) — field nào thiếu khỏi schema sẽ âm thầm rụng ở lần
+    // ghi kế tiếp. Required<Expense>: thêm 1 field vào Expense thì fixture này buộc phải đổi theo.
+    const expense: Required<Expense> = {
+      id: 1,
+      dayKey: "2026-09-01",
+      amount: 85_000,
+      note: "Ăn trưa với đồng nghiệp",
+      tag: { label: "Ăn uống", emoji: "🍜", tint: "#FFE0C7" },
+    }
+    const state = { ...DEFAULT_BUDGET_STATE, expenses: [expense] }
+
+    setStoredBudget(state)
+
+    expect(getStoredBudget()).toEqual(state)
   })
 
   it("drops an expense whose tag snapshot is missing a required field", () => {
