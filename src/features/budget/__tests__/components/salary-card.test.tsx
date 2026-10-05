@@ -64,4 +64,13 @@ describe("SalaryCard", () => {
     act(() => input.focus())
     expect(input).toHaveValue("20.000.000")
   })
+
+  it("blocks saving a salary above 999.999.999.999 đ", () => {
+    render(<SalaryCard month="2026-09" salary={0} onSave={vi.fn()} />)
+
+    fireEvent.change(screen.getByLabelText("Số tiền", { exact: false }), { target: { value: "1000000000000" } })
+
+    expect(screen.getByText("Tối đa 999.999.999.999 đ")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
+  })
 })

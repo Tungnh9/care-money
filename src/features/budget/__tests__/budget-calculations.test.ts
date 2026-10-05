@@ -13,6 +13,8 @@ import {
   tagChartColors,
   CHART_PALETTE,
   UNTAGGED_CHART_COLOR,
+  exceedsBudgetAmountLimit,
+  MAX_BUDGET_AMOUNT,
 } from "../budget-calculations"
 import type { Expense, MonthlySalary, Settlement } from "../types"
 import { DEFAULT_TAGS } from "@/lib/settings-storage"
@@ -385,5 +387,18 @@ describe("tagChartColors", () => {
     )
 
     expect(new Set(colors.values()).size).toBe(DEFAULT_TAGS.length)
+  })
+})
+
+describe("exceedsBudgetAmountLimit", () => {
+  it("accepts amounts up to 999.999.999.999 đ, and an empty field", () => {
+    expect(MAX_BUDGET_AMOUNT).toBe(999_999_999_999)
+    expect(exceedsBudgetAmountLimit("")).toBe(false)
+    expect(exceedsBudgetAmountLimit("999999999999")).toBe(false)
+  })
+
+  it("rejects anything larger, including a 17-digit typo that would vanish after a reload", () => {
+    expect(exceedsBudgetAmountLimit("1000000000000")).toBe(true)
+    expect(exceedsBudgetAmountLimit("12345678901234567")).toBe(true)
   })
 })

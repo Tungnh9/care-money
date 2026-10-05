@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Field } from "@/components/ui/field"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
+import { BUDGET_AMOUNT_LIMIT_HINT, exceedsBudgetAmountLimit } from "../budget-calculations"
 
 interface SalaryCardProps {
   month: string
@@ -28,7 +29,8 @@ function SalaryCard({ month, salary, onSave }: SalaryCardProps) {
     setPrevSalary(salary)
   }
 
-  const disabled = !amount.trim() || Number(amount) === salary
+  const tooLarge = exceedsBudgetAmountLimit(amount)
+  const disabled = !amount.trim() || Number(amount) === salary || tooLarge
 
   function handleSave() {
     onSave(month, Number(amount) || 0)
@@ -44,6 +46,8 @@ function SalaryCard({ month, salary, onSave }: SalaryCardProps) {
         suffix="đ"
         placeholder="0"
         masked={hidden}
+        invalid={tooLarge}
+        hint={tooLarge ? BUDGET_AMOUNT_LIMIT_HINT : undefined}
         value={amount}
         onChange={(e) => {
           setAmount(e.target.value)

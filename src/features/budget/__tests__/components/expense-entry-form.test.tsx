@@ -72,4 +72,18 @@ describe("ExpenseEntryForm", () => {
 
     expect(onAdd).toHaveBeenCalledWith({ amount: 10_000, tag: null, note: undefined })
   })
+
+  it("blocks an amount above 999.999.999.999 đ with a hint under the field", () => {
+    render(<ExpenseEntryForm tags={TAGS} onAdd={vi.fn()} />)
+
+    fireEvent.change(screen.getByLabelText("Số tiền", { exact: false }), { target: { value: "1000000000000" } })
+
+    expect(screen.getByText("Tối đa 999.999.999.999 đ")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Ghi khoản chi" })).toBeDisabled()
+
+    fireEvent.change(screen.getByLabelText("Số tiền", { exact: false }), { target: { value: "999999999999" } })
+
+    expect(screen.queryByText("Tối đa 999.999.999.999 đ")).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Ghi khoản chi" })).not.toBeDisabled()
+  })
 })

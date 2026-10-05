@@ -5,6 +5,18 @@ const UNTAGGED_LABEL = "Không gắn thẻ"
 const UNTAGGED_EMOJI = "🏷️"
 const UNTAGGED_TINT = "#F2E9DC"
 
+// Trần số tiền gõ tay ở 3 form Chi tiêu (lương, ghi khoản chi, sửa khoản chi). budget-storage đọc số
+// tiền bằng z.number().int(), mà zod 4 coi số > Number.MAX_SAFE_INTEGER là không hợp lệ — 1 số 16–17
+// chữ số gõ nhầm sẽ hiện bình thường cho tới lần tải lại trang rồi mất hẳn. Chặn ở form, xa dưới
+// ngưỡng đó (không thêm .max() vào schema: sẽ âm thầm bỏ luôn bản ghi cũ vượt trần đang có trong máy).
+const MAX_BUDGET_AMOUNT = 999_999_999_999
+const BUDGET_AMOUNT_LIMIT_HINT = `Tối đa ${MAX_BUDGET_AMOUNT.toLocaleString("vi-VN")} đ`
+
+// `amount` là chuỗi chữ số của ô Field (group) — chuỗi rỗng là 0, không vượt.
+function exceedsBudgetAmountLimit(amount: string): boolean {
+  return Number(amount) > MAX_BUDGET_AMOUNT
+}
+
 function totalExpensesForMonth(expenses: Expense[], month: string): number {
   return expenses
     .filter((e) => monthKeyFromDayKey(e.dayKey) === month)
@@ -195,9 +207,12 @@ export {
   monthlyExpenseTotals,
   monthlyTagBreakdown,
   tagChartColors,
+  exceedsBudgetAmountLimit,
   CHART_PALETTE,
   UNTAGGED_CHART_COLOR,
   UNTAGGED_LABEL,
+  MAX_BUDGET_AMOUNT,
+  BUDGET_AMOUNT_LIMIT_HINT,
   type TagBreakdownEntry,
   type UnsettledMonth,
   type DayGroup,

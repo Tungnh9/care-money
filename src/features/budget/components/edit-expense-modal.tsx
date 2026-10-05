@@ -7,6 +7,7 @@ import { Field } from "@/components/ui/field"
 import { Modal } from "@/components/ui/modal"
 import type { BudgetTag } from "@/lib/settings-storage"
 import type { Expense, TagSnapshot } from "../types"
+import { BUDGET_AMOUNT_LIMIT_HINT, exceedsBudgetAmountLimit } from "../budget-calculations"
 import { TagPicker } from "./tag-picker"
 
 interface EditExpenseModalProps {
@@ -48,7 +49,8 @@ function EditExpenseModal({ expense, tags, onOpenChange, onSave }: EditExpenseMo
       : picked
         ? { label: picked.label, emoji: picked.emoji, tint: picked.tint }
         : null
-  const disabled = !Number(amount)
+  const tooLarge = exceedsBudgetAmountLimit(amount)
+  const disabled = !Number(amount) || tooLarge
 
   function handleSave() {
     onSave(currentExpense.id, {
@@ -70,6 +72,8 @@ function EditExpenseModal({ expense, tags, onOpenChange, onSave }: EditExpenseMo
         numeric
         group
         suffix="đ"
+        invalid={tooLarge}
+        hint={tooLarge ? BUDGET_AMOUNT_LIMIT_HINT : undefined}
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
       />

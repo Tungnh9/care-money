@@ -137,4 +137,13 @@ describe("EditExpenseModal", () => {
       note: "Tiền nhà tháng này",
     })
   })
+
+  it("blocks saving an amount above 999.999.999.999 đ", () => {
+    render(<EditExpenseModal expense={EXPENSE} tags={TAGS} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+
+    fireEvent.change(screen.getByLabelText("Số tiền", { exact: false }), { target: { value: "12345678901234567" } })
+
+    expect(screen.getByText("Tối đa 999.999.999.999 đ")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
+  })
 })

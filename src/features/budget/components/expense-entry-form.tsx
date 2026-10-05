@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card"
 import { Field } from "@/components/ui/field"
 import type { BudgetTag } from "@/lib/settings-storage"
 import type { TagSnapshot } from "../types"
+import { BUDGET_AMOUNT_LIMIT_HINT, exceedsBudgetAmountLimit } from "../budget-calculations"
 import { TagPicker } from "./tag-picker"
 
 interface ExpenseEntryFormProps {
@@ -19,6 +20,7 @@ function ExpenseEntryForm({ tags, onAdd }: ExpenseEntryFormProps) {
   const [amount, setAmount] = useState("")
   const [selectedLabel, setSelectedLabel] = useState<string | null>(null)
   const [note, setNote] = useState("")
+  const tooLarge = exceedsBudgetAmountLimit(amount)
 
   function reset() {
     setAmount("")
@@ -44,6 +46,8 @@ function ExpenseEntryForm({ tags, onAdd }: ExpenseEntryFormProps) {
         group
         suffix="đ"
         placeholder="0"
+        invalid={tooLarge}
+        hint={tooLarge ? BUDGET_AMOUNT_LIMIT_HINT : undefined}
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
       />
@@ -58,7 +62,7 @@ function ExpenseEntryForm({ tags, onAdd }: ExpenseEntryFormProps) {
         onChange={(e) => setNote(e.target.value)}
       />
       <div className="mt-4">
-        <Button variant="primary" size="sm" type="button" disabled={!Number(amount)} onClick={handleSubmit}>
+        <Button variant="primary" size="sm" type="button" disabled={!Number(amount) || tooLarge} onClick={handleSubmit}>
           Ghi khoản chi
         </Button>
       </div>
