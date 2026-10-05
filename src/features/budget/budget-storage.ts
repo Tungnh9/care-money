@@ -1,6 +1,7 @@
 import { z } from "zod"
 
 import { notifyDataChanged } from "@/lib/data-change-bus"
+import { safeArray } from "@/lib/safe-array"
 import type { Expense, MonthlySalary, Settlement } from "./types"
 
 interface BudgetState {
@@ -43,13 +44,8 @@ const settlementSchema: z.ZodType<Settlement> = z.object({
   fundAmountAfter: z.number().int(),
 })
 
-// Khác finance-storage.ts: expenses/settlements là lịch sử tích luỹ dài hạn, 1 bản ghi hỏng
-// làm mất cả mảng là cái giá quá đắt — nên lọc bỏ đúng phần tử hỏng, giữ lại phần còn hợp lệ.
-function safeArray<T>(schema: z.ZodType<T>, value: unknown): T[] {
-  if (!Array.isArray(value)) return []
-  return value.filter((item): item is T => schema.safeParse(item).success)
-}
-
+// expenses/settlements là lịch sử tích luỹ dài hạn — 1 bản ghi hỏng chỉ bị bỏ riêng nó (safeArray),
+// không kéo mất cả mảng.
 function parseBudgetState(value: unknown): BudgetState {
   const parsed = (value ?? {}) as Record<string, unknown>
   return {

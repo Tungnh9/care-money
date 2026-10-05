@@ -1,6 +1,7 @@
 import { z } from "zod"
 
 import { notifyDataChanged } from "@/lib/data-change-bus"
+import { safeArray } from "@/lib/safe-array"
 import type { CreditCard, GoldPurchase, GoldStore, Investment, SavingsFund } from "./types"
 
 interface FinanceState {
@@ -66,13 +67,6 @@ const financeStateSchema = z.object({
   invests: z.array(investmentSchema),
 })
 
-// Đọc/khôi phục 1 field độc lập — field nào sai shape thì rơi về default riêng field đó,
-// không kéo sập cả state (vd. "cards" hỏng không làm mất luôn "savings" hợp lệ).
-function safeField<T>(schema: z.ZodType<T>, value: unknown, fallback: T): T {
-  const result = schema.safeParse(value)
-  return result.success ? result.data : fallback
-}
-
 // Quỹ và thẻ được định danh bằng TÊN ở mọi nơi (sửa, xoá, trả thẻ, tất toán ngân sách, liên kết
 // mục tiêu mua xe, React key) — 2 mục trùng tên thì thao tác trên 1 mục sẽ đè/xoá luôn mục kia.
 // Bản lưu cũ (hay file sao lưu cũ) lỡ có trùng: giữ nguyên tên mục ĐẦU TIÊN (đúng mục mà find() ở
@@ -100,8 +94,8 @@ function isObject(value: unknown): value is Record<string, unknown> {
 }
 
 // Bản cũ chỉ có 1 `goldPrice` chung, purchase chưa có field `store`. Phải chạy TRƯỚC khi
-// Zod validate `gold` — nếu không, purchase thiếu `store` sẽ fail goldPurchaseSchema và
-// cả mảng gold rơi về [], mất sạch lịch sử mua. Không đụng vào nếu đã ở format mới
+// Zod validate `gold` — nếu không, mọi purchase thiếu `store` sẽ fail goldPurchaseSchema và
+// bị bỏ khi đọc, mất sạch lịch sử mua. Không đụng vào nếu đã ở format mới
 // (đã có `goldStores`, kể cả khi rỗng) — tránh migrate lặp hoặc ghi đè dữ liệu đang đúng.
 function migrateGoldShape(parsed: Record<string, unknown>): { gold: unknown; goldStores: unknown } {
   if (Array.isArray(parsed.goldStores)) {
@@ -125,12 +119,15 @@ function migrateGoldShape(parsed: Record<string, unknown>): { gold: unknown; gol
 function parseFinanceState(value: unknown): FinanceState {
   const parsed = (value ?? {}) as Record<string, unknown>
   const migrated = migrateGoldShape(parsed)
+  // Lọc TỪNG phần tử (giống budget-storage): 1 purchase/thẻ hỏng chỉ mất riêng nó. Trước đây cả
+  // mảng rơi về [] và lần ghi kế tiếp (vd. gõ 1 phím giá vàng) biến mất mát đó thành vĩnh viễn.
+  // Lọc trước, khử trùng tên sau — bản hỏng bị bỏ thì không chiếm tên của bản hợp lệ.
   return {
-    savings: dedupeNames(safeField(z.array(savingsFundSchema), parsed.savings, DEFAULT_FINANCE_STATE.savings)),
-    cards: dedupeNames(safeField(z.array(creditCardSchema), parsed.cards, DEFAULT_FINANCE_STATE.cards)),
-    gold: safeField(z.array(goldPurchaseSchema), migrated.gold, DEFAULT_FINANCE_STATE.gold),
-    goldStores: safeField(z.array(goldStoreSchema), migrated.goldStores, DEFAULT_FINANCE_STATE.goldStores),
-    invests: safeField(z.array(investmentSchema), parsed.invests, DEFAULT_FINANCE_STATE.invests),
+    savings: dedupeNames(safeArray(savingsFundSchema, parsed.savings)),
+    cards: dedupeNames(safeArray(creditCardSchema, parsed.cards)),
+    gold: safeArray(goldPurchaseSchema, migrated.gold),
+    goldStores: safeArray(goldStoreSchema, migrated.goldStores),
+    invests: safeArray(investmentSchema, parsed.invests),
   }
 }
 

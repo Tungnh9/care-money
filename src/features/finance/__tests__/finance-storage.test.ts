@@ -22,13 +22,26 @@ describe("getStoredFinance", () => {
     expect(getStoredFinance().savings).toEqual([])
   })
 
-  it("falls back to an empty array when a list field contains elements missing required fields", () => {
+  it("drops only the malformed element of a list field, keeping its valid siblings", () => {
+    const validCard = { name: "Thẻ tốt", balance: 1_000_000, min: 100_000, limit: 10_000_000, due: "15" }
     window.localStorage.setItem(
       FINANCE_STORAGE_KEY,
-      JSON.stringify({ ...DEFAULT_FINANCE_STATE, cards: [{ name: "Thẻ lỗi" }] })
+      JSON.stringify({ ...DEFAULT_FINANCE_STATE, cards: [{ name: "Thẻ lỗi" }, validCard] })
     )
 
-    expect(getStoredFinance().cards).toEqual([])
+    expect(getStoredFinance().cards).toEqual([validCard])
+  })
+
+  it("keeps every other gold purchase when one was saved with a non-finite weight (stored as null)", () => {
+    const good = { id: 1, date: "10/08/2026", phan: 20, buy: 900_000, store: "SJC" }
+    const broken = { id: 2, date: "12/08/2026", phan: Infinity, buy: 910_000, store: "SJC" }
+    // JSON.stringify ghi Infinity thành null — đúng thứ localStorage giữ lại sau khi gõ "1e400".
+    window.localStorage.setItem(
+      FINANCE_STORAGE_KEY,
+      JSON.stringify({ ...DEFAULT_FINANCE_STATE, gold: [good, broken], goldStores: [{ name: "SJC", price: "" }] })
+    )
+
+    expect(getStoredFinance().gold).toEqual([good])
   })
 
   it("keeps a valid field untouched even when a sibling field is malformed", () => {

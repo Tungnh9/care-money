@@ -293,17 +293,18 @@ describe("parseImportPayload", () => {
     }
   })
 
-  it("falls back to the default finance array when its elements are missing required fields, not just when the field is wrong-typed", () => {
+  it("drops only the finance elements missing required fields, keeping their valid siblings", () => {
+    const validCard = { name: "Thẻ tốt", balance: 1_000_000, min: 100_000, limit: 10_000_000, due: "15" }
     const raw = JSON.stringify({
       version: EXPORT_VERSION,
-      finance: { cards: [{ name: "Thẻ lỗi" }] },
+      finance: { cards: [{ name: "Thẻ lỗi" }, validCard] },
     })
 
     const result = parseImportPayload(raw)
 
     expect(result.ok).toBe(true)
     if (result.ok) {
-      expect(result.data.finance.cards).toEqual(DEFAULT_FINANCE_STATE.cards)
+      expect(result.data.finance.cards).toEqual([validCard])
     }
   })
 

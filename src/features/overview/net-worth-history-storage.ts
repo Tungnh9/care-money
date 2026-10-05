@@ -1,6 +1,7 @@
 import { z } from "zod"
 
 import { notifyDataChanged } from "@/lib/data-change-bus"
+import { safeArray } from "@/lib/safe-array"
 
 interface NetWorthSnapshot {
   date: string // dayKey "YYYY-MM-DD"
@@ -18,13 +19,6 @@ const netWorthSnapshotSchema: z.ZodType<NetWorthSnapshot> = z.object({
   net: z.number(),
   savingsTotal: z.number(),
 })
-
-// Lịch sử tích luỹ dài hạn, không giới hạn số điểm — 1 bản ghi hỏng không được kéo sập cả
-// mảng, đúng nguyên tắc đã dùng ở budget-storage.ts cho expenses/settlements.
-function safeArray<T>(schema: z.ZodType<T>, value: unknown): T[] {
-  if (!Array.isArray(value)) return []
-  return value.filter((item): item is T => schema.safeParse(item).success)
-}
 
 // Tách riêng để data-transfer.ts (import/export/đồng bộ cloud) dùng lại đúng 1 quy tắc lọc
 // từng phần tử, thay vì tự viết lại logic validate ở nơi khác.
