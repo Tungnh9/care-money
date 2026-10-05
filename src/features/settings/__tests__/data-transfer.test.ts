@@ -418,4 +418,21 @@ describe("parseImportPayload", () => {
       )
     }
   })
+
+  it("keeps the valid learned ids from an imported backup and drops only a wrong-typed one", () => {
+    const raw = JSON.stringify({
+      version: EXPORT_VERSION,
+      study: { ...DEFAULT_STUDY_STATE, learned: ["v-0001", null, "v-0002"] },
+    })
+
+    const result = parseImportPayload(raw)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.study.learned).toEqual(["v-0001", "v-0002"])
+      expect(result.summary).toBe(
+        "0 bài nhật ký · 0 lần mua vàng · 2 từ đã học · đã khôi phục tiết kiệm, nợ thẻ, mục tiêu"
+      )
+    }
+  })
 })

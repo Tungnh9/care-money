@@ -96,4 +96,13 @@ describe("getStoredStudy", () => {
     expect(state.wordReviews["v-1"]).toEqual(saved.wordReviews["v-1"])
     expect(state.wordReviews["v-2" as keyof typeof state.wordReviews]).toBeUndefined()
   })
+
+  it("keeps valid learned ids and drops only a wrong-typed element (and duplicates)", () => {
+    window.localStorage.setItem(
+      STUDY_STORAGE_KEY,
+      JSON.stringify({ ...DEFAULT_STUDY_STATE, learned: ["v-0001", null, "v-0002", "v-0001"] })
+    )
+
+    expect(getStoredStudy().learned).toEqual(["v-0001", "v-0002"])
+  })
 })

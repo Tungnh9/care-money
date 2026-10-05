@@ -1,6 +1,7 @@
 import { z } from "zod"
 
 import { notifyDataChanged } from "@/lib/data-change-bus"
+import { safeArray } from "@/lib/safe-array"
 import type { GameHighScores, GameStreak, Task, WordReviewState } from "./types"
 
 interface StudyState {
@@ -79,11 +80,18 @@ function safeWordReviews(value: unknown): Record<string, WordReviewState> {
   return out
 }
 
+// learned là danh sách tích luỹ dài hạn (khác tasks có mặc định riêng) — lọc TỪNG phần tử qua
+// safeArray: 1 phần tử sai kiểu chỉ bị bỏ riêng nó thay vì kéo cả danh sách về [] như safeField;
+// id trùng được gộp, giữ thứ tự lần xuất hiện đầu.
+function safeLearned(value: unknown): string[] {
+  return [...new Set(safeArray(z.string(), value))]
+}
+
 function parseStudyState(value: unknown): StudyState {
   const parsed = (value ?? {}) as Partial<StudyState>
   return {
     tasks: safeField(z.array(taskSchema), parsed.tasks, DEFAULT_STUDY_STATE.tasks),
-    learned: safeField(z.array(z.string()), parsed.learned, DEFAULT_STUDY_STATE.learned),
+    learned: safeLearned(parsed.learned),
     gameHighScores: safeField(gameHighScoresSchema, parsed.gameHighScores, DEFAULT_STUDY_STATE.gameHighScores),
     gameStreak: safeField(gameStreakSchema, parsed.gameStreak, DEFAULT_STUDY_STATE.gameStreak),
     wordReviews: safeWordReviews(parsed.wordReviews),
