@@ -39,8 +39,10 @@ function exportFileName(exportedAt: string): string {
   return `orange-banana-${exportedAt.slice(0, 10)}.json`
 }
 
+// exportedAt: thời điểm bản sao được tạo (null nếu file sửa tay không có) — để hộp xác nhận cho
+// người dùng thấy bản sắp thay dữ liệu trên máy cũ hay mới.
 type ImportResult =
-  | { ok: true; data: ImportedSnapshot; summary: string }
+  | { ok: true; data: ImportedSnapshot; summary: string; exportedAt: string | null }
   | { ok: false; error: string }
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -87,7 +89,8 @@ function parseImportPayload(raw: string): ImportResult {
   const goals = parseGoalsSnapshot(parsed.goals)
 
   const data: ImportedSnapshot = { journal, finance, study, settings, budget, netWorthHistory, goals }
-  return { ok: true, data, summary: restoredSummary(data) }
+  const exportedAt = typeof parsed.exportedAt === "string" ? parsed.exportedAt : null
+  return { ok: true, data, summary: restoredSummary(data), exportedAt }
 }
 
 const UNCOUNTED_SECTIONS = "tiết kiệm, nợ thẻ, mục tiêu"
@@ -104,11 +107,24 @@ function uploadedSummary(snapshot: ImportedSnapshot): string {
   return `${snapshotCounts(snapshot)} · đã tải lên ${UNCOUNTED_SECTIONS}`
 }
 
+// Dùng trong hộp xác nhận trước khi thay dữ liệu: đặt số liệu của bản sắp nạp cạnh số liệu trên
+// máy, gồm cả khoản chi và quỹ tiết kiệm (2 thứ hay đổi nhất) mà snapshotCounts không đếm.
+function restoreCounts(snapshot: ImportedSnapshot): string {
+  return [
+    `${snapshot.journal.entries.length} bài nhật ký`,
+    `${snapshot.budget.expenses.length} khoản chi`,
+    `${snapshot.finance.savings.length} quỹ tiết kiệm`,
+    `${snapshot.finance.gold.length} lần mua vàng`,
+    `${snapshot.study.learned.length} từ đã học`,
+  ].join(" · ")
+}
+
 export {
   EXPORT_VERSION,
   buildExportPayload,
   exportFileName,
   parseImportPayload,
+  restoreCounts,
   uploadedSummary,
   type ExportPayload,
   type ExportSnapshot,

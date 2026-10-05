@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 
 import { setStoredJournal } from "@/features/journal/journal-storage"
 import { setStoredFinance, DEFAULT_FINANCE_STATE } from "@/features/finance/finance-storage"
@@ -82,7 +82,32 @@ describe("SettingsView", () => {
 
     fireEvent.change(input, { target: { files: [file] } })
 
+    // Chưa ghi gì cho tới khi xác nhận trong hộp thoại.
+    const dialog = await screen.findByRole("alertdialog")
+    expect(getStoredSettings().profile.displayName).toBe("Tungnh2k1")
+    fireEvent.click(within(dialog).getByRole("button", { name: "Thay dữ liệu" }))
+
     expect(await screen.findByText("Đã nạp backup.json", { exact: false })).toBeInTheDocument()
+    expect(getStoredSettings().profile.displayName).toBe("Khôi phục")
+  })
+
+  it("keeps this device's data when the restore is cancelled", async () => {
+    render(<SettingsView />)
+    await waitFor(() => expect(screen.getByText("Module hiển thị")).toBeInTheDocument())
+
+    const payload = {
+      version: EXPORT_VERSION,
+      settings: { profile: { displayName: "Khôi phục", greeting: "Chào buổi sáng, Khôi phục" } },
+    }
+    const file = new File([JSON.stringify(payload)], "backup.json", { type: "application/json" })
+    fireEvent.change(document.querySelector('input[type="file"]') as HTMLInputElement, { target: { files: [file] } })
+
+    const dialog = await screen.findByRole("alertdialog")
+    fireEvent.click(within(dialog).getByRole("button", { name: "Huỷ" }))
+
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument())
+    expect(getStoredSettings().profile.displayName).toBe("Tungnh2k1")
+    expect(screen.queryByText("Đã nạp backup.json", { exact: false })).not.toBeInTheDocument()
   })
 
   it("saves a new display name, keeping the greeting prefix and persisting both to localStorage", async () => {

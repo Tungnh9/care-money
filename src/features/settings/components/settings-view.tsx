@@ -41,6 +41,9 @@ function SettingsView() {
     syncResult,
     pushToCloud,
     pullFromCloud,
+    pendingRestore,
+    confirmRestore,
+    cancelRestore,
   } = useDataManagement({
     onReplaceJournal: replaceJournal,
     onReplaceFinance: replaceFinance,
@@ -82,10 +85,13 @@ function SettingsView() {
           imported={imported}
           syncing={syncing}
           syncResult={syncResult}
+          pendingRestore={pendingRestore}
           onExport={exportData}
           onImport={importData}
           onPushToCloud={pushToCloud}
           onPullFromCloud={pullFromCloud}
+          onConfirmRestore={confirmRestore}
+          onCancelRestore={cancelRestore}
         />
         <ResetCard counts={counts} onWipe={wipeData} onExport={exportData} />
       </div>

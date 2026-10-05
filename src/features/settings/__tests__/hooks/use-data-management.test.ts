@@ -2,12 +2,18 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { act, renderHook } from "@testing-library/react"
 
 import { DEFAULT_FINANCE_STATE, FINANCE_STORAGE_KEY, setStoredFinance } from "@/features/finance/finance-storage"
-import { DEFAULT_JOURNAL_STATE, getStoredJournal, setStoredJournal } from "@/features/journal/journal-storage"
-import { DEFAULT_STUDY_STATE } from "@/features/study/study-storage"
-import { DEFAULT_BUDGET_STATE } from "@/features/budget/budget-storage"
-import { DEFAULT_NET_WORTH_HISTORY } from "@/features/overview/net-worth-history-storage"
-import { DEFAULT_SETTINGS } from "@/lib/settings-storage"
-import { getCarGoalFundName, setCarGoalFundName } from "@/features/goals/car-goal-storage"
+import {
+  DEFAULT_JOURNAL_STATE,
+  JOURNAL_STORAGE_KEY,
+  getStoredJournal,
+  setStoredJournal,
+} from "@/features/journal/journal-storage"
+import { DEFAULT_STUDY_STATE, STUDY_STORAGE_KEY } from "@/features/study/study-storage"
+import { BUDGET_STORAGE_KEY, DEFAULT_BUDGET_STATE } from "@/features/budget/budget-storage"
+import { DEFAULT_NET_WORTH_HISTORY, NET_WORTH_HISTORY_KEY } from "@/features/overview/net-worth-history-storage"
+import { onDataChanged } from "@/lib/data-change-bus"
+import { DEFAULT_SETTINGS, SETTINGS_STORAGE_KEY } from "@/lib/settings-storage"
+import { CAR_GOAL_FUND_KEY, getCarGoalFundName, setCarGoalFundName } from "@/features/goals/car-goal-storage"
 import { EXPORT_VERSION } from "../../data-transfer"
 import { useDataManagement } from "../../hooks/use-data-management"
 
@@ -53,6 +59,27 @@ function renderDataManagement() {
   }
 }
 
+type DataManagementResult = ReturnType<typeof renderDataManagement>["result"]
+
+// Nạp bản sao giờ gồm 2 bước: đọc + parse (xếp vào pendingRestore), rồi người dùng xác nhận.
+async function importAndConfirm(result: DataManagementResult, file: File) {
+  await act(async () => {
+    await result.current.importData(file)
+  })
+  act(() => {
+    result.current.confirmRestore()
+  })
+}
+
+async function pullAndConfirm(result: DataManagementResult, secret: string) {
+  await act(async () => {
+    await result.current.pullFromCloud(secret)
+  })
+  act(() => {
+    result.current.confirmRestore()
+  })
+}
+
 describe("useDataManagement", () => {
   beforeEach(() => {
     window.localStorage.clear()
@@ -76,7 +103,8 @@ describe("useDataManagement", () => {
     expect(result.current.imported).toBeNull()
   })
 
-  it("importData reports the restored data to each domain's replace callback", async () => {
+  it("importData stages a valid backup and replaces nothing until confirmRestore", async () => {
+    setStoredJournal(LOCAL_JOURNAL)
     const {
       result,
       onReplaceJournal,
@@ -96,6 +124,7 @@ describe("useDataManagement", () => {
     const netWorthHistory = [{ date: "2026-09-01", net: 1_000_000, savingsTotal: 500_000 }]
     const payload = {
       version: EXPORT_VERSION,
+      exportedAt: "2026-09-20T02:00:00.000Z",
       journal,
       finance,
       study: DEFAULT_STUDY_STATE,
@@ -109,17 +138,48 @@ describe("useDataManagement", () => {
       await result.current.importData(file)
     })
 
+    expect(onReplaceJournal).not.toHaveBeenCalled()
+    expect(result.current.imported).toBeNull()
+    expect(result.current.pendingRestore).toMatchObject({
+      source: "file",
+      fileName: "backup.json",
+      exportedAt: "2026-09-20T02:00:00.000Z",
+      incomingCounts: "1 bài nhật ký · 0 khoản chi · 1 quỹ tiết kiệm · 0 lần mua vàng · 0 từ đã học",
+      localCounts: "1 bài nhật ký · 0 khoản chi · 0 quỹ tiết kiệm · 0 lần mua vàng · 0 từ đã học",
+    })
+
+    act(() => {
+      result.current.confirmRestore()
+    })
+
     expect(onReplaceJournal).toHaveBeenCalledWith(journal)
     expect(onReplaceFinance).toHaveBeenCalledWith(finance)
     expect(onReplaceStudy).toHaveBeenCalledWith(DEFAULT_STUDY_STATE)
     expect(onReplaceSettings).toHaveBeenCalledWith(settings)
     expect(onReplaceBudget).toHaveBeenCalledWith(budget)
     expect(onReplaceNetWorthHistory).toHaveBeenCalledWith(netWorthHistory)
+    expect(result.current.pendingRestore).toBeNull()
     expect(result.current.imported).toEqual({
       ok: true,
       file: "backup.json",
       summary: expect.stringContaining("bài nhật ký"),
     })
+  })
+
+  it("cancelRestore drops the staged backup without writing anything", async () => {
+    const { result, onReplaceJournal } = renderDataManagement()
+    const file = new File([JSON.stringify({ version: EXPORT_VERSION })], "backup.json", { type: "application/json" })
+
+    await act(async () => {
+      await result.current.importData(file)
+    })
+    act(() => {
+      result.current.cancelRestore()
+    })
+
+    expect(result.current.pendingRestore).toBeNull()
+    expect(onReplaceJournal).not.toHaveBeenCalled()
+    expect(result.current.imported).toBeNull()
   })
 
   it("importData reports an error and calls no replace callback when the file is invalid", async () => {
@@ -197,7 +257,7 @@ describe("useDataManagement", () => {
     expect(result.current.syncing).toBe(false)
   })
 
-  it("pullFromCloud reports the restored data to each domain's replace callback", async () => {
+  it("pullFromCloud stages the cloud snapshot; confirmRestore applies it and reports the summary", async () => {
     const {
       result,
       onReplaceJournal,
@@ -224,6 +284,7 @@ describe("useDataManagement", () => {
         netWorthHistory,
       },
       summary: "5 bài nhật ký",
+      exportedAt: "2026-09-20T02:00:00.000Z",
     })
 
     await act(async () => {
@@ -231,6 +292,14 @@ describe("useDataManagement", () => {
     })
 
     expect(pullSnapshot).toHaveBeenCalledWith("my-secret")
+    expect(onReplaceJournal).not.toHaveBeenCalled()
+    expect(result.current.syncing).toBe(false)
+    expect(result.current.pendingRestore).toMatchObject({ source: "cloud", exportedAt: "2026-09-20T02:00:00.000Z" })
+
+    act(() => {
+      result.current.confirmRestore()
+    })
+
     expect(onReplaceJournal).toHaveBeenCalledWith(journal)
     expect(onReplaceFinance).toHaveBeenCalledWith(DEFAULT_FINANCE_STATE)
     expect(onReplaceStudy).toHaveBeenCalledWith(DEFAULT_STUDY_STATE)
@@ -238,6 +307,46 @@ describe("useDataManagement", () => {
     expect(onReplaceBudget).toHaveBeenCalledWith(budget)
     expect(onReplaceNetWorthHistory).toHaveBeenCalledWith(netWorthHistory)
     expect(result.current.syncResult).toEqual({ ok: true, summary: "5 bài nhật ký" })
+  })
+
+  it("writes nothing when the settings page is left before the cloud answers", async () => {
+    let resolvePull!: (value: Awaited<ReturnType<typeof pullSnapshot>>) => void
+    vi.mocked(pullSnapshot).mockReturnValue(new Promise((resolve) => (resolvePull = resolve)))
+    const onReplaceJournal = vi.fn()
+    const { result, unmount } = renderHook(() =>
+      useDataManagement({
+        onReplaceJournal,
+        onReplaceFinance: vi.fn(),
+        onReplaceStudy: vi.fn(),
+        onReplaceSettings: vi.fn(),
+        onReplaceBudget: vi.fn(),
+        onReplaceNetWorthHistory: vi.fn(),
+      })
+    )
+
+    let pending!: Promise<void>
+    act(() => {
+      pending = result.current.pullFromCloud("my-secret")
+    })
+    unmount()
+    await act(async () => {
+      resolvePull({
+        ok: true,
+        data: {
+          journal: DEFAULT_JOURNAL_STATE,
+          finance: DEFAULT_FINANCE_STATE,
+          study: DEFAULT_STUDY_STATE,
+          settings: DEFAULT_SETTINGS,
+          budget: DEFAULT_BUDGET_STATE,
+          netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
+        },
+        summary: "ok",
+        exportedAt: null,
+      })
+      await pending
+    })
+
+    expect(onReplaceJournal).not.toHaveBeenCalled()
   })
 
   it("pullFromCloud reports an error and calls no replace callback when it fails", async () => {
@@ -294,9 +403,7 @@ describe("useDataManagement", () => {
     }
     const file = new File([JSON.stringify(payload)], "backup.json", { type: "application/json" })
 
-    await act(async () => {
-      await result.current.importData(file)
-    })
+    await importAndConfirm(result, file)
 
     expect(getStoredJournal()).toEqual(LOCAL_JOURNAL)
     expect(window.localStorage.getItem(FINANCE_STORAGE_KEY)).toBeNull()
@@ -334,15 +441,73 @@ describe("useDataManagement", () => {
         netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
       },
       summary: "1 bài nhật ký",
+      exportedAt: null,
     })
 
-    await act(async () => {
-      await result.current.pullFromCloud("my-secret")
-    })
+    await pullAndConfirm(result, "my-secret")
 
     expect(getStoredJournal()).toEqual(LOCAL_JOURNAL)
     expect(result.current.syncResult).toEqual({ ok: false, error: WRITE_FAILED })
     expect(result.current.syncing).toBe(false)
+  })
+
+  it("confirmRestore puts every written key back byte-for-byte and notifies once when a write fails half-way through", async () => {
+    // Chuỗi thô cố ý lệch khỏi JSON.stringify(JSON.parse(raw)): khôi phục bằng cách serialize lại thay
+    // vì trả đúng chuỗi cũ sẽ không còn khớp. Budget cố ý để trống — sau khi khôi phục nó phải bị gỡ.
+    const seeds: Record<string, string> = {
+      [JOURNAL_STORAGE_KEY]: '{ "seed" :  "journal" }',
+      [FINANCE_STORAGE_KEY]: '{ "seed" :  "finance" }',
+      [STUDY_STORAGE_KEY]: '{ "seed" :  "study" }',
+      [SETTINGS_STORAGE_KEY]: '{ "seed" :  "settings" }',
+      [NET_WORTH_HISTORY_KEY]: '{ "seed" :  "net-worth" }',
+      [CAR_GOAL_FUND_KEY]: "Quỹ mua xe",
+    }
+    for (const [key, raw] of Object.entries(seeds)) window.localStorage.setItem(key, raw)
+    const watchedKeys = [...Object.keys(seeds), BUDGET_STORAGE_KEY]
+
+    const {
+      result,
+      onReplaceJournal,
+      onReplaceFinance,
+      onReplaceStudy,
+      onReplaceSettings,
+      onReplaceBudget,
+      onReplaceNetWorthHistory,
+    } = renderDataManagement()
+    // Mỗi onReplace* ghi thẳng 1 chuỗi khác vào key của nó (không qua setStored* nên không notify);
+    // net-worth ghi xong mới lỗi, như localStorage hết dung lượng ở lần ghi cuối.
+    const writeOther = (key: string) => () => window.localStorage.setItem(key, `{"written":"${key}"}`)
+    onReplaceJournal.mockImplementation(writeOther(JOURNAL_STORAGE_KEY))
+    onReplaceFinance.mockImplementation(writeOther(FINANCE_STORAGE_KEY))
+    onReplaceStudy.mockImplementation(writeOther(STUDY_STORAGE_KEY))
+    onReplaceSettings.mockImplementation(writeOther(SETTINGS_STORAGE_KEY))
+    onReplaceBudget.mockImplementation(writeOther(BUDGET_STORAGE_KEY))
+    onReplaceNetWorthHistory.mockImplementation(() => {
+      writeOther(NET_WORTH_HISTORY_KEY)()
+      throw new Error("QuotaExceededError")
+    })
+    const file = new File([JSON.stringify({ version: EXPORT_VERSION })], "backup.json", { type: "application/json" })
+
+    // Nghe từ trước bước xếp hàng: nếu chỉ chọn file (chưa xác nhận) mà đã notify thì listener bị gọi 2 lần.
+    const seenByListener: Array<Record<string, string | null>> = []
+    const listener = vi.fn(() => {
+      seenByListener.push(Object.fromEntries(watchedKeys.map((key) => [key, window.localStorage.getItem(key)])))
+    })
+    const unsubscribe = onDataChanged(listener)
+    try {
+      await importAndConfirm(result, file)
+    } finally {
+      unsubscribe()
+    }
+
+    for (const [key, raw] of Object.entries(seeds)) {
+      expect(window.localStorage.getItem(key), key).toBe(raw)
+    }
+    expect(window.localStorage.getItem(BUDGET_STORAGE_KEY)).toBeNull()
+    expect(listener).toHaveBeenCalledTimes(1)
+    // Listener chạy khi storage đã trả về hết, không phải lúc còn dở dang.
+    expect(seenByListener[0]).toEqual({ ...seeds, [BUDGET_STORAGE_KEY]: null })
+    expect(result.current.imported).toEqual({ ok: false, error: WRITE_FAILED })
   })
 
   describe("car-goal fund link", () => {
@@ -384,9 +549,7 @@ describe("useDataManagement", () => {
       setCarGoalFundName("Quỹ cũ")
       const { result } = renderDataManagement()
 
-      await act(async () => {
-        await result.current.importData(backupFile({ goals: { carFundName: "Quỹ mua xe" } }))
-      })
+      await importAndConfirm(result, backupFile({ goals: { carFundName: "Quỹ mua xe" } }))
 
       expect(getCarGoalFundName()).toBe("Quỹ mua xe")
     })
@@ -395,9 +558,7 @@ describe("useDataManagement", () => {
       setCarGoalFundName("Quỹ cũ")
       const { result } = renderDataManagement()
 
-      await act(async () => {
-        await result.current.importData(backupFile({ goals: { carFundName: null } }))
-      })
+      await importAndConfirm(result, backupFile({ goals: { carFundName: null } }))
 
       expect(getCarGoalFundName()).toBeNull()
     })
@@ -406,9 +567,7 @@ describe("useDataManagement", () => {
       setCarGoalFundName("Quỹ mua xe")
       const { result } = renderDataManagement()
 
-      await act(async () => {
-        await result.current.importData(backupFile({}))
-      })
+      await importAndConfirm(result, backupFile({}))
 
       expect(getCarGoalFundName()).toBe("Quỹ mua xe")
     })
@@ -427,12 +586,11 @@ describe("useDataManagement", () => {
           goals: { carFundName: "Quỹ mua xe" },
         },
         summary: "ok",
+        exportedAt: null,
       })
       const { result } = renderDataManagement()
 
-      await act(async () => {
-        await result.current.pullFromCloud("my-secret")
-      })
+      await pullAndConfirm(result, "my-secret")
 
       expect(getCarGoalFundName()).toBe("Quỹ mua xe")
     })
@@ -451,12 +609,11 @@ describe("useDataManagement", () => {
           goals: { carFundName: null },
         },
         summary: "ok",
+        exportedAt: null,
       })
       const { result } = renderDataManagement()
 
-      await act(async () => {
-        await result.current.pullFromCloud("my-secret")
-      })
+      await pullAndConfirm(result, "my-secret")
 
       expect(getCarGoalFundName()).toBeNull()
     })
@@ -474,12 +631,11 @@ describe("useDataManagement", () => {
           netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
         },
         summary: "ok",
+        exportedAt: null,
       })
       const { result } = renderDataManagement()
 
-      await act(async () => {
-        await result.current.pullFromCloud("my-secret")
-      })
+      await pullAndConfirm(result, "my-secret")
 
       expect(getCarGoalFundName()).toBe("Quỹ mua xe")
     })

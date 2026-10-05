@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react"
 import { AlertTriangle, Check, Copy } from "lucide-react"
 
+import { AlertDialog } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Field } from "@/components/ui/field"
 import { getSyncSecret, setSyncSecret } from "@/lib/sync-secret-storage"
 import { getAutoBackupStatus, type AutoBackupStatus } from "../auto-backup-storage"
-import type { ExportedInfo, ImportedInfo, SyncResult } from "../hooks/use-data-management"
+import type { ExportedInfo, ImportedInfo, PendingRestore, SyncResult } from "../hooks/use-data-management"
 
 function formatAutoBackupTime(iso: string): string {
   const d = new Date(iso)
@@ -17,15 +18,27 @@ function formatAutoBackupTime(iso: string): string {
   return `${time} ngày ${date}`
 }
 
+// Có cả năm (khác formatAutoBackupTime): bản sao cũ cả năm trời vẫn phải nhận ra được là cũ.
+function formatSnapshotTime(iso: string | null): string {
+  const d = iso ? new Date(iso) : null
+  if (!d || Number.isNaN(d.getTime())) return "không rõ thời điểm"
+  const time = d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
+  const date = `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`
+  return `${time} ngày ${date}`
+}
+
 interface DataCardProps {
   exported: ExportedInfo | null
   imported: ImportedInfo | null
   syncing: boolean
   syncResult: SyncResult | null
+  pendingRestore: PendingRestore | null
   onExport: () => void
   onImport: (file: File) => void
   onPushToCloud: (secret: string) => void
   onPullFromCloud: (secret: string) => void
+  onConfirmRestore: () => void
+  onCancelRestore: () => void
 }
 
 function DataCard({
@@ -33,10 +46,13 @@ function DataCard({
   imported,
   syncing,
   syncResult,
+  pendingRestore,
   onExport,
   onImport,
   onPushToCloud,
   onPullFromCloud,
+  onConfirmRestore,
+  onCancelRestore,
 }: DataCardProps) {
   const fileRef = useRef<HTMLInputElement>(null)
   const [secret, setSecret] = useState("")
@@ -229,6 +245,33 @@ function DataCard({
           </div>
         ) : null}
       </div>
+
+      <AlertDialog
+        open={pendingRestore !== null}
+        onOpenChange={(open) => {
+          if (!open) onCancelRestore()
+        }}
+        title="Thay dữ liệu trên máy này?"
+        description={
+          pendingRestore ? (
+            <>
+              <span className="block">
+                {pendingRestore.source === "cloud" ? "Bản trên đám mây" : `File ${pendingRestore.fileName}`} được tạo lúc{" "}
+                <strong className="font-bold">{formatSnapshotTime(pendingRestore.exportedAt)}</strong>
+              </span>
+              <span className="mt-2 block">Bản sắp nạp: {pendingRestore.incomingCounts}</span>
+              <span className="block">Trên máy này: {pendingRestore.localCounts}</span>
+              <span className="mt-2 block">
+                Toàn bộ dữ liệu trên máy này sẽ bị thay bằng bản đó và không hoàn tác được. Nếu chưa chắc, hãy
+                Huỷ rồi bấm &quot;Xuất file JSON&quot; trước.
+              </span>
+            </>
+          ) : null
+        }
+        confirmLabel="Thay dữ liệu"
+        destructive
+        onConfirm={onConfirmRestore}
+      />
     </Card>
   )
 }

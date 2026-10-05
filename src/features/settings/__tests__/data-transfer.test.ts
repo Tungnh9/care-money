@@ -11,6 +11,7 @@ import {
   buildExportPayload,
   exportFileName,
   parseImportPayload,
+  restoreCounts,
 } from "../data-transfer"
 
 describe("buildExportPayload", () => {
@@ -432,6 +433,50 @@ describe("parseImportPayload", () => {
       expect(result.data.study.learned).toEqual(["v-0001", "v-0002"])
       expect(result.summary).toBe(
         "0 bài nhật ký · 0 lần mua vàng · 2 từ đã học · đã khôi phục tiết kiệm, nợ thẻ, mục tiêu"
+      )
+    }
+  })
+
+  it("returns the file's exportedAt so the confirm dialog can show how old the copy is", () => {
+    const result = parseImportPayload(
+      JSON.stringify({ version: EXPORT_VERSION, exportedAt: "2026-09-20T02:00:00.000Z" })
+    )
+
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(result.exportedAt).toBe("2026-09-20T02:00:00.000Z")
+  })
+
+  it("returns a null exportedAt when a hand-made file has none or a non-string one", () => {
+    for (const exportedAt of [undefined, 123]) {
+      const result = parseImportPayload(JSON.stringify({ version: EXPORT_VERSION, exportedAt }))
+
+      expect(result.ok).toBe(true)
+      if (result.ok) expect(result.exportedAt).toBeNull()
+    }
+  })
+})
+
+describe("restoreCounts", () => {
+  it("lists journal entries, expenses, savings funds, gold purchases and learned words", () => {
+    const result = parseImportPayload(
+      JSON.stringify({
+        version: EXPORT_VERSION,
+        journal: { entries: [{ id: 1, text: "Bài 1", time: "09:00", date: "10/08", words: 2, mood: null }] },
+        budget: {
+          expenses: [
+            { id: 1, dayKey: "2026-09-01", amount: 50_000, tag: null },
+            { id: 2, dayKey: "2026-09-02", amount: 10_000, tag: null },
+          ],
+        },
+        finance: { savings: [{ name: "Quỹ A", amount: 1, target: 2 }] },
+        study: { ...DEFAULT_STUDY_STATE, learned: ["v-1", "v-2", "v-3"] },
+      })
+    )
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(restoreCounts(result.data)).toBe(
+        "1 bài nhật ký · 2 khoản chi · 1 quỹ tiết kiệm · 0 lần mua vàng · 3 từ đã học"
       )
     }
   })

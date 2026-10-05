@@ -21,7 +21,14 @@ import { CAR_GOAL_FUND_KEY, getCarGoalFundName, setCarGoalFundName } from "@/fea
 import { notifyDataChanged } from "@/lib/data-change-bus"
 import { SETTINGS_STORAGE_KEY, getStoredSettings, type AppSettings } from "@/lib/settings-storage"
 import { pushSnapshot, pullSnapshot } from "../api"
-import { buildExportPayload, exportFileName, parseImportPayload, type ImportedSnapshot } from "../data-transfer"
+import {
+  buildExportPayload,
+  exportFileName,
+  parseImportPayload,
+  restoreCounts,
+  type ExportSnapshot,
+  type ImportedSnapshot,
+} from "../data-transfer"
 
 interface ExportedInfo {
   file: string
@@ -31,6 +38,16 @@ interface ExportedInfo {
 
 type ImportedInfo = { ok: true; file: string; summary: string } | { ok: false; error: string }
 type SyncResult = { ok: true; summary: string } | { ok: false; error: string }
+
+// Bản sao đã đọc + parse xong nhưng CHƯA ghi gì xuống máy — chờ người dùng xác nhận ở hộp thoại
+// (DataCard), vì nạp là thay TOÀN BỘ dữ liệu trên máy và không hoàn tác được.
+type PendingRestore = {
+  data: ImportedSnapshot
+  summary: string
+  exportedAt: string | null
+  incomingCounts: string
+  localCounts: string
+} & ({ source: "file"; fileName: string } | { source: "cloud" })
 
 interface UseDataManagementOptions {
   onReplaceJournal: (journal: JournalState) => void
@@ -43,6 +60,7 @@ interface UseDataManagementOptions {
 
 // Mọi key mà 1 lần nạp bản sao ghi đè — chụp lại chuỗi thô trước khi ghi để trả về nguyên trạng
 // nếu 1 lần ghi giữa chừng lỗi (vd. hết dung lượng localStorage), thay vì để máy nửa cũ nửa mới.
+// Thêm 1 lần ghi mới vào applySnapshot thì thêm key của nó vào đây.
 const RESTORE_KEYS = [
   JOURNAL_STORAGE_KEY,
   FINANCE_STORAGE_KEY,
@@ -82,6 +100,28 @@ function restoreRawBackup(backup: Map<string, string | null>) {
   notifyDataChanged()
 }
 
+function readLocalSnapshot(): ExportSnapshot {
+  return {
+    journal: getStoredJournal(),
+    finance: getStoredFinance(),
+    study: getStoredStudy(),
+    settings: getStoredSettings(),
+    budget: getStoredBudget(),
+    netWorthHistory: getStoredNetWorthHistory(),
+    goals: { carFundName: getCarGoalFundName() },
+  }
+}
+
+function describeRestore(data: ImportedSnapshot, summary: string, exportedAt: string | null) {
+  return {
+    data,
+    summary,
+    exportedAt,
+    incomingCounts: restoreCounts(data),
+    localCounts: restoreCounts(readLocalSnapshot()),
+  }
+}
+
 function useDataManagement({
   onReplaceJournal,
   onReplaceFinance,
@@ -94,6 +134,7 @@ function useDataManagement({
   const [imported, setImported] = useState<ImportedInfo | null>(null)
   const [syncing, setSyncing] = useState(false)
   const [syncResult, setSyncResult] = useState<SyncResult | null>(null)
+  const [pendingRestore, setPendingRestore] = useState<PendingRestore | null>(null)
 
   const applySnapshot = useCallback(
     (data: ImportedSnapshot) => {
@@ -116,62 +157,33 @@ function useDataManagement({
 
   const pushToCloud = useCallback(async (secret: string) => {
     setSyncing(true)
-    const payload = buildExportPayload(
-      {
-        journal: getStoredJournal(),
-        finance: getStoredFinance(),
-        study: getStoredStudy(),
-        settings: getStoredSettings(),
-        budget: getStoredBudget(),
-        netWorthHistory: getStoredNetWorthHistory(),
-        goals: { carFundName: getCarGoalFundName() },
-      },
-      new Date().toISOString()
-    )
+    const payload = buildExportPayload(readLocalSnapshot(), new Date().toISOString())
     const result = await pushSnapshot(secret, payload)
     setSyncResult(result)
     setSyncing(false)
   }, [])
 
-  const pullFromCloud = useCallback(
-    async (secret: string) => {
-      setSyncing(true)
-      try {
-        const result = await pullSnapshot(secret)
-        if (!result.ok) {
-          setSyncResult({ ok: false, error: result.error })
-          return
-        }
-        try {
-          applySnapshot(result.data)
-        } catch {
-          setSyncResult({ ok: false, error: RESTORE_WRITE_ERROR })
-          return
-        }
-        setSyncResult({ ok: true, summary: result.summary })
-      } catch {
-        setSyncResult({ ok: false, error: "Không kết nối được máy chủ đồng bộ." })
-      } finally {
-        setSyncing(false)
+  const pullFromCloud = useCallback(async (secret: string) => {
+    setSyncing(true)
+    try {
+      const result = await pullSnapshot(secret)
+      if (result.ok) {
+        // Chỉ xếp hàng chờ xác nhận — ghi thật ở confirmRestore. Kết quả về sau khi đã rời Cài đặt
+        // vì thế không ghi gì (component đã unmount, không còn ai xác nhận).
+        setPendingRestore({ ...describeRestore(result.data, result.summary, result.exportedAt), source: "cloud" })
+      } else {
+        setSyncResult({ ok: false, error: result.error })
       }
-    },
-    [applySnapshot]
-  )
+    } catch {
+      setSyncResult({ ok: false, error: "Không kết nối được máy chủ đồng bộ." })
+    } finally {
+      setSyncing(false)
+    }
+  }, [])
 
   const exportData = useCallback(() => {
     const now = new Date()
-    const payload = buildExportPayload(
-      {
-        journal: getStoredJournal(),
-        finance: getStoredFinance(),
-        study: getStoredStudy(),
-        settings: getStoredSettings(),
-        budget: getStoredBudget(),
-        netWorthHistory: getStoredNetWorthHistory(),
-        goals: { carFundName: getCarGoalFundName() },
-      },
-      now.toISOString()
-    )
+    const payload = buildExportPayload(readLocalSnapshot(), now.toISOString())
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" })
     const url = URL.createObjectURL(blob)
     const name = exportFileName(payload.exportedAt)
@@ -189,29 +201,41 @@ function useDataManagement({
     setImported(null)
   }, [])
 
-  const importData = useCallback(
-    async (file: File) => {
-      setExported(null)
-      const raw = await file.text().catch(() => null)
-      if (raw === null) {
-        setImported({ ok: false, error: "Không đọc được nội dung file." })
-        return
-      }
-      const result = parseImportPayload(raw)
-      if (!result.ok) {
-        setImported({ ok: false, error: result.error })
-        return
-      }
-      try {
-        applySnapshot(result.data)
-      } catch {
-        setImported({ ok: false, error: RESTORE_WRITE_ERROR })
-        return
-      }
-      setImported({ ok: true, file: file.name, summary: result.summary })
-    },
-    [applySnapshot]
-  )
+  const importData = useCallback(async (file: File) => {
+    setExported(null)
+    const raw = await file.text().catch(() => null)
+    if (raw === null) {
+      setImported({ ok: false, error: "Không đọc được nội dung file." })
+      return
+    }
+    const result = parseImportPayload(raw)
+    if (!result.ok) {
+      setImported({ ok: false, error: result.error })
+      return
+    }
+    setPendingRestore({
+      ...describeRestore(result.data, result.summary, result.exportedAt),
+      source: "file",
+      fileName: file.name,
+    })
+  }, [])
+
+  const confirmRestore = useCallback(() => {
+    if (!pendingRestore) return
+    const pending = pendingRestore
+    setPendingRestore(null)
+    try {
+      applySnapshot(pending.data)
+    } catch {
+      if (pending.source === "cloud") setSyncResult({ ok: false, error: RESTORE_WRITE_ERROR })
+      else setImported({ ok: false, error: RESTORE_WRITE_ERROR })
+      return
+    }
+    if (pending.source === "cloud") setSyncResult({ ok: true, summary: pending.summary })
+    else setImported({ ok: true, file: pending.fileName, summary: pending.summary })
+  }, [pendingRestore, applySnapshot])
+
+  const cancelRestore = useCallback(() => setPendingRestore(null), [])
 
   const wipeData = useCallback(() => {
     const { goldStores } = getStoredFinance()
@@ -235,7 +259,10 @@ function useDataManagement({
     syncResult,
     pushToCloud,
     pullFromCloud,
+    pendingRestore,
+    confirmRestore,
+    cancelRestore,
   }
 }
 
-export { useDataManagement, type ExportedInfo, type ImportedInfo, type SyncResult }
+export { useDataManagement, type ExportedInfo, type ImportedInfo, type SyncResult, type PendingRestore }
