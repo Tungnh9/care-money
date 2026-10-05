@@ -18,6 +18,18 @@ const EXPENSE: Expense = {
   tag: { label: "Tiền trọ", emoji: "🏠", tint: "#FFF0B8" },
 }
 
+const TAGS_WITH_COFFEE_OFF: BudgetTag[] = [
+  ...TAGS,
+  { label: "Cà phê", emoji: "☕", desc: "", tint: "#EAF1FE", on: false },
+]
+
+const COFFEE_EXPENSE: Expense = {
+  id: 3,
+  dayKey: "2026-09-03",
+  amount: 200_000,
+  tag: { label: "Cà phê", emoji: "☕", tint: "#EAF1FE" },
+}
+
 describe("EditExpenseModal", () => {
   it("renders nothing when there is no expense being edited", () => {
     render(<EditExpenseModal expense={null} tags={TAGS} onOpenChange={vi.fn()} onSave={vi.fn()} />)
@@ -80,5 +92,49 @@ describe("EditExpenseModal", () => {
     rerender(<EditExpenseModal expense={other} tags={TAGS} onOpenChange={vi.fn()} onSave={vi.fn()} />)
 
     expect(screen.getByLabelText("Số tiền", { exact: false })).toHaveValue("600.000")
+  })
+
+  it("keeps a tag that was turned off in Settings when only the amount is edited", () => {
+    const onSave = vi.fn()
+    render(
+      <EditExpenseModal expense={COFFEE_EXPENSE} tags={TAGS_WITH_COFFEE_OFF} onOpenChange={vi.fn()} onSave={onSave} />
+    )
+
+    fireEvent.change(screen.getByLabelText("Số tiền", { exact: false }), { target: { value: "250000" } })
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
+
+    expect(onSave).toHaveBeenCalledWith(3, {
+      amount: 250_000,
+      tag: { label: "Cà phê", emoji: "☕", tint: "#EAF1FE" },
+      note: undefined,
+    })
+  })
+
+  it("shows that turned-off tag as selected so it can still be removed", () => {
+    const onSave = vi.fn()
+    render(
+      <EditExpenseModal expense={COFFEE_EXPENSE} tags={TAGS_WITH_COFFEE_OFF} onOpenChange={vi.fn()} onSave={onSave} />
+    )
+    const chip = screen.getByRole("button", { name: /Cà phê/ })
+    expect(chip).toHaveClass("border-[var(--ob-color-action)]")
+
+    fireEvent.click(chip)
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
+
+    expect(onSave).toHaveBeenCalledWith(3, { amount: 200_000, tag: null, note: undefined })
+  })
+
+  it("keeps the tag exactly as it was recorded, even if its emoji or colour changed in Settings since", () => {
+    const restyled: BudgetTag[] = [{ label: "Tiền trọ", emoji: "🏡", desc: "", tint: "#FFE0C7", on: true }, TAGS[1]]
+    const onSave = vi.fn()
+    render(<EditExpenseModal expense={EXPENSE} tags={restyled} onOpenChange={vi.fn()} onSave={onSave} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
+
+    expect(onSave).toHaveBeenCalledWith(1, {
+      amount: 3_000_000,
+      tag: { label: "Tiền trọ", emoji: "🏠", tint: "#FFF0B8" },
+      note: "Tiền nhà tháng này",
+    })
   })
 })

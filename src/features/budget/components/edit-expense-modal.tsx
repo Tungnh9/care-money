@@ -38,13 +38,22 @@ function EditExpenseModal({ expense, tags, onOpenChange, onSave }: EditExpenseMo
   // narrow xuyên qua closure `handleSave` bên dưới dù đã check null ở trên).
   const currentExpense = expense
   const activeTags = tags.filter((t) => t.on)
-  const tag = activeTags.find((t) => t.label === selectedLabel)
+  const picked = activeTags.find((t) => t.label === selectedLabel)
+  // Expense.tag là snapshot đóng băng lúc ghi: nhãn đang chọn vẫn là nhãn gốc thì lưu lại đúng
+  // snapshot gốc — kể cả khi nhãn đó đã tắt/xoá hay đã đổi emoji/màu trong Cài đặt (trước đây chỉ
+  // tìm trong nhãn đang bật nên nhãn đã tắt bị lưu thành null). Chọn nhãn khác mới chụp snapshot mới.
+  const tag: TagSnapshot | null =
+    currentExpense.tag && selectedLabel === currentExpense.tag.label
+      ? currentExpense.tag
+      : picked
+        ? { label: picked.label, emoji: picked.emoji, tint: picked.tint }
+        : null
   const disabled = !Number(amount)
 
   function handleSave() {
     onSave(currentExpense.id, {
       amount: Number(amount) || 0,
-      tag: tag ? { label: tag.label, emoji: tag.emoji, tint: tag.tint } : null,
+      tag,
       note: note.trim() || undefined,
     })
     onOpenChange(false)
@@ -66,7 +75,12 @@ function EditExpenseModal({ expense, tags, onOpenChange, onSave }: EditExpenseMo
       />
 
       <div className="mt-3">
-        <TagPicker tags={tags} selectedLabel={selectedLabel} onSelect={setSelectedLabel} />
+        <TagPicker
+          tags={tags}
+          selectedLabel={selectedLabel}
+          onSelect={setSelectedLabel}
+          extraTag={currentExpense.tag}
+        />
       </div>
 
       <Field

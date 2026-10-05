@@ -2,19 +2,26 @@
 
 import { cn } from "@/lib/utils"
 import type { BudgetTag } from "@/lib/settings-storage"
+import type { TagSnapshot } from "../types"
 
 interface TagPickerProps {
   tags: BudgetTag[]
   selectedLabel: string | null
   onSelect: (label: string | null) => void
+  // Nhãn (snapshot lúc ghi) của khoản chi đang sửa mà nay đã tắt/xoá trong Cài đặt — vẫn có 1 chip
+  // để thấy nhãn đang gắn và bỏ chọn được. Nhãn còn bật thì đã có chip của chính nó.
+  extraTag?: TagSnapshot | null
 }
 
-function TagPicker({ tags, selectedLabel, onSelect }: TagPickerProps) {
+function TagPicker({ tags, selectedLabel, onSelect, extraTag }: TagPickerProps) {
   const activeTags = tags.filter((t) => t.on)
+  const activeLabels = activeTags.map((t) => t.label)
+  const chips: Pick<TagSnapshot, "label" | "emoji">[] =
+    extraTag && !activeLabels.includes(extraTag.label) ? [extraTag, ...activeTags] : activeTags
 
   return (
     <div className="flex flex-wrap gap-2">
-      {activeTags.map((t) => {
+      {chips.map((t) => {
         const active = t.label === selectedLabel
         return (
           <button
