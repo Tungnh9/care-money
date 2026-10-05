@@ -1,5 +1,5 @@
 import { parseFinanceState, type FinanceState } from "@/features/finance/finance-storage"
-import { DEFAULT_JOURNAL_STATE, type JournalState } from "@/features/journal/journal-storage"
+import { parseJournalState, type JournalState } from "@/features/journal/journal-storage"
 import { parseStudyState, type StudyState } from "@/features/study/study-storage"
 import { parseBudgetState, type BudgetState } from "@/features/budget/budget-storage"
 import { parseNetWorthHistory, type NetWorthHistory } from "@/features/overview/net-worth-history-storage"
@@ -70,12 +70,9 @@ function parseImportPayload(raw: string): ImportResult {
     return { ok: false, error: "Không phải bản sao Orange Banana (thiếu version 1)." }
   }
 
-  const journalOverride = isObject(parsed.journal) ? parsed.journal : {}
-  const journal: JournalState = {
-    ...DEFAULT_JOURNAL_STATE,
-    ...journalOverride,
-    entries: ensureArray(journalOverride.entries, DEFAULT_JOURNAL_STATE.entries),
-  }
+  // Cùng 1 bộ parse với getStoredJournal — 1 bài null trong file sửa tay chỉ bị bỏ riêng nó, thay
+  // vì được lưu rồi làm sập /journal và /overview ở mọi lần mở sau.
+  const journal: JournalState = parseJournalState(parsed.journal)
 
   const finance: FinanceState = parseFinanceState(isObject(parsed.finance) ? parsed.finance : {})
 

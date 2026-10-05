@@ -366,4 +366,19 @@ describe("parseImportPayload", () => {
       ])
     }
   })
+
+  it("drops a null journal entry from an imported backup, keeping the valid ones", () => {
+    const entry = { id: 1, text: "Bài 1", time: "09:00", date: "10/08", words: 2, mood: null }
+    const raw = JSON.stringify({ version: EXPORT_VERSION, journal: { entries: [null, entry] } })
+
+    const result = parseImportPayload(raw)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.journal.entries).toEqual([entry])
+      expect(result.summary).toBe(
+        "1 bài nhật ký · 0 lần mua vàng · 0 từ đã học · đã khôi phục tiết kiệm, nợ thẻ, mục tiêu"
+      )
+    }
+  })
 })
