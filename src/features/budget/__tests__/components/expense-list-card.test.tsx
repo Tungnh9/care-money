@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest"
-import { render, screen, fireEvent } from "@testing-library/react"
+import { render, screen, fireEvent, within } from "@testing-library/react"
 
 import { ExpenseListCard } from "../../components/expense-list-card"
 import { formatMoney } from "@/lib/format"
@@ -33,13 +33,34 @@ describe("ExpenseListCard", () => {
     expect(screen.getByText("Không gắn thẻ")).toBeInTheDocument()
   })
 
-  it("calls onRemove with the expense's id when its delete button is clicked", () => {
+  it("asks for confirmation, naming the tag, amount and day, before removing an expense", () => {
     const onRemove = vi.fn()
     render(<ExpenseListCard expenses={EXPENSES} onRemove={onRemove} onEdit={vi.fn()} />)
 
-    fireEvent.click(screen.getAllByRole("button", { name: /Xoá/ })[0])
+    fireEvent.click(screen.getByRole("button", { name: "Xoá khoản chi Mua sắm" }))
+
+    const dialog = screen.getByRole("alertdialog")
+    expect(within(dialog).getByText("Xoá khoản chi?")).toBeInTheDocument()
+    expect(within(dialog).getByText("Mua sắm", { selector: "strong" })).toBeInTheDocument()
+    expect(dialog).toHaveTextContent(formatMoney(50_000))
+    expect(dialog).toHaveTextContent("02/09")
+    expect(onRemove).not.toHaveBeenCalled()
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Xoá" }))
 
     expect(onRemove).toHaveBeenCalledWith(2)
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument()
+  })
+
+  it("keeps the expense when the confirmation is cancelled", () => {
+    const onRemove = vi.fn()
+    render(<ExpenseListCard expenses={EXPENSES} onRemove={onRemove} onEdit={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Xoá khoản chi Không gắn thẻ" }))
+    fireEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Huỷ" }))
+
+    expect(onRemove).not.toHaveBeenCalled()
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument()
   })
 
   it("calls onEdit with the full expense when its edit button is clicked", () => {

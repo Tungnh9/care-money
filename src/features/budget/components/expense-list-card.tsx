@@ -1,7 +1,9 @@
 "use client"
 
+import { useState } from "react"
 import { Pencil, Trash2 } from "lucide-react"
 
+import { AlertDialog } from "@/components/ui/alert-dialog"
 import { Card } from "@/components/ui/card"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
@@ -39,6 +41,10 @@ interface ExpenseListCardProps {
 function ExpenseListCard({ expenses, onRemove, onEdit }: ExpenseListCardProps) {
   const { hidden } = useMoneyVisibility()
   const days = groupExpensesByDay(expenses)
+  // Như mọi nút xoá ở trang Tài chính: thùng rác chỉ mở hộp xác nhận. Tra lại theo id trên danh
+  // sách hiện tại — khoản chi đã biến mất (vd. tab khác vừa xoá) thì hộp tự đóng.
+  const [deletingId, setDeletingId] = useState<number | null>(null)
+  const deleting = expenses.find((e) => e.id === deletingId) ?? null
 
   return (
     <Card label="Khoản chi tháng này" className="min-w-0 w-full">
@@ -99,7 +105,7 @@ function ExpenseListCard({ expenses, onRemove, onEdit }: ExpenseListCardProps) {
                       <button
                         type="button"
                         aria-label={`Xoá khoản chi ${e.tag?.label ?? UNTAGGED_LABEL}`}
-                        onClick={() => onRemove(e.id)}
+                        onClick={() => setDeletingId(e.id)}
                         className="flex size-9 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
                       >
                         <Trash2 size={17} />
@@ -115,6 +121,24 @@ function ExpenseListCard({ expenses, onRemove, onEdit }: ExpenseListCardProps) {
           <p className="text-[13.5px] text-[var(--ob-color-text-subtle)]">Chưa có khoản chi nào trong tháng này.</p>
         ) : null}
       </div>
+      <AlertDialog
+        open={deleting !== null}
+        onOpenChange={(open) => !open && setDeletingId(null)}
+        title="Xoá khoản chi?"
+        description={
+          deleting ? (
+            <>
+              Xoá khoản chi &quot;<strong>{deleting.tag?.label ?? UNTAGGED_LABEL}</strong>&quot;{" "}
+              {formatMoney(deleting.amount, hidden)} ({formatDayKey(deleting.dayKey)}) sẽ không thể hoàn tác.
+            </>
+          ) : null
+        }
+        confirmLabel="Xoá"
+        destructive
+        onConfirm={() => {
+          if (deleting) onRemove(deleting.id)
+        }}
+      />
     </Card>
   )
 }
