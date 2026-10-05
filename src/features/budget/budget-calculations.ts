@@ -1,4 +1,4 @@
-import { monthKeyFromDayKey } from "@/lib/date"
+import { monthKeyFromDayKey, shiftMonth } from "@/lib/date"
 import type { Expense, MonthlySalary, Settlement } from "./types"
 
 const UNTAGGED_LABEL = "Không gắn thẻ"
@@ -31,6 +31,27 @@ function remainingToSettle(
 ): number {
   const net = salaryForMonth(salaries, month) - totalExpensesForMonth(expenses, month)
   return net - signedSettledForMonth(settlements, month)
+}
+
+interface UnsettledMonth {
+  month: string
+  remaining: number
+}
+
+// Tháng đã qua còn dư/thiếu ≠ 0 trong `lookback` tháng liền trước `currentMonth`, mới nhất trước.
+// Khoản chi luôn ghi vào hôm nay nên tháng đã qua chỉ còn đổi được qua tất toán — phần lệch phát sinh
+// sát lúc sang tháng (ghi thêm khoản chi sau khi đã tất toán, hay quên tất toán trước nửa đêm) chỉ
+// còn đường này để nạp/rút. Tính lại từ dữ liệu gốc như remainingToSettle, không lưu trạng thái gì.
+function unsettledPastMonths(
+  salaries: MonthlySalary[],
+  expenses: Expense[],
+  settlements: Settlement[],
+  currentMonth: string,
+  lookback: number
+): UnsettledMonth[] {
+  return Array.from({ length: lookback }, (_, i) => shiftMonth(currentMonth, -(i + 1)))
+    .map((month) => ({ month, remaining: remainingToSettle(salaries, expenses, settlements, month) }))
+    .filter((entry) => entry.remaining !== 0)
 }
 
 interface TagBreakdownEntry {
@@ -133,6 +154,7 @@ export {
   salaryForMonth,
   signedSettledForMonth,
   remainingToSettle,
+  unsettledPastMonths,
   breakdownByTag,
   groupExpensesByDay,
   monthlyExpenseTotals,
@@ -140,6 +162,7 @@ export {
   CHART_PALETTE,
   UNTAGGED_LABEL,
   type TagBreakdownEntry,
+  type UnsettledMonth,
   type DayGroup,
   type MonthlyExpensePoint,
   type MonthlyTagSeries,

@@ -252,4 +252,63 @@ describe("BudgetView", () => {
     expect(getStoredBudget().settlements).toEqual([])
     expect(getStoredFinance().savings[0].amount).toBe(0)
   })
+
+  it("offers to settle last month's leftover and records it against that month", async () => {
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      savings: [{ name: "Quỹ A", amount: 100_000, target: 500_000 }],
+    })
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [{ month: "2026-08", amount: 1_000_000 }],
+      expenses: [{ id: 1, dayKey: "2026-08-20", amount: 850_000, tag: null }],
+    })
+
+    render(<BudgetView />)
+    fireEvent.click(await screen.findByRole("button", { name: "Tất toán tháng 8, 2026" }))
+
+    const modal = screen.getByRole("dialog")
+    expect(within(modal).getByText("Tất toán Tháng 8, 2026")).toBeInTheDocument()
+    expect(within(modal).getByLabelText("Số tiền", { exact: false })).toHaveValue("150.000")
+    fireEvent.click(within(modal).getByRole("button", { name: "Quỹ A" }))
+    fireEvent.click(within(modal).getByRole("button", { name: "Xác nhận" }))
+
+    await waitFor(() => expect(getStoredBudget().settlements).toHaveLength(1))
+    expect(getStoredBudget().settlements[0]).toMatchObject({ month: "2026-08", direction: "deposit", amount: 150_000 })
+    expect(getStoredFinance().savings[0].amount).toBe(250_000)
+    await waitFor(() =>
+      expect(screen.queryByRole("button", { name: "Tất toán tháng 8, 2026" })).not.toBeInTheDocument()
+    )
+    // Tháng này chưa có gì để tất toán — nút của tháng này vẫn khoá.
+    expect(screen.getByRole("button", { name: "Tất toán tháng" })).toBeDisabled()
+  })
+
+  it("shows last month's shortfall in the expense colour", async () => {
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [{ month: "2026-08", amount: 1_000_000 }],
+      expenses: [{ id: 1, dayKey: "2026-08-20", amount: 1_200_000, tag: null }],
+    })
+
+    render(<BudgetView />)
+    await screen.findByRole("button", { name: "Tất toán tháng 8, 2026" })
+
+    expect(screen.getByText(/còn thiếu/)).toBeInTheDocument()
+    expect(screen.getByText(formatMoney(200_000))).toHaveStyle({ color: "var(--ob-color-expense)" })
+  })
+
+  it("does not bring up months older than last month", async () => {
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [
+        { month: "2026-07", amount: 1_000_000 },
+        { month: "2026-08", amount: 1_000_000 },
+      ],
+    })
+
+    render(<BudgetView />)
+    await screen.findByRole("button", { name: "Tất toán tháng 8, 2026" })
+
+    expect(screen.queryByRole("button", { name: "Tất toán tháng 7, 2026" })).not.toBeInTheDocument()
+  })
 })

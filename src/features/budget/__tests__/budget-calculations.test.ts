@@ -9,6 +9,7 @@ import {
   groupExpensesByDay,
   monthlyExpenseTotals,
   monthlyTagBreakdown,
+  unsettledPastMonths,
 } from "../budget-calculations"
 import type { Expense, MonthlySalary, Settlement } from "../types"
 
@@ -300,5 +301,50 @@ describe("monthlyTagBreakdown", () => {
 
   it("returns an empty array when no requested month has any expenses", () => {
     expect(monthlyTagBreakdown([], ["2026-09", "2026-10"])).toEqual([])
+  })
+})
+
+describe("unsettledPastMonths", () => {
+  const salaries: MonthlySalary[] = [
+    { month: "2026-07", amount: 1_000_000 },
+    { month: "2026-08", amount: 1_000_000 },
+  ]
+
+  it("lists last month when it still has a surplus", () => {
+    const expenses = [expense({ dayKey: "2026-08-20", amount: 850_000 })]
+
+    expect(unsettledPastMonths(salaries, expenses, [], "2026-09", 1)).toEqual([{ month: "2026-08", remaining: 150_000 }])
+  })
+
+  it("lists last month with a negative remaining when it is short", () => {
+    const expenses = [expense({ dayKey: "2026-08-20", amount: 1_200_000 })]
+
+    expect(unsettledPastMonths(salaries, expenses, [], "2026-09", 1)).toEqual([{ month: "2026-08", remaining: -200_000 }])
+  })
+
+  it("leaves out a month that is fully settled or has nothing to settle", () => {
+    const expenses = [expense({ dayKey: "2026-08-20", amount: 850_000 })]
+    const settlements = [settlement({ month: "2026-08", amount: 150_000 })]
+
+    expect(unsettledPastMonths(salaries, expenses, settlements, "2026-09", 1)).toEqual([])
+    expect(unsettledPastMonths([], [], [], "2026-09", 1)).toEqual([])
+  })
+
+  it("looks back only as many months as asked, newest first, never including the current month", () => {
+    const expenses = [
+      expense({ id: 1, dayKey: "2026-08-20", amount: 850_000 }),
+      expense({ id: 2, dayKey: "2026-09-02", amount: 50_000 }),
+    ]
+
+    expect(unsettledPastMonths(salaries, expenses, [], "2026-09", 3)).toEqual([
+      { month: "2026-08", remaining: 150_000 },
+      { month: "2026-07", remaining: 1_000_000 },
+    ])
+  })
+
+  it("reaches back across the new year", () => {
+    expect(unsettledPastMonths([{ month: "2025-12", amount: 500_000 }], [], [], "2026-01", 1)).toEqual([
+      { month: "2025-12", remaining: 500_000 },
+    ])
   })
 })

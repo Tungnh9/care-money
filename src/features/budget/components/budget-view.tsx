@@ -8,7 +8,15 @@ import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { useFinance } from "@/features/finance/hooks/use-finance"
 import { useSettings } from "@/features/settings/hooks/use-settings"
 import { formatMoney } from "@/lib/format"
-import { dayKey, monthKey, monthKeyFromDayKey, monthsFrom, monthsThroughYearEnd, shiftMonth } from "@/lib/date"
+import {
+  dayKey,
+  formatMonthKey,
+  monthKey,
+  monthKeyFromDayKey,
+  monthsFrom,
+  monthsThroughYearEnd,
+  shiftMonth,
+} from "@/lib/date"
 import { useBudget } from "../hooks/use-budget"
 import {
   breakdownByTag,
@@ -17,6 +25,7 @@ import {
   remainingToSettle,
   salaryForMonth,
   totalExpensesForMonth,
+  unsettledPastMonths,
 } from "../budget-calculations"
 import { SalaryCard } from "./salary-card"
 import { ExpenseEntryForm } from "./expense-entry-form"
@@ -27,6 +36,10 @@ import { MonthlyTrendChart } from "./monthly-trend-chart"
 import { MonthlyTagTrendChart } from "./monthly-tag-trend-chart"
 import { SettleMonthModal } from "./settle-month-modal"
 import type { Expense } from "../types"
+
+// Nhắc tất toán bao nhiêu tháng đã qua (Quyết định 1 của plan 2026-09-29-fix-2-budget: chỉ tháng
+// liền trước — đủ cho phần lệch phát sinh quanh lúc sang tháng, không lôi các tháng cũ ra làm phiền).
+const PAST_MONTHS_TO_SETTLE = 1
 
 function BudgetView() {
   const { hidden } = useMoneyVisibility()
@@ -42,7 +55,8 @@ function BudgetView() {
   } = useBudget()
   const { savings } = useFinance()
   const { settings } = useSettings()
-  const [settleOpen, setSettleOpen] = useState(false)
+  // null = modal tất toán đang đóng; ngược lại là tháng đang tất toán (tháng này, hoặc tháng trước còn lệch).
+  const [settleMonth, setSettleMonth] = useState<string | null>(null)
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
 
   const currentMonth = monthKey()
@@ -55,6 +69,9 @@ function BudgetView() {
   const monthExpenses = expenses.filter((e) => monthKeyFromDayKey(e.dayKey) === currentMonth)
   const remaining = remainingToSettle(salaries, expenses, settlements, currentMonth)
   const tagBreakdown = breakdownByTag(expenses, currentMonth)
+  const pastUnsettled = unsettledPastMonths(salaries, expenses, settlements, currentMonth, PAST_MONTHS_TO_SETTLE)
+  const settleTarget = settleMonth ?? currentMonth
+  const settleRemaining = remainingToSettle(salaries, expenses, settlements, settleTarget)
 
   // Chart "Chi tiêu theo tháng" bắt đầu từ tháng hiện tại, kéo dài tới hết tháng 12 cùng năm —
   // sang năm mới, currentMonth tự đổi theo giờ hệ thống nên chart tự cập nhật lại đúng từ tháng 1
@@ -95,10 +112,28 @@ function BudgetView() {
               size="sm"
               type="button"
               disabled={remaining === 0}
-              onClick={() => setSettleOpen(true)}
+              onClick={() => setSettleMonth(currentMonth)}
             >
               Tất toán tháng
             </Button>
+
+            {pastUnsettled.map((past) => (
+              <div key={past.month} className="mt-4 border-t border-[var(--ob-color-border)] pt-[14px]">
+                <p className="mb-[10px] text-[13px] leading-[1.55] text-[var(--ob-color-text-muted)]">
+                  {formatMonthKey(past.month)} còn {past.remaining > 0 ? "dư" : "thiếu"}{" "}
+                  <span
+                    className="font-bold"
+                    style={{ color: past.remaining > 0 ? "var(--ob-color-income)" : "var(--ob-color-expense)" }}
+                  >
+                    {formatMoney(Math.abs(past.remaining), hidden)}
+                  </span>{" "}
+                  chưa tất toán.
+                </p>
+                <Button variant="secondary" size="sm" type="button" onClick={() => setSettleMonth(past.month)}>
+                  Tất toán {formatMonthKey(past.month).toLowerCase()}
+                </Button>
+              </div>
+            ))}
           </Card>
         </div>
 
@@ -125,12 +160,14 @@ function BudgetView() {
       </div>
 
       <SettleMonthModal
-        open={settleOpen}
-        onOpenChange={setSettleOpen}
-        month={currentMonth}
-        remaining={remaining}
+        open={settleMonth !== null}
+        onOpenChange={(open) => {
+          if (!open) setSettleMonth(null)
+        }}
+        month={settleTarget}
+        remaining={settleRemaining}
         savings={savings}
-        onConfirm={(fundName, direction, amount) => confirmSettlement(currentMonth, fundName, direction, amount)}
+        onConfirm={(fundName, direction, amount) => confirmSettlement(settleTarget, fundName, direction, amount)}
       />
 
       <EditExpenseModal
