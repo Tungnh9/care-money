@@ -110,9 +110,44 @@ function monthlyExpenseTotals(expenses: Expense[], months: string[]): MonthlyExp
 }
 
 // tag.tint là màu pastel rất nhạt (dùng cho badge tròn nhỏ trong Cài đặt/danh sách chi tiêu),
-// không đủ rực để phân biệt trên chart — dùng chung 1 bảng màu rực cố định, cycle theo index,
-// cho mọi chart liên quan tới nhãn (donut "Chi theo nhãn" + cột "Xu hướng theo nhãn").
-const CHART_PALETTE = ["#FF6B9D", "#3DCFB6", "#FFA94D", "#748FFC", "#9775FA", "#A0AEC0"]
+// không đủ rực để phân biệt trên chart — dùng chung 1 bảng màu rực cố định cho mọi chart liên quan
+// tới nhãn (donut "Chi theo nhãn" + cột "Xu hướng theo nhãn"). 11 màu = 11 nhãn mặc định trong Cài
+// đặt, không màu nào lặp lại giữa chúng; xám để riêng cho "Không gắn thẻ".
+const CHART_PALETTE = [
+  "#FF6B9D",
+  "#3DCFB6",
+  "#FFA94D",
+  "#748FFC",
+  "#9775FA",
+  "#51CF66",
+  "#FCC419",
+  "#FA5252",
+  "#22B8CF",
+  "#94D82D",
+  "#E599F7",
+]
+const UNTAGGED_CHART_COLOR = "#A0AEC0"
+
+// Màu của mỗi nhãn theo VỊ TRÍ của nhãn trong Cài đặt (tính cả nhãn đang tắt — tắt 1 nhãn không làm
+// nhãn khác đổi màu), không theo thứ tự xuất hiện trong từng chart: donut xếp nhãn theo khoản chi
+// đầu tiên của tháng này, chart 6 tháng theo lần xuất hiện đầu tiên trong 6 tháng — tô theo thứ tự
+// đó thì cùng 1 nhãn mang 2 màu trên cùng 1 trang. Nhãn không còn trong Cài đặt (đã xoá/đổi tên,
+// chỉ còn trong snapshot cũ) lấy các màu kế tiếp sau nhãn cuối của Cài đặt.
+function tagChartColors(labels: string[], tags: { label: string }[]): Map<string, string> {
+  const order = tags.map((t) => t.label)
+  for (const label of labels) {
+    if (label !== UNTAGGED_LABEL && !order.includes(label)) order.push(label)
+  }
+
+  const colors = new Map<string, string>()
+  for (const label of labels) {
+    colors.set(
+      label,
+      label === UNTAGGED_LABEL ? UNTAGGED_CHART_COLOR : CHART_PALETTE[order.indexOf(label) % CHART_PALETTE.length]
+    )
+  }
+  return colors
+}
 
 interface MonthlyTagSeries {
   label: string
@@ -159,7 +194,9 @@ export {
   groupExpensesByDay,
   monthlyExpenseTotals,
   monthlyTagBreakdown,
+  tagChartColors,
   CHART_PALETTE,
+  UNTAGGED_CHART_COLOR,
   UNTAGGED_LABEL,
   type TagBreakdownEntry,
   type UnsettledMonth,

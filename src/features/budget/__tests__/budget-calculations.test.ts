@@ -10,8 +10,12 @@ import {
   monthlyExpenseTotals,
   monthlyTagBreakdown,
   unsettledPastMonths,
+  tagChartColors,
+  CHART_PALETTE,
+  UNTAGGED_CHART_COLOR,
 } from "../budget-calculations"
 import type { Expense, MonthlySalary, Settlement } from "../types"
+import { DEFAULT_TAGS } from "@/lib/settings-storage"
 
 const TAG_RENT = { label: "Tiền trọ", emoji: "🏠", tint: "#FFF0B8" }
 const TAG_SHOPPING = { label: "Mua sắm", emoji: "🛍️", tint: "#E7F6EF" }
@@ -346,5 +350,40 @@ describe("unsettledPastMonths", () => {
     expect(unsettledPastMonths([{ month: "2025-12", amount: 500_000 }], [], [], "2026-01", 1)).toEqual([
       { month: "2025-12", remaining: 500_000 },
     ])
+  })
+})
+
+describe("tagChartColors", () => {
+  const TAGS = [{ label: "Tiền trọ" }, { label: "Mua sắm" }, { label: "Ăn uống" }]
+
+  it("colours each tag by its place in Settings, whatever order a chart lists it in", () => {
+    const colors = tagChartColors(["Ăn uống", "Tiền trọ"], TAGS)
+
+    expect(colors.get("Tiền trọ")).toBe(CHART_PALETTE[0])
+    expect(colors.get("Ăn uống")).toBe(CHART_PALETTE[2])
+    expect(tagChartColors(["Tiền trọ", "Ăn uống"], TAGS)).toEqual(colors)
+  })
+
+  it("always paints 'Không gắn thẻ' grey, a colour no tag gets", () => {
+    const colors = tagChartColors(["Không gắn thẻ", "Tiền trọ"], TAGS)
+
+    expect(colors.get("Không gắn thẻ")).toBe(UNTAGGED_CHART_COLOR)
+    expect(CHART_PALETTE).not.toContain(UNTAGGED_CHART_COLOR)
+  })
+
+  it("gives tags no longer in Settings the colours right after the Settings tags", () => {
+    const colors = tagChartColors(["Tag đã xoá", "Mua sắm"], TAGS)
+
+    expect(colors.get("Tag đã xoá")).toBe(CHART_PALETTE[3])
+    expect(colors.get("Mua sắm")).toBe(CHART_PALETTE[1])
+  })
+
+  it("never repeats a colour among the 11 default tags", () => {
+    const colors = tagChartColors(
+      DEFAULT_TAGS.map((t) => t.label),
+      DEFAULT_TAGS
+    )
+
+    expect(new Set(colors.values()).size).toBe(DEFAULT_TAGS.length)
   })
 })

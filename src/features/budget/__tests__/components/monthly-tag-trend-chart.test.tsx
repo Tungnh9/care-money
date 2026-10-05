@@ -104,4 +104,26 @@ describe("MonthlyTagTrendChart", () => {
 
     expect(screen.queryByText("Tổng cộng")).not.toBeInTheDocument()
   })
+
+  it("colours each tag's dot in the summary from the given colour map", () => {
+    render(
+      <MonthlyTagTrendChart
+        months={["2026-09"]}
+        series={[
+          { label: "Tiền trọ", emoji: "🏠", tint: "#FFF0B8", data: [3_000_000] },
+          { label: "Mua sắm", emoji: "🛍️", tint: "#E7F6EF", data: [1_200_000] },
+        ]}
+        colors={
+          new Map([
+            ["Tiền trọ", "#22B8CF"],
+            ["Mua sắm", "#FCC419"],
+          ])
+        }
+      />
+    )
+
+    const dots = screen.getAllByTestId("tag-trend-dot")
+    expect(dots[0]).toHaveStyle({ backgroundColor: "#22B8CF" })
+    expect(dots[1]).toHaveStyle({ backgroundColor: "#FCC419" })
+  })
 })

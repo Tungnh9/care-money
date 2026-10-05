@@ -22,6 +22,7 @@ import {
   breakdownByTag,
   monthlyExpenseTotals,
   monthlyTagBreakdown,
+  tagChartColors,
   remainingToSettle,
   salaryForMonth,
   totalExpensesForMonth,
@@ -85,6 +86,12 @@ function BudgetView() {
   // ngược hướng với chart dự báo ở trên, vì đây là lịch sử thật đã xảy ra, không phải ước tính.
   const trendMonths = monthsFrom(shiftMonth(currentMonth, -5), 6)
   const tagTrend = monthlyTagBreakdown(expenses, trendMonths)
+  // 1 bảng màu cho cả donut lẫn chart 6 tháng, theo vị trí nhãn trong Cài đặt — cùng 1 nhãn luôn
+  // cùng 1 màu dù 2 chart xếp nhãn theo 2 thứ tự khác nhau.
+  const tagColors = tagChartColors(
+    [...tagTrend.map((s) => s.label), ...tagBreakdown.map((e) => e.label)],
+    settings.tags
+  )
 
   return (
     <div>
@@ -144,7 +151,7 @@ function BudgetView() {
           />
 
           <Card label="Chi theo nhãn (tháng này)" className="min-w-0">
-            <TagBreakdownChart data={tagBreakdown} />
+            <TagBreakdownChart data={tagBreakdown} colors={tagColors} />
           </Card>
         </div>
 
@@ -155,7 +162,7 @@ function BudgetView() {
         </Card>
 
         <Card label="Xu hướng chi tiêu (6 tháng gần nhất)" className="min-w-0 w-full">
-          <MonthlyTagTrendChart months={trendMonths} series={tagTrend} />
+          <MonthlyTagTrendChart months={trendMonths} series={tagTrend} colors={tagColors} />
         </Card>
       </div>
 

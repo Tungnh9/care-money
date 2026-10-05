@@ -87,4 +87,24 @@ describe("TagBreakdownChart", () => {
     expect(badge).not.toBeNull()
     expect(badge).not.toHaveAttribute("fill", "#FFF0B8")
   })
+
+  it("colours each tag from the given colour map, so it matches the other tag chart", () => {
+    render(
+      <TagBreakdownChart
+        data={[
+          { label: "Tiền trọ", emoji: "🏠", tint: "#FFF0B8", total: 100_000 },
+          { label: "Mua sắm", emoji: "🛍️", tint: "#E7F6EF", total: 50_000 },
+        ]}
+        colors={
+          new Map([
+            ["Tiền trọ", "#22B8CF"],
+            ["Mua sắm", "#FCC419"],
+          ])
+        }
+      />
+    )
+
+    const badges = Array.from(document.querySelectorAll('[data-testid="tag-badge"]'))
+    expect(badges.map((badge) => badge.getAttribute("fill"))).toEqual(["#22B8CF", "#FCC419"])
+  })
 })

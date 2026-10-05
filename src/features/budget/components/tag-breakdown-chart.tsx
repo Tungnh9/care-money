@@ -11,6 +11,9 @@ const Chart = dynamic(() => import("react-apexcharts"), { ssr: false })
 
 interface TagBreakdownChartProps {
   data: TagBreakdownEntry[]
+  // Màu theo nhãn (tagChartColors) — BudgetView truyền chung 1 bảng cho cả 2 chart nhãn để cùng 1
+  // nhãn cùng 1 màu. Không truyền (hoặc thiếu nhãn) thì tô theo thứ tự như trước.
+  colors?: Map<string, string>
 }
 
 const CHART_HEIGHT = 300
@@ -162,7 +165,7 @@ function RingCallouts({ items, width, centerX }: { items: CalloutItem[]; width: 
   )
 }
 
-function TagBreakdownChart({ data }: TagBreakdownChartProps) {
+function TagBreakdownChart({ data, colors: tagColors }: TagBreakdownChartProps) {
   const { hidden } = useMoneyVisibility()
   const [containerRef, width] = useMeasuredWidth(320)
 
@@ -173,7 +176,7 @@ function TagBreakdownChart({ data }: TagBreakdownChartProps) {
   }
 
   const total = data.reduce((sum, entry) => sum + entry.total, 0)
-  const colors = data.map((_, i) => CHART_PALETTE[i % CHART_PALETTE.length])
+  const colors = data.map((entry, i) => tagColors?.get(entry.label) ?? CHART_PALETTE[i % CHART_PALETTE.length])
   const items: CalloutItem[] = data.map((entry, i) => {
     const fraction = entry.total / total
     const before = data.slice(0, i).reduce((sum, e) => sum + e.total, 0) / total

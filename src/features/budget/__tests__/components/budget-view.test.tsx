@@ -10,6 +10,7 @@ import {
 import { formatMoney } from "@/lib/format"
 import { setStoredBudget, DEFAULT_BUDGET_STATE, getStoredBudget } from "../../budget-storage"
 import { BudgetView } from "../../components/budget-view"
+import { CHART_PALETTE } from "../../budget-calculations"
 import type { Settlement } from "../../types"
 
 function settlement(overrides: Partial<Settlement>): Settlement {
@@ -46,6 +47,23 @@ function stubChartMeasurement() {
     y: 0,
     toJSON: () => {},
   } as DOMRect)
+}
+
+// Màu của 1 nhãn trên vòng donut: badge nằm cùng nhóm <g> với chữ tên nhãn.
+function donutColor(label: string) {
+  const badge = screen
+    .getAllByTestId("tag-badge")
+    .find((el) => el.parentElement?.textContent?.includes(label))
+  return badge?.getAttribute("fill")
+}
+
+// Chấm màu của 1 nhãn trong bảng tổng dưới chart 6 tháng: chấm nằm cùng hàng với tên nhãn.
+function trendDot(label: string): HTMLElement {
+  const dot = screen
+    .getAllByTestId("tag-trend-dot")
+    .find((el) => el.parentElement?.textContent?.includes(label))
+  if (!dot) throw new Error(`Không thấy chấm màu của nhãn "${label}"`)
+  return dot
 }
 
 describe("BudgetView", () => {
@@ -310,5 +328,27 @@ describe("BudgetView", () => {
     await screen.findByRole("button", { name: "Tất toán tháng 8, 2026" })
 
     expect(screen.queryByRole("button", { name: "Tất toán tháng 7, 2026" })).not.toBeInTheDocument()
+  })
+
+  it("gives the same tag the same colour in the donut and in the 6-month chart, by its place in Settings", async () => {
+    // Donut xếp nhãn theo khoản chi tháng này (Ăn uống trước), chart 6 tháng xếp theo lần xuất hiện
+    // đầu tiên (Tiền trọ từ tháng 5) — trước bản sửa 2 nhãn bị tráo màu cho nhau giữa 2 chart.
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      expenses: [
+        { id: 1, dayKey: "2026-05-03", amount: 3_000_000, tag: { label: "Tiền trọ", emoji: "🏠", tint: "#FFF0B8" } },
+        { id: 2, dayKey: "2026-09-02", amount: 100_000, tag: { label: "Ăn uống", emoji: "🍔", tint: "#F0ECFE" } },
+        { id: 3, dayKey: "2026-09-03", amount: 3_000_000, tag: { label: "Tiền trọ", emoji: "🏠", tint: "#FFF0B8" } },
+      ],
+    })
+
+    render(<BudgetView />)
+    await waitFor(() => expect(screen.getAllByTestId("tag-badge")).toHaveLength(2))
+
+    // Cài đặt mặc định: "Tiền trọ" là nhãn thứ 1, "Ăn uống" là nhãn thứ 6.
+    expect(donutColor("Tiền trọ")).toBe(CHART_PALETTE[0])
+    expect(donutColor("Ăn uống")).toBe(CHART_PALETTE[5])
+    expect(trendDot("Tiền trọ")).toHaveStyle({ backgroundColor: CHART_PALETTE[0] })
+    expect(trendDot("Ăn uống")).toHaveStyle({ backgroundColor: CHART_PALETTE[5] })
   })
 })

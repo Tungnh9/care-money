@@ -11,16 +11,19 @@ const Chart = dynamic(() => import("react-apexcharts"), { ssr: false })
 interface MonthlyTagTrendChartProps {
   months: string[]
   series: MonthlyTagSeries[]
+  // Màu theo nhãn (tagChartColors) — cùng bảng với donut "Chi theo nhãn"; không truyền (hoặc thiếu
+  // nhãn) thì tô theo thứ tự như trước.
+  colors?: Map<string, string>
 }
 
-function MonthlyTagTrendChart({ months, series }: MonthlyTagTrendChartProps) {
+function MonthlyTagTrendChart({ months, series, colors }: MonthlyTagTrendChartProps) {
   const { hidden } = useMoneyVisibility()
 
   // Giữ đúng thứ tự/màu như chart cột chồng ở trên (không sort theo tổng) để dòng tổng kết khớp
   // trực quan với legend của ApexCharts ngay phía trên nó.
   const totals = series.map((s, i) => ({
     ...s,
-    color: CHART_PALETTE[i % CHART_PALETTE.length],
+    color: colors?.get(s.label) ?? CHART_PALETTE[i % CHART_PALETTE.length],
     total: s.data.reduce((sum, value) => sum + value, 0),
   }))
   const grandTotal = totals.reduce((sum, t) => sum + t.total, 0)
@@ -33,7 +36,7 @@ function MonthlyTagTrendChart({ months, series }: MonthlyTagTrendChartProps) {
         series={series.map((s) => ({ name: s.label, data: s.data }))}
         options={{
           chart: { fontFamily: "inherit", toolbar: { show: false }, stacked: true },
-          colors: series.map((_, i) => CHART_PALETTE[i % CHART_PALETTE.length]),
+          colors: totals.map((t) => t.color),
           plotOptions: { bar: { columnWidth: "45%" } },
           dataLabels: { enabled: false },
           legend: { position: "bottom", fontFamily: "inherit" },
@@ -49,7 +52,11 @@ function MonthlyTagTrendChart({ months, series }: MonthlyTagTrendChartProps) {
           {totals.map((t) => (
             <div key={t.label} className="flex items-center justify-between gap-3 text-[13.5px]">
               <span className="flex items-center gap-2 text-[var(--ob-color-text-muted)]">
-                <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: t.color }} />
+                <span
+                  data-testid="tag-trend-dot"
+                  className="h-2.5 w-2.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: t.color }}
+                />
                 <span>{t.emoji}</span>
                 <span>{t.label}</span>
               </span>
