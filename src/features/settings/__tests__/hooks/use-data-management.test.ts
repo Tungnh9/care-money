@@ -551,7 +551,8 @@ describe("useDataManagement", () => {
       onReplaceNetWorthHistory,
     } = renderDataManagement()
     // Mỗi onReplace* ghi thẳng 1 chuỗi khác vào key của nó (không qua setStored* nên không notify);
-    // net-worth ghi xong mới lỗi, như localStorage hết dung lượng ở lần ghi cuối.
+    // net-worth ghi xong mới lỗi, như localStorage hết dung lượng ở lần ghi cuối. Liên kết quỹ mua xe
+    // (key riêng, chuỗi thô không phải JSON) cũng đã bị ghi đè trước lúc lỗi — phải về lại như cũ.
     const writeOther = (key: string) => () => window.localStorage.setItem(key, `{"written":"${key}"}`)
     onReplaceJournal.mockImplementation(writeOther(JOURNAL_STORAGE_KEY))
     onReplaceFinance.mockImplementation(writeOther(FINANCE_STORAGE_KEY))
@@ -560,6 +561,7 @@ describe("useDataManagement", () => {
     onReplaceBudget.mockImplementation(writeOther(BUDGET_STORAGE_KEY))
     onReplaceNetWorthHistory.mockImplementation(() => {
       writeOther(NET_WORTH_HISTORY_KEY)()
+      window.localStorage.setItem(CAR_GOAL_FUND_KEY, "Quỹ đã ghi")
       throw new Error("QuotaExceededError")
     })
     const file = new File([JSON.stringify({ version: EXPORT_VERSION })], "backup.json", { type: "application/json" })
