@@ -54,6 +54,15 @@ describe("useBudget", () => {
     expect(result.current.salaries).toEqual([{ month: "2026-09", amount: 22_000_000 }])
   })
 
+  it("names the month in words in the salary toast", async () => {
+    const { result } = renderHook(() => useBudget())
+    await waitFor(() => expect(result.current.salaries).toEqual([]))
+
+    act(() => result.current.setSalary("2026-09", 20_000_000))
+
+    expect(toast.success).toHaveBeenCalledWith("Đã lưu lương tháng 9, 2026")
+  })
+
   it("addExpense appends an expense with a freshly generated unique id", async () => {
     const { result } = renderHook(() => useBudget())
     await waitFor(() => expect(result.current.expenses).toEqual([]))

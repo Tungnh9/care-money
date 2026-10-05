@@ -3,6 +3,7 @@ import { render, screen, fireEvent, within } from "@testing-library/react"
 
 import { ExpenseListCard } from "../../components/expense-list-card"
 import { formatMoney } from "@/lib/format"
+import { UNTAGGED_EMOJI, UNTAGGED_LABEL } from "../../budget-calculations"
 import type { Expense } from "../../types"
 
 const EXPENSES: Expense[] = [
@@ -131,5 +132,19 @@ describe("ExpenseListCard", () => {
     const rows = screen.getAllByTestId("expense-row")
     expect(rows[0].className).toContain("border-b")
     expect(rows[1].className).not.toContain("border-b")
+  })
+
+  it("names and badges untagged rows exactly like the tag charts do", () => {
+    render(
+      <ExpenseListCard
+        expenses={[{ id: 1, dayKey: "2026-09-01", amount: 10_000, tag: null }]}
+        onRemove={vi.fn()}
+        onEdit={vi.fn()}
+      />
+    )
+
+    const row = screen.getByTestId("expense-row")
+    expect(row).toHaveTextContent(UNTAGGED_LABEL)
+    expect(row).toHaveTextContent(UNTAGGED_EMOJI)
   })
 })

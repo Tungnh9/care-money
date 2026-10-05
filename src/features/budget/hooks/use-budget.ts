@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 
 import { toast } from "sonner"
 import { applySavingsFundDelta } from "@/features/finance/finance-storage"
+import { formatMonthKey } from "@/lib/date"
 import { nextId } from "@/lib/next-id"
 import { useStorageSync } from "@/lib/use-storage-sync"
 import {
@@ -74,7 +75,7 @@ function useBudget() {
             ? current.salaries.map((s) => (s.month === month ? { ...s, amount } : s))
             : [...current.salaries, { month, amount }],
         })
-        toast.success(`Đã lưu lương tháng ${month}`)
+        toast.success(`Đã lưu lương ${formatMonthKey(month).toLowerCase()}`)
       } catch {
         toast.error("Không thể lưu lương. Vui lòng thử lại.")
       }
