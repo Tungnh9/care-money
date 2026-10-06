@@ -189,9 +189,10 @@ describe("useBudget", () => {
       })
 
       expect(outcomes).toEqual([true, false, false])
+      expect(toast.success).toHaveBeenCalledTimes(1)
     })
 
-    it("takes a deposit back out of the fund when the settlement history cannot be saved, so a retry cannot deposit twice", async () => {
+    it("takes a deposit back out of the fund when the settlement history cannot be saved", async () => {
       const { result } = renderHook(() => useBudget())
       await waitFor(() => expect(result.current.settlements).toEqual([]))
 
@@ -212,6 +213,7 @@ describe("useBudget", () => {
       expect(toast.error).toHaveBeenCalledWith(
         "Không thể ghi lại lịch sử tất toán — số dư quỹ vẫn giữ nguyên. Vui lòng thử lại."
       )
+      expect(toast.success).not.toHaveBeenCalled()
     })
 
     it("puts a withdrawal back when the settlement history cannot be saved", async () => {
@@ -275,6 +277,7 @@ describe("useBudget", () => {
 
       expect(ok).toBe(false)
       expect(toast.error).toHaveBeenCalledWith('Không thể cập nhật số dư quỹ "Quỹ A". Vui lòng thử lại.')
+      expect(toast.success).not.toHaveBeenCalled()
       expect(getStoredFinance().savings[0].amount).toBe(100_000)
       expect(getStoredBudget().settlements).toEqual([])
     })
