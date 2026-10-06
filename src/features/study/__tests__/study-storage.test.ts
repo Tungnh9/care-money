@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest"
 
-import { DEFAULT_STUDY_STATE, STUDY_STORAGE_KEY, getStoredStudy } from "../study-storage"
+import { DEFAULT_STUDY_STATE, STUDY_STORAGE_KEY, getStoredStudy, tasksForDay } from "../study-storage"
+import type { Task } from "../types"
 
 describe("getStoredStudy", () => {
   beforeEach(() => {
@@ -104,5 +105,44 @@ describe("getStoredStudy", () => {
     )
 
     expect(getStoredStudy().learned).toEqual(["v-0001", "v-0002"])
+  })
+
+  it("backfills tasksDay as null for data saved before ticks were tied to a day", () => {
+    window.localStorage.setItem(
+      STUDY_STORAGE_KEY,
+      JSON.stringify({ tasks: DEFAULT_STUDY_STATE.tasks, learned: [] })
+    )
+
+    expect(getStoredStudy().tasksDay).toBeNull()
+  })
+
+  it("keeps the stored day the task ticks belong to", () => {
+    window.localStorage.setItem(
+      STUDY_STORAGE_KEY,
+      JSON.stringify({ ...DEFAULT_STUDY_STATE, tasksDay: "2026-09-28" })
+    )
+
+    expect(getStoredStudy().tasksDay).toBe("2026-09-28")
+  })
+})
+
+describe("tasksForDay", () => {
+  const ticked: Task[] = [
+    { label: "Ôn 20 từ vựng", done: true },
+    { label: "Đọc 10 trang", done: false },
+  ]
+
+  it("keeps the ticks as they are when they belong to today", () => {
+    expect(tasksForDay(ticked, "2026-09-29", "2026-09-29")).toBe(ticked)
+  })
+
+  it("unticks every task when the ticks belong to another day, or to no known day", () => {
+    const unticked = [
+      { label: "Ôn 20 từ vựng", done: false },
+      { label: "Đọc 10 trang", done: false },
+    ]
+
+    expect(tasksForDay(ticked, "2026-09-28", "2026-09-29")).toEqual(unticked)
+    expect(tasksForDay(ticked, null, "2026-09-29")).toEqual(unticked)
   })
 })

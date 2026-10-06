@@ -6,6 +6,9 @@ import type { GameHighScores, GameStreak, Task, WordReviewState } from "./types"
 
 interface StudyState {
   tasks: Task[]
+  // dayKey mà các dấu tick trong `tasks` thuộc về — null khi chưa từng tick (hoặc dữ liệu lưu trước
+  // khi có field này). Tick của ngày khác không được tính là "hôm nay" (xem tasksForDay).
+  tasksDay: string | null
   learned: string[]
   gameHighScores: GameHighScores
   gameStreak: GameStreak
@@ -22,6 +25,7 @@ const DEFAULT_TASKS: Task[] = [
 
 const DEFAULT_STUDY_STATE: StudyState = {
   tasks: DEFAULT_TASKS,
+  tasksDay: null,
   learned: [],
   gameHighScores: { quiz: 0, match: 0, spelling: 0 },
   gameStreak: { count: 0, lastPlayedDayKey: null },
@@ -51,14 +55,6 @@ const wordReviewStateSchema: z.ZodType<WordReviewState> = z.object({
   repetitions: z.number(),
   dueAt: z.string(),
   lastReviewedAt: z.string().nullable(),
-})
-
-const studyStateSchema: z.ZodType<StudyState> = z.object({
-  tasks: z.array(taskSchema),
-  learned: z.array(z.string()),
-  gameHighScores: gameHighScoresSchema,
-  gameStreak: gameStreakSchema,
-  wordReviews: z.record(z.string(), wordReviewStateSchema),
 })
 
 // Field nào sai shape thì rơi về default riêng field đó, không kéo sập cả state.
@@ -91,11 +87,20 @@ function parseStudyState(value: unknown): StudyState {
   const parsed = (value ?? {}) as Partial<StudyState>
   return {
     tasks: safeField(z.array(taskSchema), parsed.tasks, DEFAULT_STUDY_STATE.tasks),
+    tasksDay: safeField(z.string().nullable(), parsed.tasksDay, DEFAULT_STUDY_STATE.tasksDay),
     learned: safeLearned(parsed.learned),
     gameHighScores: safeField(gameHighScoresSchema, parsed.gameHighScores, DEFAULT_STUDY_STATE.gameHighScores),
     gameStreak: safeField(gameStreakSchema, parsed.gameStreak, DEFAULT_STUDY_STATE.gameStreak),
     wordReviews: safeWordReviews(parsed.wordReviews),
   }
+}
+
+// "Nhiệm vụ hôm nay" là danh sách lặp lại mỗi ngày: tick của ngày khác (hoặc không rõ ngày) coi như
+// chưa làm. Hàm thuần — nơi gọi truyền today; chỉ áp lúc tính giá trị hiển thị/lúc ghi, không bao giờ
+// ghi ngược storage lúc đọc (reload của useStudy chỉ đọc — hợp đồng của Plan 1a).
+function tasksForDay(tasks: Task[], tasksDay: string | null, today: string): Task[] {
+  if (tasksDay === today) return tasks
+  return tasks.map((task) => (task.done ? { ...task, done: false } : task))
 }
 
 function getStoredStudy(): StudyState {
@@ -119,7 +124,7 @@ export {
   getStoredStudy,
   setStoredStudy,
   parseStudyState,
-  studyStateSchema,
+  tasksForDay,
   taskSchema,
   type StudyState,
 }

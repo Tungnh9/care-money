@@ -11,6 +11,7 @@ import {
   STUDY_STORAGE_KEY,
   getStoredStudy,
   setStoredStudy,
+  tasksForDay,
   type StudyState,
 } from "../study-storage"
 import type { GameType, ReviewGrade, VocabEntry } from "../types"
@@ -52,10 +53,13 @@ function useStudy() {
   const toggleTask = useCallback(
     (index: number) => {
       const current = stateRef.current
-      persist({
-        ...current,
-        tasks: current.tasks.map((task, i) => (i === index ? { ...task, done: !task.done } : task)),
-      })
+      const today = dayKey()
+      // Dựng từ danh sách của HÔM NAY (tick của hôm qua đã về chưa làm) rồi đóng dấu ngày — nếu không,
+      // trang để mở qua đêm tick 1 việc sáng nay sẽ lưu luôn các tick sót lại từ hôm qua thành của hôm nay.
+      const tasks = tasksForDay(current.tasks, current.tasksDay, today).map((task, i) =>
+        i === index ? { ...task, done: !task.done } : task
+      )
+      persist({ ...current, tasks, tasksDay: today })
     },
     [persist]
   )
@@ -145,7 +149,8 @@ function useStudy() {
   )
 
   return {
-    tasks: state.tasks,
+    // Luôn là nhiệm vụ của hôm nay — StudyView, OverviewView, SettingsView đều đọc từ đây.
+    tasks: tasksForDay(state.tasks, state.tasksDay, dayKey()),
     learned: state.learned,
     gameHighScores: state.gameHighScores,
     gameStreak: state.gameStreak,

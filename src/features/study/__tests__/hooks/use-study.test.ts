@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest"
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { act, renderHook, waitFor } from "@testing-library/react"
 
 import { useStudy } from "../../hooks/use-study"
@@ -8,6 +8,14 @@ import { dayKey } from "@/lib/date"
 describe("useStudy", () => {
   beforeEach(() => {
     window.localStorage.clear()
+    // Ghim đồng hồ: hook và câu assert cùng gọi dayKey() — dùng giờ thật thì chạy qua nửa đêm là 2 lần
+    // gọi ra 2 ngày khác nhau. shouldAdvanceTime để waitFor vẫn chạy được.
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    vi.setSystemTime(new Date(2026, 0, 1, 9, 0))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it("seeds from defaults when localStorage is empty", async () => {
@@ -61,6 +69,7 @@ describe("useStudy", () => {
 
     const restored = {
       tasks: [{ label: "Việc mới", done: true }],
+      tasksDay: "2026-01-01",
       learned: ["v-0009"],
       gameHighScores: { quiz: 0, match: 0, spelling: 0 },
       gameStreak: { count: 0, lastPlayedDayKey: null },
@@ -160,9 +169,6 @@ describe("useStudy", () => {
   })
 
   it("updates an existing wordReviews entry via applyGrade instead of re-seeding it", async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true })
-    vi.setSystemTime(new Date(2026, 0, 1, 9, 0))
-
     const { result } = renderHook(() => useStudy())
     await waitFor(() => expect(result.current.tasks).toEqual(DEFAULT_STUDY_STATE.tasks))
 
@@ -178,8 +184,6 @@ describe("useStudy", () => {
 
     expect(result.current.wordReviews["v-0001"].repetitions).toBe(2)
     expect(result.current.wordReviews["v-0001"].intervalDays).toBe(6)
-
-    vi.useRealTimers()
   })
 
   it("does not apply a second grade to the same word again on the same day", async () => {
@@ -273,5 +277,54 @@ describe("useStudy", () => {
 
     expect(getStoredStudy().learned).toEqual(["v-0007"])
     expect(getStoredStudy().wordReviews["v-0001"]).toBeDefined()
+  })
+
+  it("starts a new day with every task unticked, instead of carrying yesterday's ticks", async () => {
+    const { result, unmount } = renderHook(() => useStudy())
+    await waitFor(() => expect(result.current.hydrated).toBe(true))
+    act(() => {
+      result.current.toggleTask(0)
+    })
+    expect(result.current.tasks[0].done).toBe(true)
+    unmount()
+
+    vi.setSystemTime(new Date(2026, 0, 2, 9, 0))
+    const { result: nextDay } = renderHook(() => useStudy())
+    await waitFor(() => expect(nextDay.current.hydrated).toBe(true))
+
+    expect(nextDay.current.tasks.map((task) => task.done)).toEqual([false, false, false])
+  })
+
+  it("keeps today's ticks when the page is reopened later the same day", async () => {
+    const { result, unmount } = renderHook(() => useStudy())
+    await waitFor(() => expect(result.current.hydrated).toBe(true))
+    act(() => {
+      result.current.toggleTask(0)
+    })
+    unmount()
+
+    vi.setSystemTime(new Date(2026, 0, 1, 21, 0))
+    const { result: sameDay } = renderHook(() => useStudy())
+    await waitFor(() => expect(sameDay.current.hydrated).toBe(true))
+
+    expect(sameDay.current.tasks.map((task) => task.done)).toEqual([true, false, false])
+  })
+
+  it("does not bring yesterday's other ticks back when ticking a task in a page left open overnight", async () => {
+    const { result } = renderHook(() => useStudy())
+    await waitFor(() => expect(result.current.hydrated).toBe(true))
+    act(() => {
+      result.current.toggleTask(0)
+      result.current.toggleTask(1)
+    })
+
+    vi.setSystemTime(new Date(2026, 0, 2, 9, 0))
+    act(() => {
+      result.current.toggleTask(2)
+    })
+
+    expect(result.current.tasks.map((task) => task.done)).toEqual([false, false, true])
+    expect(getStoredStudy().tasks.map((task) => task.done)).toEqual([false, false, true])
+    expect(getStoredStudy().tasksDay).toBe("2026-01-02")
   })
 })
