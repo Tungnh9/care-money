@@ -82,6 +82,18 @@ describe("ReviewDueCard", () => {
     expect(screen.queryByRole("button", { name: /Ôn tiếp/ })).not.toBeInTheDocument()
   })
 
+  it("skips words already graded on this card when showing the next batch", () => {
+    // Cha tĩnh: từ đã chấm vẫn nằm trong dueWords, nên chỉ riêng gradedIds mới loại chúng khỏi lượt kế.
+    const dueWords = Array.from({ length: 12 }, (_, i) => vocab(`${i}`))
+    render(<ReviewDueCard dueWords={dueWords} onGrade={vi.fn()} />)
+
+    for (let i = 0; i < 5; i++) gradeNextShownCard()
+    fireEvent.click(screen.getByRole("button", { name: "Ôn tiếp 5 từ" }))
+
+    const shownWords = screen.getAllByText(/^word-/, { selector: "span" }).map((el) => el.textContent)
+    expect(shownWords).toEqual(["word-5", "word-6", "word-7", "word-8", "word-9"])
+  })
+
   it("offers only as many words as are left for the last batch", () => {
     render(<DueHarness initial={Array.from({ length: 7 }, (_, i) => vocab(`${i}`))} />)
 
