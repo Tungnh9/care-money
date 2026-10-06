@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { describe, it, expect, vi } from "vitest"
 import { render, screen, fireEvent } from "@testing-library/react"
 
@@ -6,6 +7,18 @@ import type { VocabEntry } from "../../types"
 
 function vocab(id: string): VocabEntry {
   return { id, word: `word-${id}`, meaning: `nghĩa-${id}`, addedAt: "2026-01-01" }
+}
+
+// Mô phỏng đúng component cha thật (StudyView): chấm 1 thẻ xong thì từ đó không còn tới hạn nữa.
+function DueHarness({ initial }: { initial: VocabEntry[] }) {
+  const [due, setDue] = useState(initial)
+  return <ReviewDueCard dueWords={due} onGrade={(wordId) => setDue((words) => words.filter((w) => w.id !== wordId))} />
+}
+
+// Luôn lật thẻ chưa lật đầu tiên rồi chấm "Nhớ" — mỗi lúc chỉ có đúng 1 thẻ đang lật mà chưa chấm.
+function gradeNextShownCard() {
+  fireEvent.click(screen.getAllByRole("button", { name: /Hiện nghĩa/ })[0])
+  fireEvent.click(screen.getByRole("button", { name: "Nhớ" }))
 }
 
 describe("ReviewDueCard", () => {
@@ -50,5 +63,30 @@ describe("ReviewDueCard", () => {
     const shownWords = screen.getAllByText(/^word-/, { selector: "span" }).map((el) => el.textContent)
     expect(shownWords).toEqual(["word-0", "word-1", "word-2"])
     expect(screen.getByText("2 từ đang chờ")).toBeInTheDocument()
+  })
+
+  it("offers the next batch of due words once every shown card is graded", () => {
+    render(<DueHarness initial={Array.from({ length: 12 }, (_, i) => vocab(`${i}`))} />)
+
+    for (let i = 0; i < 4; i++) gradeNextShownCard()
+    // Còn 1 thẻ chưa chấm trong lượt này — chưa mời ôn tiếp.
+    expect(screen.queryByRole("button", { name: /Ôn tiếp/ })).not.toBeInTheDocument()
+
+    gradeNextShownCard()
+    expect(screen.getByText("7 từ đang chờ")).toBeInTheDocument()
+    fireEvent.click(screen.getByRole("button", { name: "Ôn tiếp 5 từ" }))
+
+    const shownWords = screen.getAllByText(/^word-/, { selector: "span" }).map((el) => el.textContent)
+    expect(shownWords).toEqual(["word-5", "word-6", "word-7", "word-8", "word-9"])
+    expect(screen.getAllByRole("button", { name: /Hiện nghĩa/ })).toHaveLength(5)
+    expect(screen.queryByRole("button", { name: /Ôn tiếp/ })).not.toBeInTheDocument()
+  })
+
+  it("offers only as many words as are left for the last batch", () => {
+    render(<DueHarness initial={Array.from({ length: 7 }, (_, i) => vocab(`${i}`))} />)
+
+    for (let i = 0; i < 5; i++) gradeNextShownCard()
+
+    expect(screen.getByRole("button", { name: "Ôn tiếp 2 từ" })).toBeInTheDocument()
   })
 })

@@ -3,6 +3,8 @@ import type { ReviewGrade, VocabEntry, WordReviewState } from "./types"
 
 const SRS_EASE_START = 2.5
 const SRS_EASE_FLOOR = 1.3
+// Số thẻ mỗi lượt ôn trên card "Từ cần ôn hôm nay" (và số từ Tổng quan hiện). Ôn hết 1 lượt thì card
+// mời "Ôn tiếp" lượt kế — đây không còn là giới hạn/ngày dù tên vẫn giữ chữ DAILY.
 const DAILY_REVIEW_CAP = 5
 
 function initialReviewState(wordId: string, today: string): WordReviewState {

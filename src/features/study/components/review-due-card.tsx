@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 
+import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Empty } from "@/components/ob/empty"
 import { cn } from "@/lib/utils"
@@ -16,10 +17,16 @@ interface ReviewDueCardProps {
 }
 
 function ReviewDueCard({ dueWords, onGrade, className }: ReviewDueCardProps) {
-  // Đóng băng đúng 1 lần lúc mount (lazy initializer chỉ chạy 1 lần bất kể re-render) — chấm 1
-  // thẻ làm dueWords tính lại ở component cha (thẻ đó không còn "tới hạn" nữa) không được làm
-  // thẻ đang ôn dở biến mất giữa phiên, giống idiom queue/cards đã dùng ở SpellingGame/MatchGame.
-  const [shown] = useState(() => dueWords.slice(0, DAILY_REVIEW_CAP))
+  // Đóng băng từng lượt (lazy initializer lúc mount, sau đó chỉ đổi khi bấm "Ôn tiếp") — chấm 1 thẻ
+  // làm dueWords tính lại ở component cha (thẻ đó không còn "tới hạn" nữa) không được làm thẻ đang
+  // ôn dở biến mất giữa lượt, giống idiom queue/cards đã dùng ở SpellingGame/MatchGame.
+  const [shown, setShown] = useState(() => dueWords.slice(0, DAILY_REVIEW_CAP))
+  const [gradedIds, setGradedIds] = useState<string[]>([])
+
+  function handleGrade(wordId: string, grade: ReviewGrade) {
+    onGrade(wordId, grade)
+    setGradedIds((ids) => [...ids, wordId])
+  }
 
   if (!dueWords.length) {
     return (
@@ -28,6 +35,13 @@ function ReviewDueCard({ dueWords, onGrade, className }: ReviewDueCardProps) {
       </Card>
     )
   }
+
+  // Chấm hết lượt đang hiện thì mời lượt kế: các từ vẫn tới hạn mà chưa chấm trong phiên này, theo
+  // đúng thứ tự getDueWords (lượt ôn thật trước từ mới). Không bao giờ bày cả backlog ra 1 lần.
+  const batchDone = shown.every((entry) => gradedIds.includes(entry.id))
+  const nextBatch = batchDone
+    ? dueWords.filter((entry) => !gradedIds.includes(entry.id)).slice(0, DAILY_REVIEW_CAP)
+    : []
 
   return (
     <Card
@@ -41,9 +55,16 @@ function ReviewDueCard({ dueWords, onGrade, className }: ReviewDueCardProps) {
     >
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {shown.map((entry) => (
-          <ReviewWordCard key={entry.id} entry={entry} onGrade={onGrade} />
+          <ReviewWordCard key={entry.id} entry={entry} onGrade={handleGrade} />
         ))}
       </div>
+      {nextBatch.length ? (
+        <div className="mt-4 flex justify-center">
+          <Button type="button" variant="primary" size="sm" onClick={() => setShown(nextBatch)}>
+            Ôn tiếp {nextBatch.length} từ
+          </Button>
+        </div>
+      ) : null}
     </Card>
   )
 }
