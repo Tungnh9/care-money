@@ -201,4 +201,46 @@ describe("StudyView", () => {
       expect(screen.queryByText(word.word)).not.toBeInTheDocument()
     }
   })
+
+  it("shows a word graded yesterday ahead of the never-studied backlog (regression: real reviews were buried behind new words)", async () => {
+    const wordReviews: Record<string, unknown> = {}
+    // v-0..v-8: cold-seed hôm qua (13/08), chưa từng chấm.
+    for (let i = 0; i < 9; i++) {
+      wordReviews[`v-${i}`] = {
+        wordId: `v-${i}`,
+        easeFactor: 2.5,
+        intervalDays: 0,
+        repetitions: 0,
+        dueAt: "2026-08-13",
+        lastReviewedAt: null,
+      }
+    }
+    // v-9: chấm "Nhớ" hôm qua → hẹn đúng hôm nay (14/08).
+    wordReviews["v-9"] = {
+      wordId: "v-9",
+      easeFactor: 2.5,
+      intervalDays: 1,
+      repetitions: 1,
+      dueAt: "2026-08-14",
+      lastReviewedAt: "2026-08-13T09:00:00.000Z",
+    }
+    window.localStorage.setItem(
+      STUDY_STORAGE_KEY,
+      JSON.stringify({
+        tasks: [],
+        learned: [],
+        gameHighScores: { quiz: 0, match: 0, spelling: 0 },
+        gameStreak: { count: 0, lastPlayedDayKey: null },
+        wordReviews,
+      })
+    )
+
+    render(<StudyView vocab={VOCAB} grammar={GRAMMAR} />)
+
+    await waitFor(() => expect(screen.getByText("word-9")).toBeInTheDocument())
+    for (const word of VOCAB.slice(0, 4)) {
+      expect(screen.getByText(word.word)).toBeInTheDocument()
+    }
+    expect(screen.queryByText("word-4")).not.toBeInTheDocument()
+  })
 })

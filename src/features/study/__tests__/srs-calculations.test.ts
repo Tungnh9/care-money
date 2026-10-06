@@ -151,4 +151,36 @@ describe("getDueWords", () => {
   it("returns an empty array when nothing is due", () => {
     expect(getDueWords({}, [vocab("v-1")], "2026-01-01")).toEqual([])
   })
+
+  it("puts real reviews ahead of never-studied words, even when the new words have been due longer", () => {
+    const wordReviews: Record<string, WordReviewState> = {
+      // Cold-seed ngày 01-01, chưa từng chấm — "từ mới".
+      "v-1": initialReviewState("v-1", "2026-01-01"),
+      "v-2": initialReviewState("v-2", "2026-01-01"),
+      // Chấm "Nhớ" ngày 01-01 → hẹn 01-02.
+      "v-3": applyGrade(initialReviewState("v-3", "2026-01-01"), "good", "2026-01-01", "2026-01-01T10:00:00.000Z"),
+      // Chấm "Quên" ngày 01-01 → repetitions về 0 nhưng vẫn là lượt ôn thật, hẹn 01-02.
+      "v-4": applyGrade(initialReviewState("v-4", "2026-01-01"), "again", "2026-01-01", "2026-01-01T10:00:00.000Z"),
+      // Seed "đã học" ngày 2025-12-27 → tới hạn 01-02; chưa từng chấm nhưng không phải từ mới.
+      "v-5": seedLearnedReviewState("v-5", "2025-12-27"),
+    }
+    const vocabList = [vocab("v-1"), vocab("v-2"), vocab("v-3"), vocab("v-4"), vocab("v-5")]
+
+    const due = getDueWords(wordReviews, vocabList, "2026-01-02")
+
+    expect(due.map((v) => v.id)).toEqual(["v-3", "v-4", "v-5", "v-1", "v-2"])
+  })
+
+  it("still orders real reviews among themselves by oldest due first", () => {
+    const wordReviews: Record<string, WordReviewState> = {
+      // Chấm "Nhớ" ngày 01-03 → hẹn 01-04.
+      "v-1": applyGrade(initialReviewState("v-1", "2026-01-03"), "good", "2026-01-03", "2026-01-03T10:00:00.000Z"),
+      // Chấm "Nhớ" ngày 01-01 → hẹn 01-02, quá hạn lâu hơn.
+      "v-2": applyGrade(initialReviewState("v-2", "2026-01-01"), "good", "2026-01-01", "2026-01-01T10:00:00.000Z"),
+    }
+
+    const due = getDueWords(wordReviews, [vocab("v-1"), vocab("v-2")], "2026-01-05")
+
+    expect(due.map((v) => v.id)).toEqual(["v-2", "v-1"])
+  })
 })

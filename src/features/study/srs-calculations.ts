@@ -58,9 +58,23 @@ function ensureReviewStates(
   return { ...wordReviews, ...additions }
 }
 
+// "Từ mới" = entry cold-seed chưa từng được chấm (initialReviewState). Từ đã chấm ít nhất 1 lần (kể
+// cả "Quên": repetitions về 0 nhưng lastReviewedAt khác null) và từ seed "đã học" (repetitions 2)
+// đều là lượt ôn thật.
+function isNewWord(state: WordReviewState): boolean {
+  return state.repetitions === 0 && state.lastReviewedAt === null
+}
+
 function getDueWords(wordReviews: Record<string, WordReviewState>, vocab: VocabEntry[], today: string): VocabEntry[] {
   const due = vocab.filter((v) => wordReviews[v.id] && wordReviews[v.id].dueAt <= today)
-  return [...due].sort((a, b) => wordReviews[a.id].dueAt.localeCompare(wordReviews[b.id].dueAt))
+  // Lượt ôn thật luôn đứng trước từ mới: ngày đầu cả kho từ mới cùng tới hạn đúng ngày seed, còn mọi
+  // lần chấm đều hẹn từ ngày hôm sau trở đi — chỉ xếp theo dueAt thì từ vừa chấm "Quên" hôm qua nằm
+  // sau ~330 từ mới và không bao giờ lọt vào 5 thẻ đầu. Trong từng nhóm vẫn quá hạn lâu nhất trước;
+  // sort ổn định nên cùng hạn thì giữ thứ tự kho từ.
+  return [...due].sort((a, b) => {
+    const groupDiff = Number(isNewWord(wordReviews[a.id])) - Number(isNewWord(wordReviews[b.id]))
+    return groupDiff || wordReviews[a.id].dueAt.localeCompare(wordReviews[b.id].dueAt)
+  })
 }
 
 export {
