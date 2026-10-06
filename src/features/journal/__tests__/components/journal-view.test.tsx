@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 
 import { JournalView } from "../../components/journal-view"
+import type { JournalEntry } from "../../types"
 
 // jsdom không đồng bộ innerText <-> innerHTML như trình duyệt thật (set cái này không
 // cập nhật cái kia), nên set cả 2 để mô phỏng đúng trạng thái 1 trình duyệt thật sẽ có.
@@ -195,5 +196,91 @@ describe("JournalView on-this-day card", () => {
 
     await screen.findByText("Chưa có bài nào")
     expect(screen.queryByText(/bạn đã viết/)).not.toBeInTheDocument()
+  })
+})
+
+// "Hôm nay" ghim là 30/09/2026 — không bài mẫu nào trùng mốc "ngày này năm xưa" (23/09, 30/08, 30/09/2025)
+// nên mỗi đoạn chữ chỉ xuất hiện 1 lần trên trang.
+const ENTRY_A: JournalEntry = {
+  id: new Date(2026, 8, 28, 20, 0).getTime(),
+  text: "Tối nay đi bộ quanh hồ",
+  time: "20:00",
+  date: "28/09",
+  words: 6,
+  mood: null,
+}
+
+const ENTRY_B: JournalEntry = {
+  id: new Date(2026, 8, 27, 21, 0).getTime(),
+  text: "Đọc xong một cuốn sách",
+  time: "21:00",
+  date: "27/09",
+  words: 5,
+  mood: null,
+}
+
+function seedEntries(...entries: JournalEntry[]) {
+  window.localStorage.setItem("journal-entries", JSON.stringify({ entries }))
+}
+
+describe("JournalView — sửa, xoá và giữ nội dung đang viết", () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    vi.setSystemTime(new Date(2026, 8, 30, 9, 0))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it("keeps a new entry in the editor when it cannot be saved, so it can be saved again", async () => {
+    render(<JournalView />)
+
+    const editor = await screen.findByRole("textbox")
+    typeInto(editor, "Bài sẽ lưu lỗi")
+    const setItemSpy = vi.spyOn(Storage.prototype, "setItem").mockImplementationOnce(() => {
+      throw new Error("quota exceeded")
+    })
+    fireEvent.click(screen.getByRole("button", { name: "Lưu vào nhật ký" }))
+    setItemSpy.mockRestore()
+
+    expect(screen.queryByText("Đã lưu vào nhật ký")).not.toBeInTheDocument()
+    expect(screen.getByRole("textbox")).toHaveTextContent("Bài sẽ lưu lỗi")
+    expect(screen.getByText("4 từ")).toBeInTheDocument()
+  })
+
+  it("stays in edit mode with the edited text when the update cannot be written", async () => {
+    seedEntries(ENTRY_A, ENTRY_B)
+    render(<JournalView />)
+
+    fireEvent.click(await screen.findByRole("button", { name: "Sửa bài 28/09 20:00" }))
+    typeInto(screen.getByRole("textbox"), "Bài A đã sửa")
+    const setItemSpy = vi.spyOn(Storage.prototype, "setItem").mockImplementationOnce(() => {
+      throw new Error("quota exceeded")
+    })
+    fireEvent.click(screen.getByRole("button", { name: "Cập nhật bài viết" }))
+    setItemSpy.mockRestore()
+
+    expect(screen.getByRole("button", { name: "Cập nhật bài viết" })).toBeInTheDocument()
+    expect(screen.getByRole("textbox")).toHaveTextContent("Bài A đã sửa")
+    const stored = JSON.parse(window.localStorage.getItem("journal-entries") ?? "{}")
+    expect(stored.entries[0].text).toBe(ENTRY_A.text)
+  })
+
+  it("keeps the edited text, and saves no new entry, when the entry was deleted in another tab meanwhile", async () => {
+    seedEntries(ENTRY_A, ENTRY_B)
+    render(<JournalView />)
+
+    fireEvent.click(await screen.findByRole("button", { name: "Sửa bài 28/09 20:00" }))
+    typeInto(screen.getByRole("textbox"), "Bài A đã sửa")
+    // Tab khác xoá bài A — ghi thẳng, KHÔNG bắn sự kiện: trang này vẫn đang ở chế độ sửa bài A.
+    seedEntries(ENTRY_B)
+    fireEvent.click(screen.getByRole("button", { name: "Cập nhật bài viết" }))
+
+    expect(screen.getByRole("button", { name: "Cập nhật bài viết" })).toBeInTheDocument()
+    expect(screen.getByRole("textbox")).toHaveTextContent("Bài A đã sửa")
+    const stored = JSON.parse(window.localStorage.getItem("journal-entries") ?? "{}")
+    expect(stored.entries).toEqual([ENTRY_B])
   })
 })

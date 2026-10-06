@@ -88,7 +88,7 @@ describe("JournalEditor", () => {
   })
 
   it("saves the current text, word count, and selected mood, then clears the editor", () => {
-    const onSave = vi.fn()
+    const onSave = vi.fn(() => true) // true = đã ghi được — chỉ khi đó khung soạn mới được xoá
     const mood = { emoji: "🙂", label: "Vui", tint: "#FFE0C7", score: 4 }
     render(<JournalEditor selectedMood={mood} onSave={onSave} />)
 
@@ -100,6 +100,20 @@ describe("JournalEditor", () => {
     expect(onSave).toHaveBeenCalledWith({ text: "Một ngày ổn", words: 3, mood })
     expect(editor.innerHTML).toBe("")
     expect(screen.getByText("0 từ")).toBeInTheDocument()
+  })
+
+  it("keeps the text and word count when onSave reports that nothing was written, so saving can be retried", () => {
+    const onSave = vi.fn(() => false)
+    render(<JournalEditor selectedMood={null} onSave={onSave} />)
+
+    const editor = screen.getByRole("textbox")
+    typeInto(editor, "Một ngày ổn")
+    fireEvent.click(screen.getByRole("button", { name: "Lưu vào nhật ký" }))
+
+    expect(onSave).toHaveBeenCalledTimes(1)
+    expect(editor.innerHTML).toBe("Một ngày ổn")
+    expect(screen.getByText("3 từ")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Lưu vào nhật ký" })).toBeEnabled()
   })
 
   it("sanitizes formatted HTML before saving, keeping only the allowed tags", () => {

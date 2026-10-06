@@ -29,7 +29,8 @@ const TOOLS: Tool[] = [
 
 interface JournalEditorProps {
   selectedMood: MoodSnapshot | null
-  onSave: (input: { text: string; words: number; mood: MoodSnapshot | null }) => void
+  // true = đã ghi được. false (bộ nhớ đầy, bài đã bị xoá ở tab khác...) thì khung soạn giữ nguyên chữ.
+  onSave: (input: { text: string; words: number; mood: MoodSnapshot | null }) => boolean
   editingEntry?: JournalEntry | null
   onCancelEdit?: () => void
 }
@@ -92,7 +93,8 @@ function JournalEditor({ selectedMood, onSave, editingEntry, onCancelEdit }: Jou
     const plainText = ref.current?.innerText?.trim() ?? ""
     if (!plainText) return
     const html = sanitizeJournalHtml(ref.current?.innerHTML ?? "")
-    onSave({ text: html, words, mood: selectedMood })
+    // Ghi không được thì giữ nguyên chữ — toast lỗi bảo "thử lại", nên phải còn chữ để thử lại.
+    if (!onSave({ text: html, words, mood: selectedMood })) return
     if (ref.current) ref.current.innerHTML = ""
     setWords(0)
   }

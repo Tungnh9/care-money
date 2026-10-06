@@ -29,15 +29,18 @@ function JournalView() {
     : null
   const onThisDay = findOnThisDay(entries)
 
-  function handleSave(input: { text: string; words: number; mood: typeof selectedMoodSnapshot }) {
+  function handleSave(input: { text: string; words: number; mood: typeof selectedMoodSnapshot }): boolean {
     if (editingEntry) {
-      updateEntry(editingEntry.id, input)
+      // Ghi lỗi (hay bài vừa bị xoá ở tab khác) thì ở lại chế độ sửa: khung soạn còn nguyên chữ để thử lại.
+      if (!updateEntry(editingEntry.id, input)) return false
       setEditingEntry(null)
       setMood("")
-      return
+      return true
     }
     const entry = saveEntry(input)
-    if (entry) setJustSaved(entry)
+    if (!entry) return false
+    setJustSaved(entry)
+    return true
   }
 
   function handleEdit(entry: JournalEntry) {
