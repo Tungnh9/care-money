@@ -3,6 +3,8 @@
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Streak } from "@/components/ob/streak"
+import { dayKey } from "@/lib/date"
+import { activeStreakCount } from "../../game-calculations"
 import { GAME_REGISTRY } from "../../game-registry"
 import type { GameHighScores, GameStreak, GameType } from "../../types"
 
@@ -16,7 +18,8 @@ function GameMenuCard({ highScores, streak, onSelect }: GameMenuCardProps) {
   return (
     <div className="flex flex-col gap-5">
       <Card label="Chuỗi ngày chơi" className="min-w-0">
-        <Streak days={7} done={Math.min(streak.count, 7)} icon="🔥" />
+        {/* Chuỗi đã đứt (bỏ quá 1 ngày) hiện 0 ngay, không đợi tới ván kế tiếp mới tụt về 1. */}
+        <Streak days={7} done={Math.min(activeStreakCount(streak, dayKey()), 7)} icon="🔥" />
       </Card>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {GAME_REGISTRY.map((game) => (

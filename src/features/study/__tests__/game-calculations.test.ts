@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 
-import { isTypableWord, matchScoreFromFlips, nextStreak, pickQuizOptions, pickRandomSet } from "../game-calculations"
+import { activeStreakCount, isTypableWord, matchScoreFromFlips, nextStreak, pickQuizOptions, pickRandomSet } from "../game-calculations"
 import type { VocabEntry } from "../types"
 
 function vocab(id: string, word?: string): VocabEntry {
@@ -86,5 +86,18 @@ describe("nextStreak", () => {
   it("starts at 1 on the very first play (lastPlayedDayKey is null)", () => {
     const current = { count: 0, lastPlayedDayKey: null }
     expect(nextStreak(current, "2026-09-16")).toEqual({ count: 1, lastPlayedDayKey: "2026-09-16" })
+  })
+})
+
+describe("activeStreakCount", () => {
+  it("keeps the count while the last play was today or yesterday, across a month boundary too", () => {
+    expect(activeStreakCount({ count: 4, lastPlayedDayKey: "2026-09-29" }, "2026-09-29")).toBe(4)
+    expect(activeStreakCount({ count: 4, lastPlayedDayKey: "2026-09-28" }, "2026-09-29")).toBe(4)
+    expect(activeStreakCount({ count: 2, lastPlayedDayKey: "2026-09-30" }, "2026-10-01")).toBe(2)
+  })
+
+  it("is 0 once a whole day was skipped, or before the first play", () => {
+    expect(activeStreakCount({ count: 6, lastPlayedDayKey: "2026-09-20" }, "2026-09-29")).toBe(0)
+    expect(activeStreakCount({ count: 0, lastPlayedDayKey: null }, "2026-09-29")).toBe(0)
   })
 })

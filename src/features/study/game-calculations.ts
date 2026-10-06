@@ -35,4 +35,12 @@ function nextStreak(current: GameStreak, today: string): GameStreak {
   return { count: 1, lastPlayedDayKey: today }
 }
 
-export { pickRandomSet, pickQuizOptions, matchScoreFromFlips, nextStreak, isTypableWord }
+// Chuỗi ngày chơi chỉ còn "sống" khi lần chơi cuối là hôm nay hoặc hôm qua (hôm nay vẫn kịp chơi để
+// nối chuỗi); xa hơn là đã đứt → hiển thị 0, dù count lưu trong storage chỉ được tính lại (về 1) ở
+// nextStreak khi chơi xong ván kế tiếp. Hàm thuần — nơi gọi truyền today.
+function activeStreakCount(streak: GameStreak, today: string): number {
+  const alive = streak.lastPlayedDayKey === today || streak.lastPlayedDayKey === shiftDay(today, -1)
+  return alive ? streak.count : 0
+}
+
+export { pickRandomSet, pickQuizOptions, matchScoreFromFlips, nextStreak, activeStreakCount, isTypableWord }
