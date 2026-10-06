@@ -1,6 +1,7 @@
-import { describe, it, expect, vi } from "vitest"
-import { render, screen, fireEvent, within } from "@testing-library/react"
+import { describe, it, expect, beforeEach, vi } from "vitest"
+import { render, screen, fireEvent, within, waitFor } from "@testing-library/react"
 
+import { MoneyVisibilityProvider } from "@/components/money-visibility-provider"
 import { ExpenseListCard } from "../../components/expense-list-card"
 import { formatMoney } from "@/lib/format"
 import { UNTAGGED_EMOJI, UNTAGGED_LABEL } from "../../budget-calculations"
@@ -12,6 +13,8 @@ const EXPENSES: Expense[] = [
 ]
 
 describe("ExpenseListCard", () => {
+  beforeEach(() => window.localStorage.clear())
+
   it("shows the empty state when there are no expenses", () => {
     render(<ExpenseListCard expenses={[]} onRemove={vi.fn()} onEdit={vi.fn()} />)
 
@@ -51,6 +54,22 @@ describe("ExpenseListCard", () => {
 
     expect(onRemove).toHaveBeenCalledWith(2)
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument()
+  })
+
+  it("hides the amount in the delete confirmation while money is hidden", async () => {
+    window.localStorage.setItem("hide-money", "1")
+    render(
+      <MoneyVisibilityProvider>
+        <ExpenseListCard expenses={EXPENSES} onRemove={vi.fn()} onEdit={vi.fn()} />
+      </MoneyVisibilityProvider>
+    )
+    await waitFor(() => expect(screen.queryByText("50.000 ₫")).not.toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole("button", { name: "Xoá khoản chi Mua sắm" }))
+
+    const dialog = screen.getByRole("alertdialog")
+    expect(dialog).toHaveTextContent("•••••••• ₫")
+    expect(dialog).not.toHaveTextContent("50.000")
   })
 
   it("keeps the expense when the confirmation is cancelled", () => {
