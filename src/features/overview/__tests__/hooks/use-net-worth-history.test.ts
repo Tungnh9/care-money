@@ -8,6 +8,15 @@ import { NET_WORTH_HISTORY_KEY, getStoredNetWorthHistory, setStoredNetWorthHisto
 describe("useNetWorthHistory", () => {
   beforeEach(() => {
     window.localStorage.clear()
+    // recordSnapshot ghi theo dayKey() của đồng hồ thật — ghim "hôm nay" để kết quả không đổi theo ngày
+    // chạy, và test "replaces (not duplicates)…" không hỏng khi chạy vắt qua nửa đêm (2 lần
+    // recordSnapshot rơi vào 2 ngày khác nhau thì thành 2 bản ghi).
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    vi.setSystemTime(new Date(2026, 8, 25, 9, 0))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it("starts empty and records a snapshot for today", async () => {
@@ -21,6 +30,7 @@ describe("useNetWorthHistory", () => {
     expect(result.current.history).toHaveLength(1)
     expect(result.current.history[0].net).toBe(10_000_000)
     expect(result.current.history[0].savingsTotal).toBe(5_000_000)
+    expect(result.current.history[0].date).toBe("2026-09-25")
     expect(getStoredNetWorthHistory()).toHaveLength(1)
   })
 
@@ -40,6 +50,7 @@ describe("useNetWorthHistory", () => {
     expect(result.current.history).toHaveLength(1)
     expect(result.current.history[0].net).toBe(20_000_000)
     expect(result.current.history[0].savingsTotal).toBe(9_000_000)
+    expect(result.current.history[0].date).toBe("2026-09-25")
   })
 
   it("preserves and appends to pre-existing history when a consumer calls recordSnapshot from its own mount effect", async () => {
@@ -74,6 +85,7 @@ describe("useNetWorthHistory", () => {
       { date: "2026-09-19", net: 2, savingsTotal: 2 },
       { date: "2026-09-20", net: 3, savingsTotal: 3 },
     ])
+    expect(getStoredNetWorthHistory()[3]).toEqual({ date: "2026-09-25", net: 9_999_999, savingsTotal: 8_888_888 })
   })
 })
 
