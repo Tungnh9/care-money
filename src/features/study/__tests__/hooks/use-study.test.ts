@@ -327,4 +327,45 @@ describe("useStudy", () => {
     expect(getStoredStudy().tasks.map((task) => task.done)).toEqual([false, false, true])
     expect(getStoredStudy().tasksDay).toBe("2026-01-02")
   })
+
+  it("undoing an accidental 'đã học' tap puts a never-reviewed word back on today's schedule", async () => {
+    const { result } = renderHook(() => useStudy())
+    await waitFor(() => expect(result.current.hydrated).toBe(true))
+    act(() => {
+      result.current.seedReviews([{ id: "v-0005", word: "test", meaning: "test", addedAt: "2026-01-01" }])
+    })
+    const coldSeed = result.current.wordReviews["v-0005"]
+    expect(coldSeed.dueAt).toBe("2026-01-01")
+
+    act(() => {
+      result.current.toggleLearned("v-0005")
+    })
+    expect(result.current.wordReviews["v-0005"].dueAt).toBe("2026-01-07")
+
+    act(() => {
+      result.current.toggleLearned("v-0005")
+    })
+
+    expect(result.current.learned).toEqual([])
+    expect(result.current.wordReviews["v-0005"]).toEqual(coldSeed)
+    expect(getStoredStudy().wordReviews["v-0005"]).toEqual(coldSeed)
+  })
+
+  it("keeps real review progress when a word is un-marked as learned", async () => {
+    const { result } = renderHook(() => useStudy())
+    await waitFor(() => expect(result.current.hydrated).toBe(true))
+    act(() => {
+      result.current.gradeWord("v-0006", "good")
+    })
+    act(() => {
+      result.current.toggleLearned("v-0006")
+    })
+    const graded = result.current.wordReviews["v-0006"]
+
+    act(() => {
+      result.current.toggleLearned("v-0006")
+    })
+
+    expect(result.current.wordReviews["v-0006"]).toEqual(graded)
+  })
 })

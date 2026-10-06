@@ -67,18 +67,24 @@ function useStudy() {
   const toggleLearned = useCallback(
     (id: string) => {
       const current = stateRef.current
+      const today = dayKey()
       const wasLearned = current.learned.includes(id)
       const learned = wasLearned ? current.learned.filter((entryId) => entryId !== id) : [...current.learned, id]
 
-      // Đánh dấu MỚI "đã học" (không phải bỏ đánh dấu) cho 1 từ chưa từng thật sự được ôn qua SRS
-      // (entry cold-seed tự động của seedReviews, hoặc chưa có entry nào) — đẩy lịch ôn ra xa theo
-      // đúng seed "learned" (6 ngày), thay vì để nguyên "due hôm nay" từ lượt cold-seed ban đầu.
-      // Từ ĐÃ có tiến trình ôn thật (lastReviewedAt khác null, tức đã từng chấm điểm thật) thì giữ
-      // nguyên, không ghi đè tiến trình đã có.
+      // Chỉ đụng lịch ôn của từ CHƯA từng được chấm thật (lastReviewedAt null: entry cold-seed tự động
+      // của seedReviews, entry seed "đã học", hoặc chưa có entry nào):
+      // - đánh dấu MỚI "đã học" → đẩy lịch ra xa theo seed "learned" (6 ngày), thay vì để nguyên "due
+      //   hôm nay" của lượt cold-seed ban đầu;
+      // - BỎ đánh dấu (vd. bấm nhầm rồi bấm lại ngay) → trả về seed từ mới, tới hạn hôm nay — nếu không,
+      //   từ đó vẫn bị đẩy 6 ngày và lần "Nhớ" đầu tiên nhảy thẳng lên ~15 ngày dù chưa từng học.
+      // Từ ĐÃ có tiến trình ôn thật (lastReviewedAt khác null) thì giữ nguyên ở cả 2 chiều.
       const existing = current.wordReviews[id]
-      const shouldReseedAsLearned = !wasLearned && (!existing || existing.lastReviewedAt === null)
-      const wordReviews = shouldReseedAsLearned
-        ? { ...current.wordReviews, [id]: seedLearnedReviewState(id, dayKey()) }
+      const neverReviewed = !existing || existing.lastReviewedAt === null
+      const wordReviews = neverReviewed
+        ? {
+            ...current.wordReviews,
+            [id]: wasLearned ? initialReviewState(id, today) : seedLearnedReviewState(id, today),
+          }
         : current.wordReviews
 
       persist({ ...current, learned, wordReviews })
