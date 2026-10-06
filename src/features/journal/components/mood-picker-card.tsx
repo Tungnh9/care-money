@@ -3,25 +3,32 @@
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import type { Mood } from "@/lib/settings-storage"
+import type { MoodSnapshot } from "../types"
 
 interface MoodPickerCardProps {
   moods: Mood[]
   selected: string
   onSelect: (label: string) => void
+  // Mood đã lưu của bài đang sửa: vẫn hiện thành 1 chip (để thấy nó đang được chọn và bỏ chọn được) kể cả
+  // khi mood đó đã bị tắt hay đã bị xoá khỏi Cài đặt.
+  entryMood?: MoodSnapshot | null
 }
 
-function MoodPickerCard({ moods, selected, onSelect }: MoodPickerCardProps) {
+function MoodPickerCard({ moods, selected, onSelect, entryMood = null }: MoodPickerCardProps) {
   const activeMoods = moods.filter((m) => m.on)
+  const chips: Pick<MoodSnapshot, "label" | "emoji">[] =
+    entryMood && !activeMoods.some((m) => m.label === entryMood.label) ? [...activeMoods, entryMood] : activeMoods
 
   return (
     <Card label="Tâm trạng hôm nay">
       <div className="flex flex-wrap gap-2">
-        {activeMoods.map((m) => {
+        {chips.map((m) => {
           const active = m.label === selected
           return (
             <button
               key={m.label}
               type="button"
+              aria-pressed={active}
               onClick={() => onSelect(active ? "" : m.label)}
               className={cn(
                 "inline-flex min-h-[var(--ob-hit-min)] items-center gap-[9px] rounded-[var(--ob-radius-pill)] border-[1.5px] px-[15px] py-[9px] text-[13px] font-semibold",

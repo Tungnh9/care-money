@@ -12,7 +12,7 @@ import { JournalEntriesCard } from "./journal-entries-card"
 import { JournalSaveSuccess } from "./journal-save-success"
 import { MoodPickerCard } from "./mood-picker-card"
 import { OnThisDayCard } from "./on-this-day-card"
-import type { JournalEntry } from "../types"
+import type { JournalEntry, MoodSnapshot } from "../types"
 
 function JournalView() {
   const { settings } = useSettings()
@@ -24,9 +24,15 @@ function JournalView() {
 
   const moodEnabled = settings.modules.find((m) => m.key === "tamtrang")?.on ?? true
   const selectedMood = settings.moods.find((m) => m.label === mood)
-  const selectedMoodSnapshot = selectedMood
-    ? { emoji: selectedMood.emoji, label: selectedMood.label, tint: selectedMood.tint, score: selectedMood.score }
-    : null
+  // Bài đang sửa vẫn chọn đúng mood đã lưu thì giữ nguyên snapshot đã lưu (đóng băng như Expense.tag) — kể
+  // cả khi mood đó đã bị tắt, bị xoá hay được tạo lại trong Cài đặt. Chỉ khi chọn mood khác (hoặc viết bài
+  // mới) mới dựng snapshot từ Cài đặt.
+  const keptEntryMood = editingEntry?.mood && editingEntry.mood.label === mood ? editingEntry.mood : null
+  const selectedMoodSnapshot: MoodSnapshot | null =
+    keptEntryMood ??
+    (selectedMood
+      ? { emoji: selectedMood.emoji, label: selectedMood.label, tint: selectedMood.tint, score: selectedMood.score }
+      : null)
   const onThisDay = findOnThisDay(entries)
 
   function handleSave(input: { text: string; words: number; mood: typeof selectedMoodSnapshot }): boolean {
@@ -99,7 +105,12 @@ function JournalView() {
         ) : null}
         {moodEnabled ? (
           <div className="min-w-0 flex-[1_1_300px] [&>*]:h-full">
-            <MoodPickerCard moods={settings.moods} selected={mood} onSelect={setMood} />
+            <MoodPickerCard
+              moods={settings.moods}
+              selected={mood}
+              onSelect={setMood}
+              entryMood={editingEntry?.mood ?? null}
+            />
           </div>
         ) : null}
         <div

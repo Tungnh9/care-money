@@ -2,7 +2,7 @@ interface MoodSnapshot {
   emoji: string
   label: string
   tint: string
-  score: number
+  score?: number
 }
 
 interface JournalEntry {

@@ -312,4 +312,50 @@ describe("JournalView — sửa, xoá và giữ nội dung đang viết", () => 
     expect(screen.getByRole("textbox")).toHaveTextContent("Bài A đang sửa")
     expect(screen.getByText("Nhật ký đã viết · 1")).toBeInTheDocument()
   })
+
+  it("keeps the saved mood when only the text is edited, even after that mood was deleted from Settings", async () => {
+    const savedMood = { emoji: "🥳", label: "Phấn khích", tint: "#FFF0B8", score: 5 } // không có trong Cài đặt
+    seedEntries({ ...ENTRY_A, mood: savedMood }, ENTRY_B)
+    render(<JournalView />)
+
+    fireEvent.click(await screen.findByRole("button", { name: "Sửa bài 28/09 20:00" }))
+    expect(screen.getByRole("button", { pressed: true })).toHaveTextContent("Phấn khích")
+
+    typeInto(screen.getByRole("textbox"), "Bài A chỉ sửa chữ")
+    fireEvent.click(screen.getByRole("button", { name: "Cập nhật bài viết" }))
+
+    const stored = JSON.parse(window.localStorage.getItem("journal-entries") ?? "{}")
+    expect(stored.entries[0]).toMatchObject({ text: "Bài A chỉ sửa chữ", mood: savedMood })
+  })
+
+  it("shows a switched-off mood of the edited entry as selected, and lets it be cleared", async () => {
+    const savedMood = { emoji: "😔", label: "Buồn", tint: "#E4E9F2", score: 1 } // "Buồn" tắt sẵn trong Cài đặt mặc định
+    seedEntries({ ...ENTRY_A, mood: savedMood }, ENTRY_B)
+    render(<JournalView />)
+
+    fireEvent.click(await screen.findByRole("button", { name: "Sửa bài 28/09 20:00" }))
+    const chip = screen.getByRole("button", { pressed: true })
+    expect(chip).toHaveTextContent("Buồn")
+
+    fireEvent.click(chip)
+    typeInto(screen.getByRole("textbox"), "Bài A bỏ tâm trạng")
+    fireEvent.click(screen.getByRole("button", { name: "Cập nhật bài viết" }))
+
+    const stored = JSON.parse(window.localStorage.getItem("journal-entries") ?? "{}")
+    expect(stored.entries[0].mood).toBeNull()
+  })
+
+  it("keeps the stored mood snapshot instead of rebuilding it from the current Settings", async () => {
+    // Cài đặt mặc định hiện có "Vui" với tint #FFE0C7, score 4 — bài này lưu bản cũ hơn.
+    const savedMood = { emoji: "🙂", label: "Vui", tint: "#ABCDEF", score: 3 }
+    seedEntries({ ...ENTRY_A, mood: savedMood }, ENTRY_B)
+    render(<JournalView />)
+
+    fireEvent.click(await screen.findByRole("button", { name: "Sửa bài 28/09 20:00" }))
+    typeInto(screen.getByRole("textbox"), "Bài A sửa chữ")
+    fireEvent.click(screen.getByRole("button", { name: "Cập nhật bài viết" }))
+
+    const stored = JSON.parse(window.localStorage.getItem("journal-entries") ?? "{}")
+    expect(stored.entries[0].mood).toEqual(savedMood)
+  })
 })
