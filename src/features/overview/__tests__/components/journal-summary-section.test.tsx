@@ -48,4 +48,11 @@ describe("JournalSummarySection", () => {
     expect(screen.getByText("Hôm nay mình đã đi bộ")).toBeInTheDocument()
     expect(screen.queryByText(/<b>/)).not.toBeInTheDocument()
   })
+
+  it("shows readable preview text — decoded characters, lines separated — not raw HTML escapes", () => {
+    render(<JournalSummarySection entries={[{ ...ENTRY, text: "Tom &amp; Jerry<div>Dòng hai&nbsp;nữa</div>" }]} />)
+
+    // getByText gộp "\n" thành dấu cách, đúng như whitespace-nowrap hiển thị trên 1 dòng.
+    expect(screen.getByText("Tom & Jerry Dòng hai nữa")).toBeInTheDocument()
+  })
 })

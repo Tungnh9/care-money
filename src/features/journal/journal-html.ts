@@ -17,13 +17,45 @@ function sanitizeJournalHtml(html: string): string {
   })
 }
 
+// Thẻ khối — trên màn hình mỗi thẻ là 1 dòng riêng, nên ranh giới của chúng thành 1 lần xuống dòng.
+const BLOCK_TAGS = new Set(["DIV", "P", "LI", "H3", "BLOCKQUOTE", "UL", "OL"])
+
+function collectText(node: Node, parts: string[]) {
+  node.childNodes.forEach((child) => {
+    if (child.nodeType === Node.TEXT_NODE) {
+      // Gộp khoảng trắng thường như trình duyệt vẫn làm khi hiển thị HTML; &nbsp; (U+00A0) không bị gộp.
+      parts.push((child.textContent ?? "").replace(/[ \t\n\r]+/g, " "))
+    } else if (child.nodeName === "BR") {
+      parts.push("\n")
+    } else {
+      const isBlock = BLOCK_TAGS.has(child.nodeName)
+      if (isBlock) parts.push("\n")
+      collectText(child, parts)
+      if (isBlock) parts.push("\n")
+    }
+  })
+}
+
+// Chữ thuần cho bản xem trước. DOMPurify trả chuỗi HTML đã escape (còn &amp;/&lt;/&nbsp;, các dòng dính
+// liền) nên không dùng được làm chữ — lấy cây DOM đã lọc (RETURN_DOM: nằm trong document riêng của
+// DOMPurify, không gắn vào trang, không chạy script) rồi đọc text node, vốn đã giải mã entity sẵn.
+// Kết quả CHỈ được render như text con của React (tự escape), không bao giờ qua innerHTML.
 function stripHtmlToPlainText(html: string): string {
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: [],
+  const root = DOMPurify.sanitize(html, {
+    ALLOWED_TAGS,
     ALLOWED_ATTR: [],
     ALLOW_DATA_ATTR: false,
     ALLOW_ARIA_ATTR: false,
+    RETURN_DOM: true,
   })
+  if (!root) return ""
+  const parts: string[] = []
+  collectText(root, parts)
+  return parts
+    .join("")
+    .replace(/ /g, " ") // &nbsp; → dấu cách thường
+    .replace(/ *\n[\n ]*/g, "\n") // dòng trống và dấu cách quanh chỗ xuống dòng → đúng 1 "\n"
+    .trim()
 }
 
 export { sanitizeJournalHtml, stripHtmlToPlainText }

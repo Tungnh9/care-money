@@ -57,4 +57,30 @@ describe("stripHtmlToPlainText", () => {
   it("returns plain text unchanged when there is no markup", () => {
     expect(stripHtmlToPlainText("chỉ chữ thường")).toBe("chỉ chữ thường")
   })
+
+  it("puts each block (div/p/li/h3/blockquote) on its own line instead of running lines together", () => {
+    expect(stripHtmlToPlainText("Dòng một<div>Dòng hai</div>")).toBe("Dòng một\nDòng hai")
+    expect(stripHtmlToPlainText("<ul><li>một</li><li>hai</li></ul>")).toBe("một\nhai")
+    expect(stripHtmlToPlainText("<h3>Tiêu đề</h3><p>Đoạn</p><blockquote>Trích</blockquote>")).toBe(
+      "Tiêu đề\nĐoạn\nTrích"
+    )
+  })
+
+  it("turns <br> into a line break", () => {
+    expect(stripHtmlToPlainText("Dòng một<br>Dòng hai")).toBe("Dòng một\nDòng hai")
+  })
+
+  it("collapses blank lines and the spaces around a line break into a single line break", () => {
+    // Chrome ghi 1 dòng trống thành <div><br></div>.
+    expect(stripHtmlToPlainText("Dòng một <div><br></div><div> Dòng ba</div>")).toBe("Dòng một\nDòng ba")
+  })
+
+  it("decodes HTML entities instead of showing them literally", () => {
+    expect(stripHtmlToPlainText("Tom &amp; Jerry, 3 &lt; 5")).toBe("Tom & Jerry, 3 < 5")
+    expect(stripHtmlToPlainText("a&nbsp;&nbsp;b")).toBe("a  b")
+  })
+
+  it("returns an escaped tag as literal text, never as markup", () => {
+    expect(stripHtmlToPlainText("&lt;b&gt;đậm&lt;/b&gt;")).toBe("<b>đậm</b>")
+  })
 })

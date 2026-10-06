@@ -101,4 +101,24 @@ describe("JournalEntriesCard", () => {
     expect(document.getElementById("journal-entry-1")).toHaveClass("ob-highlight-flash")
     expect(document.getElementById("journal-entry-4")).not.toHaveClass("ob-highlight-flash")
   })
+
+  it("measures the preview on the decoded text, so HTML escapes don't make a short entry look long", () => {
+    // 40 lần "x&amp;" = 240 ký tự HTML nhưng chỉ 80 ký tự chữ thật — dưới ngưỡng 180, không cắt.
+    const entry: JournalEntry = { ...SHORT_ENTRY, text: "x&amp;".repeat(40) }
+    render(<JournalEntriesCard entries={[entry]} onDelete={vi.fn()} onEdit={vi.fn()} />)
+
+    expect(screen.queryByRole("button", { name: "Xem thêm" })).not.toBeInTheDocument()
+    expect(screen.getByText("x&".repeat(40))).toBeInTheDocument()
+  })
+
+  it("keeps line breaks and decoded characters in the collapsed preview of a long entry", () => {
+    const html = Array.from({ length: 10 }, () => "<div>Xin chào &amp; tạm biệt.</div>").join("")
+    const plain = Array.from({ length: 10 }, () => "Xin chào & tạm biệt.").join("\n") // 209 ký tự
+    render(<JournalEntriesCard entries={[{ ...LONG_ENTRY, text: html }]} onDelete={vi.fn()} onEdit={vi.fn()} />)
+
+    const preview = screen.getByText(
+      (_, element) => element?.tagName === "P" && element.textContent === `${plain.slice(0, 180)}…`
+    )
+    expect(preview).toBeInTheDocument()
+  })
 })
