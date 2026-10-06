@@ -64,11 +64,16 @@ function SpellingGame({ vocab, onFinish, onWordReviewed }: SpellingGameProps) {
   const [round, setRound] = useState<RoundState>(initialRound)
   const [nowMs, setNowMs] = useState(0)
   const [typed, setTyped] = useState("")
-  const containerRef = useRef<HTMLDivElement>(null)
+  // Chữ vào game qua 1 <input> thật: điện thoại chỉ bật bàn phím ảo khi 1 ô nhập liệu thật có focus —
+  // khu chơi kiểu <div tabIndex> nghe keydown như trước không bao giờ nhận được chữ trên điện thoại.
+  const inputRef = useRef<HTMLInputElement>(null)
+  // Ván này đã nhận được ít nhất 1 lần gõ chưa — xem chốt an toàn ở effect báo từ rơi hết giờ.
+  const hasTypedRef = useRef(false)
   const finishedRef = useRef(false)
 
   useEffect(() => {
-    containerRef.current?.focus()
+    // Máy tính: gõ được ngay khi vào ván. Điện thoại thường phải chạm vào khu chơi/ô nhập mới bật bàn phím.
+    inputRef.current?.focus()
   }, [])
 
   // 1 vòng lặp duy nhất (setInterval, không phải requestAnimationFrame — tab chuyển nền vẫn chạy
@@ -129,7 +134,10 @@ function SpellingGame({ vocab, onFinish, onWordReviewed }: SpellingGameProps) {
   // trùng. Closure vẫn luôn dùng đúng onWordReviewed mới nhất tại thời điểm lastMissedIds đổi.
   useEffect(() => {
     if (round.lastMissedIds.length > 0) {
-      round.lastMissedIds.forEach((id) => onWordReviewed?.(id, false))
+      // Chốt an toàn: ván chưa nhận được lần gõ nào (bàn phím không đưa được chữ vào game) thì từ rơi
+      // hết giờ không có nghĩa là đã quên từ — vẫn trừ mạng như thường nhưng KHÔNG chấm "Quên" vào lịch
+      // ôn SRS (1 lần "Quên" kéo từ đang giãn 40 ngày về lại 1 ngày).
+      if (hasTypedRef.current) round.lastMissedIds.forEach((id) => onWordReviewed?.(id, false))
       // eslint-disable-next-line react-hooks/set-state-in-effect -- đặt setState ở đây để xoá danh sách vừa báo, tránh báo lại khi component cha re-render
       setRound((prev) => ({
         ...prev,
@@ -159,33 +167,47 @@ function SpellingGame({ vocab, onFinish, onWordReviewed }: SpellingGameProps) {
     onFinish(round.destroyed, queue.length)
   }, [round, queue.length, onFinish])
 
-  function handleKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
-    if (e.key === "Backspace") {
-      e.preventDefault() // vùng gõ là <div>, không phải <input> — trình duyệt có thể hiểu Backspace là "quay lại trang trước"
-      setTyped((t) => t.slice(0, -1))
-      return
-    }
-    if (e.key.length !== 1) return // bỏ qua phím điều khiển (Shift, Enter, mũi tên, Tab...)
-    e.preventDefault() // chặn hành vi mặc định của phím ký tự đơn — quan trọng nhất là Space, vốn cuộn trang khi focus không nằm trên ô nhập liệu thật
+  function isPrefixOfFallingWord(text: string): boolean {
+    return round.fallingWords.some((w) => w.entry.word.toLowerCase().startsWith(text))
+  }
 
-    const next = (typed + e.key).toLowerCase()
-    const stillPossible = round.fallingWords.some((w) => w.entry.word.toLowerCase().startsWith(next))
-    if (!stillPossible) return // gõ sai — bỏ qua ký tự, không cho vào buffer
+  // Ô nhập controlled theo `typed`: không gọi setTyped thì React tự trả ô về chữ cũ — đó là cách 1 ký
+  // tự gõ sai bị bỏ qua, giống hệt lúc còn nghe keydown. onChange (không phải keydown) vì bàn phím ảo
+  // Android báo phím "Unidentified" cho keydown.
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    hasTypedRef.current = true
+    const value = e.target.value.toLowerCase()
 
-    const exact = round.fallingWords.find((w) => w.entry.word.toLowerCase() === next)
-    if (exact) {
-      setRound((prev) => ({
-        ...prev,
-        fallingWords: prev.fallingWords.filter((w) => w.id !== exact.id),
-        destroyed: prev.destroyed + 1,
-      }))
-      setTyped("")
-      speakWord(exact.entry.word)
-      onWordReviewed?.(exact.entry.id, true)
+    // Xoá bớt chữ (Backspace) hoặc bàn phím thay cả cụm: nhận nguyên chuỗi mới nếu nó rỗng hoặc vẫn là
+    // phần đầu của 1 từ đang rơi.
+    if (!value.startsWith(typed)) {
+      if (!value || isPrefixOfFallingWord(value)) setTyped(value)
       return
     }
 
-    setTyped(next)
+    // Gõ thêm — 1 ký tự, hoặc cả cụm 1 lần (chọn từ trên thanh gợi ý của bàn phím điện thoại, dán):
+    // xét lần lượt từng ký tự như 1 lần bấm phím; ký tự không khớp phần đầu từ nào thì bỏ qua.
+    let buffer = typed
+    for (const ch of value.slice(typed.length)) {
+      const next = buffer + ch
+      if (!isPrefixOfFallingWord(next)) continue
+
+      const exact = round.fallingWords.find((w) => w.entry.word.toLowerCase() === next)
+      if (exact) {
+        setRound((prev) => ({
+          ...prev,
+          fallingWords: prev.fallingWords.filter((w) => w.id !== exact.id),
+          destroyed: prev.destroyed + 1,
+        }))
+        setTyped("")
+        speakWord(exact.entry.word)
+        onWordReviewed?.(exact.entry.id, true)
+        return
+      }
+
+      buffer = next
+    }
+    setTyped(buffer)
   }
 
   if (!queue.length) {
@@ -216,13 +238,11 @@ function SpellingGame({ vocab, onFinish, onWordReviewed }: SpellingGameProps) {
       </Card>
 
       <div
-        ref={containerRef}
-        tabIndex={0}
-        role="application"
-        aria-label="Khu vực gõ từ đang rơi"
-        onKeyDown={handleKeyDown}
-        onClick={() => containerRef.current?.focus()}
-        className="relative h-[460px] overflow-hidden rounded-[var(--ob-radius-lg)] border-[1.5px] border-[var(--ob-color-border)] bg-[var(--ob-color-surface-sunken)] outline-none focus-visible:border-[var(--ob-color-focus)]"
+        data-testid="spelling-area"
+        // Chạm vào khu chơi cũng đưa focus về ô nhập bên dưới — trên điện thoại đó là lúc bàn phím ảo bật.
+        onClick={() => inputRef.current?.focus()}
+        // Màn < 640px thấp lại để khi bàn phím ảo bật vẫn thấy khu chơi lẫn ô nhập.
+        className="relative h-[300px] overflow-hidden rounded-[var(--ob-radius-lg)] border-[1.5px] border-[var(--ob-color-border)] bg-[var(--ob-color-surface-sunken)] sm:h-[460px]"
       >
         {round.fallingWords.map((word) => {
           const progress = Math.min(1, (nowMs - word.startedAt) / FALL_DURATION_MS)
@@ -254,10 +274,22 @@ function SpellingGame({ vocab, onFinish, onWordReviewed }: SpellingGameProps) {
           )
         })}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[var(--ob-color-expense)]/12 to-transparent" />
-        <p className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 text-[12px] text-[var(--ob-color-text-subtle)]">
-          {typed ? `Đang gõ: ${typed}` : "Gõ từ tiếng Anh đang rơi..."}
-        </p>
       </div>
+      <input
+        ref={inputRef}
+        type="text"
+        aria-label="Gõ từ đang rơi"
+        placeholder="Gõ từ tiếng Anh đang rơi..."
+        value={typed}
+        onChange={handleChange}
+        // Tắt tự hoàn thành/tự viết hoa/tự sửa/kiểm tra chính tả của bàn phím — từ phải gõ đúng từng chữ.
+        autoComplete="off"
+        autoCapitalize="off"
+        autoCorrect="off"
+        spellCheck={false}
+        // text-base (16px): iPhone tự phóng to cả trang khi focus 1 ô nhập có chữ nhỏ hơn 16px.
+        className="mt-3 h-11 w-full rounded-[var(--ob-radius-md)] border-[1.5px] border-[var(--ob-color-border)] bg-[var(--ob-color-surface)] px-3 [font-family:var(--ob-font-num)] text-base font-bold text-[var(--ob-color-text)] outline-none placeholder:font-normal placeholder:text-[var(--ob-color-text-subtle)] focus:border-[var(--ob-color-focus)]"
+      />
     </div>
   )
 }

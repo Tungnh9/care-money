@@ -14,12 +14,18 @@ function vocab(id: string): VocabEntry {
 
 const VOCAB: VocabEntry[] = Array.from({ length: 10 }, (_, i) => vocab(`${i}`))
 
-function typeChar(area: HTMLElement, key: string) {
-  fireEvent.keyDown(area, { key })
+function typingInput(): HTMLInputElement {
+  return screen.getByRole("textbox", { name: "Gõ từ đang rơi" }) as HTMLInputElement
 }
 
-function typeWord(area: HTMLElement, word: string) {
-  for (const ch of word) typeChar(area, ch)
+// Mỗi lần gõ (kể cả bàn phím ảo của điện thoại) tới game dưới dạng 1 sự kiện change mang TOÀN BỘ giá
+// trị mới của ô. Ô là controlled nên sau mỗi lần, input.value chính là chữ game đã nhận.
+function typeChar(input: HTMLInputElement, key: string) {
+  fireEvent.change(input, { target: { value: input.value + key } })
+}
+
+function typeWord(input: HTMLInputElement, word: string) {
+  for (const ch of word) typeChar(input, ch)
 }
 
 describe("SpellingGame", () => {
@@ -65,6 +71,28 @@ describe("SpellingGame", () => {
     expect(screen.getAllByTestId("falling-word").length).toBeGreaterThan(0)
   })
 
+  it("takes typing through a real text box, focused on start, with phone auto-capitalise and auto-correct off", () => {
+    render(<SpellingGame vocab={VOCAB} onFinish={vi.fn()} />)
+
+    const input = typingInput()
+    expect(input).toHaveFocus()
+    expect(input).toHaveAttribute("autocomplete", "off")
+    expect(input).toHaveAttribute("autocapitalize", "off")
+    expect(input).toHaveAttribute("autocorrect", "off")
+    expect(input).toHaveAttribute("spellcheck", "false")
+  })
+
+  it("focuses the text box again when the play area is tapped, which is what opens a phone's keyboard", () => {
+    render(<SpellingGame vocab={VOCAB} onFinish={vi.fn()} />)
+    const input = typingInput()
+    input.blur()
+    expect(input).not.toHaveFocus()
+
+    fireEvent.click(screen.getByTestId("spelling-area"))
+
+    expect(input).toHaveFocus()
+  })
+
   it("destroys a word when typed correctly, speaks it aloud, and advances the resolved count", () => {
     render(<SpellingGame vocab={VOCAB} onFinish={vi.fn()} />)
 
@@ -72,13 +100,27 @@ describe("SpellingGame", () => {
       vi.advanceTimersByTime(100)
     })
 
-    const area = screen.getByRole("application")
     const word = screen.getAllByTestId("falling-word")[0].textContent!
 
-    typeWord(area, word)
+    typeWord(typingInput(), word)
 
     expect(screen.queryByText(word)).not.toBeInTheDocument()
     expect(speakWord).toHaveBeenCalledWith(word)
+    expect(screen.getByText("Từ 1/10", { exact: false })).toBeInTheDocument()
+    expect(typingInput()).toHaveValue("")
+  })
+
+  it("destroys a word entered all at once, e.g. picked from the phone keyboard's suggestion bar", () => {
+    render(<SpellingGame vocab={VOCAB} onFinish={vi.fn()} />)
+
+    act(() => {
+      vi.advanceTimersByTime(100)
+    })
+
+    const word = screen.getAllByTestId("falling-word")[0].textContent!
+    fireEvent.change(typingInput(), { target: { value: word } })
+
+    expect(screen.queryByText(word)).not.toBeInTheDocument()
     expect(screen.getByText("Từ 1/10", { exact: false })).toBeInTheDocument()
   })
 
@@ -89,39 +131,25 @@ describe("SpellingGame", () => {
       vi.advanceTimersByTime(100)
     })
 
-    const area = screen.getByRole("application")
-    typeChar(area, "z") // không từ mẫu "wordN" nào bắt đầu bằng z
+    typeChar(typingInput(), "z") // không từ mẫu "wordN" nào bắt đầu bằng z
 
-    expect(screen.getByText("Gõ từ tiếng Anh đang rơi...")).toBeInTheDocument()
+    expect(typingInput()).toHaveValue("")
   })
 
-  it("removes the last typed character on Backspace", () => {
+  it("removes the last typed character when it is deleted from the text box", () => {
     render(<SpellingGame vocab={VOCAB} onFinish={vi.fn()} />)
 
     act(() => {
       vi.advanceTimersByTime(100)
     })
 
-    const area = screen.getByRole("application")
-    typeChar(area, "w")
-    typeChar(area, "o")
-    expect(screen.getByText("Đang gõ: wo")).toBeInTheDocument()
+    const input = typingInput()
+    typeChar(input, "w")
+    typeChar(input, "o")
+    expect(input).toHaveValue("wo")
 
-    fireEvent.keyDown(area, { key: "Backspace" })
-    expect(screen.getByText("Đang gõ: w")).toBeInTheDocument()
-  })
-
-  it("prevents the browser's default action for space and Backspace, so the page doesn't scroll/navigate mid-game", () => {
-    render(<SpellingGame vocab={VOCAB} onFinish={vi.fn()} />)
-
-    act(() => {
-      vi.advanceTimersByTime(100)
-    })
-
-    const area = screen.getByRole("application")
-    // dispatchEvent (dùng bên trong fireEvent) trả về false nếu có handler nào gọi preventDefault().
-    expect(fireEvent.keyDown(area, { key: " " })).toBe(false)
-    expect(fireEvent.keyDown(area, { key: "Backspace" })).toBe(false)
+    fireEvent.change(input, { target: { value: "w" } }) // Backspace
+    expect(input).toHaveValue("w")
   })
 
   it("loses a life and removes the word once it falls for the full duration without being typed", () => {
@@ -157,7 +185,7 @@ describe("SpellingGame", () => {
     const onFinish = vi.fn()
     render(<SpellingGame vocab={VOCAB} onFinish={onFinish} />)
 
-    const area = screen.getByRole("application")
+    const input = typingInput()
     // Gõ đúng từng từ ngay khi nó vừa xuất hiện, không để rơi hết mạng nào — chạy tới khi cả 10
     // từ đều được gõ xong.
     for (let i = 0; i < 10; i++) {
@@ -166,7 +194,7 @@ describe("SpellingGame", () => {
       })
       const words = screen.queryAllByTestId("falling-word")
       if (words.length) {
-        typeWord(area, words[0].textContent!)
+        typeWord(input, words[0].textContent!)
       }
     }
 
@@ -181,16 +209,15 @@ describe("SpellingGame", () => {
     act(() => {
       vi.advanceTimersByTime(100)
     })
-    const area = screen.getByRole("application")
     const wordText = screen.getAllByTestId("falling-word")[0].textContent!
     const entry = VOCAB.find((v) => v.word === wordText)!
 
-    typeWord(area, wordText)
+    typeWord(typingInput(), wordText)
 
     expect(onWordReviewed).toHaveBeenCalledWith(entry.id, true)
   })
 
-  it("reports onWordReviewed(id, false) for a word that falls for the full duration untyped", () => {
+  it("reports onWordReviewed(id, false) for a word that falls for the full duration untyped, once the player has typed something", () => {
     const onWordReviewed = vi.fn()
     render(<SpellingGame vocab={VOCAB} onFinish={vi.fn()} onWordReviewed={onWordReviewed} />)
 
@@ -199,9 +226,10 @@ describe("SpellingGame", () => {
     })
     const firstWordText = screen.getAllByTestId("falling-word")[0].textContent!
     const firstEntry = VOCAB.find((v) => v.word === firstWordText)!
+    typeChar(typingInput(), "z") // 1 lần gõ (sai, bị bỏ qua) — đủ cho thấy bàn phím đưa được chữ vào game
 
     act(() => {
-      vi.advanceTimersByTime(15000) // FALL_DURATION_MS — để rơi hết mà không gõ
+      vi.advanceTimersByTime(15000) // FALL_DURATION_MS — để rơi hết mà không gõ đúng
     })
 
     expect(onWordReviewed).toHaveBeenCalledWith(firstEntry.id, false)
@@ -220,6 +248,7 @@ describe("SpellingGame", () => {
   it("reports onWordReviewed(id, false) for every missed word, not just the last one in a batch", () => {
     const onWordReviewed = vi.fn()
     render(<SpellingGame vocab={VOCAB} onFinish={vi.fn()} onWordReviewed={onWordReviewed} />)
+    typeChar(typingInput(), "z") // đã gõ ít nhất 1 lần — từ rơi hết giờ mới được chấm "Quên"
 
     // Để hết 5 mạng, nhiều từ rơi trong cùng 1 batch fake-timer — nếu không accumulate,
     // chỉ từ cuối cùng được báo thay vì tất cả.
@@ -233,5 +262,20 @@ describe("SpellingGame", () => {
     // Kiểm tra số id khác nhau = số lần báo (không lặp, không mất)
     const missedIds = new Set(missedCalls.map(([id]) => id))
     expect(missedIds.size).toBe(missedCalls.length)
+  })
+
+  it("does not grade missed words 'Quên' while nothing has been typed yet (regression: on phones no keystroke ever reached the game and every falling word was graded 'Quên')", () => {
+    const onWordReviewed = vi.fn()
+    const onFinish = vi.fn()
+    render(<SpellingGame vocab={VOCAB} onFinish={onFinish} onWordReviewed={onWordReviewed} />)
+
+    act(() => {
+      vi.advanceTimersByTime(80_000)
+    })
+
+    // Ván vẫn mất mạng và kết thúc như thường — chỉ lịch ôn SRS là không bị kéo lùi.
+    expect(screen.getAllByTestId("heart-empty")).toHaveLength(5)
+    expect(onFinish).toHaveBeenCalledWith(0, 10)
+    expect(onWordReviewed).not.toHaveBeenCalled()
   })
 })
