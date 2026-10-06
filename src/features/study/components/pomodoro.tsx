@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Monkey } from "@/components/ob/monkey"
+import { dayKey } from "@/lib/date"
 import {
   BREAK_SECONDS,
   WORK_SECONDS,
@@ -30,7 +31,9 @@ function resolveElapsed(stored: PomodoroState, now: number): PomodoroState {
   }
   // Hết giờ trong lúc rời trang — coi như phiên đã kết thúc, giống lúc setInterval tự chạy hết.
   if (stored.mode === "work") {
-    return { ...stored, mode: "break", left: BREAK_SECONDS, running: false, rounds: stored.rounds + 1 }
+    // Phiên hết giờ đúng lúc updatedAt + left giây — tính cho ngày của thời điểm đó (có thể là hôm qua).
+    const endedDay = dayKey(new Date(stored.updatedAt + stored.left * 1000))
+    return { ...stored, mode: "break", left: BREAK_SECONDS, running: false, ...addFinishedRound(stored, endedDay) }
   }
   return { ...stored, mode: "work", left: WORK_SECONDS, running: false }
 }
@@ -40,11 +43,20 @@ function secondsUntil(endsAt: number, now: number): number {
   return Math.max(0, Math.ceil((endsAt - now) / 1000))
 }
 
+// Số phiên chỉ tính trong 1 ngày: phiên xong vào ngày khác ngày của bộ đếm thì bộ đếm bắt đầu lại từ 1.
+function addFinishedRound(
+  state: Pick<PomodoroState, "rounds" | "roundsDay">,
+  endedDay: string
+): Pick<PomodoroState, "rounds" | "roundsDay"> {
+  return { rounds: state.roundsDay === endedDay ? state.rounds + 1 : 1, roundsDay: endedDay }
+}
+
 function Pomodoro() {
   const [mode, setMode] = useState<Mode>("work")
   const [left, setLeft] = useState(WORK_SECONDS)
   const [running, setRunning] = useState(false)
   const [rounds, setRounds] = useState(0)
+  const [roundsDay, setRoundsDay] = useState<string | null>(null)
   // Mốc đồng hồ (ms) lúc phiên đang chạy hết giờ; null khi không chạy. Đếm lùi luôn tính lại từ mốc
   // này thay vì trừ 1 mỗi tick: tab ẩn bị trình duyệt bóp setInterval (~1 lần/phút sau 5 phút) hay
   // điện thoại khoá màn hình dừng hẳn JS thì lần tick/visibilitychange kế tiếp vẫn ra đúng giờ.
@@ -61,6 +73,7 @@ function Pomodoro() {
     setLeft(resolved.left)
     setRunning(resolved.running)
     setRounds(resolved.rounds)
+    setRoundsDay(resolved.roundsDay)
   }, [])
 
   useEffect(() => {
@@ -70,8 +83,8 @@ function Pomodoro() {
       skipPersistRef.current = false
       return
     }
-    setStoredPomodoro({ mode, left, running, rounds, updatedAt: Date.now() })
-  }, [mode, left, running, rounds])
+    setStoredPomodoro({ mode, left, running, rounds, roundsDay, updatedAt: Date.now() })
+  }, [mode, left, running, rounds, roundsDay])
 
   useEffect(() => {
     if (!running) return
@@ -95,24 +108,30 @@ function Pomodoro() {
   // thành 2. Cùng pattern với quiz-game.tsx (updater thuần + effect riêng phản ứng với giá trị mới).
   useEffect(() => {
     if (left > 0) return
+    // Ngày của phiên = ngày của mốc kết thúc thật — tab ẩn có thể chỉ phát hiện ra sau nửa đêm.
+    const endedDay = dayKey(new Date(endsAtRef.current ?? Date.now()))
     endsAtRef.current = null
     // eslint-disable-next-line react-hooks/set-state-in-effect -- chỉ chạy đúng lúc đồng hồ về 0, không phải mỗi lần effect chạy
     setRunning(false)
     if (mode === "work") {
-      setRounds((r) => r + 1)
+      const finished = addFinishedRound({ rounds, roundsDay }, endedDay)
+      setRounds(finished.rounds)
+      setRoundsDay(finished.roundsDay)
       setMode("break")
       setLeft(BREAK_SECONDS)
       return
     }
     setMode("work")
     setLeft(WORK_SECONDS)
-  }, [left, mode])
+  }, [left, mode, rounds, roundsDay])
 
   const isWork = mode === "work"
   const total = isWork ? WORK_SECONDS : BREAK_SECONDS
   const pct = ((total - left) / total) * 100
   const mm = String(Math.floor(left / 60)).padStart(2, "0")
   const ss = String(left % 60).padStart(2, "0")
+  // Bộ đếm của ngày khác (hoặc không rõ ngày) không phải "hôm nay" — không cần ghi lại storage để về 0.
+  const todayRounds = roundsDay === dayKey() ? rounds : 0
 
   function handleToggleRunning() {
     if (running) {
@@ -189,7 +208,7 @@ function Pomodoro() {
             style={{ color: isWork ? "var(--ob-color-text-muted)" : "#5C4200" }}
           >
             <Image src="/assets/icons/timer.svg" width={19} height={19} alt="" />
-            {rounds ? `Đã xong ${rounds} phiên hôm nay` : "Chưa có phiên nào hôm nay"}
+            {todayRounds ? `Đã xong ${todayRounds} phiên hôm nay` : "Chưa có phiên nào hôm nay"}
           </div>
         </div>
       </div>

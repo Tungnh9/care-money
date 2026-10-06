@@ -3,11 +3,13 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { act, render, screen } from "@testing-library/react"
 
 import { Pomodoro } from "../../components/pomodoro"
+import { POMODORO_STORAGE_KEY } from "../../pomodoro-storage"
 
 describe("Pomodoro", () => {
   beforeEach(() => {
     window.localStorage.clear()
     vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 8, 29, 9, 0))
   })
 
   afterEach(() => {
@@ -184,6 +186,49 @@ describe("Pomodoro", () => {
     fireClickAndAdvance("Bắt đầu", 25 * 60 * 1000)
 
     expect(screen.getByText("Đã xong 1 phiên hôm nay")).toBeInTheDocument()
+  })
+
+  it("starts a new day with no sessions counted, then counts that day's first session as 1", () => {
+    vi.setSystemTime(new Date(2026, 8, 28, 9, 0))
+    const { unmount } = render(<Pomodoro />)
+    fireClickAndAdvance("Bắt đầu", 25 * 60 * 1000)
+    expect(screen.getByText("Đã xong 1 phiên hôm nay")).toBeInTheDocument()
+    unmount()
+
+    vi.setSystemTime(new Date(2026, 8, 29, 9, 0))
+    render(<Pomodoro />)
+    expect(screen.getByText("Chưa có phiên nào hôm nay")).toBeInTheDocument()
+
+    // Phiên hôm qua kết thúc ở chế độ nghỉ — quay lại học rồi xong 1 phiên mới của hôm nay.
+    fireClickAndAdvance("Sang học 25 phút", 0)
+    fireClickAndAdvance("Bắt đầu", 25 * 60 * 1000)
+    expect(screen.getByText("Đã xong 1 phiên hôm nay")).toBeInTheDocument()
+  })
+
+  it("does not count a session that finished yesterday while the page was closed as one of today's", () => {
+    vi.setSystemTime(new Date(2026, 8, 28, 23, 0))
+    const { unmount } = render(<Pomodoro />)
+    fireClickAndAdvance("Bắt đầu", 1000)
+    unmount()
+
+    vi.setSystemTime(new Date(2026, 8, 29, 9, 0))
+    render(<Pomodoro />)
+
+    // Phiên hết giờ lúc 23:25 ngày 28 — là phiên của hôm qua.
+    expect(screen.getByText("05:00")).toBeInTheDocument()
+    expect(screen.getByText("Chưa có phiên nào hôm nay")).toBeInTheDocument()
+  })
+
+  it("keeps the time of a timer saved before sessions were tied to a day, but not its stale session count", () => {
+    window.localStorage.setItem(
+      POMODORO_STORAGE_KEY,
+      JSON.stringify({ mode: "work", left: 600, running: false, rounds: 4, updatedAt: 0 })
+    )
+
+    render(<Pomodoro />)
+
+    expect(screen.getByText("10:00")).toBeInTheDocument()
+    expect(screen.getByText("Chưa có phiên nào hôm nay")).toBeInTheDocument()
   })
 })
 
