@@ -278,4 +278,80 @@ describe("useJournal", () => {
 
     expect(result.current.entries).toHaveLength(1)
   })
+
+  it("updateEntry and deleteEntry return true when the write succeeds", async () => {
+    const { result } = renderHook(() => useJournal())
+    await waitFor(() => expect(result.current.entries).toEqual([]))
+
+    let entry!: JournalEntry
+    act(() => {
+      entry = result.current.saveEntry({ text: "Bài gốc", words: 2, mood: null })!
+    })
+
+    let updated: boolean | undefined
+    act(() => {
+      updated = result.current.updateEntry(entry.id, { text: "Bài sửa", words: 2, mood: null })
+    })
+    let deleted: boolean | undefined
+    act(() => {
+      deleted = result.current.deleteEntry(entry.id)
+    })
+
+    expect(updated).toBe(true)
+    expect(deleted).toBe(true)
+  })
+
+  it("updateEntry and deleteEntry return false when the storage write fails", async () => {
+    const { result } = renderHook(() => useJournal())
+    await waitFor(() => expect(result.current.entries).toEqual([]))
+
+    let entry!: JournalEntry
+    act(() => {
+      entry = result.current.saveEntry({ text: "Bài gốc", words: 2, mood: null })!
+    })
+
+    const setItemSpy = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("quota exceeded")
+    })
+    let updated: boolean | undefined
+    act(() => {
+      updated = result.current.updateEntry(entry.id, { text: "Sẽ lỗi", words: 2, mood: null })
+    })
+    let deleted: boolean | undefined
+    act(() => {
+      deleted = result.current.deleteEntry(entry.id)
+    })
+    setItemSpy.mockRestore()
+
+    expect(updated).toBe(false)
+    expect(deleted).toBe(false)
+  })
+
+  it("updateEntry refuses an entry that was deleted elsewhere: no write, no success toast, returns false", async () => {
+    const { result } = renderHook(() => useJournal())
+    await waitFor(() => expect(result.current.entries).toEqual([]))
+
+    let entry!: JournalEntry
+    act(() => {
+      entry = result.current.saveEntry({ text: "Bài gốc", words: 2, mood: null })!
+    })
+    // Tab khác xoá đúng bài này — ghi thẳng, KHÔNG bắn sự kiện: `state` của hook vẫn còn bài, chỉ bản
+    // đọc tươi là biết bài đã mất (cùng tình huống với xoá đúng bài đang sửa ngay trên trang này).
+    window.localStorage.setItem(JOURNAL_STORAGE_KEY, JSON.stringify({ entries: [] }))
+    const setItemSpy = vi.spyOn(Storage.prototype, "setItem")
+
+    let updated: boolean | undefined
+    act(() => {
+      updated = result.current.updateEntry(entry.id, { text: "Bài đã sửa", words: 3, mood: null })
+    })
+
+    expect(updated).toBe(false)
+    expect(setItemSpy).not.toHaveBeenCalled()
+    expect(getStoredJournal().entries).toEqual([])
+    expect(toast.success).not.toHaveBeenCalled()
+    expect(toast.error).toHaveBeenCalledWith(
+      "Không cập nhật được: bài này đã bị xoá (có thể ở tab khác). Nội dung bạn vừa sửa vẫn còn trong khung soạn."
+    )
+    setItemSpy.mockRestore()
+  })
 })

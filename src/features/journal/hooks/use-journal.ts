@@ -64,9 +64,18 @@ function useJournal() {
     [persist]
   )
 
+  // Trả true khi đã ghi được — khung soạn (JournalView/JournalEditor) chỉ rời chế độ sửa và xoá chữ khi true.
   const updateEntry = useCallback(
-    (id: number, input: SaveEntryInput) => {
+    (id: number, input: SaveEntryInput): boolean => {
       const current = getStoredJournal()
+      // Kiểm trên bản đọc tươi: bài có thể vừa bị xoá (ở tab khác, hay ngay trên trang này) trong lúc đang
+      // sửa. Không kiểm thì map() không thấy id, ghi lại y nguyên danh sách và vẫn báo "Đã cập nhật".
+      if (!current.entries.some((entry) => entry.id === id)) {
+        toast.error(
+          "Không cập nhật được: bài này đã bị xoá (có thể ở tab khác). Nội dung bạn vừa sửa vẫn còn trong khung soạn."
+        )
+        return false
+      }
       try {
         persist({
           ...current,
@@ -77,21 +86,25 @@ function useJournal() {
           ),
         })
         toast.success("Đã cập nhật bài viết")
+        return true
       } catch {
         toast.error("Không thể cập nhật bài viết. Vui lòng thử lại.")
+        return false
       }
     },
     [persist]
   )
 
   const deleteEntry = useCallback(
-    (id: number) => {
+    (id: number): boolean => {
       const current = getStoredJournal()
       try {
         persist({ ...current, entries: current.entries.filter((entry) => entry.id !== id) })
         toast.success("Đã xoá bài viết")
+        return true
       } catch {
         toast.error("Không thể xoá bài viết. Vui lòng thử lại.")
+        return false
       }
     },
     [persist]
