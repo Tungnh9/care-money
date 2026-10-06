@@ -22,9 +22,9 @@ type Mode = PomodoroMode
 
 // Timer chạy trong lúc rời trang vẫn phải trôi — tính lại left dựa trên thời gian
 // thực đã qua kể từ lần ghi cuối, thay vì cứ đứng yên đến khi quay lại.
-function resolveElapsed(stored: PomodoroState): PomodoroState {
+function resolveElapsed(stored: PomodoroState, now: number): PomodoroState {
   if (!stored.running) return stored
-  const elapsed = Math.max(0, Math.floor((Date.now() - stored.updatedAt) / 1000))
+  const elapsed = Math.max(0, Math.floor((now - stored.updatedAt) / 1000))
   if (elapsed < stored.left) {
     return { ...stored, left: stored.left - elapsed }
   }
@@ -35,16 +35,27 @@ function resolveElapsed(stored: PomodoroState): PomodoroState {
   return { ...stored, mode: "work", left: WORK_SECONDS, running: false }
 }
 
+// Số giây còn lại tới mốc kết thúc (ms), làm tròn lên — còn 0,4 giây vẫn hiện 00:01, về 0 đúng lúc hết.
+function secondsUntil(endsAt: number, now: number): number {
+  return Math.max(0, Math.ceil((endsAt - now) / 1000))
+}
+
 function Pomodoro() {
   const [mode, setMode] = useState<Mode>("work")
   const [left, setLeft] = useState(WORK_SECONDS)
   const [running, setRunning] = useState(false)
   const [rounds, setRounds] = useState(0)
+  // Mốc đồng hồ (ms) lúc phiên đang chạy hết giờ; null khi không chạy. Đếm lùi luôn tính lại từ mốc
+  // này thay vì trừ 1 mỗi tick: tab ẩn bị trình duyệt bóp setInterval (~1 lần/phút sau 5 phút) hay
+  // điện thoại khoá màn hình dừng hẳn JS thì lần tick/visibilitychange kế tiếp vẫn ra đúng giờ.
+  const endsAtRef = useRef<number | null>(null)
   const skipPersistRef = useRef(true)
 
   useEffect(() => {
     // localStorage không có lúc SSR, chỉ đọc được thật sau khi mount trên client.
-    const resolved = resolveElapsed(getStoredPomodoro())
+    const now = Date.now()
+    const resolved = resolveElapsed(getStoredPomodoro(), now)
+    endsAtRef.current = resolved.running ? now + resolved.left * 1000 : null
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMode(resolved.mode)
     setLeft(resolved.left)
@@ -65,23 +76,37 @@ function Pomodoro() {
   useEffect(() => {
     if (!running) return
 
-    const id = setInterval(() => {
-      setLeft((v) => {
-        if (v > 1) return v - 1
-        clearInterval(id)
-        setRunning(false)
-        if (mode === "work") {
-          setRounds((r) => r + 1)
-          setMode("break")
-          return BREAK_SECONDS
-        }
-        setMode("work")
-        return WORK_SECONDS
-      })
-    }, 1000)
+    // Chỉ đặt giá trị tính từ đồng hồ (không trừ dần, không side effect) — kết thúc phiên nằm ở
+    // effect bên dưới.
+    function syncWithClock() {
+      if (endsAtRef.current !== null) setLeft(secondsUntil(endsAtRef.current, Date.now()))
+    }
+    const id = setInterval(syncWithClock, 1000)
+    // Quay lại tab / mở khoá máy: cập nhật ngay, không chờ tới tick kế tiếp.
+    document.addEventListener("visibilitychange", syncWithClock)
+    return () => {
+      clearInterval(id)
+      document.removeEventListener("visibilitychange", syncWithClock)
+    }
+  }, [running])
 
-    return () => clearInterval(id)
-  }, [running, mode])
+  // Hết giờ: xử lý đúng 1 lần ở effect riêng khi left về 0 — không đặt trong updater của setLeft như
+  // trước, vì Strict Mode (bật mặc định ở App Router) gọi updater 2 lần lúc dev nên 1 phiên bị đếm
+  // thành 2. Cùng pattern với quiz-game.tsx (updater thuần + effect riêng phản ứng với giá trị mới).
+  useEffect(() => {
+    if (left > 0) return
+    endsAtRef.current = null
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- chỉ chạy đúng lúc đồng hồ về 0, không phải mỗi lần effect chạy
+    setRunning(false)
+    if (mode === "work") {
+      setRounds((r) => r + 1)
+      setMode("break")
+      setLeft(BREAK_SECONDS)
+      return
+    }
+    setMode("work")
+    setLeft(WORK_SECONDS)
+  }, [left, mode])
 
   const isWork = mode === "work"
   const total = isWork ? WORK_SECONDS : BREAK_SECONDS
@@ -90,15 +115,25 @@ function Pomodoro() {
   const ss = String(left % 60).padStart(2, "0")
 
   function handleToggleRunning() {
-    setRunning((r) => !r)
+    if (running) {
+      // Tạm dừng: chốt số giây còn lại theo đồng hồ thật đúng lúc bấm.
+      if (endsAtRef.current !== null) setLeft(secondsUntil(endsAtRef.current, Date.now()))
+      endsAtRef.current = null
+      setRunning(false)
+      return
+    }
+    endsAtRef.current = Date.now() + left * 1000
+    setRunning(true)
   }
 
   function handleReset() {
+    endsAtRef.current = null
     setRunning(false)
     setLeft(isWork ? WORK_SECONDS : BREAK_SECONDS)
   }
 
   function handleSwitchMode() {
+    endsAtRef.current = null
     setRunning(false)
     setMode(isWork ? "break" : "work")
     setLeft(isWork ? BREAK_SECONDS : WORK_SECONDS)

@@ -1,3 +1,4 @@
+import { StrictMode } from "react"
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { act, render, screen } from "@testing-library/react"
 
@@ -129,6 +130,58 @@ describe("Pomodoro", () => {
 
     unmount()
     render(<Pomodoro />)
+
+    expect(screen.getByText("Đã xong 1 phiên hôm nay")).toBeInTheDocument()
+  })
+
+  it("catches up with the real clock when the browser throttled the ticks of a hidden tab", () => {
+    render(<Pomodoro />)
+    fireClickAndAdvance("Bắt đầu", 1000)
+    expect(screen.getByText("24:59")).toBeInTheDocument()
+
+    // Tab ẩn: 10 phút thật trôi qua mà setInterval không được chạy lần nào (Chrome bóp nhịp, điện
+    // thoại khoá màn hình) — setSystemTime dời đồng hồ mà không bắn timer nào.
+    vi.setSystemTime(Date.now() + 10 * 60 * 1000)
+    act(() => {
+      vi.advanceTimersByTime(1000) // đúng 1 tick
+    })
+
+    expect(screen.getByText("14:58")).toBeInTheDocument()
+  })
+
+  it("shows the right time as soon as the tab becomes visible again, without waiting for a tick", () => {
+    render(<Pomodoro />)
+    fireClickAndAdvance("Bắt đầu", 1000)
+
+    vi.setSystemTime(Date.now() + 5 * 60 * 1000)
+    act(() => {
+      document.dispatchEvent(new Event("visibilitychange"))
+    })
+
+    expect(screen.getByText("19:59")).toBeInTheDocument()
+  })
+
+  it("switches to break once the real clock passes the end of the session, even if only one tick fires", () => {
+    render(<Pomodoro />)
+    fireClickAndAdvance("Bắt đầu", 1000)
+
+    vi.setSystemTime(Date.now() + 30 * 60 * 1000)
+    act(() => {
+      vi.advanceTimersByTime(1000)
+    })
+
+    expect(screen.getByText("05:00")).toBeInTheDocument()
+    expect(screen.getByText("Đã xong 1 phiên hôm nay")).toBeInTheDocument()
+  })
+
+  it("counts one finished session as one, even under React Strict Mode", () => {
+    render(
+      <StrictMode>
+        <Pomodoro />
+      </StrictMode>
+    )
+
+    fireClickAndAdvance("Bắt đầu", 25 * 60 * 1000)
 
     expect(screen.getByText("Đã xong 1 phiên hôm nay")).toBeInTheDocument()
   })
