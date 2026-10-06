@@ -70,4 +70,43 @@ describe("findOnThisDay", () => {
 
     expect(result).toEqual({ entry: yearAgo, label: "1 năm trước" })
   })
+
+  it("skips the 1-month-ago check on 31/03 instead of rolling 31/02 over into this month", () => {
+    const sameMonth = entry(new Date(2026, 2, 3, 9, 0).getTime(), "Đầu tháng 3")
+
+    // new Date(2026, 1, 31) tự tràn thành 03/03 — trước bản sửa, bài 03/03 bị gắn nhãn "1 tháng trước".
+    expect(findOnThisDay([sameMonth], new Date(2026, 2, 31, 9, 0))).toBeNull()
+  })
+
+  it("skips the 1-month-ago check on the 31st after a 30-day month (31/05 has no 31/04)", () => {
+    const firstOfMay = entry(new Date(2026, 4, 1, 9, 0).getTime(), "Đầu tháng 5")
+
+    expect(findOnThisDay([firstOfMay], new Date(2026, 4, 31, 9, 0))).toBeNull()
+  })
+
+  it("does not move a missing 1-month-ago day to the end of the previous month either", () => {
+    const endOfFebruary = entry(new Date(2026, 1, 28, 9, 0).getTime(), "Cuối tháng 2")
+
+    expect(findOnThisDay([endOfFebruary], new Date(2026, 2, 31, 9, 0))).toBeNull()
+    // Bài 28/02 vẫn có đúng ngày kỷ niệm của nó: 28/03.
+    expect(findOnThisDay([endOfFebruary], new Date(2026, 2, 28, 9, 0))).toEqual({
+      entry: endOfFebruary,
+      label: "1 tháng trước",
+    })
+  })
+
+  it("skips the 1-year-ago check on 29/02 instead of matching 01/03 of the year before", () => {
+    const marchFirst = entry(new Date(2027, 2, 1, 9, 0).getTime(), "01/03 năm trước")
+
+    expect(findOnThisDay([marchFirst], new Date(2028, 1, 29, 9, 0))).toBeNull()
+  })
+
+  it("still finds a 1-month-ago entry on 29/02, when only the 1-year-ago day is missing", () => {
+    const januaryEntry = entry(new Date(2028, 0, 29, 9, 0).getTime(), "29/01")
+
+    expect(findOnThisDay([januaryEntry], new Date(2028, 1, 29, 9, 0))).toEqual({
+      entry: januaryEntry,
+      label: "1 tháng trước",
+    })
+  })
 })
