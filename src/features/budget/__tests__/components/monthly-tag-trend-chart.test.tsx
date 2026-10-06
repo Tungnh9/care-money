@@ -1,8 +1,16 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { render, screen, waitFor } from "@testing-library/react"
 
 import { formatMoney } from "@/lib/format"
 import { MonthlyTagTrendChart } from "../../components/monthly-tag-trend-chart"
+
+const apex = vi.hoisted(() => ({ calls: [] as { options: { colors?: string[] } }[] }))
+vi.mock("react-apexcharts", () => ({
+  default: (props: { options: { colors?: string[] } }) => {
+    apex.calls.push(props)
+    return null
+  },
+}))
 
 function stubChartMeasurement() {
   vi.stubGlobal(
@@ -125,5 +133,27 @@ describe("MonthlyTagTrendChart", () => {
     const dots = screen.getAllByTestId("tag-trend-dot")
     expect(dots[0]).toHaveStyle({ backgroundColor: "#22B8CF" })
     expect(dots[1]).toHaveStyle({ backgroundColor: "#FCC419" })
+  })
+
+  it("paints the stacked bars with the same colour map as the summary dots", async () => {
+    apex.calls.length = 0
+    render(
+      <MonthlyTagTrendChart
+        months={["2026-09"]}
+        series={[
+          { label: "Tiền trọ", emoji: "🏠", tint: "#FFF0B8", data: [3_000_000] },
+          { label: "Mua sắm", emoji: "🛍️", tint: "#E7F6EF", data: [1_200_000] },
+        ]}
+        colors={
+          new Map([
+            ["Tiền trọ", "#22B8CF"],
+            ["Mua sắm", "#FCC419"],
+          ])
+        }
+      />
+    )
+
+    await waitFor(() => expect(apex.calls.length).toBeGreaterThan(0))
+    expect(apex.calls.at(-1)?.options.colors).toEqual(["#22B8CF", "#FCC419"])
   })
 })
