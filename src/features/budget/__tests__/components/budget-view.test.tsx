@@ -264,6 +264,7 @@ describe("BudgetView", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Tất toán tháng" }))
     fireEvent.click(screen.getByRole("button", { name: "Quỹ B" }))
+    expect(screen.getByRole("button", { name: "Xác nhận" })).not.toBeDisabled()
     fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }))
 
     expect(screen.getByRole("dialog")).toBeInTheDocument()

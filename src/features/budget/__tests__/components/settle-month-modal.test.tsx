@@ -119,6 +119,7 @@ describe("SettleMonthModal", () => {
 
   it("stays open when onConfirm reports that the settlement failed", () => {
     const onOpenChange = vi.fn()
+    const onConfirm = vi.fn(() => false)
     render(
       <SettleMonthModal
         open
@@ -126,13 +127,14 @@ describe("SettleMonthModal", () => {
         month="2026-09"
         remaining={200_000}
         savings={SAVINGS}
-        onConfirm={() => false}
+        onConfirm={onConfirm}
       />
     )
     fireEvent.click(screen.getByRole("button", { name: "Quỹ A" }))
 
     fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }))
 
+    expect(onConfirm).toHaveBeenCalledTimes(1)
     expect(onOpenChange).not.toHaveBeenCalled()
   })
 
