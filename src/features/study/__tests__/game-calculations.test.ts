@@ -79,6 +79,7 @@ describe("pickQuizOptions", () => {
     for (let i = 0; i < 20; i++) {
       const meanings = pickQuizOptions(pool, correct, 4).map((option) => option.meaning)
       expect(new Set(meanings).size).toBe(meanings.length)
+      expect(meanings).toHaveLength(4)
     }
   })
 
