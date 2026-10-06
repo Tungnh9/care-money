@@ -15,9 +15,11 @@ function stemCandidates(word: string): string[] {
   if (lower.endsWith("'s") && lower.length - 2 >= MIN_STEM_LENGTH) {
     candidates.push(lower.slice(0, -2))
   } else if (lower.endsWith("ies") && lower.length - 3 + 1 >= MIN_STEM_LENGTH) {
-    candidates.push(lower.slice(0, -3) + "y")
+    // cities -> city; từ gốc tận cùng "ie" chỉ thêm "s": movies -> movie.
+    candidates.push(lower.slice(0, -3) + "y", lower.slice(0, -1))
   } else if (lower.endsWith("es") && lower.length - 2 >= MIN_STEM_LENGTH) {
-    candidates.push(lower.slice(0, -2))
+    // teaches -> teach; từ gốc tận cùng "e" chỉ thêm "s": makes -> make.
+    candidates.push(lower.slice(0, -2), lower.slice(0, -1))
   } else if (lower.endsWith("s") && !lower.endsWith("ss") && lower.length - 1 >= MIN_STEM_LENGTH) {
     candidates.push(lower.slice(0, -1))
   }

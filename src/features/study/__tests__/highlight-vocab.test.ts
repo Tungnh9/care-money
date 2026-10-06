@@ -116,6 +116,26 @@ describe("highlightVocabInSentence", () => {
     expect(usingSegments.some((s) => s.matched && s.text === "using")).toBe(true)
     expect(usedSegments.some((s) => s.matched && s.text === "used")).toBe(true)
   })
+
+  it("matches a base word ending in e from its -es form (makes -> make)", () => {
+    const index = makeIndex([{ id: "v-0203", word: "make" }])
+    const segments = highlightVocabInSentence("He makes his kids clean their room.", index)
+
+    const matched = segments.filter((s) => s.matched)
+    expect(matched).toHaveLength(1)
+    expect(matched[0].text).toBe("makes")
+    expect(matched[0].vocabId).toBe("v-0203")
+  })
+
+  it("matches a base word ending in ie from its -ies form (movies -> movie)", () => {
+    const index = makeIndex([{ id: "v-0142", word: "movie" }])
+    const segments = highlightVocabInSentence("When we hang out, we usually go to the movies.", index)
+
+    const matched = segments.filter((s) => s.matched)
+    expect(matched).toHaveLength(1)
+    expect(matched[0].text).toBe("movies")
+    expect(matched[0].vocabId).toBe("v-0142")
+  })
 })
 
 describe("buildVocabIndex", () => {
