@@ -33,8 +33,7 @@ function JournalView() {
     if (editingEntry) {
       // Ghi lỗi (hay bài vừa bị xoá ở tab khác) thì ở lại chế độ sửa: khung soạn còn nguyên chữ để thử lại.
       if (!updateEntry(editingEntry.id, input)) return false
-      setEditingEntry(null)
-      setMood("")
+      leaveEditMode()
       return true
     }
     const entry = saveEntry(input)
@@ -49,9 +48,15 @@ function JournalView() {
     setMood(entry.mood?.label ?? "")
   }
 
-  function handleCancelEdit() {
+  // Dùng chung cho Huỷ sửa, Cập nhật xong và xoá đúng bài đang sửa.
+  function leaveEditMode() {
     setEditingEntry(null)
     setMood("")
+  }
+
+  function handleDelete(id: number) {
+    // Xoá đúng bài đang sửa thì rời chế độ sửa — không thì nút "Cập nhật" trỏ vào 1 bài không còn nữa.
+    if (deleteEntry(id) && editingEntry?.id === id) leaveEditMode()
   }
 
   function handleViewEntries() {
@@ -83,7 +88,7 @@ function JournalView() {
               selectedMood={selectedMoodSnapshot}
               onSave={handleSave}
               editingEntry={editingEntry}
-              onCancelEdit={handleCancelEdit}
+              onCancelEdit={leaveEditMode}
             />
           )}
         </div>
@@ -105,7 +110,7 @@ function JournalView() {
         >
           <JournalEntriesCard
             entries={entries}
-            onDelete={deleteEntry}
+            onDelete={handleDelete}
             onEdit={handleEdit}
             highlightEntryId={highlight?.id ?? null}
             highlightNonce={highlight?.nonce}

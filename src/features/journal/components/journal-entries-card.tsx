@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Pencil, Trash2 } from "lucide-react"
 
 import { Card } from "@/components/ui/card"
+import { AlertDialog } from "@/components/ui/alert-dialog"
 import { Empty } from "@/components/ob/empty"
 import { formatShortDate } from "@/lib/date"
 import { cn } from "@/lib/utils"
@@ -34,6 +35,11 @@ function JournalEntriesCard({
   highlightNonce,
 }: JournalEntriesCardProps) {
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set())
+
+  // Xoá là mất hẳn (không hoàn tác) — nút thùng rác chỉ mở hộp xác nhận, như mọi nút xoá ở trang Tài chính.
+  const [deletingId, setDeletingId] = useState<number | null>(null)
+  // Tra lại theo id mỗi lần render: bài đã biến mất (vd. bị xoá ở tab khác) thì hộp tự đóng.
+  const deleting = entries.find((entry) => entry.id === deletingId) ?? null
 
   function toggleExpanded(id: number) {
     setExpandedIds((prev) => {
@@ -115,8 +121,8 @@ function JournalEntriesCard({
                 </button>
                 <button
                   type="button"
-                  aria-label="Xoá bài"
-                  onClick={() => onDelete(entry.id)}
+                  aria-label={`Xoá bài ${dateLabel} ${entry.time}`}
+                  onClick={() => setDeletingId(entry.id)}
                   className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
                 >
                   <Trash2 size={17} />
@@ -128,6 +134,27 @@ function JournalEntriesCard({
       ) : (
         <Empty pose="book" title="Chưa có bài nào" hint="Bài đầu tiên bạn lưu sẽ hiện ở đây." />
       )}
+      <AlertDialog
+        open={deleting !== null}
+        onOpenChange={(open) => !open && setDeletingId(null)}
+        title="Xoá bài nhật ký?"
+        description={
+          deleting ? (
+            <>
+              Xoá bài viết lúc{" "}
+              <strong>
+                {deleting.time} ngày {entryDateLabel(deleting)}
+              </strong>{" "}
+              sẽ không thể hoàn tác.
+            </>
+          ) : null
+        }
+        confirmLabel="Xoá"
+        destructive
+        onConfirm={() => {
+          if (deleting) onDelete(deleting.id)
+        }}
+      />
     </Card>
   )
 }

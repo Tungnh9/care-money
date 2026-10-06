@@ -87,13 +87,47 @@ describe("JournalEntriesCard", () => {
     expect(onEdit).toHaveBeenCalledWith(SHORT_ENTRY)
   })
 
-  it("calls onDelete with the matching entry's id when its delete button is clicked", () => {
+  it("asks for confirmation, naming the entry's time and date, instead of deleting on the first tap", () => {
     const onDelete = vi.fn()
     render(<JournalEntriesCard entries={[SHORT_ENTRY]} onDelete={onDelete} onEdit={vi.fn()} />)
 
-    fireEvent.click(screen.getByRole("button", { name: "Xoá bài" }))
+    fireEvent.click(screen.getByRole("button", { name: "Xoá bài 10/08 09:00" }))
+
+    expect(screen.getByRole("alertdialog")).toBeInTheDocument()
+    expect(screen.getByText("Xoá bài nhật ký?")).toBeInTheDocument()
+    const when = screen.getByText("09:00 ngày 10/08", { selector: "strong" })
+    expect(when.closest("p")).toHaveTextContent("Xoá bài viết lúc 09:00 ngày 10/08 sẽ không thể hoàn tác.")
+    expect(onDelete).not.toHaveBeenCalled()
+  })
+
+  it("calls onDelete with the entry's id only after Xoá is confirmed", () => {
+    const onDelete = vi.fn()
+    render(<JournalEntriesCard entries={[SHORT_ENTRY]} onDelete={onDelete} onEdit={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Xoá bài 10/08 09:00" }))
+    fireEvent.click(screen.getByRole("button", { name: "Xoá" }))
 
     expect(onDelete).toHaveBeenCalledWith(SHORT_ENTRY.id)
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument()
+  })
+
+  it("keeps the entry when the confirmation is cancelled", () => {
+    const onDelete = vi.fn()
+    render(<JournalEntriesCard entries={[SHORT_ENTRY]} onDelete={onDelete} onEdit={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Xoá bài 10/08 09:00" }))
+    fireEvent.click(screen.getByRole("button", { name: "Huỷ" }))
+
+    expect(onDelete).not.toHaveBeenCalled()
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument()
+  })
+
+  it("names each delete button after its entry's date and time, so entries of the same day are told apart", () => {
+    const evening: JournalEntry = { ...SHORT_ENTRY, id: new Date(2026, 7, 10, 21, 30).getTime(), time: "21:30" }
+    render(<JournalEntriesCard entries={[evening, SHORT_ENTRY]} onDelete={vi.fn()} onEdit={vi.fn()} />)
+
+    expect(screen.getByRole("button", { name: "Xoá bài 10/08 21:30" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Xoá bài 10/08 09:00" })).toBeInTheDocument()
   })
 
   it("flashes only the entry matching highlightEntryId, not other entries", () => {

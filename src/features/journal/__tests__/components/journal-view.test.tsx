@@ -283,4 +283,33 @@ describe("JournalView — sửa, xoá và giữ nội dung đang viết", () => 
     const stored = JSON.parse(window.localStorage.getItem("journal-entries") ?? "{}")
     expect(stored.entries).toEqual([ENTRY_B])
   })
+
+  it("leaves edit mode when the entry being edited is deleted", async () => {
+    seedEntries(ENTRY_A, ENTRY_B)
+    render(<JournalView />)
+
+    fireEvent.click(await screen.findByRole("button", { name: "Sửa bài 28/09 20:00" }))
+    expect(screen.getByRole("button", { name: "Cập nhật bài viết" })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: "Xoá bài 28/09 20:00" }))
+    fireEvent.click(screen.getByRole("button", { name: "Xoá" }))
+
+    expect(screen.queryByRole("button", { name: "Cập nhật bài viết" })).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Lưu vào nhật ký" })).toBeInTheDocument()
+    expect(screen.getByText("Nhật ký đã viết · 1")).toBeInTheDocument()
+  })
+
+  it("stays in edit mode, keeping the typed text, when a different entry is deleted", async () => {
+    seedEntries(ENTRY_A, ENTRY_B)
+    render(<JournalView />)
+
+    fireEvent.click(await screen.findByRole("button", { name: "Sửa bài 28/09 20:00" }))
+    typeInto(screen.getByRole("textbox"), "Bài A đang sửa")
+    fireEvent.click(screen.getByRole("button", { name: "Xoá bài 27/09 21:00" }))
+    fireEvent.click(screen.getByRole("button", { name: "Xoá" }))
+
+    expect(screen.getByRole("button", { name: "Cập nhật bài viết" })).toBeInTheDocument()
+    expect(screen.getByRole("textbox")).toHaveTextContent("Bài A đang sửa")
+    expect(screen.getByText("Nhật ký đã viết · 1")).toBeInTheDocument()
+  })
 })
