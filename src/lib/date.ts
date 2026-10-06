@@ -56,6 +56,13 @@ function formatDayKeyWithYear(key: string): string {
   return `${weekday}, ${String(d).padStart(2, "0")}/${String(m).padStart(2, "0")}/${y}`
 }
 
+// "dd/mm" khi cùng năm với `now`, "dd/mm/yyyy" khi khác năm — năm nay nhìn gọn như cũ, còn 29/09 năm
+// ngoái không lẫn với 29/09 năm nay.
+function formatShortDate(d: Date, now: Date = new Date()): string {
+  const dayMonth = `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`
+  return d.getFullYear() === now.getFullYear() ? dayMonth : `${dayMonth}/${d.getFullYear()}`
+}
+
 function daysInMonth(month: string): number {
   const [y, m] = month.split("-").map(Number)
   // Ngày 0 của tháng sau = ngày cuối tháng này — cách chuẩn để lấy số ngày trong tháng.
@@ -77,6 +84,7 @@ export {
   formatDayKey,
   formatDayKeyWithYear,
   formatMonthKey,
+  formatShortDate,
   monthKey,
   monthKeyFromDayKey,
   monthsFrom,

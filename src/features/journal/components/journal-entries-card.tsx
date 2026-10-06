@@ -5,6 +5,7 @@ import { Pencil, Trash2 } from "lucide-react"
 
 import { Card } from "@/components/ui/card"
 import { Empty } from "@/components/ob/empty"
+import { formatShortDate } from "@/lib/date"
 import { cn } from "@/lib/utils"
 import { sanitizeJournalHtml, stripHtmlToPlainText } from "../journal-html"
 import type { JournalEntry } from "../types"
@@ -18,6 +19,12 @@ interface JournalEntriesCardProps {
 }
 
 const TRUNCATE_LENGTH = 180
+
+// entry.date chỉ lưu dd/mm (không có năm) — ngày hiển thị lấy từ entry.id (timestamp lúc lưu) để bài của
+// năm khác hiện kèm năm, và 2 bài cùng ngày khác năm không trùng tên nút Sửa/Xoá.
+function entryDateLabel(entry: JournalEntry): string {
+  return formatShortDate(new Date(entry.id))
+}
 
 function JournalEntriesCard({
   entries,
@@ -49,6 +56,7 @@ function JournalEntriesCard({
           const isTruncated = plainText.length > TRUNCATE_LENGTH
           const isExpanded = expandedIds.has(entry.id)
           const isHighlighted = entry.id === highlightEntryId
+          const dateLabel = entryDateLabel(entry)
 
           return (
             <div
@@ -68,7 +76,7 @@ function JournalEntriesCard({
               <div className="min-w-0 flex-1">
                 <div className="mb-1 flex flex-wrap items-center gap-x-[10px] gap-y-1">
                   <span className="[font-family:var(--ob-font-num)] text-[12px] text-[var(--ob-color-text-subtle)]">
-                    {entry.date} · {entry.time} · {entry.words} từ
+                    {dateLabel} · {entry.time} · {entry.words} từ
                   </span>
                   {entry.mood ? (
                     <span className="text-[12.5px] font-semibold text-[var(--ob-color-text-muted)]">
@@ -99,7 +107,7 @@ function JournalEntriesCard({
               <div className="flex flex-none items-start gap-1">
                 <button
                   type="button"
-                  aria-label={`Sửa bài ${entry.date} ${entry.time}`}
+                  aria-label={`Sửa bài ${dateLabel} ${entry.time}`}
                   onClick={() => onEdit(entry)}
                   className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-info)]"
                 >

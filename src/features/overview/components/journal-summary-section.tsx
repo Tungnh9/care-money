@@ -2,6 +2,7 @@ import Link from "next/link"
 
 import type { JournalEntry } from "@/features/journal/types"
 import { stripHtmlToPlainText } from "@/features/journal/journal-html"
+import { formatShortDate } from "@/lib/date"
 import { Card } from "@/components/ui/card"
 import { buttonVariants } from "@/components/ui/button"
 import { Empty } from "@/components/ob/empty"
@@ -28,7 +29,7 @@ function JournalSummarySection({ entries }: JournalSummarySectionProps) {
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="mb-[3px] [font-family:var(--ob-font-num)] text-[11.5px] text-[var(--ob-color-text-subtle)]">
-                    {entry.date} · {entry.time} · {entry.words} từ
+                    {formatShortDate(new Date(entry.id))} · {entry.time} · {entry.words} từ
                   </div>
                   <p className="m-0 overflow-hidden text-[13.5px] leading-[1.55] text-ellipsis whitespace-nowrap text-[var(--ob-color-text-muted)]">
                     {stripHtmlToPlainText(entry.text)}

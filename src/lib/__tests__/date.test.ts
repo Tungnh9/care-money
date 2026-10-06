@@ -7,6 +7,7 @@ import {
   formatDayKey,
   formatDayKeyWithYear,
   formatMonthKey,
+  formatShortDate,
   monthKey,
   monthKeyFromDayKey,
   monthsFrom,
@@ -150,5 +151,19 @@ describe("daysBetween", () => {
 
   it("returns a negative count when `to` is before `from`", () => {
     expect(daysBetween("2026-09-15", "2026-09-01")).toBe(-14)
+  })
+})
+
+describe("formatShortDate", () => {
+  const now = new Date(2026, 8, 30, 9, 0)
+
+  it("shows dd/mm for a date in the same year as now", () => {
+    expect(formatShortDate(new Date(2026, 8, 29, 8, 30), now)).toBe("29/09")
+    expect(formatShortDate(new Date(2026, 0, 5), now)).toBe("05/01")
+  })
+
+  it("adds the year for a date in another year", () => {
+    expect(formatShortDate(new Date(2025, 8, 29, 8, 30), now)).toBe("29/09/2025")
+    expect(formatShortDate(new Date(2027, 0, 5), now)).toBe("05/01/2027")
   })
 })

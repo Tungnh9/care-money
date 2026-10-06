@@ -1,11 +1,11 @@
-import { describe, it, expect, vi } from "vitest"
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { fireEvent, render, screen } from "@testing-library/react"
 
 import { JournalEntriesCard } from "../../components/journal-entries-card"
 import type { JournalEntry } from "../../types"
 
 const SHORT_ENTRY: JournalEntry = {
-  id: 1,
+  id: new Date(2026, 7, 10, 9, 0).getTime(),
   text: "Một ngày bình thường.",
   time: "09:00",
   date: "10/08",
@@ -16,7 +16,7 @@ const SHORT_ENTRY: JournalEntry = {
 const LONG_TEXT = Array.from({ length: 30 }, () => "Xin chào.").join(" ") // > 180 ký tự
 
 const LONG_ENTRY: JournalEntry = {
-  id: 2,
+  id: new Date(2026, 7, 11, 20, 0).getTime(),
   text: LONG_TEXT,
   time: "20:00",
   date: "11/08",
@@ -25,6 +25,16 @@ const LONG_ENTRY: JournalEntry = {
 }
 
 describe("JournalEntriesCard", () => {
+  beforeEach(() => {
+    // Ngày hiển thị so năm của bài với năm hiện tại — ghim "hôm nay" vào 30/09/2026 cho mọi test.
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    vi.setSystemTime(new Date(2026, 8, 30, 9, 0))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it("renders the empty-state mascot when there are no entries", () => {
     render(<JournalEntriesCard entries={[]} onDelete={vi.fn()} onEdit={vi.fn()} />)
 
@@ -83,7 +93,7 @@ describe("JournalEntriesCard", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Xoá bài" }))
 
-    expect(onDelete).toHaveBeenCalledWith(1)
+    expect(onDelete).toHaveBeenCalledWith(SHORT_ENTRY.id)
   })
 
   it("flashes only the entry matching highlightEntryId, not other entries", () => {
@@ -93,12 +103,12 @@ describe("JournalEntriesCard", () => {
         entries={[SHORT_ENTRY, other]}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
-        highlightEntryId={1}
+        highlightEntryId={SHORT_ENTRY.id}
         highlightNonce={1}
       />
     )
 
-    expect(document.getElementById("journal-entry-1")).toHaveClass("ob-highlight-flash")
+    expect(document.getElementById(`journal-entry-${SHORT_ENTRY.id}`)).toHaveClass("ob-highlight-flash")
     expect(document.getElementById("journal-entry-4")).not.toHaveClass("ob-highlight-flash")
   })
 
@@ -120,5 +130,15 @@ describe("JournalEntriesCard", () => {
       (_, element) => element?.tagName === "P" && element.textContent === `${plain.slice(0, 180)}…`
     )
     expect(preview).toBeInTheDocument()
+  })
+
+  it("adds the year to the date of an entry written in another year, in the list and in the edit button's name", () => {
+    const lastYear: JournalEntry = { ...SHORT_ENTRY, id: new Date(2025, 7, 10, 9, 0).getTime() }
+    render(<JournalEntriesCard entries={[SHORT_ENTRY, lastYear]} onDelete={vi.fn()} onEdit={vi.fn()} />)
+
+    expect(screen.getByText("10/08/2025 · 09:00 · 3 từ")).toBeInTheDocument()
+    expect(screen.getByText("10/08 · 09:00 · 3 từ")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Sửa bài 10/08/2025 09:00" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Sửa bài 10/08 09:00" })).toBeInTheDocument()
   })
 })

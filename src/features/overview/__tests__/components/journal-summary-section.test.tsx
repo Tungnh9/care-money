@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { render, screen } from "@testing-library/react"
 
 import type { JournalEntry } from "@/features/journal/types"
@@ -54,5 +54,30 @@ describe("JournalSummarySection", () => {
 
     // getByText gộp "\n" thành dấu cách, đúng như whitespace-nowrap hiển thị trên 1 dòng.
     expect(screen.getByText("Tom & Jerry Dòng hai nữa")).toBeInTheDocument()
+  })
+})
+
+describe("JournalSummarySection — ngày của bài", () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    vi.setSystemTime(new Date(2026, 8, 30, 9, 0))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it("shows dd/mm for this year's entries and adds the year for an entry from another year", () => {
+    render(
+      <JournalSummarySection
+        entries={[
+          { ...ENTRY, id: new Date(2026, 7, 10, 9, 0).getTime() },
+          { ...ENTRY, id: new Date(2025, 7, 10, 9, 0).getTime(), text: "Bài năm ngoái" },
+        ]}
+      />
+    )
+
+    expect(screen.getByText("10/08 · 09:00 · 5 từ")).toBeInTheDocument()
+    expect(screen.getByText("10/08/2025 · 09:00 · 5 từ")).toBeInTheDocument()
   })
 })
