@@ -152,6 +152,27 @@ describe("SpellingGame", () => {
     expect(input).toHaveValue("w")
   })
 
+  it("lower-cases input, ignores a wrong letter after a partial word and allows deleting", () => {
+    render(<SpellingGame vocab={VOCAB} onFinish={vi.fn()} />)
+
+    act(() => {
+      vi.advanceTimersByTime(100)
+    })
+
+    const input = typingInput()
+    fireEvent.change(input, { target: { value: "W" } }) // chữ hoa (vd. bật Caps Lock) vẫn tính là chữ thường
+    expect(input).toHaveValue("w")
+
+    fireEvent.change(input, { target: { value: "wo" } })
+    expect(input).toHaveValue("wo")
+
+    fireEvent.change(input, { target: { value: "woz" } }) // sai chữ sau phần đã gõ — bị bỏ qua
+    expect(input).toHaveValue("wo")
+
+    fireEvent.change(input, { target: { value: "" } }) // xoá hết
+    expect(input).toHaveValue("")
+  })
+
   it("loses a life and removes the word once it falls for the full duration without being typed", () => {
     render(<SpellingGame vocab={VOCAB} onFinish={vi.fn()} />)
 
