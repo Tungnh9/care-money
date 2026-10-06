@@ -1,10 +1,22 @@
 import { describe, it, expect } from "vitest"
 
-import { activeStreakCount, isTypableWord, matchScoreFromFlips, nextStreak, pickQuizOptions, pickRandomSet } from "../game-calculations"
+import {
+  activeStreakCount,
+  isTypableWord,
+  matchScoreFromFlips,
+  nextStreak,
+  pickMatchEntries,
+  pickQuizOptions,
+  pickRandomSet,
+} from "../game-calculations"
 import type { VocabEntry } from "../types"
 
 function vocab(id: string, word?: string): VocabEntry {
   return { id, word: word ?? `word-${id}`, meaning: `nghĩa-${id}`, addedAt: "2026-01-01" }
+}
+
+function entry(id: string, word: string, meaning: string): VocabEntry {
+  return { id, word, meaning, addedAt: "2026-01-01" }
 }
 
 const POOL: VocabEntry[] = Array.from({ length: 10 }, (_, i) => vocab(`${i}`))
@@ -39,6 +51,69 @@ describe("pickQuizOptions", () => {
     const correct = POOL[0]
     const options = pickQuizOptions(POOL, correct, 4)
     expect(new Set(options.map((o) => o.id)).size).toBe(4)
+  })
+
+  it("never offers a wrong option that shares the answer's meaning or spelling", () => {
+    const correct = entry("v-0051", "light", "sáng (màu sắc)")
+    const pool = [
+      correct,
+      entry("v-0138", "bright", "sáng (màu sắc)"), // cùng nghĩa — chọn trúng nút này vẫn bị chấm "Quên"
+      entry("v-0123", "Light", "đèn"), // cùng chữ — "đèn" cũng là 1 nghĩa đúng của "light"
+      vocab("1"),
+      vocab("2"),
+      vocab("3"),
+    ]
+
+    // Phương án được rút ngẫu nhiên: lặp nhiều lần để trước bản sửa gần như chắc chắn có lần rút trúng
+    // v-0138/v-0123. Chỉ còn đúng 3 phương án sai hợp lệ nên lần nào cũng phải ra đúng bộ này.
+    for (let i = 0; i < 20; i++) {
+      const ids = pickQuizOptions(pool, correct, 4).map((option) => option.id)
+      expect(ids.sort()).toEqual(["1", "2", "3", "v-0051"])
+    }
+  })
+
+  it("never shows two options with the same meaning", () => {
+    const correct = vocab("1")
+    const pool = [correct, entry("v-0064", "famous", "nổi tiếng"), entry("v-0062", "popular", "nổi tiếng"), vocab("2"), vocab("3")]
+
+    for (let i = 0; i < 20; i++) {
+      const meanings = pickQuizOptions(pool, correct, 4).map((option) => option.meaning)
+      expect(new Set(meanings).size).toBe(meanings.length)
+    }
+  })
+
+  it("offers fewer options rather than a duplicate when the pool runs out of distinct meanings", () => {
+    const correct = entry("v-0004", "pay", "mức lương")
+    const options = pickQuizOptions([correct, entry("v-0179", "pay", "mức lương"), vocab("1")], correct, 4)
+
+    expect(options.map((option) => option.id).sort()).toEqual(["1", "v-0004"])
+  })
+})
+
+describe("pickMatchEntries", () => {
+  it("never picks two entries with the same word or the same meaning", () => {
+    const pool = [
+      entry("v-0004", "pay", "mức lương"),
+      entry("v-0179", "pay", "mức lương"),
+      entry("v-0064", "famous", "nổi tiếng"),
+      entry("v-0062", "popular", "nổi tiếng"),
+      entry("v-0051", "light", "sáng (màu sắc)"),
+      entry("v-0123", "light", "đèn"),
+      vocab("1"),
+      vocab("2"),
+    ]
+
+    // 3 nhóm trùng (pay/pay, famous/popular, light/light) mỗi nhóm chỉ được góp 1 mục → luôn đúng 5 mục.
+    for (let i = 0; i < 20; i++) {
+      const picked = pickMatchEntries(pool, 6)
+      expect(picked).toHaveLength(5)
+      expect(new Set(picked.map((v) => v.word.toLowerCase())).size).toBe(5)
+      expect(new Set(picked.map((v) => v.meaning)).size).toBe(5)
+    }
+  })
+
+  it("returns exactly count entries when the pool has enough distinct ones", () => {
+    expect(pickMatchEntries(POOL, 6)).toHaveLength(6)
   })
 })
 

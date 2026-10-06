@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { Empty } from "@/components/ob/empty"
 import { Fireworks } from "@/components/ob/fireworks"
-import { matchScoreFromFlips, pickRandomSet } from "../../game-calculations"
+import { matchScoreFromFlips, pickMatchEntries, pickRandomSet } from "../../game-calculations"
 import type { VocabEntry } from "../../types"
 
 const PAIR_COUNT = 6
@@ -24,7 +24,7 @@ interface MatchCard {
 }
 
 function buildCards(vocab: VocabEntry[]): MatchCard[] {
-  const entries = pickRandomSet(vocab, PAIR_COUNT)
+  const entries = pickMatchEntries(vocab, PAIR_COUNT)
   const cards: MatchCard[] = entries.flatMap((entry) => [
     { key: `${entry.id}-word`, vocabId: entry.id, label: entry.word },
     { key: `${entry.id}-meaning`, vocabId: entry.id, label: entry.meaning },

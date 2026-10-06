@@ -177,4 +177,26 @@ describe("MatchGame", () => {
       fireEvent.click(sorted[1])
     }).not.toThrow()
   })
+
+  it("never deals two cards that read the same, even when the vocab has duplicate entries", () => {
+    const withDuplicates: VocabEntry[] = [
+      { id: "v-0004", word: "pay", meaning: "mức lương", addedAt: "2026-01-01" },
+      { id: "v-0179", word: "pay", meaning: "mức lương", addedAt: "2026-01-01" },
+      { id: "v-0064", word: "famous", meaning: "nổi tiếng", addedAt: "2026-01-01" },
+      { id: "v-0062", word: "popular", meaning: "nổi tiếng", addedAt: "2026-01-01" },
+      ...Array.from({ length: 4 }, (_, i) => vocab(`${i}`)),
+    ]
+
+    // Bàn được rút ngẫu nhiên — lặp vài lần để trước bản sửa gần như chắc chắn có lần chia trúng cả 2
+    // bản trùng. Sau bản sửa: 1 "pay" + 1 trong famous/popular + 4 từ khác = đúng 6 cặp.
+    for (let i = 0; i < 10; i++) {
+      const { unmount } = render(<MatchGame vocab={withDuplicates} onFinish={vi.fn()} />)
+      const ids = new Set(screen.getAllByRole("button").map((card) => card.getAttribute("data-vocab-id")))
+
+      expect(screen.getAllByRole("button")).toHaveLength(12)
+      expect(ids.has("v-0004") && ids.has("v-0179")).toBe(false)
+      expect(ids.has("v-0064") && ids.has("v-0062")).toBe(false)
+      unmount()
+    }
+  })
 })
