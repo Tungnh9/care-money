@@ -1,18 +1,21 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 
+import { AlertDialog } from "@/components/ui/alert-dialog"
 import { longDate } from "@/lib/date"
 import { cn } from "@/lib/utils"
 import { useSettings } from "@/features/settings/hooks/use-settings"
 import { useJournal } from "../hooks/use-journal"
 import { findOnThisDay } from "../journal-calculations"
-import { JournalEditor } from "./journal-editor"
+import { JournalEditor, type EditorDraft } from "./journal-editor"
 import { JournalEntriesCard } from "./journal-entries-card"
 import { JournalSaveSuccess } from "./journal-save-success"
 import { MoodPickerCard } from "./mood-picker-card"
 import { OnThisDayCard } from "./on-this-day-card"
 import type { JournalEntry, MoodSnapshot } from "../types"
+
+const EMPTY_DRAFT: EditorDraft = { html: "", words: 0 }
 
 function JournalView() {
   const { settings } = useSettings()
@@ -21,6 +24,16 @@ function JournalView() {
   const [justSaved, setJustSaved] = useState<JournalEntry | null>(null)
   const [editingEntry, setEditingEntry] = useState<JournalEntry | null>(null)
   const [highlight, setHighlight] = useState<{ id: number; nonce: number } | null>(null)
+  // Bản nháp bài mới (chữ + số từ + mood) được cất lúc bấm Sửa 1 bài cũ — khung soạn remount mỗi lần đổi
+  // bài nên tự nó không giữ được; Huỷ sửa hay Cập nhật xong thì khung soạn bài mới hiện lại đúng bản này.
+  const [draft, setDraft] = useState<EditorDraft>(EMPTY_DRAFT)
+  const [draftMood, setDraftMood] = useState("")
+  // Bài muốn chuyển sang sửa trong lúc bài đang sửa còn thay đổi chưa cập nhật — mở hộp hỏi lại.
+  const [pendingEdit, setPendingEdit] = useState<JournalEntry | null>(null)
+  // 2 giá trị dưới chỉ đọc trong hàm xử lý sự kiện, không dùng để render — để trong ref thì mỗi phím gõ
+  // không render lại cả trang (danh sách bài lọc HTML từng bài mỗi lần render).
+  const latestDraftRef = useRef<EditorDraft>(EMPTY_DRAFT)
+  const editDirtyRef = useRef(false)
 
   const moodEnabled = settings.modules.find((m) => m.key === "tamtrang")?.on ?? true
   const selectedMood = settings.moods.find((m) => m.label === mood)
@@ -35,6 +48,21 @@ function JournalView() {
       : null)
   const onThisDay = findOnThisDay(entries)
 
+  function startEditing(entry: JournalEntry) {
+    setJustSaved(null)
+    setEditingEntry(entry)
+    setMood(entry.mood?.label ?? "")
+    editDirtyRef.current = false
+  }
+
+  // Dùng chung cho Huỷ sửa, Cập nhật xong và xoá đúng bài đang sửa: khung soạn bài mới hiện lại bản nháp
+  // đã cất (prop initialDraft), mood quay về mood của bản nháp.
+  function leaveEditMode() {
+    setEditingEntry(null)
+    setMood(draftMood)
+    editDirtyRef.current = false
+  }
+
   function handleSave(input: { text: string; words: number; mood: typeof selectedMoodSnapshot }): boolean {
     if (editingEntry) {
       // Ghi lỗi (hay bài vừa bị xoá ở tab khác) thì ở lại chế độ sửa: khung soạn còn nguyên chữ để thử lại.
@@ -44,20 +72,36 @@ function JournalView() {
     }
     const entry = saveEntry(input)
     if (!entry) return false
+    // Bản nháp đã thành bài — lần sau khung soạn bài mới bắt đầu trống.
+    latestDraftRef.current = EMPTY_DRAFT
+    setDraft(EMPTY_DRAFT)
     setJustSaved(entry)
     return true
   }
 
   function handleEdit(entry: JournalEntry) {
-    setJustSaved(null)
-    setEditingEntry(entry)
-    setMood(entry.mood?.label ?? "")
+    if (entry.id === editingEntry?.id) return
+    if (editingEntry && editDirtyRef.current) {
+      // Thay đổi của 1 bài cũ không có chỗ cất hợp lý — hỏi trước khi bỏ.
+      setPendingEdit(entry)
+      return
+    }
+    if (!editingEntry) {
+      // Rời khung soạn bài mới: cất bản nháp và mood đang chọn để trả lại khi sửa xong.
+      setDraft(latestDraftRef.current)
+      setDraftMood(mood)
+    }
+    startEditing(entry)
   }
 
-  // Dùng chung cho Huỷ sửa, Cập nhật xong và xoá đúng bài đang sửa.
-  function leaveEditMode() {
-    setEditingEntry(null)
-    setMood("")
+  function handleDraftChange(next: EditorDraft) {
+    if (editingEntry) editDirtyRef.current = true
+    else latestDraftRef.current = next
+  }
+
+  function handleSelectMood(label: string) {
+    setMood(label)
+    if (editingEntry) editDirtyRef.current = true
   }
 
   function handleDelete(id: number) {
@@ -95,6 +139,8 @@ function JournalView() {
               onSave={handleSave}
               editingEntry={editingEntry}
               onCancelEdit={leaveEditMode}
+              initialDraft={draft}
+              onDraftChange={handleDraftChange}
             />
           )}
         </div>
@@ -108,7 +154,7 @@ function JournalView() {
             <MoodPickerCard
               moods={settings.moods}
               selected={mood}
-              onSelect={setMood}
+              onSelect={handleSelectMood}
               entryMood={editingEntry?.mood ?? null}
             />
           </div>
@@ -128,6 +174,18 @@ function JournalView() {
           />
         </div>
       </div>
+      <AlertDialog
+        open={pendingEdit !== null}
+        onOpenChange={(open) => !open && setPendingEdit(null)}
+        title="Bỏ thay đổi chưa lưu?"
+        description="Bài đang sửa có thay đổi chưa cập nhật. Chuyển sang sửa bài khác thì các thay đổi đó sẽ mất."
+        confirmLabel="Bỏ thay đổi"
+        cancelLabel="Tiếp tục sửa"
+        destructive
+        onConfirm={() => {
+          if (pendingEdit) startEditing(pendingEdit)
+        }}
+      />
     </div>
   )
 }

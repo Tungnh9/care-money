@@ -27,17 +27,34 @@ const TOOLS: Tool[] = [
   { icon: Quote, command: "formatBlock", value: "blockquote", label: "Trích dẫn" },
 ]
 
+interface EditorDraft {
+  html: string
+  words: number
+}
+
 interface JournalEditorProps {
   selectedMood: MoodSnapshot | null
   // true = đã ghi được. false (bộ nhớ đầy, bài đã bị xoá ở tab khác...) thì khung soạn giữ nguyên chữ.
   onSave: (input: { text: string; words: number; mood: MoodSnapshot | null }) => boolean
   editingEntry?: JournalEntry | null
   onCancelEdit?: () => void
+  // Nội dung hiện lại lúc mount khi không sửa bài nào: bản nháp bài mới mà JournalView đã cất trong lúc
+  // sửa 1 bài cũ (khung soạn remount mỗi lần đổi bài nên tự nó không giữ được).
+  initialDraft?: EditorDraft
+  // Gọi sau mỗi lần gõ/dán/kéo-thả/Xoá nháp — để JournalView cất bản nháp và biết bài đang sửa đã đổi.
+  onDraftChange?: (draft: EditorDraft) => void
 }
 
-function JournalEditor({ selectedMood, onSave, editingEntry, onCancelEdit }: JournalEditorProps) {
+function JournalEditor({
+  selectedMood,
+  onSave,
+  editingEntry,
+  onCancelEdit,
+  initialDraft,
+  onDraftChange,
+}: JournalEditorProps) {
   const ref = useRef<HTMLDivElement>(null)
-  const [words, setWords] = useState(editingEntry?.words ?? 0)
+  const [words, setWords] = useState(editingEntry?.words ?? initialDraft?.words ?? 0)
   const isEditing = !!editingEntry
 
   // contentEditable không hỗ trợ prop "value" điều khiển được như input/textarea, nên
@@ -46,9 +63,10 @@ function JournalEditor({ selectedMood, onSave, editingEntry, onCancelEdit }: Jou
   // không dùng ref callback vì callback định nghĩa inline sẽ có identity mới mỗi lần
   // render, khiến React gọi lại nó (và ghi đè nội dung đang gõ dở) sau mỗi lần setWords.
   useEffect(() => {
-    if (ref.current && editingEntry) {
-      ref.current.innerHTML = sanitizeJournalHtml(editingEntry.text)
-    }
+    if (!ref.current) return
+    if (editingEntry) ref.current.innerHTML = sanitizeJournalHtml(editingEntry.text)
+    // Bản nháp là innerHTML thô lúc đang gõ — vẫn lọc lại trước khi gắn vào DOM, như mọi HTML khác.
+    else if (initialDraft) ref.current.innerHTML = sanitizeJournalHtml(initialDraft.html)
     // eslint-disable-next-line react-hooks/exhaustive-deps -- chỉ chạy 1 lần lúc mount
   }, [])
 
@@ -59,7 +77,9 @@ function JournalEditor({ selectedMood, onSave, editingEntry, onCancelEdit }: Jou
 
   function handleInput() {
     const text = ref.current?.innerText?.trim() ?? ""
-    setWords(text ? text.split(/\s+/).length : 0)
+    const nextWords = text ? text.split(/\s+/).length : 0
+    setWords(nextWords)
+    onDraftChange?.({ html: ref.current?.innerHTML ?? "", words: nextWords })
   }
 
   // Chặn hành vi chèn mặc định của trình duyệt cho cả dán (paste) lẫn kéo-thả (drop):
@@ -87,6 +107,7 @@ function JournalEditor({ selectedMood, onSave, editingEntry, onCancelEdit }: Jou
   function handleClear() {
     if (ref.current) ref.current.innerHTML = ""
     setWords(0)
+    onDraftChange?.({ html: "", words: 0 })
   }
 
   function handleSave() {
@@ -160,4 +181,4 @@ function JournalEditor({ selectedMood, onSave, editingEntry, onCancelEdit }: Jou
   )
 }
 
-export { JournalEditor }
+export { JournalEditor, type EditorDraft }

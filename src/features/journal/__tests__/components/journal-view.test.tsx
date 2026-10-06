@@ -358,4 +358,84 @@ describe("JournalView — sửa, xoá và giữ nội dung đang viết", () => 
     const stored = JSON.parse(window.localStorage.getItem("journal-entries") ?? "{}")
     expect(stored.entries[0].mood).toEqual(savedMood)
   })
+
+  it("keeps a half-written new entry and its mood while another entry is edited, and gives them back on Huỷ sửa", async () => {
+    seedEntries(ENTRY_A, ENTRY_B)
+    render(<JournalView />)
+
+    const editor = await screen.findByRole("textbox")
+    fireEvent.click(screen.getByText("Vui"))
+    typeInto(editor, "Nháp bài mới hôm nay")
+
+    fireEvent.click(screen.getByRole("button", { name: "Sửa bài 28/09 20:00" }))
+    expect(screen.getByRole("textbox")).toHaveTextContent(ENTRY_A.text)
+    expect(screen.queryByRole("button", { pressed: true })).not.toBeInTheDocument() // bài A không có mood
+
+    fireEvent.click(screen.getByRole("button", { name: "Huỷ sửa" }))
+
+    expect(screen.getByRole("textbox")).toHaveTextContent("Nháp bài mới hôm nay")
+    expect(screen.getByText("5 từ")).toBeInTheDocument()
+    expect(screen.getByRole("button", { pressed: true })).toHaveTextContent("Vui")
+  })
+
+  it("gives the new-entry draft back after the edited entry is updated, untouched by the edit", async () => {
+    seedEntries(ENTRY_A, ENTRY_B)
+    render(<JournalView />)
+
+    typeInto(await screen.findByRole("textbox"), "Nháp bài mới hôm nay")
+    fireEvent.click(screen.getByRole("button", { name: "Sửa bài 28/09 20:00" }))
+    typeInto(screen.getByRole("textbox"), "Bài A đã sửa lỗi chính tả")
+    fireEvent.click(screen.getByRole("button", { name: "Cập nhật bài viết" }))
+
+    expect(screen.getByText("Bài A đã sửa lỗi chính tả")).toBeInTheDocument()
+    expect(screen.getByRole("textbox")).toHaveTextContent("Nháp bài mới hôm nay")
+    expect(screen.getByRole("button", { name: "Lưu vào nhật ký" })).toBeEnabled()
+
+    // Chữ gõ lúc sửa bài A không được lẫn vào bản nháp: sửa tiếp bài B rồi huỷ vẫn ra đúng bản nháp cũ.
+    fireEvent.click(screen.getByRole("button", { name: "Sửa bài 27/09 21:00" }))
+    fireEvent.click(screen.getByRole("button", { name: "Huỷ sửa" }))
+    expect(screen.getByRole("textbox")).toHaveTextContent("Nháp bài mới hôm nay")
+  })
+
+  it("asks before discarding unsaved changes when switching from one edited entry to another", async () => {
+    seedEntries(ENTRY_A, ENTRY_B)
+    render(<JournalView />)
+
+    fireEvent.click(await screen.findByRole("button", { name: "Sửa bài 28/09 20:00" }))
+    typeInto(screen.getByRole("textbox"), "Bài A sửa dở")
+    fireEvent.click(screen.getByRole("button", { name: "Sửa bài 27/09 21:00" }))
+
+    expect(screen.getByText("Bỏ thay đổi chưa lưu?")).toBeInTheDocument()
+    fireEvent.click(screen.getByRole("button", { name: "Tiếp tục sửa" }))
+    expect(screen.queryByText("Bỏ thay đổi chưa lưu?")).not.toBeInTheDocument()
+    expect(screen.getByRole("textbox")).toHaveTextContent("Bài A sửa dở")
+
+    fireEvent.click(screen.getByRole("button", { name: "Sửa bài 27/09 21:00" }))
+    fireEvent.click(screen.getByRole("button", { name: "Bỏ thay đổi" }))
+    expect(screen.getByRole("textbox")).toHaveTextContent(ENTRY_B.text)
+    const stored = JSON.parse(window.localStorage.getItem("journal-entries") ?? "{}")
+    expect(stored.entries[0].text).toBe(ENTRY_A.text)
+  })
+
+  it("also asks when only the mood of the entry being edited was changed", async () => {
+    seedEntries(ENTRY_A, ENTRY_B)
+    render(<JournalView />)
+
+    fireEvent.click(await screen.findByRole("button", { name: "Sửa bài 28/09 20:00" }))
+    fireEvent.click(screen.getByText("Vui"))
+    fireEvent.click(screen.getByRole("button", { name: "Sửa bài 27/09 21:00" }))
+
+    expect(screen.getByText("Bỏ thay đổi chưa lưu?")).toBeInTheDocument()
+  })
+
+  it("switches straight to another entry when the one being edited has no changes", async () => {
+    seedEntries(ENTRY_A, ENTRY_B)
+    render(<JournalView />)
+
+    fireEvent.click(await screen.findByRole("button", { name: "Sửa bài 28/09 20:00" }))
+    fireEvent.click(screen.getByRole("button", { name: "Sửa bài 27/09 21:00" }))
+
+    expect(screen.queryByText("Bỏ thay đổi chưa lưu?")).not.toBeInTheDocument()
+    expect(screen.getByRole("textbox")).toHaveTextContent(ENTRY_B.text)
+  })
 })

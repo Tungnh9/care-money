@@ -229,4 +229,52 @@ describe("JournalEditor", () => {
 
     expect(onSave).toHaveBeenCalledWith({ text: "Bài viết đã sửa", words: 4, mood })
   })
+
+  it("shows the draft it was given when mounted for a new entry, ready to save", () => {
+    render(
+      <JournalEditor selectedMood={null} onSave={vi.fn()} initialDraft={{ html: "<b>Nháp</b> dở dang", words: 3 }} />
+    )
+
+    expect(screen.getByRole("textbox").innerHTML).toBe("<b>Nháp</b> dở dang")
+    expect(screen.getByText("3 từ")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Lưu vào nhật ký" })).toBeEnabled()
+  })
+
+  it("sanitizes the draft before putting it back into the editor", () => {
+    render(
+      <JournalEditor
+        selectedMood={null}
+        onSave={vi.fn()}
+        initialDraft={{ html: '<b>Nháp</b><img src=x onerror="window.__xss = true">', words: 1 }}
+      />
+    )
+
+    expect(screen.getByRole("textbox").innerHTML).toBe("<b>Nháp</b>")
+  })
+
+  it("shows the entry, not the draft, when mounted to edit an entry", () => {
+    const entry: JournalEntry = { id: 1, text: "Bài viết cũ", time: "09:00", date: "10/08", words: 3, mood: null }
+    render(
+      <JournalEditor
+        selectedMood={null}
+        onSave={vi.fn()}
+        editingEntry={entry}
+        initialDraft={{ html: "Nháp", words: 1 }}
+      />
+    )
+
+    expect(screen.getByRole("textbox").innerHTML).toBe("Bài viết cũ")
+    expect(screen.getByText("3 từ")).toBeInTheDocument()
+  })
+
+  it("reports the editor content after typing and after Xoá nháp", () => {
+    const onDraftChange = vi.fn()
+    render(<JournalEditor selectedMood={null} onSave={vi.fn()} onDraftChange={onDraftChange} />)
+
+    typeInto(screen.getByRole("textbox"), "Đang viết nháp")
+    expect(onDraftChange).toHaveBeenLastCalledWith({ html: "Đang viết nháp", words: 3 })
+
+    fireEvent.click(screen.getByRole("button", { name: "Xoá nháp" }))
+    expect(onDraftChange).toHaveBeenLastCalledWith({ html: "", words: 0 })
+  })
 })
