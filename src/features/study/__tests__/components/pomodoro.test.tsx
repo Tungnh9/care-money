@@ -124,6 +124,27 @@ describe("Pomodoro", () => {
     expect(screen.getByRole("button", { name: "Tiếp tục" })).toBeInTheDocument()
   })
 
+  it("resumes from the paused time after a long pause", () => {
+    render(<Pomodoro />)
+
+    fireClickAndAdvance("Bắt đầu", 5000)
+    expect(screen.getByText("24:55")).toBeInTheDocument()
+
+    act(() => {
+      screen.getByRole("button", { name: "Tạm dừng" }).click()
+    })
+    // Dừng 10 phút thật — đồng hồ trôi nhưng bộ đếm đang tạm dừng thì không được trôi theo.
+    vi.setSystemTime(Date.now() + 10 * 60 * 1000)
+    act(() => {
+      vi.advanceTimersByTime(3000)
+    })
+    expect(screen.getByText("24:55")).toBeInTheDocument()
+
+    fireClickAndAdvance("Tiếp tục", 1000)
+
+    expect(screen.getByText("24:54")).toBeInTheDocument()
+  })
+
   it("carries the session count across a remount", () => {
     const { unmount } = render(<Pomodoro />)
 
