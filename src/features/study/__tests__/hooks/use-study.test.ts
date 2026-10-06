@@ -366,6 +366,27 @@ describe("useStudy", () => {
       result.current.toggleLearned("v-0006")
     })
 
+    expect(result.current.learned).toEqual([])
     expect(result.current.wordReviews["v-0006"]).toEqual(graded)
+  })
+
+  it("keeps a word's review history when it is graded after being marked and then un-marked", async () => {
+    const { result } = renderHook(() => useStudy())
+    await waitFor(() => expect(result.current.hydrated).toBe(true))
+    act(() => {
+      result.current.toggleLearned("v-0007")
+    })
+    act(() => {
+      result.current.gradeWord("v-0007", "good")
+    })
+    const graded = result.current.wordReviews["v-0007"]
+    expect(graded.lastReviewedAt).not.toBeNull()
+
+    act(() => {
+      result.current.toggleLearned("v-0007")
+    })
+
+    expect(result.current.learned).toEqual([])
+    expect(result.current.wordReviews["v-0007"]).toEqual(graded)
   })
 })
