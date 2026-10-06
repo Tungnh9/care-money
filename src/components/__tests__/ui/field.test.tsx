@@ -19,7 +19,8 @@ describe("Field", () => {
   })
 
   it("shows the real value while the field is focused, and hides it again on blur", () => {
-    render(<Field label="Số tiền" numeric group masked value="20000000" onChange={vi.fn()} />)
+    const onChange = vi.fn()
+    render(<Field label="Số tiền" numeric group masked value="20000000" onChange={onChange} />)
     const input = screen.getByLabelText("Số tiền", { exact: false })
 
     act(() => input.focus())
@@ -27,6 +28,7 @@ describe("Field", () => {
 
     act(() => input.blur())
     expect(input).toHaveValue("")
+    expect(onChange).not.toHaveBeenCalled()
   })
 
   it("keeps the caller's placeholder for an empty masked field", () => {
