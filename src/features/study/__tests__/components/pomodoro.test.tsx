@@ -240,6 +240,21 @@ describe("Pomodoro", () => {
     expect(screen.getByText("Chưa có phiên nào hôm nay")).toBeInTheDocument()
   })
 
+  it("counts a session that ends after midnight for the new day", () => {
+    vi.setSystemTime(new Date(2026, 8, 28, 23, 30))
+    render(<Pomodoro />)
+    fireClickAndAdvance("Bắt đầu", 1000)
+
+    // Tab ẩn qua nửa đêm: phiên thật ra hết giờ lúc 23:55 ngày 28, nhưng chỉ phát hiện ra lúc 00:10 ngày 29.
+    vi.setSystemTime(new Date(2026, 8, 29, 0, 10))
+    act(() => {
+      document.dispatchEvent(new Event("visibilitychange"))
+    })
+
+    expect(screen.getByText("05:00")).toBeInTheDocument()
+    expect(screen.getByText("Chưa có phiên nào hôm nay")).toBeInTheDocument()
+  })
+
   it("keeps the time of a timer saved before sessions were tied to a day, but not its stale session count", () => {
     window.localStorage.setItem(
       POMODORO_STORAGE_KEY,
