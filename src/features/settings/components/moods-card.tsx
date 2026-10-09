@@ -54,7 +54,7 @@ function MoodsCard({ moods, onToggle, onRemove, onAdd }: MoodsCardProps) {
           <p className="text-[13.5px] text-[var(--ob-color-text-subtle)]">Chưa có tâm trạng nào.</p>
         ) : null}
       </div>
-      <AddMoodForm onAdd={onAdd} />
+      <AddMoodForm onAdd={onAdd} existingLabels={moods.map((m) => m.label)} />
     </Card>
   )
 }

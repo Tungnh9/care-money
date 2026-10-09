@@ -105,6 +105,13 @@ function useSettings() {
   const addMood = useCallback(
     (mood: Omit<Mood, "tint" | "on" | "score">) => {
       const current = getStoredSettings()
+      // Nhật ký nhận diện mood bằng tên — 2 mood trùng tên thì chip mới không bao giờ chọn riêng được
+      // (bài lưu luôn lấy mood đầu tiên). So không phân biệt hoa/thường, sau khi bỏ dấu cách 2 đầu.
+      const label = mood.label.trim()
+      if (current.moods.some((m) => m.label.trim().toLowerCase() === label.toLowerCase())) {
+        toast.error(`Đã có tâm trạng tên "${label}". Vui lòng chọn tên khác.`)
+        return
+      }
       try {
         const tint = TINT_PALETTE[current.moods.length % TINT_PALETTE.length]
         persist({ ...current, moods: [...current.moods, { ...mood, tint, on: true, score: 3 }] })

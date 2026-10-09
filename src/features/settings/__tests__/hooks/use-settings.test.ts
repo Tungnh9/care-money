@@ -261,4 +261,42 @@ describe("useSettings", () => {
     expect(modules.find((m) => m.key === "nhatky")?.on).toBe(false)
     expect(modules.find((m) => m.key === "chitieu")?.on).toBe(true)
   })
+
+  it("refuses a mood whose name is already taken (ignoring case and spaces) and explains why", async () => {
+    const { result } = renderHook(() => useSettings())
+    await waitFor(() => expect(result.current.settings).toEqual(DEFAULT_SETTINGS))
+    const countBefore = result.current.settings.moods.length
+
+    act(() => {
+      result.current.addMood({ label: " vui ", desc: "Trùng tên", emoji: "🥳" })
+    })
+
+    expect(toast.error).toHaveBeenCalledWith('Đã có tâm trạng tên "vui". Vui lòng chọn tên khác.')
+    expect(toast.success).not.toHaveBeenCalled()
+    expect(result.current.settings.moods).toHaveLength(countBefore)
+    expect(getStoredSettings().moods).toHaveLength(countBefore)
+  })
+
+  it("checks the name against moods another tab just saved, not only this tab's copy", async () => {
+    const { result } = renderHook(() => useSettings())
+    await waitFor(() => expect(result.current.settings).toEqual(DEFAULT_SETTINGS))
+    // Tab khác vừa thêm "Hào hứng" — chưa bắn sự kiện storage nên state của tab này chưa có.
+    window.localStorage.setItem(
+      SETTINGS_STORAGE_KEY,
+      JSON.stringify({
+        ...DEFAULT_SETTINGS,
+        moods: [
+          ...DEFAULT_SETTINGS.moods,
+          { label: "Hào hứng", emoji: "🥳", desc: "", tint: "#FFF0B8", on: true, score: 3 },
+        ],
+      })
+    )
+
+    act(() => {
+      result.current.addMood({ label: "Hào hứng", desc: "", emoji: "🥳" })
+    })
+
+    expect(toast.error).toHaveBeenCalledWith('Đã có tâm trạng tên "Hào hứng". Vui lòng chọn tên khác.')
+    expect(getStoredSettings().moods.filter((m) => m.label === "Hào hứng")).toHaveLength(1)
+  })
 })

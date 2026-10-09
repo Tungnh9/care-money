@@ -201,4 +201,15 @@ describe("getStoredSettings", () => {
     expect(settings.modules).toEqual(DEFAULT_MODULES)
     expect(settings.tags).toEqual(DEFAULT_TAGS)
   })
+
+  it("renames a mood that exactly repeats an earlier mood's name, so the journal can tell them apart", () => {
+    const vui = DEFAULT_SETTINGS.moods[1]
+    window.localStorage.setItem(
+      SETTINGS_STORAGE_KEY,
+      JSON.stringify({ ...DEFAULT_SETTINGS, moods: [vui, { ...vui, emoji: "🥳", score: 3 }, { ...vui, emoji: "🤩" }] })
+    )
+
+    expect(getStoredSettings().moods.map((m) => m.label)).toEqual(["Vui", "Vui (2)", "Vui (3)"])
+    expect(getStoredSettings().moods[1].emoji).toBe("🥳")
+  })
 })

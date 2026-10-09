@@ -9,9 +9,12 @@ import { EMOJI_PICKER, type Mood } from "@/lib/settings-storage"
 
 interface AddMoodFormProps {
   onAdd: (mood: Omit<Mood, "tint" | "on" | "score">) => void
+  // Tên các tâm trạng đang có — chặn trùng ngay ở form (không phân biệt hoa/thường) để giữ chữ đã gõ;
+  // useSettings.addMood vẫn kiểm lại trên bản đọc tươi.
+  existingLabels?: string[]
 }
 
-function AddMoodForm({ onAdd }: AddMoodFormProps) {
+function AddMoodForm({ onAdd, existingLabels = [] }: AddMoodFormProps) {
   const [open, setOpen] = useState(false)
   const [emoji, setEmoji] = useState("🙂")
   const [label, setLabel] = useState("")
@@ -32,6 +35,10 @@ function AddMoodForm({ onAdd }: AddMoodFormProps) {
       </div>
     )
   }
+
+  const trimmedLabel = label.trim()
+  const duplicate =
+    trimmedLabel !== "" && existingLabels.some((l) => l.trim().toLowerCase() === trimmedLabel.toLowerCase())
 
   return (
     <div className="mt-[18px] border-t border-[var(--ob-color-border)] pt-[18px]">
@@ -62,6 +69,8 @@ function AddMoodForm({ onAdd }: AddMoodFormProps) {
           placeholder="vd: Hào hứng"
           value={label}
           onChange={(e) => setLabel(e.target.value)}
+          invalid={duplicate}
+          hint={duplicate ? "Đã có tâm trạng tên này — chọn tên khác" : undefined}
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"
@@ -76,7 +85,7 @@ function AddMoodForm({ onAdd }: AddMoodFormProps) {
           variant="primary"
           size="sm"
           type="button"
-          disabled={!label.trim()}
+          disabled={!trimmedLabel || duplicate}
           onClick={() => {
             onAdd({ label: label.trim(), desc: desc.trim() || "Tâm trạng của riêng bạn", emoji })
             reset()
