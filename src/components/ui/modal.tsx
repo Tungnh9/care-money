@@ -8,14 +8,15 @@ import { cn } from "@/lib/utils"
 
 // Phần tử nhận Tab được trong panel — dùng cho cả focus tự động lúc mở lẫn 2 đầu của bẫy Tab. Input bị
 // khoá, input type="hidden" và input ẩn tabIndex=-1 (Switch/Checkbox của Base UI render kèm 1 cái) không
-// nhận focus được nên không được làm đầu/cuối vòng Tab.
+// nhận focus được nên không được làm đầu/cuối vòng Tab. Dùng :disabled (không phải [disabled]) để bắt cả
+// control nằm trong <fieldset disabled> và phần tử đã khoá nhưng vẫn mang tabindex.
 const FOCUSABLE_SELECTOR = [
-  "button:not([disabled])",
+  "button:not(:disabled)",
   "[href]",
-  'input:not([disabled]):not([type="hidden"]):not([tabindex="-1"])',
-  "select:not([disabled])",
-  "textarea:not([disabled])",
-  '[tabindex]:not([tabindex="-1"])',
+  'input:not(:disabled):not([type="hidden"]):not([tabindex="-1"])',
+  "select:not(:disabled)",
+  "textarea:not(:disabled)",
+  '[tabindex]:not([tabindex="-1"]):not(:disabled)',
 ].join(",")
 
 interface ModalProps {

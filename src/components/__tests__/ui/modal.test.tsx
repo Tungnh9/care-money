@@ -292,4 +292,21 @@ describe("Modal", () => {
     fireEvent.keyDown(window, { key: "Tab" })
     expect(screen.getByRole("button", { name: "Đầu tiên" })).toHaveFocus()
   })
+
+  it("never wraps Shift+Tab onto a disabled control that still carries a tabindex", () => {
+    render(
+      <Modal open onOpenChange={vi.fn()} ariaLabel="Test modal">
+        <button type="button">Đầu tiên</button>
+        <button type="button">Cuối thật</button>
+        <button type="button" disabled tabIndex={0}>
+          Khoá
+        </button>
+      </Modal>
+    )
+
+    screen.getByRole("button", { name: "Đầu tiên" }).focus()
+    fireEvent.keyDown(window, { key: "Tab", shiftKey: true })
+
+    expect(screen.getByRole("button", { name: "Cuối thật" })).toHaveFocus()
+  })
 })
