@@ -4,6 +4,7 @@ import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Field } from "@/components/ui/field"
+import { normalizeGoldDate } from "../finance-calculations"
 import type { GoldPurchase, GoldStore } from "../types"
 import { GoldStorePicker } from "./gold-store-picker"
 
@@ -44,6 +45,9 @@ function AddGoldForm({ stores, onAdd }: AddGoldFormProps) {
   // lúc form còn mở (hook chỉ đổi tên ở các lần mua ĐÃ lưu) — chỉ coi là đã chọn khi tên đó vẫn còn
   // trong danh sách, để không lưu lần mua trỏ vào cửa hàng không tồn tại.
   const selectedStore = stores.some((s) => s.name === store) ? store : ""
+  const normalizedDate = normalizeGoldDate(date)
+  // Ô trống chỉ khoá nút; gõ rồi mà không đọc ra 1 ngày có thật thì báo đỏ.
+  const dateInvalid = date.trim() !== "" && normalizedDate === null
 
   return (
     <div className="mt-[18px] border-t border-[var(--ob-color-border)] pt-[18px]">
@@ -57,6 +61,8 @@ function AddGoldForm({ stores, onAdd }: AddGoldFormProps) {
           placeholder="vd: 10/08/2026"
           value={date}
           onChange={(e) => setDate(e.target.value)}
+          invalid={dateInvalid}
+          hint={dateInvalid ? "Nhập ngày dạng dd/mm/yyyy, vd: 10/08/2026" : undefined}
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"
@@ -86,10 +92,11 @@ function AddGoldForm({ stores, onAdd }: AddGoldFormProps) {
           variant="primary"
           size="sm"
           type="button"
-          disabled={!date.trim() || !phanValid || !buy.trim() || !selectedStore}
+          disabled={!normalizedDate || !phanValid || !buy.trim() || !selectedStore}
           onClick={() => {
+            if (!normalizedDate) return
             onAdd({
-              date: date.trim(),
+              date: normalizedDate,
               phan: Number(phan) || 0,
               buy: Number(buy) || 0,
               store: selectedStore,

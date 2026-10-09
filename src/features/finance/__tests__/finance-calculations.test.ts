@@ -11,6 +11,7 @@ import {
   goldMarketPrice,
   unpricedGoldStores,
   parseGoldDate,
+  normalizeGoldDate,
   sortGoldByDate,
   summarizeGoldByStore,
 } from "../finance-calculations"
@@ -202,6 +203,18 @@ describe("parseGoldDate", () => {
     expect(parseGoldDate("")).toBe(0)
     expect(parseGoldDate("not-a-date")).toBe(0)
   })
+
+  it("sorts other ways of writing the same day exactly like dd/mm/yyyy", () => {
+    const expected = parseGoldDate("10/08/2026")
+    expect(parseGoldDate("10-08-2026")).toBe(expected)
+    expect(parseGoldDate("10.08.2026")).toBe(expected)
+    expect(parseGoldDate("2026-08-10")).toBe(expected)
+  })
+
+  it("does not turn a 2-digit year into the 1900s or roll 31/02 over into March", () => {
+    expect(parseGoldDate("10/08/26")).toBe(0)
+    expect(parseGoldDate("31/02/2026")).toBe(0)
+  })
 })
 
 describe("sortGoldByDate", () => {
@@ -362,5 +375,29 @@ describe("summarizeFinance — cửa hàng chưa nhập giá", () => {
     expect(summary.goldPL).toBe(0)
     expect(summary.goldPct).toBe(0)
     expect(summary.net).toBe(80_000_000)
+  })
+})
+
+describe("normalizeGoldDate", () => {
+  it("keeps a dd/mm/yyyy date as is", () => {
+    expect(normalizeGoldDate("10/08/2026")).toBe("10/08/2026")
+  })
+
+  it("accepts 1-digit day/month and '-' or '.' separators, trims spaces and pads to dd/mm/yyyy", () => {
+    expect(normalizeGoldDate("1/8/2026")).toBe("01/08/2026")
+    expect(normalizeGoldDate("10-08-2026")).toBe("10/08/2026")
+    expect(normalizeGoldDate(" 10.08.2026 ")).toBe("10/08/2026")
+  })
+
+  it("accepts an ISO yyyy-mm-dd date", () => {
+    expect(normalizeGoldDate("2026-08-10")).toBe("10/08/2026")
+  })
+
+  it("rejects a 2-digit year, a day that does not exist, mixed separators and free text", () => {
+    expect(normalizeGoldDate("10/08/26")).toBeNull()
+    expect(normalizeGoldDate("31/02/2026")).toBeNull()
+    expect(normalizeGoldDate("10/08-2026")).toBeNull()
+    expect(normalizeGoldDate("hôm qua")).toBeNull()
+    expect(normalizeGoldDate("")).toBeNull()
   })
 })

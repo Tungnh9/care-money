@@ -50,9 +50,25 @@ function unpricedGoldStores(gold: GoldPurchase[], stores: GoldStore[]): string[]
   return Array.from(new Set(names))
 }
 
+// Ngày mua vàng là ô chữ: nhận d/m/yyyy hoặc dd/mm/yyyy (ngăn bằng "/", "-" hoặc ".", cùng 1 loại
+// trong 1 ngày) và yyyy-mm-dd; năm đủ 4 chữ số (new Date(26, …) là năm 1926); ngày phải có thật
+// (new Date tự trôi 31/02 sang 03/03). Trả dạng chuẩn dd/mm/yyyy, hoặc null nếu không đọc được.
+function normalizeGoldDate(input: string): string | null {
+  const text = input.trim()
+  const dmy = /^(\d{1,2})([/.-])(\d{1,2})\2(\d{4})$/.exec(text)
+  const ymd = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(text)
+  const parts = dmy ? [dmy[1], dmy[3], dmy[4]] : ymd ? [ymd[3], ymd[2], ymd[1]] : null
+  if (!parts) return null
+  const [day, month, year] = parts.map(Number)
+  const date = new Date(year, month - 1, day)
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null
+  return `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}/${year}`
+}
+
 function parseGoldDate(date: string): number {
-  const [day, month, year] = date.split("/").map(Number)
-  if (!day || !month || !year) return 0
+  const normalized = normalizeGoldDate(date)
+  if (!normalized) return 0
+  const [day, month, year] = normalized.split("/").map(Number)
   return new Date(year, month - 1, day).getTime()
 }
 
@@ -172,6 +188,7 @@ export {
   goldPurchasePL,
   goldStorePrice,
   goldMarketPrice,
+  normalizeGoldDate,
   parseGoldDate,
   sortGoldByDate,
   summarizeGoldByStore,

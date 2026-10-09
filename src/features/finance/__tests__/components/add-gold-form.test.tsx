@@ -54,3 +54,32 @@ describe("AddGoldForm — cửa hàng đang chọn bị đổi tên/xoá", () =>
     expect(onAdd).not.toHaveBeenCalled()
   })
 })
+
+describe("AddGoldForm — ngày mua", () => {
+  it("accepts another way of writing a real date and saves it as dd/mm/yyyy", () => {
+    const onAdd = vi.fn()
+    render(<AddGoldForm stores={[SJX]} onAdd={onAdd} />)
+    openForm()
+    fireEvent.click(screen.getByRole("button", { name: "SJX" }))
+    fillValidPurchase()
+
+    fireEvent.change(screen.getByLabelText("Ngày mua", { exact: false }), { target: { value: "2026-08-10" } })
+    fireEvent.click(screen.getByRole("button", { name: "Thêm" }))
+
+    expect(onAdd).toHaveBeenCalledWith({ date: "10/08/2026", phan: 10, buy: 900_000, store: "SJX" })
+  })
+
+  it("explains the expected format and blocks Thêm for a 2-digit year or a day that does not exist", () => {
+    render(<AddGoldForm stores={[SJX]} onAdd={vi.fn()} />)
+    openForm()
+    fireEvent.click(screen.getByRole("button", { name: "SJX" }))
+    fillValidPurchase()
+
+    fireEvent.change(screen.getByLabelText("Ngày mua", { exact: false }), { target: { value: "10/08/26" } })
+    expect(screen.getByText("Nhập ngày dạng dd/mm/yyyy, vd: 10/08/2026")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Thêm" })).toBeDisabled()
+
+    fireEvent.change(screen.getByLabelText("Ngày mua", { exact: false }), { target: { value: "31/02/2026" } })
+    expect(screen.getByRole("button", { name: "Thêm" })).toBeDisabled()
+  })
+})

@@ -84,4 +84,19 @@ describe("EditGoldPurchaseModal", () => {
 
     expect(screen.getByLabelText("Ngày mua", { exact: false })).toHaveValue("01/09/2026")
   })
+
+  it("flags a purchase saved earlier with an unreadable date and only saves once the date is fixed", () => {
+    const onSave = vi.fn()
+    render(
+      <EditGoldPurchaseModal purchase={{ ...PURCHASE, date: "10/08/26" }} stores={STORES} onOpenChange={vi.fn()} onSave={onSave} />
+    )
+
+    expect(screen.getByText("Nhập ngày dạng dd/mm/yyyy, vd: 10/08/2026")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
+
+    fireEvent.change(screen.getByLabelText("Ngày mua", { exact: false }), { target: { value: "10-08-2026" } })
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
+
+    expect(onSave).toHaveBeenCalledWith(1, { date: "10/08/2026", phan: PURCHASE.phan, buy: PURCHASE.buy, store: "PNJ" })
+  })
 })
