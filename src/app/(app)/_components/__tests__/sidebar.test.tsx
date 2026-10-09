@@ -118,4 +118,19 @@ describe("Sidebar", () => {
       expect(link.querySelector("span")).toHaveClass("max-w-full", "truncate")
     }
   })
+
+  it("gives the 3 mobile top-bar buttons a 44px touch target without making the bar taller", () => {
+    render(<Sidebar />)
+
+    for (const name of ["Máy tính", "Ẩn số tiền", "Đăng xuất"]) {
+      // Nút đầu tiên trong DOM nằm ở thanh trên điện thoại; nút sau là dòng ở chân sidebar desktop.
+      const [topBarButton, sidebarRow] = screen.getAllByRole("button", { name })
+      // 44px (--ob-hit-min) thay vì đúng 18px của icon; margin âm dọc giữ thanh cao như cũ.
+      expect(topBarButton).toHaveClass("size-[var(--ob-hit-min)]", "-my-[9px]")
+      expect(sidebarRow).not.toHaveClass("size-[var(--ob-hit-min)]")
+    }
+    // 3 nút rộng hơn thì chữ thương hiệu nhường chỗ (cắt "…" ở máy rất hẹp) thay vì đẩy nút ra ngoài.
+    const brand = screen.getAllByText("Orange")[0].parentElement as HTMLElement
+    expect(brand).toHaveClass("min-w-0", "flex-1", "truncate")
+  })
 })

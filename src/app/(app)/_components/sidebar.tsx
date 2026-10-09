@@ -46,6 +46,10 @@ function SidebarActionButton({ variant, icon, label, onClick, ariaPressed, class
       aria-pressed={ariaPressed}
       className={cn(
         "flex items-center justify-center transition-colors duration-[var(--ob-dur-fast)]",
+        // Thanh trên điện thoại: icon 18px nhưng vùng chạm đủ --ob-hit-min (44px), để không bấm trượt
+        // sang nút bên cạnh (Đăng xuất không hỏi lại). Margin âm dọc trả hộp về đúng 26px như logo
+        // nên thanh trên không cao thêm.
+        variant === "icon" && "size-[var(--ob-hit-min)] -my-[9px]",
         variant === "row" &&
           "gap-[11px] rounded-[var(--ob-radius-md)] px-[14px] py-[11px] text-left text-[length:var(--ob-size-sm)] leading-[var(--ob-lh-normal)] font-medium lg:justify-start",
         className
@@ -93,7 +97,10 @@ function Sidebar() {
     <>
       <div className="fixed inset-x-0 top-0 z-[9] flex items-center gap-[10px] border-b border-[var(--ob-color-border)] bg-[var(--ob-color-bg)] px-4 py-2.5 md:hidden">
         <Image src="/assets/logo-mark.svg" width={26} height={26} alt="" />
-        <span className="flex-1 [font:700_15px/1_var(--ob-font-display)] tracking-[-0.02em] whitespace-nowrap">
+        {/* min-w-0 + truncate: 3 nút 44px chiếm thêm chỗ — máy rất hẹp (< ~340px) thì chữ cắt "…" thay vì
+            đẩy nút ra ngoài màn hình. line-height 1.5 (thay vì 1) để vùng cắt của truncate không xén chân
+            chữ "g"; thanh vẫn cao theo logo 26px. */}
+        <span className="min-w-0 flex-1 truncate [font:700_15px/1.5_var(--ob-font-display)] tracking-[-0.02em]">
           <span className="text-[var(--ob-color-action)]">Orange</span>{" "}
           <span className="text-[var(--ob-chuoi-500)]">Banana</span>
         </span>
