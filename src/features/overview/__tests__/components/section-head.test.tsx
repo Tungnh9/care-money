@@ -18,4 +18,10 @@ describe("SectionHead", () => {
     expect(screen.getByText("Nhật ký")).toBeInTheDocument()
     expect(screen.getByRole("link", { name: /Mở/ })).toHaveAttribute("href", "/journal")
   })
+
+  it("names the Mở link after its section, so the links on Tổng quan read differently", () => {
+    render(<SectionHead icon="wallet" title="Tài chính" href="/finance" />)
+
+    expect(screen.getByRole("link", { name: "Mở Tài chính" })).toHaveAttribute("href", "/finance")
+  })
 })

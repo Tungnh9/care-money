@@ -20,6 +20,8 @@ function SectionHead({ icon, title, hint, href }: SectionHeadProps) {
       <span className="h-px min-w-4 flex-1 bg-[var(--ob-color-border)]" />
       <Link
         href={href}
+        // Tổng quan có tới 5 link "Mở" — danh sách link của trình đọc màn hình cần biết link nào tới đâu.
+        aria-label={`Mở ${title}`}
         className="flex flex-none items-center gap-[6px] rounded-[var(--ob-radius-pill)] px-[13px] py-2 text-[length:var(--ob-size-sm)] font-bold text-[var(--ob-color-action-strong)] whitespace-nowrap"
       >
         Mở
