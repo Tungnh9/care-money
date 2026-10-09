@@ -17,6 +17,9 @@ function Tabs({ tabs, active, onChange }: TabsProps) {
           <button
             key={tab}
             type="button"
+            // Tab đang chọn chỉ khác ở màu/độ đậm chữ — aria-pressed báo trạng thái đó cho trình đọc màn
+            // hình, đúng kiểu các nút chọn khác trong app (Ẩn số tiền, chip tâm trạng).
+            aria-pressed={isActive}
             onClick={() => onChange(tab)}
             className={cn(
               "min-h-[var(--ob-hit-min)] rounded-[var(--ob-radius-pill)] px-4 py-[10px] text-[length:var(--ob-size-sm)] leading-[var(--ob-lh-normal)] whitespace-nowrap",
