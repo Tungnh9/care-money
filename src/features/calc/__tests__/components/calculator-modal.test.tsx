@@ -341,6 +341,21 @@ describe("CalculatorModal", () => {
     expect(screen.getAllByTestId("calculator-history-item")).toHaveLength(1)
   })
 
+  it("nạp 1 dòng lịch sử rồi gõ tiếp, Enter vẫn là '='", () => {
+    render(<CalculatorModal open onOpenChange={vi.fn()} />)
+    type(["1", "+", "1", "="])
+    const [item] = screen.getAllByTestId("calculator-history-item")
+
+    item.focus()
+    fireEvent.click(item)
+    fireEvent.keyDown(window, { key: "+" })
+    fireEvent.keyDown(window, { key: "3" })
+    fireEvent.keyDown(document.activeElement ?? window, { key: "Enter" })
+
+    expect(screen.getByTestId("calculator-result")).toHaveTextContent("5")
+    expect(screen.getAllByTestId("calculator-history-item")).toHaveLength(2)
+  })
+
   it("bấm 2 phép tính liền nhau thì phép sau thay phép trước: 5 × × 2 = 10, 5 ÷ × 2 = 10", () => {
     render(<CalculatorModal open onOpenChange={vi.fn()} />)
 

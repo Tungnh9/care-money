@@ -202,6 +202,9 @@ function CalculatorModal({ open, onOpenChange }: CalculatorModalProps) {
 
   function handleRestore(item: HistoryItem) {
     restoreFromHistory(item)
+    // Trả focus về nút Đóng (đích focus ban đầu của hộp thoại): nếu để focus ở dòng lịch sử thì Enter
+    // kế tiếp bị bỏ qua ở trên và trình duyệt bấm lại dòng đó, mất phép tính vừa gõ.
+    closeRef.current?.focus()
   }
 
   return createPortal(
