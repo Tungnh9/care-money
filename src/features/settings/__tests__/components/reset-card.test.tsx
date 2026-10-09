@@ -81,6 +81,12 @@ describe("ResetCard", () => {
     expect(onWipe).toHaveBeenCalled()
     expect(toast.success).toHaveBeenCalledWith("Đã xoá toàn bộ dữ liệu.")
     expect(screen.getByText("Đã xoá sạch.")).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        "Tài chính, chi tiêu, nhật ký, học tập và lịch sử tài sản đều về 0 — chỉ còn cài đặt và danh sách cửa hàng vàng. Bắt đầu lại từ Tổng quan.",
+        { exact: false }
+      )
+    ).toBeInTheDocument()
     expect(screen.queryByRole("button")).not.toBeInTheDocument()
   })
 

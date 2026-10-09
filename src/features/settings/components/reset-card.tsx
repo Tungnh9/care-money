@@ -72,8 +72,8 @@ function ResetCard({ counts, onWipe, onExport }: ResetCardProps) {
           <div className="text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)]">
             <strong className="font-bold text-[var(--ob-color-text)]">Đã xoá sạch.</strong>
             <br />
-            Nhật ký, vàng, đầu tư, tiết kiệm, nợ thẻ, chuỗi ngày và số đã học đều về 0 — bắt đầu lại từ
-            Tổng quan.
+            Tài chính, chi tiêu, nhật ký, học tập và lịch sử tài sản đều về 0 — chỉ còn cài đặt và danh sách
+            cửa hàng vàng. Bắt đầu lại từ Tổng quan.
           </div>
         </div>
       </Card>
