@@ -40,6 +40,10 @@ function AddGoldForm({ stores, onAdd }: AddGoldFormProps) {
   // Number("1e400") = Infinity vẫn > 0, nhưng JSON.stringify lưu nó thành null và lần đọc sau purchase
   // bị bỏ — chỉ nhận số hữu hạn.
   const phanValid = Number.isFinite(Number(phan)) && Number(phan) > 0
+  // Cửa hàng đang chọn có thể vừa bị đổi tên/xoá ở thẻ "Giá thị trường hôm nay" ngay phía trên trong
+  // lúc form còn mở (hook chỉ đổi tên ở các lần mua ĐÃ lưu) — chỉ coi là đã chọn khi tên đó vẫn còn
+  // trong danh sách, để không lưu lần mua trỏ vào cửa hàng không tồn tại.
+  const selectedStore = stores.some((s) => s.name === store) ? store : ""
 
   return (
     <div className="mt-[18px] border-t border-[var(--ob-color-border)] pt-[18px]">
@@ -75,20 +79,20 @@ function AddGoldForm({ stores, onAdd }: AddGoldFormProps) {
         />
       </div>
       <div className="mt-3">
-        <GoldStorePicker stores={stores} selected={store} onSelect={setStore} />
+        <GoldStorePicker stores={stores} selected={selectedStore} onSelect={setStore} />
       </div>
       <div className="mt-4 flex gap-[10px]">
         <Button
           variant="primary"
           size="sm"
           type="button"
-          disabled={!date.trim() || !phanValid || !buy.trim() || !store}
+          disabled={!date.trim() || !phanValid || !buy.trim() || !selectedStore}
           onClick={() => {
             onAdd({
               date: date.trim(),
               phan: Number(phan) || 0,
               buy: Number(buy) || 0,
-              store,
+              store: selectedStore,
             })
             reset()
           }}
