@@ -255,12 +255,16 @@ function SpellingGame({ vocab, onFinish, onWordReviewed }: SpellingGameProps) {
               key={word.id}
               data-testid="falling-word"
               style={{
+                // Đặt tại xPercent% khu chơi rồi lùi đúng xPercent% bề rộng của chính từ: mép trái từ =
+                // xPercent% × (khu chơi − từ), nên cụm từ dài sinh sát mép vẫn nằm trọn trong khu chơi
+                // (căn giữa bằng -translate-x-1/2 làm từ dài ở mép trái mất mấy chữ đầu).
                 left: `${word.xPercent}%`,
+                transform: `translateX(-${word.xPercent}%)`,
                 top: `${progress * 95}%`,
                 backgroundColor: isDanger ? undefined : tint,
               }}
               className={cn(
-                "absolute -translate-x-1/2 rounded-[var(--ob-radius-sm)] border-[1.5px] px-2.5 py-1 [font-family:var(--ob-font-num)] text-sm font-bold shadow-[var(--ob-shadow-sm)] transition-colors duration-[var(--ob-dur-base)]",
+                "absolute w-max max-w-full rounded-[var(--ob-radius-sm)] border-[1.5px] px-2.5 py-1 [font-family:var(--ob-font-num)] text-sm font-bold shadow-[var(--ob-shadow-sm)] transition-colors duration-[var(--ob-dur-base)]",
                 isDanger
                   ? "border-[var(--ob-color-expense)] bg-[var(--ob-color-expense-soft)]"
                   : isMatching

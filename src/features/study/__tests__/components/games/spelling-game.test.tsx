@@ -299,4 +299,24 @@ describe("SpellingGame", () => {
     expect(onFinish).toHaveBeenCalledWith(0, 10)
     expect(onWordReviewed).not.toHaveBeenCalled()
   })
+
+  it("keeps a falling word inside the play area even when it spawns at the left edge", () => {
+    // xPercent = 8 + 0 × 84 = 8 — sát mép trái nhất có thể. Chỉ khoá Math.random lúc render đầu (nơi
+    // duy nhất rút xPercent, qua lazy initializer của useState), trả lại ngay sau đó.
+    const random = vi.spyOn(Math, "random").mockReturnValue(0)
+    render(<SpellingGame vocab={VOCAB} onFinish={vi.fn()} />)
+    random.mockRestore()
+
+    act(() => {
+      vi.advanceTimersByTime(100)
+    })
+
+    const word = screen.getAllByTestId("falling-word")[0]
+    // Lùi lại 8% bề rộng của chính từ (không phải 50% như căn giữa): mép trái từ = 8% × (khu chơi − từ) ≥ 0.
+    expect(word.style.left).toBe("8%")
+    expect(word.style.transform).toBe("translateX(-8%)")
+    expect(word).not.toHaveClass("-translate-x-1/2")
+    // Hộp ôm đúng 1 dòng chữ nhưng không bao giờ rộng hơn khu chơi.
+    expect(word).toHaveClass("w-max", "max-w-full")
+  })
 })
