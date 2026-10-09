@@ -4,7 +4,8 @@ import { useEffect } from "react"
 
 import { goldReferencePricePerPhan, summarizeFinance } from "@/lib/finance/finance-calculations"
 import { useFinance } from "@/lib/finance/use-finance"
-import { getGoals, useCarGoalFund } from "@/features/goals"
+import { getGoals } from "@/lib/goals/get-goals"
+import { useCarGoalFund } from "@/lib/goals/use-car-goal-fund"
 import { useJournal } from "@/lib/journal/use-journal"
 import { useBudget } from "@/lib/budget/use-budget"
 import { remainingToSettle, salaryForMonth, totalExpensesForMonth } from "@/lib/budget/budget-calculations"
@@ -24,7 +25,7 @@ import {
   forecastSavingsGoal,
   type Insight,
 } from "../insights-calculations"
-import { splitGreeting } from "../overview-calculations"
+import { splitGreeting } from "@/lib/settings/greeting"
 import { BudgetSummarySection } from "./budget-summary-section"
 import { FinanceSummarySection } from "./finance-summary-section"
 import { GoalsSummarySection } from "./goals-summary-section"

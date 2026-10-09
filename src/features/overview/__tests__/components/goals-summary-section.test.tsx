@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest"
 import { render, screen } from "@testing-library/react"
 
 import { formatMoney } from "@/lib/format"
-import type { Goal } from "@/features/goals"
+import type { Goal } from "@/lib/goals/types"
 import { GoalsSummarySection } from "../../components/goals-summary-section"
 
 function makeGoal(overrides: Partial<Goal> & Pick<Goal, "key" | "name" | "icon" | "percent">): Goal {

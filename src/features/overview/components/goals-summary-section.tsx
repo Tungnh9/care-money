@@ -1,7 +1,7 @@
 import Image from "next/image"
 
 import type { SavingsFund } from "@/lib/finance/types"
-import type { Goal } from "@/features/goals"
+import type { Goal } from "@/lib/goals/types"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"

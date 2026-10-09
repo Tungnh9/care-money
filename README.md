@@ -62,10 +62,10 @@ src/
 │                          # (xem mục Tính năng dưới để biết mỗi feature làm gì)
 ├── components/
 │   ├── ui/                # 13 component nền shadcn/ui + @base-ui/react, custom theo token --ob-*
-│   ├── ob/                 # 13 component riêng Orange Banana (mascot Monkey, Streak, FundPicker...)
+│   ├── ob/                 # 15 component riêng Orange Banana (mascot Monkey, Streak, FundPicker, GrammarHighlightCard...)
 │   ├── auth-guard.tsx      # bọc root layout, check localStorage, đẩy về /login nếu chưa đăng nhập
 │   └── money-visibility-provider.tsx  # context "ẩn số tiền", bọc trong layout (app)
-├── lib/                   # helper dùng chung ≥ 2 feature — xem bảng chi tiết ở mục Component hiện có
+├── lib/                   # helper + data layer dùng chung ≥ 2 feature (finance/, budget/, goals/, journal/, study/, net-worth/, settings/) — xem bảng ở mục Component hiện có
 └── test/                  # setup file cho Vitest
 
 content/                   # vocabulary.jsonl (333 từ, mỗi từ đã có ảnh minh hoạ), grammar.jsonl — dữ liệu học tập, không phải code
@@ -115,7 +115,7 @@ Tab "Trò chơi" gồm 3 mini-game ôn từ vựng, dùng chung 1 khung điều 
 | `Toaster` (sonner) | wrapper `sonner`, theme + icon + màu đã khớp token `--ob-*` |
 | `Checkbox`, `Input`, `Label` | primitive gốc shadcn/`@base-ui/react` — dùng làm nền cho các component trên, ít khi gọi trực tiếp |
 
-### `components/ob/` (13 file) — không có primitive shadcn tương ứng, viết riêng
+### `components/ob/` (15 file) — không có primitive shadcn tương ứng, viết riêng
 
 | Component | Props chính |
 | --- | --- |
@@ -132,6 +132,8 @@ Tab "Trò chơi" gồm 3 mini-game ôn từ vựng, dùng chung 1 khung điều 
 | `FundPicker` | `savings` · `selected` · `onSelect` — chọn 1 quỹ tiết kiệm, dùng chung ở Mục tiêu (gắn quỹ mua xe) và Chi tiêu (chốt tháng) |
 | `ImageWithFallback` | `src` · `alt` · `iconSize` · `imageSizes` — wrapper `next/image` tự rơi về icon khi thiếu ảnh hoặc load lỗi (dùng cho ảnh minh hoạ từ vựng) |
 | `SpeakButton` | `word` · `size` sm/md — phát âm 1 từ tiếng Anh qua Web Speech API (`speakWord`) |
+| `GrammarHighlightCard` · `GrammarListCard` | `entry` / `entries` · `vocab` — thẻ "Ngữ pháp hôm nay" (dùng ở Học tập và Tổng quan) và danh sách ngữ pháp, tô sáng từ vựng trong câu ví dụ, có nút dịch từng câu |
+| `HighlightedSentence` | `sentence` · `vocabIndex` — 1 câu ví dụ với các từ có trong kho từ vựng được tô sáng (dùng trong 2 thẻ trên) |
 
 **Mascot `Monkey`** xuất hiện lặp lại nhiều nơi (trạng thái rỗng, trang chủ...) qua 7 giá trị `pose`: `wave` (mặc định, vẫy tay có animation), `cheer` (ăn mừng), `banana` (cầm chuối), `book` (cầm sách), `sleep` (ngủ, dùng trong `Empty`), `focus` (đang tập trung), `calc` (cầm máy tính). `dark` đổi màu để dùng trên nền tối.
 
@@ -142,19 +144,22 @@ Tab "Trò chơi" gồm 3 mini-game ôn từ vựng, dùng chung 1 khung điều 
 | `AuthGuard` | `src/components/auth-guard.tsx` | Bọc `children` trong root layout, check user trong `localStorage` (qua `src/lib/auth.ts`), đẩy về `/login` nếu chưa đăng nhập; hiện spinner trong lúc chờ check |
 | `MoneyVisibilityProvider` | `src/components/money-visibility-provider.tsx` | Context "ẩn số tiền" toàn app (`useMoneyVisibility()`), bọc trong `src/app/(app)/layout.tsx`, lưu trạng thái qua `src/lib/money-visibility-storage.ts` |
 
-### `src/lib/` — helper dùng chung ≥ 2 feature
+### `src/lib/` — helper và data layer dùng chung ≥ 2 feature
 
 | File | Vai trò |
 | --- | --- |
+| `finance/` · `budget/` · `goals/` · `journal/` · `study/` · `net-worth/` · `settings/` | Data layer của từng domain mà ≥ 2 feature cùng đọc/ghi: `types.ts`, `*-storage.ts` (đọc/ghi localStorage + hàm `parse*`), `*-calculations.ts` (hàm thuần), hook `use-*.ts`. `settings/` gồm `settings-storage.ts` (`AppSettings` + default `DEFAULT_SETTINGS`/`DEFAULT_MODULES`/`DEFAULT_TAGS`, `TINT_PALETTE`/`EMOJI_PICKER`), `use-settings.ts`, `greeting.ts` (`splitGreeting`); `study/` có thêm `content-loader.ts` (đọc `content/*.jsonl`, chỉ dùng phía server) |
 | `auth.ts` | Auth mock qua localStorage: `getStoredUser` · `setStoredUser` · `clearStoredUser` |
 | `data-change-bus.ts` | Pub/sub nhỏ (`notifyDataChanged` · `onDataChanged`) báo hiệu dữ liệu vừa đổi giữa các component không liên quan trực tiếp |
+| `data-transfer.ts` | Định dạng bản sao xuất/nhập/đồng bộ: `buildExportPayload` · `parseImportPayload` · `exportFileName` · `uploadedSummary` · `EXPORT_VERSION` — dùng bởi Cài đặt và route `/api/sync` |
 | `date.ts` | Helper ngày/tháng tiếng Việt: `longDate` · `dayKey` · `formatDayKey` · `monthKey` · `monthKeyFromDayKey` · `monthsFrom` · `shiftMonth` · `shiftDay` · `monthsThroughYearEnd` · `formatMonthKey` |
 | `format.ts` | `formatMoney(n, hidden)` (VNĐ, ẩn bằng dấu chấm khi bật "ẩn số tiền") · `groupVN(value)` (nhóm số hàng nghìn cho input) |
 | `mock-account.ts` | `MOCK_ACCOUNT` — tài khoản demo hardcode cho `login` |
 | `money-visibility-storage.ts` | Đọc/ghi localStorage cờ "ẩn số tiền": `getHideMoney` · `setHideMoney` |
 | `next-id.ts` | `nextId(existing)` — sinh id số nguyên tiếp theo (`max(id hiện có) + 1`), dùng chung bởi `use-finance.ts` và `use-budget.ts` |
-| `settings-storage.ts` | Lưu `AppSettings` (hồ sơ, mood, module bật/tắt, tag chi tiêu) + default (`DEFAULT_SETTINGS`, `DEFAULT_MODULES`, `DEFAULT_TAGS`), cộng `TINT_PALETTE`/`EMOJI_PICKER` dùng chung |
+| `safe-array.ts` | `safeArray(schema, value)` — parse mảng theo từng phần tử bằng zod, phần tử hỏng chỉ bị bỏ riêng nó |
 | `speak.ts` | `speakWord(word)` — phát âm tiếng Anh qua Web Speech API |
 | `sync-secret-storage.ts` | Đọc/ghi/xoá localStorage "sync secret": `getSyncSecret` · `setSyncSecret` · `clearSyncSecret` |
 | `use-attempt-lockout.ts` | `useAttemptLockout(storageKey)` — khoá sau N lần thao tác sai liên tiếp (mặc định 5 lần / khoá 10 phút), dùng cho cả login và các thao tác phá huỷ cần xác nhận |
+| `use-storage-sync.ts` | `useStorageSync(key, reload)` — hook domain tự đọc lại khi tab khác hoặc nơi khác trong app ghi cùng key |
 | `utils.ts` | `cn(...)` — gộp class kiểu shadcn (`clsx` + `tailwind-merge`) |

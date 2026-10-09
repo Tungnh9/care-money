@@ -23,7 +23,7 @@ src/
 ├── app/         # routing thuần — không business logic, mỗi page.tsx là shell mỏng
 ├── features/    # business logic thật của từng feature (xem mục 3)
 ├── components/  # UI dùng chung ≥ 2 feature (xem mục 4)
-├── lib/         # helper dùng chung ≥ 2 feature (vd. cn())
+├── lib/         # helper + data layer dùng chung ≥ 2 feature (vd. cn(), lib/finance/) — xem mục 3
 └── test/        # setup file cho Vitest
 ```
 
@@ -50,7 +50,7 @@ src/
       └── components/
           └── [name]-form.test.tsx
   ```
-- Dùng ở ≥ 2 feature → đưa lên `src/components/` hoặc `src/lib/` ở gốc `src/`, không để trong 1 feature.
+- Dùng ở ≥ 2 feature → đưa lên `src/components/` (UI) hoặc `src/lib/` (helper, data layer) ở gốc `src/`, không để trong 1 feature. Data layer của 1 domain mà ≥ 2 feature đọc/ghi (`types.ts`, `*-storage.ts`, `*-calculations.ts`, hook `use-*.ts`) nằm chung 1 thư mục `src/lib/<domain>/` — hiện có `finance`, `budget`, `goals`, `journal`, `study`, `net-worth`, `settings` — test ở `src/lib/__tests__/<domain>/`. Feature không import từ feature khác (kể cả qua barrel); `src/components/` và `src/lib/` không import `src/features/`; chỉ code trong `src/app/` import feature, và chỉ qua barrel `index.ts`.
 - **Hook đọc/ghi localStorage** (`use-finance`, `use-budget`, `use-journal`, `use-study`, `use-settings`, `use-net-worth-history`, `use-car-goal-fund`...): (1) gọi `useStorageSync(KEY, reload)` từ `@/lib/use-storage-sync` để tự đọc lại khi tab khác hoặc nơi khác trong app ghi cùng key — `reload` phải ổn định (`useCallback(..., [])` hoặc hàm cấp module) và chỉ đọc, không bao giờ ghi; (2) mỗi lần ghi dựng từ bản đọc tươi `getStored*()` (hoặc ref được `reload` cập nhật đồng bộ), không dựng từ `state` trong closure; (3) mọi lần ghi localStorage đi qua `setStored*()` (đã gọi `notifyDataChanged()`) — ghi thẳng `localStorage.setItem` thì phải tự gọi `notifyDataChanged()` ngay sau. (4) mảng đọc từ localStorage hoặc từ 1 bản sao (file/cloud) parse bằng zod theo TỪNG phần tử qua `safeArray` từ `@/lib/safe-array` — phần tử hỏng chỉ bị bỏ riêng nó, không kéo cả mảng về `[]`; mỗi domain có đúng 1 hàm `parse*` dùng chung cho đọc máy lẫn `parseImportPayload`.
 - Layout/sidebar dùng chung toàn app (route group `(app)`) không phải "feature" — không áp dụng quy tắc này.
 
