@@ -377,6 +377,21 @@ describe("CalculatorModal", () => {
     expect(screen.getByTestId("calculator-result")).toHaveTextContent("-10")
   })
 
+  it("cặp phép tính liền nhau: 5 × − + → 5+, 5 ÷ − − 2 → 5÷−2, 5 + − 2 → 5−2", () => {
+    render(<CalculatorModal open onOpenChange={vi.fn()} />)
+
+    type(["5", "×", "−", "+"])
+    expect(screen.getByTestId("calculator-expr")).toHaveTextContent("5+")
+
+    click("Xoá hết")
+    type(["5", "÷", "−", "−", "2"])
+    expect(screen.getByTestId("calculator-expr")).toHaveTextContent("5÷−2")
+
+    click("Xoá hết")
+    type(["5", "+", "−", "2"])
+    expect(screen.getByTestId("calculator-expr")).toHaveTextContent("5−2")
+  })
+
   it("bàn phím thật: gõ '*' 2 lần cũng chỉ là 1 phép nhân", () => {
     render(<CalculatorModal open onOpenChange={vi.fn()} />)
 
