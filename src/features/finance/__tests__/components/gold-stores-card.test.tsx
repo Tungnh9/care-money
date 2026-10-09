@@ -148,3 +148,19 @@ describe("GoldStoresCard — tên cửa hàng trùng", () => {
     expect(onUpdate).not.toHaveBeenCalled()
   })
 })
+
+describe("GoldStoresCard — tên đọc được của ô giá", () => {
+  it("names each store's price field after the store instead of just the 'đ' suffix", () => {
+    const onSetPrice = vi.fn()
+    render(
+      <GoldStoresCard stores={STORES} gold={[]} onAdd={vi.fn()} onUpdate={vi.fn()} onRemove={vi.fn()} onSetPrice={onSetPrice} />
+    )
+
+    expect(screen.getByRole("textbox", { name: "Giá SJC hôm nay (mỗi phân)" })).toHaveValue("935.000")
+    fireEvent.change(screen.getByRole("textbox", { name: "Giá PNJ hôm nay (mỗi phân)" }), {
+      target: { value: "810.000" },
+    })
+
+    expect(onSetPrice).toHaveBeenCalledWith("PNJ", "810000")
+  })
+})

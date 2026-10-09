@@ -54,6 +54,9 @@ function GoldStoresCard({ stores, gold, onAdd, onUpdate, onRemove, onSetPrice }:
                   suffix="đ"
                   value={store.price}
                   onChange={(e) => onSetPrice(store.name, e.target.value)}
+                  // Field bọc ô trong <label> chỉ chứa hậu tố "đ" và nhãn cột ẩn dưới sm → đặt tên riêng.
+                  // Không bắt đầu bằng "Giá hôm nay" để không lẫn với ô cùng tên của form thêm cửa hàng.
+                  aria-label={`Giá ${store.name} hôm nay (mỗi phân)`}
                 />
                 <div className="flex flex-none items-center gap-1">
                   <button

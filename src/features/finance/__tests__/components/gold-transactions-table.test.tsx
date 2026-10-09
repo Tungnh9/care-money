@@ -67,10 +67,9 @@ describe("GoldTransactionsTable", () => {
       />,
     )
 
-    const deleteButtons = screen.getAllByRole("button", { name: "Xoá giao dịch vàng" })
-    expect(deleteButtons).toHaveLength(2)
-
-    fireEvent.click(deleteButtons[1])
+    // Mỗi nút xoá kèm ngày mua như nút sửa — trình đọc màn hình phân biệt được từng dòng.
+    expect(screen.getByRole("button", { name: "Xoá giao dịch vàng 01/08/2026" })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole("button", { name: "Xoá giao dịch vàng 05/08/2026" }))
 
     expect(onRemove).toHaveBeenCalledWith(2)
     expect(onRemove).not.toHaveBeenCalledWith(1)
@@ -131,8 +130,7 @@ describe("GoldTransactionsTable", () => {
     )
 
     const editButton = screen.getByRole("button", { name: "Sửa giao dịch vàng 05/08/2026" })
-    const deleteButtons = screen.getAllByRole("button", { name: "Xoá giao dịch vàng" })
-    const deleteButton = deleteButtons[1]
+    const deleteButton = screen.getByRole("button", { name: "Xoá giao dịch vàng 05/08/2026" })
 
     const container = editButton.parentElement
     expect(container).toBe(deleteButton.parentElement)

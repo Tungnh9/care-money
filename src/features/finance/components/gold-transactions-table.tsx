@@ -115,7 +115,7 @@ function GoldTransactionsTable({ gold, stores, onRemove, onEdit }: GoldTransacti
                     </button>
                     <button
                       type="button"
-                      aria-label="Xoá giao dịch vàng"
+                      aria-label={`Xoá giao dịch vàng ${purchase.date}`}
                       onClick={() => onRemove(purchase.id)}
                       className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
                     >

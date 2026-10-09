@@ -25,7 +25,7 @@ describe("GoldTransactionsCards", () => {
     )
 
     expect(screen.getByText(/Chưa có giao dịch vàng nào/)).toBeInTheDocument()
-    expect(screen.queryAllByRole("button", { name: "Xoá giao dịch vàng" })).toHaveLength(0)
+    expect(screen.queryAllByRole("button", { name: /^Xoá giao dịch vàng/ })).toHaveLength(0)
   })
 
   it("renders each purchase's date, quantity and money figures, including a losing purchase's Lãi lỗ figure", () => {
@@ -103,10 +103,8 @@ describe("GoldTransactionsCards", () => {
       />
     )
 
-    const deleteButtons = screen.getAllByRole("button", { name: "Xoá giao dịch vàng" })
-    expect(deleteButtons).toHaveLength(2)
-
-    fireEvent.click(deleteButtons[1])
+    expect(screen.getByRole("button", { name: "Xoá giao dịch vàng 01/08/2026" })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole("button", { name: "Xoá giao dịch vàng 05/08/2026" }))
 
     expect(onRemove).toHaveBeenCalledWith(2)
     expect(onRemove).not.toHaveBeenCalledWith(1)

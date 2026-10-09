@@ -276,7 +276,7 @@ describe("GoldTab", () => {
       />
     )
 
-    fireEvent.click(screen.getAllByRole("button", { name: "Xoá giao dịch vàng" })[0])
+    fireEvent.click(screen.getAllByRole("button", { name: /^Xoá giao dịch vàng \d/ })[0])
 
     expect(screen.getByText("Xoá giao dịch vàng?")).toBeInTheDocument()
     expect(onRemoveGold).not.toHaveBeenCalled()
@@ -499,7 +499,7 @@ describe("GoldTab", () => {
       />
     )
 
-    fireEvent.click(screen.getAllByRole("button", { name: "Xoá giao dịch vàng" })[0])
+    fireEvent.click(screen.getAllByRole("button", { name: /^Xoá giao dịch vàng \d/ })[0])
     expect(screen.getByText("Xoá giao dịch vàng?")).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole("button", { name: "Huỷ" }))
