@@ -92,7 +92,9 @@ function ResetCard({ counts, onWipe, onExport }: ResetCardProps) {
                 xuất một bản sao trước.
               </>
             ) : (
-              "Không còn gì để xoá."
+              // Không bao giờ nói "không còn gì để xoá": dù các mục đếm được đều trống, wipeData vẫn xoá phần
+              // còn lại (secret đồng bộ, liên kết mục tiêu mua xe...) — và vẫn nên có 1 bản sao trước.
+              "Chưa thấy dữ liệu nào ở các mục chính — phần còn lại trên máy (kể cả secret đồng bộ) vẫn sẽ bị xoá. Không khôi phục được — nên xuất một bản sao trước."
             )}
           </div>
         </div>
@@ -138,7 +140,9 @@ function ResetCard({ counts, onWipe, onExport }: ResetCardProps) {
   return (
     <Card label="Bắt đầu lại" className="min-w-0 flex-[1_1_300px]">
       <p className="mb-[14px] text-[13.5px] leading-[1.55] text-[var(--ob-color-text-muted)]">
-        Xoá sạch chi tiêu, nhật ký và chuỗi ngày. Không khôi phục được.
+        Xoá sạch tài chính, chi tiêu (cả lương và tất toán), nhật ký, học tập, lịch sử tài sản, quỹ gắn mục tiêu
+        mua xe và secret đồng bộ trên máy này — chỉ giữ lại cài đặt và danh sách cửa hàng vàng. Không khôi phục
+        được.
       </p>
       <p className="mb-[14px] text-[12.5px] leading-[1.5] text-[var(--ob-color-text-subtle)]">
         Cần nhập lại mật khẩu đăng nhập để xác nhận. Nhập sai quá {MAX_ATTEMPTS} lần sẽ khoá tính năng này trong{" "}

@@ -23,7 +23,9 @@ describe("ResetCard", () => {
     render(<ResetCard counts={["3 bài nhật ký"]} onWipe={vi.fn()} onExport={vi.fn()} />)
 
     expect(
-      screen.getByText("Xoá sạch chi tiêu, nhật ký và chuỗi ngày. Không khôi phục được.")
+      screen.getByText(
+        "Xoá sạch tài chính, chi tiêu (cả lương và tất toán), nhật ký, học tập, lịch sử tài sản, quỹ gắn mục tiêu mua xe và secret đồng bộ trên máy này — chỉ giữ lại cài đặt và danh sách cửa hàng vàng. Không khôi phục được."
+      )
     ).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Xoá toàn bộ dữ liệu" })).toBeInTheDocument()
     expect(
@@ -44,12 +46,17 @@ describe("ResetCard", () => {
     expect(screen.getByRole("button", { name: "Xoá toàn bộ dữ liệu" })).toBeInTheDocument()
   })
 
-  it("shows a message with no data to delete when counts is empty", () => {
+  it("never claims there is nothing to delete, and still suggests a backup, when counts is empty", () => {
     render(<ResetCard counts={[]} onWipe={vi.fn()} onExport={vi.fn()} />)
 
     fireEvent.click(screen.getByRole("button", { name: "Xoá toàn bộ dữ liệu" }))
 
-    expect(screen.getByText("Không còn gì để xoá.")).toBeInTheDocument()
+    expect(screen.queryByText("Không còn gì để xoá.")).not.toBeInTheDocument()
+    expect(
+      screen.getByText(
+        "Chưa thấy dữ liệu nào ở các mục chính — phần còn lại trên máy (kể cả secret đồng bộ) vẫn sẽ bị xoá. Không khôi phục được — nên xuất một bản sao trước."
+      )
+    ).toBeInTheDocument()
   })
 
   it("opens a password confirmation modal instead of wiping immediately", () => {

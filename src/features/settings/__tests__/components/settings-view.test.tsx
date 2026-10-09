@@ -3,6 +3,9 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 
 import { setStoredJournal } from "@/features/journal/journal-storage"
 import { setStoredFinance, DEFAULT_FINANCE_STATE } from "@/features/finance/finance-storage"
+import { setStoredBudget, DEFAULT_BUDGET_STATE } from "@/features/budget/budget-storage"
+import { setStoredNetWorthHistory } from "@/features/overview/net-worth-history-storage"
+import { setStoredStudy, DEFAULT_STUDY_STATE } from "@/features/study/study-storage"
 import { getStoredSettings } from "@/lib/settings-storage"
 import { MOCK_ACCOUNT } from "@/lib/mock-account"
 import { EXPORT_VERSION } from "../../data-transfer"
@@ -63,6 +66,45 @@ describe("SettingsView", () => {
 
     const grid = screen.getByText("Module hiển thị").closest("section")?.parentElement
     expect(grid).toHaveClass("ob-card-grid")
+  })
+
+  it("also counts salaries, settlements, net-worth history, review progress and mini-game records, since wiping deletes them", async () => {
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [{ month: "2026-09", amount: 20_000_000 }],
+      settlements: [
+        { id: 1, month: "2026-08", at: "2026-08-31T12:00:00.000Z", direction: "deposit", amount: 500_000, fundName: "Quỹ A", fundAmountBefore: 0, fundAmountAfter: 500_000 },
+      ],
+    })
+    setStoredNetWorthHistory([
+      { date: "2026-09-20", net: 1_000_000, savingsTotal: 1_000_000 },
+      { date: "2026-09-21", net: 1_000_000, savingsTotal: 1_000_000 },
+    ])
+    setStoredStudy({
+      ...DEFAULT_STUDY_STATE,
+      gameHighScores: { quiz: 7, match: 0, spelling: 0 },
+      gameStreak: { count: 3, lastPlayedDayKey: "2026-09-21" },
+      wordReviews: {
+        "v-0001": {
+          wordId: "v-0001",
+          easeFactor: 2.5,
+          intervalDays: 1,
+          repetitions: 1,
+          dueAt: "2026-09-22",
+          lastReviewedAt: "2026-09-21T09:00:00.000Z",
+        },
+      },
+    })
+
+    render(<SettingsView />)
+    await waitFor(() => expect(screen.getByText("Module hiển thị")).toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole("button", { name: "Xoá toàn bộ dữ liệu" }))
+
+    expect(screen.queryByText("Không còn gì để xoá.")).not.toBeInTheDocument()
+    expect(screen.getByText(/tháng lương/)).toHaveTextContent(
+      "tiến độ ôn 1 từ, điểm cao mini-game, chuỗi ngày chơi mini-game, 1 tháng lương, 1 lần tất toán, 2 ngày lịch sử tài sản"
+    )
   })
 
   it("restores settings from an imported backup and shows the success banner", async () => {

@@ -28,9 +28,9 @@ function SettingsView() {
   } = useSettings()
   const { entries, replaceJournal } = useJournal()
   const { savings, cards, gold, invests, replaceFinance } = useFinance()
-  const { tasks, learned, replaceStudy } = useStudy()
-  const { expenses, replaceBudget } = useBudget()
-  const { replaceHistory: replaceNetWorthHistory } = useNetWorthHistory()
+  const { tasks, learned, gameHighScores, gameStreak, wordReviews, replaceStudy } = useStudy()
+  const { salaries, expenses, settlements, replaceBudget } = useBudget()
+  const { history: netWorthHistory, replaceHistory: replaceNetWorthHistory } = useNetWorthHistory()
   const {
     exported,
     imported,
@@ -53,6 +53,10 @@ function SettingsView() {
     onReplaceNetWorthHistory: replaceNetWorthHistory,
   })
 
+  // Đếm đủ mọi thứ wipeData sẽ xoá — thiếu mục nào thì ResetCard có thể báo như không còn gì trong khi
+  // vẫn xoá lương, tất toán, lịch sử tài sản, tiến độ ôn từ hay điểm mini-game.
+  const reviewedWords = Object.values(wordReviews).filter((review) => review.lastReviewedAt !== null).length
+  const salaryMonths = salaries.filter((salary) => salary.amount > 0).length
   const counts = [
     entries.length ? `${entries.length} bài nhật ký` : null,
     gold.length ? `${gold.length} lần mua vàng` : null,
@@ -61,7 +65,13 @@ function SettingsView() {
     cards.length ? `${cards.length} thẻ tín dụng` : null,
     tasks.some((task) => task.done) ? "nhiệm vụ đã tick" : null,
     learned.length ? `${learned.length} từ đã học` : null,
+    reviewedWords ? `tiến độ ôn ${reviewedWords} từ` : null,
+    Object.values(gameHighScores).some((score) => score > 0) ? "điểm cao mini-game" : null,
+    gameStreak.count > 0 ? "chuỗi ngày chơi mini-game" : null,
     expenses.length ? `${expenses.length} khoản chi` : null,
+    salaryMonths ? `${salaryMonths} tháng lương` : null,
+    settlements.length ? `${settlements.length} lần tất toán` : null,
+    netWorthHistory.length ? `${netWorthHistory.length} ngày lịch sử tài sản` : null,
   ].filter((count): count is string => count !== null)
 
   function handleSaveDisplayName(name: string) {
