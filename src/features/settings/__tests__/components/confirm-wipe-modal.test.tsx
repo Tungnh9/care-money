@@ -81,4 +81,19 @@ describe("ConfirmWipeModal", () => {
     expect(screen.getByLabelText("Mật khẩu", { exact: false })).toBeDisabled()
     expect(screen.getByRole("button", { name: "Xác nhận" })).toBeDisabled()
   })
+
+  it("forgets the typed password once closed, so reopening needs it typed again", () => {
+    const props = baseProps()
+    const { rerender } = render(<ConfirmWipeModal {...props} />)
+    fireEvent.change(screen.getByLabelText("Mật khẩu", { exact: false }), {
+      target: { value: MOCK_ACCOUNT.password },
+    })
+
+    // Đóng (vd. bấm "Huỷ" → ResetCard đặt open=false, hộp vẫn mounted) rồi mở lại.
+    rerender(<ConfirmWipeModal {...props} open={false} />)
+    rerender(<ConfirmWipeModal {...props} open />)
+
+    expect(screen.getByLabelText("Mật khẩu", { exact: false })).toHaveValue("")
+    expect(screen.getByRole("button", { name: "Xác nhận" })).toBeDisabled()
+  })
 })

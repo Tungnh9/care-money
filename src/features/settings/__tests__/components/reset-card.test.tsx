@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { act, fireEvent, render, screen } from "@testing-library/react"
+import { act, fireEvent, render, screen, within } from "@testing-library/react"
 import { toast } from "sonner"
 
 import { MOCK_ACCOUNT } from "@/lib/mock-account"
@@ -150,5 +150,22 @@ describe("ResetCard", () => {
     expect(onExport).toHaveBeenCalled()
     expect(onWipe).not.toHaveBeenCalled()
     expect(screen.getByRole("button", { name: "Xoá toàn bộ dữ liệu" })).toBeInTheDocument()
+  })
+
+  it("asks for the password again after the confirm dialog was cancelled", () => {
+    render(<ResetCard counts={["3 bài nhật ký"]} onWipe={vi.fn()} onExport={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Xoá toàn bộ dữ liệu" }))
+    fireEvent.click(screen.getByRole("button", { name: "Xoá vĩnh viễn" }))
+    fireEvent.change(screen.getByLabelText("Mật khẩu", { exact: false }), {
+      target: { value: MOCK_ACCOUNT.password },
+    })
+    // Bấm "Huỷ" của hộp mật khẩu (thẻ phía sau cũng có 1 nút "Huỷ" riêng).
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Huỷ" }))
+
+    fireEvent.click(screen.getByRole("button", { name: "Xoá vĩnh viễn" }))
+
+    expect(screen.getByLabelText("Mật khẩu", { exact: false })).toHaveValue("")
+    expect(screen.getByRole("button", { name: "Xác nhận" })).toBeDisabled()
   })
 })

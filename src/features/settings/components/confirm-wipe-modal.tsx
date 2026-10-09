@@ -33,6 +33,9 @@ function ConfirmWipeModal({
   registerSuccess,
 }: ConfirmWipeModalProps) {
   const [password, setPassword] = useState("")
+  // Hộp ở lại mounted khi đóng (ResetCard vẫn đứng ở bước 1): mỗi lần đóng — "Huỷ", Esc hay bấm ra
+  // ngoài — xoá mật khẩu đã gõ, để lần mở sau vẫn phải gõ lại mới xoá được dữ liệu.
+  if (!open && password !== "") setPassword("")
 
   if (!open) return null
 
