@@ -19,7 +19,8 @@ interface MoodsCardProps {
 function MoodsCard({ moods, onToggle, onRemove, onAdd }: MoodsCardProps) {
   // Xoá hỏi lại trước (như mọi nút xoá ở trang Tài chính): thêm lại qua "Thêm tâm trạng" luôn ra điểm
   // 3 và màu khác, nên xoá nhầm "Tuyệt vời" (điểm 5) là gợi ý chi tiêu–tâm trạng lệch mãi về sau.
-  const [deleting, setDeleting] = useState<{ index: number; label: string } | null>(null)
+  // Hộp thoại tìm lại mood theo tên lúc xác nhận vì tab khác có thể đã đổi danh sách.
+  const [deleting, setDeleting] = useState<string | null>(null)
 
   return (
     <Card label="Tâm trạng dùng trong nhật ký" className="min-w-0 w-full">
@@ -49,7 +50,7 @@ function MoodsCard({ moods, onToggle, onRemove, onAdd }: MoodsCardProps) {
             <button
               type="button"
               aria-label={"Xoá " + m.label}
-              onClick={() => setDeleting({ index: i, label: m.label })}
+              onClick={() => setDeleting(m.label)}
               className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
             >
               <Trash2 size={17} />
@@ -67,14 +68,15 @@ function MoodsCard({ moods, onToggle, onRemove, onAdd }: MoodsCardProps) {
         title="Xoá tâm trạng?"
         description={
           <>
-            Xoá &quot;<strong>{deleting?.label}</strong>&quot; sẽ không thể hoàn tác — thêm lại sau cũng không lấy
+            Xoá &quot;<strong>{deleting}</strong>&quot; sẽ không thể hoàn tác — thêm lại sau cũng không lấy
             lại được màu và điểm tâm trạng cũ. Muốn ẩn khỏi màn Nhật ký thì chỉ cần tắt công tắc.
           </>
         }
         confirmLabel="Xoá"
         destructive
         onConfirm={() => {
-          if (deleting) onRemove(deleting.index)
+          const index = moods.findIndex((m) => m.label === deleting)
+          if (index !== -1) onRemove(index)
         }}
       />
     </Card>

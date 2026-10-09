@@ -69,4 +69,16 @@ describe("MoodsCard — xoá tâm trạng", () => {
     expect(onRemove).not.toHaveBeenCalled()
     expect(screen.queryByText("Xoá tâm trạng?")).not.toBeInTheDocument()
   })
+
+  it("deletes the mood named in the dialog even if the list changed while it was open", () => {
+    const onRemove = vi.fn()
+    const { rerender } = render(<MoodsCard moods={MOODS} onToggle={vi.fn()} onRemove={onRemove} onAdd={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Xoá Vui" }))
+    // Tab khác vừa xoá "Tuyệt vời" — "Vui" giờ đứng ở vị trí 0.
+    rerender(<MoodsCard moods={MOODS.slice(1)} onToggle={vi.fn()} onRemove={onRemove} onAdd={vi.fn()} />)
+    fireEvent.click(screen.getByRole("button", { name: "Xoá" }))
+
+    expect(onRemove).toHaveBeenCalledWith(0)
+  })
 })
