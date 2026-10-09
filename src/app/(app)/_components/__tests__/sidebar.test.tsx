@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 
 import { MoneyVisibilityProvider } from "@/components/money-visibility-provider"
 import { setStoredUser } from "@/lib/auth"
@@ -89,5 +89,33 @@ describe("Sidebar", () => {
 
     expect(window.localStorage.getItem("auth-user")).toBeNull()
     expect(window.localStorage.getItem("sync-secret")).toBeNull()
+  })
+
+  it("lets the 7 bottom-nav links shrink to share a phone-width bar instead of pushing Cài đặt off screen", () => {
+    render(<Sidebar />)
+
+    // Thanh dưới là position: fixed nên phần tràn không cuộn tới được: nav phải co về đúng bề rộng
+    // màn hình (min-w-0) và không chừa khe giữa các mục ở mobile.
+    const nav = screen.getByRole("navigation")
+    expect(nav).toHaveClass("min-w-0", "flex-1", "md:gap-1")
+    expect(nav).not.toHaveClass("gap-1")
+
+    const links = within(nav).getAllByRole("link")
+    expect(links.map((link) => link.textContent)).toEqual([
+      "Tổng quan",
+      "Tài chính",
+      "Chi tiêu",
+      "Nhật ký",
+      "Học tập",
+      "Mục tiêu",
+      "Cài đặt",
+    ])
+    for (const link of links) {
+      // Mục rộng theo nhãn nhưng co được; từ md trở lên không co giãn như cũ.
+      expect(link).toHaveClass("min-w-0", "flex-auto", "px-0.5", "md:flex-none")
+      expect(link).not.toHaveClass("px-2")
+      // Thiếu chỗ (máy < ~340px) thì nhãn cắt "…" trong mục của nó thay vì đẩy mục khác ra ngoài.
+      expect(link.querySelector("span")).toHaveClass("max-w-full", "truncate")
+    }
   })
 })

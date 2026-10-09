@@ -139,7 +139,10 @@ function Sidebar() {
           </span>
         </div>
 
-        <nav className="flex flex-1 items-center justify-around gap-1 md:flex-none md:flex-col md:items-stretch md:justify-start">
+        {/* Điện thoại: 7 mục chia nhau đúng bề rộng thanh — mục rộng theo nhãn nhưng co được (min-w-0
+            flex-auto), đệm ngang 2px, không khe giữa các mục; thiếu chỗ thì nhãn cắt "…" thay vì đẩy
+            "Cài đặt" ra ngoài thanh cố định (không cuộn tới được). Từ md trở lên giữ nguyên cột dọc. */}
+        <nav className="flex min-w-0 flex-1 items-center justify-around md:flex-none md:flex-col md:items-stretch md:justify-start md:gap-1">
           {nav.map(({ label, href, icon: ItemIcon }) => {
             const active = pathname === href
             return (
@@ -147,14 +150,14 @@ function Sidebar() {
                 key={label}
                 href={href}
                 className={cn(
-                  "flex min-h-[var(--ob-hit-min)] flex-col items-center justify-center gap-0.5 rounded-[var(--ob-radius-md)] px-2 py-1.5 text-center text-[10.5px] leading-[var(--ob-lh-normal)] no-underline transition-[background-color,color] duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] md:flex-row md:justify-center md:gap-[11px] md:px-[14px] md:py-[11px] md:text-left md:text-[length:var(--ob-size-sm)] lg:justify-start",
+                  "flex min-h-[var(--ob-hit-min)] min-w-0 flex-auto flex-col items-center justify-center gap-0.5 rounded-[var(--ob-radius-md)] px-0.5 py-1.5 text-center text-[10.5px] leading-[var(--ob-lh-normal)] no-underline transition-[background-color,color] duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] md:flex-none md:flex-row md:justify-center md:gap-[11px] md:px-[14px] md:py-[11px] md:text-left md:text-[length:var(--ob-size-sm)] lg:justify-start",
                   active
                     ? "bg-[var(--ob-color-action-soft)] font-bold text-[var(--ob-color-action-strong)]"
                     : "font-medium text-[var(--ob-color-text-muted)] hover:bg-[var(--ob-color-action-soft)] hover:text-[var(--ob-color-action-strong)]"
                 )}
               >
                 <ItemIcon size={18} />
-                <span className="whitespace-nowrap md:hidden lg:inline">{label}</span>
+                <span className="max-w-full truncate md:hidden lg:inline">{label}</span>
               </Link>
             )
           })}
