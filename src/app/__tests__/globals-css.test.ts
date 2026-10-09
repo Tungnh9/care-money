@@ -64,4 +64,10 @@ describe("globals.css — rule phần tử trần nằm trong @layer base", () =
   it("has no unlayered `*` rule — Tailwind preflight in @layer base already sets box-sizing", () => {
     for (const rule of rulesFor("*")) expect(wrappersOf(rule)[0]).toBe("layer base")
   })
+
+  it("keeps the body rule inside @layer base, so Tailwind utilities on <body> can override it", () => {
+    const rules = rulesFor("body")
+    expect(rules.length).toBeGreaterThan(0)
+    for (const rule of rules) expect(wrappersOf(rule)).toContain("layer base")
+  })
 })
