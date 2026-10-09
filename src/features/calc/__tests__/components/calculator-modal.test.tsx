@@ -291,4 +291,53 @@ describe("CalculatorModal", () => {
     expect(screen.getByTestId("calculator-result")).toHaveTextContent("0")
     expect(screen.getByTestId("calculator-expr")).toHaveTextContent("")
   })
+
+  it("phím có Ctrl/Cmd: Ctrl+C và Cmd+C để trình duyệt copy kết quả, không xoá biểu thức", () => {
+    render(<CalculatorModal open onOpenChange={vi.fn()} />)
+    type(["1", "2", "+", "3", "="])
+    expect(screen.getByTestId("calculator-result")).toHaveTextContent("15")
+
+    const ctrlNotCancelled = fireEvent.keyDown(window, { key: "c", ctrlKey: true })
+    const cmdNotCancelled = fireEvent.keyDown(window, { key: "c", metaKey: true })
+
+    expect(ctrlNotCancelled).toBe(true)
+    expect(cmdNotCancelled).toBe(true)
+    expect(screen.getByTestId("calculator-result")).toHaveTextContent("15")
+    expect(screen.getByTestId("calculator-expr")).toHaveTextContent("15")
+  })
+
+  it("phím có Ctrl: Ctrl+'-', Ctrl+'=' và Ctrl+'0' (thu phóng trang) không gõ vào máy tính", () => {
+    render(<CalculatorModal open onOpenChange={vi.fn()} />)
+    type(["1", "2"])
+
+    for (const key of ["-", "=", "0"]) {
+      expect(fireEvent.keyDown(window, { key, ctrlKey: true })).toBe(true)
+    }
+
+    expect(screen.getByTestId("calculator-expr")).toHaveTextContent("12")
+    expect(screen.queryAllByTestId("calculator-history-item")).toHaveLength(0)
+  })
+
+  it("Enter trên 1 dòng lịch sử đang focus để nút đó tự kích hoạt, không chạy '=' thêm 1 dòng", () => {
+    render(<CalculatorModal open onOpenChange={vi.fn()} />)
+    type(["1", "+", "1", "="])
+    const [item] = screen.getAllByTestId("calculator-history-item")
+
+    item.focus()
+    const notCancelled = fireEvent.keyDown(item, { key: "Enter" })
+
+    expect(notCancelled).toBe(true)
+    expect(screen.getAllByTestId("calculator-history-item")).toHaveLength(1)
+  })
+
+  it("Enter khi đang focus 1 phím số vẫn là '=' (chỉ dòng lịch sử được bỏ qua)", () => {
+    render(<CalculatorModal open onOpenChange={vi.fn()} />)
+    type(["8", "+", "2"])
+    screen.getByRole("button", { name: "2" }).focus()
+
+    fireEvent.keyDown(window, { key: "Enter" })
+
+    expect(screen.getByTestId("calculator-result")).toHaveTextContent("10")
+    expect(screen.getAllByTestId("calculator-history-item")).toHaveLength(1)
+  })
 })

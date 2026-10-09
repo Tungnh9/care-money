@@ -131,8 +131,21 @@ function CalculatorModal({ open, onOpenChange }: CalculatorModalProps) {
         onOpenChange(false)
         return
       }
+      // Phím tắt của trình duyệt/hệ điều hành (Ctrl/Cmd+C copy kết quả, Ctrl+"-"/"="/"0" thu phóng
+      // trang...) không phải phím của máy tính — để nguyên cho trình duyệt, không preventDefault.
+      if (e.ctrlKey || e.metaKey || e.altKey) return
       if (e.key === "Tab") {
         trapTab(e)
+        return
+      }
+      // Enter trên 1 dòng lịch sử đang focus là "bấm" dòng đó (nạp lại phép tính), không phải "=".
+      // Chỉ bỏ qua đúng dòng lịch sử: nút Đóng được focus sẵn khi mở, và click chuột vào 1 phím cũng
+      // làm phím đó focus — bỏ qua mọi nút sẽ làm Enter đóng máy tính hoặc bấm lại phím vừa click.
+      if (
+        e.key === "Enter" &&
+        document.activeElement instanceof HTMLElement &&
+        document.activeElement.closest("[data-calc-history-item]")
+      ) {
         return
       }
       if (e.key === "Enter" || e.key === "=") {
@@ -228,6 +241,7 @@ function CalculatorModal({ open, onOpenChange }: CalculatorModalProps) {
                 key={`${item.m}-${index}`}
                 type="button"
                 data-testid="calculator-history-item"
+                data-calc-history-item
                 aria-label={`Nạp lại ${item.q} bằng ${item.a}`}
                 onClick={() => handleRestore(item)}
                 className="flex items-center gap-2 rounded-[var(--ob-radius-md)] px-[10px] py-[6px] text-left outline-none hover:bg-[var(--ob-color-surface-sunken)] focus-visible:ring-3 focus-visible:ring-ring/50"
