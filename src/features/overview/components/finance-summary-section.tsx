@@ -1,5 +1,5 @@
-import { formatPhan, nearestDueCard, type FinanceSummary } from "@/features/finance/finance-calculations"
-import type { CreditCard, Investment, SavingsFund } from "@/features/finance/types"
+import { formatPhan, nearestDueCard, type FinanceSummary } from "@/lib/finance/finance-calculations"
+import type { CreditCard, Investment, SavingsFund } from "@/lib/finance/types"
 import { Card } from "@/components/ui/card"
 import { NetWorthCard } from "@/components/ob/net-worth-card"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"

@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest"
 import { render, screen, fireEvent } from "@testing-library/react"
 
 import { GoldStoresCard } from "../../components/gold-stores-card"
-import type { GoldPurchase, GoldStore } from "../../types"
+import type { GoldPurchase, GoldStore } from "@/lib/finance/types"
 
 const STORES: GoldStore[] = [
   { name: "SJC", price: "935.000" },

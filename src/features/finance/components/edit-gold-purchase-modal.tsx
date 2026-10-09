@@ -5,8 +5,8 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Field } from "@/components/ui/field"
 import { Modal } from "@/components/ui/modal"
-import { normalizeGoldDate } from "../finance-calculations"
-import type { GoldPurchase, GoldStore } from "../types"
+import { normalizeGoldDate } from "@/lib/finance/finance-calculations"
+import type { GoldPurchase, GoldStore } from "@/lib/finance/types"
 import { GoldStorePicker } from "./gold-store-picker"
 
 interface EditGoldPurchaseModalProps {

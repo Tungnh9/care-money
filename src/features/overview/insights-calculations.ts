@@ -4,10 +4,10 @@ import {
   monthlyTagBreakdown,
   totalExpensesForMonth,
   UNTAGGED_LABEL,
-} from "@/features/budget/budget-calculations"
-import type { Expense } from "@/features/budget/types"
-import type { JournalEntry } from "@/features/journal/types"
-import type { NetWorthSnapshot } from "./net-worth-history-storage"
+} from "@/lib/budget/budget-calculations"
+import type { Expense } from "@/lib/budget/types"
+import type { JournalEntry } from "@/lib/journal/types"
+import type { NetWorthSnapshot } from "@/lib/net-worth/net-worth-history-storage"
 
 interface Insight {
   id: string

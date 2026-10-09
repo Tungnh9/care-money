@@ -3,7 +3,7 @@ import { act, render, screen, fireEvent, within } from "@testing-library/react"
 
 import { formatMoney } from "@/lib/format"
 import { FinanceView } from "../../components/finance-view"
-import { DEFAULT_FINANCE_STATE, FINANCE_STORAGE_KEY } from "../../finance-storage"
+import { DEFAULT_FINANCE_STATE, FINANCE_STORAGE_KEY } from "@/lib/finance/finance-storage"
 
 describe("FinanceView", () => {
   beforeEach(() => {

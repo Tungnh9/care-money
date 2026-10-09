@@ -8,8 +8,8 @@ import { AlertDialog } from "@/components/ui/alert-dialog"
 import { Empty } from "@/components/ob/empty"
 import { formatShortDate } from "@/lib/date"
 import { cn } from "@/lib/utils"
-import { sanitizeJournalHtml, stripHtmlToPlainText } from "../journal-html"
-import type { JournalEntry } from "../types"
+import { sanitizeJournalHtml, stripHtmlToPlainText } from "@/lib/journal/journal-html"
+import type { JournalEntry } from "@/lib/journal/types"
 
 interface JournalEntriesCardProps {
   entries: JournalEntry[]

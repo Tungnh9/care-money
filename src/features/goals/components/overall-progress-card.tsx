@@ -3,7 +3,7 @@ import Image from "next/image"
 import { Figure } from "@/components/ob/figure"
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-import type { Goal } from "../types"
+import type { Goal } from "@/lib/goals/types"
 
 interface OverallProgressCardProps {
   goals: Goal[]

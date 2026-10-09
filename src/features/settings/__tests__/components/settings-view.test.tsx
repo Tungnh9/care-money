@@ -1,14 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 
-import { setStoredJournal } from "@/features/journal/journal-storage"
-import { setStoredFinance, DEFAULT_FINANCE_STATE } from "@/features/finance/finance-storage"
-import { setStoredBudget, DEFAULT_BUDGET_STATE } from "@/features/budget/budget-storage"
-import { setStoredNetWorthHistory } from "@/features/overview/net-worth-history-storage"
-import { setStoredStudy, DEFAULT_STUDY_STATE } from "@/features/study/study-storage"
-import { getStoredSettings } from "@/lib/settings-storage"
+import { setStoredJournal } from "@/lib/journal/journal-storage"
+import { setStoredFinance, DEFAULT_FINANCE_STATE } from "@/lib/finance/finance-storage"
+import { setStoredBudget, DEFAULT_BUDGET_STATE } from "@/lib/budget/budget-storage"
+import { setStoredNetWorthHistory } from "@/lib/net-worth/net-worth-history-storage"
+import { setStoredStudy, DEFAULT_STUDY_STATE } from "@/lib/study/study-storage"
+import { getStoredSettings } from "@/lib/settings/settings-storage"
 import { MOCK_ACCOUNT } from "@/lib/mock-account"
-import { EXPORT_VERSION } from "../../data-transfer"
+import { EXPORT_VERSION } from "@/lib/data-transfer"
 import { SettingsView } from "../../components/settings-view"
 
 describe("SettingsView", () => {

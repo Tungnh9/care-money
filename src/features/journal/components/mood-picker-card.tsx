@@ -2,8 +2,8 @@
 
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-import type { Mood } from "@/lib/settings-storage"
-import type { MoodSnapshot } from "../types"
+import type { Mood } from "@/lib/settings/settings-storage"
+import type { MoodSnapshot } from "@/lib/journal/types"
 
 interface MoodPickerCardProps {
   moods: Mood[]

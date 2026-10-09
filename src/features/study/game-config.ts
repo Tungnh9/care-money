@@ -1,4 +1,4 @@
-import type { GameType } from "./types"
+import type { GameType } from "@/lib/study/types"
 
 // Hằng số dùng chung giữa từng game component (số câu/từ mỗi lượt chơi) và game-registry.ts
 // (điểm tối đa hiển thị dạng "x/maxScore") — tách riêng file này (không import component nào)

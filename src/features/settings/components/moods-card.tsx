@@ -7,7 +7,7 @@ import { AlertDialog } from "@/components/ui/alert-dialog"
 import { Card } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { AddMoodForm } from "./add-mood-form"
-import type { Mood } from "@/lib/settings-storage"
+import type { Mood } from "@/lib/settings/settings-storage"
 
 interface MoodsCardProps {
   moods: Mood[]

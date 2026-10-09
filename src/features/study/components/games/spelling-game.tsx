@@ -7,10 +7,10 @@ import { Card } from "@/components/ui/card"
 import { Empty } from "@/components/ob/empty"
 import { cn } from "@/lib/utils"
 import { speakWord } from "@/lib/speak"
-import { TINT_PALETTE } from "@/lib/settings-storage"
+import { TINT_PALETTE } from "@/lib/settings/settings-storage"
 import { SPELLING_WORD_COUNT } from "../../game-config"
-import { isTypableWord, pickRandomSet } from "../../game-calculations"
-import type { VocabEntry } from "../../types"
+import { isTypableWord, pickRandomSet } from "@/lib/study/game-calculations"
+import type { VocabEntry } from "@/lib/study/types"
 
 const MAX_LIVES = 5
 const FALL_DURATION_MS = 15000 // thời gian 1 từ rơi từ đỉnh xuống đáy khu chơi

@@ -1,10 +1,10 @@
 "use client"
 
-import { useFinance } from "@/features/finance/hooks/use-finance"
-import { useJournal } from "@/features/journal/hooks/use-journal"
-import { useStudy } from "@/features/study/hooks/use-study"
-import { useBudget } from "@/features/budget/hooks/use-budget"
-import { useNetWorthHistory } from "@/features/overview/hooks/use-net-worth-history"
+import { useFinance } from "@/lib/finance/use-finance"
+import { useJournal } from "@/lib/journal/use-journal"
+import { useStudy } from "@/lib/study/use-study"
+import { useBudget } from "@/lib/budget/use-budget"
+import { useNetWorthHistory } from "@/lib/net-worth/use-net-worth-history"
 import { splitGreeting } from "@/features/overview/overview-calculations"
 import { ProfileCard } from "./profile-card"
 import { ModulesCard } from "./modules-card"
@@ -13,7 +13,7 @@ import { TagsCard } from "./tags-card"
 import { DataCard } from "./data-card"
 import { ResetCard } from "./reset-card"
 import { useDataManagement } from "../hooks/use-data-management"
-import { useSettings } from "../hooks/use-settings"
+import { useSettings } from "@/lib/settings/use-settings"
 
 function SettingsView() {
   const {

@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card"
-import { sanitizeJournalHtml } from "../journal-html"
+import { sanitizeJournalHtml } from "@/lib/journal/journal-html"
 import type { OnThisDayResult } from "../journal-calculations"
 
 interface OnThisDayCardProps {

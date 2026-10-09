@@ -2,7 +2,7 @@
 
 import { Card } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
-import type { ModuleToggle } from "@/lib/settings-storage"
+import type { ModuleToggle } from "@/lib/settings/settings-storage"
 
 interface ModulesCardProps {
   modules: ModuleToggle[]

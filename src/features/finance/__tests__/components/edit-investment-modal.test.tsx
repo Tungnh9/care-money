@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react"
 
 import { groupVN } from "@/components/ui/field"
 import { EditInvestmentModal } from "../../components/edit-investment-modal"
-import type { Investment } from "../../types"
+import type { Investment } from "@/lib/finance/types"
 
 const INVESTMENT: Investment = { id: 1, name: "Cổ phiếu FPT", cost: 10_000_000, value: 12_000_000 }
 

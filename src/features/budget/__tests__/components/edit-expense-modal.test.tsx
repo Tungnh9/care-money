@@ -2,8 +2,8 @@ import { describe, it, expect, vi } from "vitest"
 import { render, screen, fireEvent } from "@testing-library/react"
 
 import { EditExpenseModal } from "../../components/edit-expense-modal"
-import type { BudgetTag } from "@/lib/settings-storage"
-import type { Expense } from "../../types"
+import type { BudgetTag } from "@/lib/settings/settings-storage"
+import type { Expense } from "@/lib/budget/types"
 
 const TAGS: BudgetTag[] = [
   { label: "Tiền trọ", emoji: "🏠", desc: "", tint: "#FFF0B8", on: true },

@@ -5,7 +5,7 @@ import { Check, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ImageWithFallback } from "@/components/ob/image-with-fallback"
 import { SpeakButton } from "@/components/ob/speak-button"
-import type { VocabEntry } from "../types"
+import type { VocabEntry } from "@/lib/study/types"
 
 interface VocabWordCardProps {
   entry: VocabEntry

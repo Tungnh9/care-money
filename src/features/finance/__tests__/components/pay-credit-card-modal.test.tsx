@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react"
 
 import { formatMoney } from "@/lib/format"
 import { PayCreditCardModal } from "../../components/pay-credit-card-modal"
-import type { CreditCard } from "../../types"
+import type { CreditCard } from "@/lib/finance/types"
 
 const CARD: CreditCard = {
   name: "Techcombank Visa",

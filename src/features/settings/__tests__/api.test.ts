@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 
 import { pullSnapshot, pushSnapshot, SECRET_CHARSET_ERROR } from "../api"
-import type { ExportPayload } from "../data-transfer"
+import type { ExportPayload } from "@/lib/data-transfer"
 
 // Các test chặn secret không bao giờ tới fetch, nên payload chỉ cần đúng kiểu.
 const PAYLOAD = { version: 1, exportedAt: "2026-09-28T00:00:00.000Z" } as unknown as ExportPayload

@@ -4,7 +4,7 @@ import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Field } from "@/components/ui/field"
-import type { SavingsFund } from "../types"
+import type { SavingsFund } from "@/lib/finance/types"
 
 interface AddSavingsFundFormProps {
   onAdd: (fund: SavingsFund) => void

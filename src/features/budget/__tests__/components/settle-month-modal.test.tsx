@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 
 import { MoneyVisibilityProvider } from "@/components/money-visibility-provider"
 import { SettleMonthModal } from "../../components/settle-month-modal"
-import type { SavingsFund } from "@/features/finance/types"
+import type { SavingsFund } from "@/lib/finance/types"
 
 const SAVINGS: SavingsFund[] = [
   { name: "Quỹ A", amount: 100_000, target: 500_000 },

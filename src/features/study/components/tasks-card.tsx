@@ -2,7 +2,7 @@
 
 import { Card } from "@/components/ui/card"
 import { TaskItem } from "@/components/ob/task-item"
-import type { Task } from "../types"
+import type { Task } from "@/lib/study/types"
 
 interface TasksCardProps {
   tasks: Task[]

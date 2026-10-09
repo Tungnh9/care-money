@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils"
 import { clearStoredUser } from "@/lib/auth"
 import { clearSyncSecret } from "@/lib/sync-secret-storage"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
-import { useSettings } from "@/features/settings/hooks/use-settings"
+import { useSettings } from "@/lib/settings/use-settings"
 import { CalculatorModal } from "@/features/calc"
 
 interface SidebarActionButtonProps {

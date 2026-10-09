@@ -6,7 +6,7 @@ import { Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ImageWithFallback } from "@/components/ob/image-with-fallback"
 import { SpeakButton } from "@/components/ob/speak-button"
-import type { ReviewGrade, VocabEntry } from "../types"
+import type { ReviewGrade, VocabEntry } from "@/lib/study/types"
 
 interface ReviewWordCardProps {
   entry: VocabEntry

@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 
-import { getGrammar, getVocab } from "@/features/study/content-loader"
+import { getGrammar, getVocab } from "@/lib/study/content-loader"
 import { StudyView } from "@/features/study"
 
 export const metadata: Metadata = {

@@ -4,7 +4,7 @@ import { GAME_ICONS, GAME_LABELS, GAME_MAX_SCORES } from "./game-config"
 import { MatchGame } from "./components/games/match-game"
 import { QuizGame } from "./components/games/quiz-game"
 import { SpellingGame } from "./components/games/spelling-game"
-import type { GameMistake, GameType, VocabEntry } from "./types"
+import type { GameMistake, GameType, VocabEntry } from "@/lib/study/types"
 
 interface GameDefinition {
   type: GameType

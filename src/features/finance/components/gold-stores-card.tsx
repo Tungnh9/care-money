@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card"
 import { Field } from "@/components/ui/field"
 import { AddGoldStoreForm } from "./add-gold-store-form"
 import { EditGoldStoreModal } from "./edit-gold-store-modal"
-import type { GoldPurchase, GoldStore } from "../types"
+import type { GoldPurchase, GoldStore } from "@/lib/finance/types"
 
 interface GoldStoresCardProps {
   stores: GoldStore[]

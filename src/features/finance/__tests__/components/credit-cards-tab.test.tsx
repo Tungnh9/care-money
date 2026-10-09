@@ -5,7 +5,7 @@ import { groupVN } from "@/components/ui/field"
 import { formatMoney } from "@/lib/format"
 import { AddCreditCardForm } from "../../components/add-credit-card-form"
 import { CreditCardsTab } from "../../components/credit-cards-tab"
-import type { CreditCard } from "../../types"
+import type { CreditCard } from "@/lib/finance/types"
 
 const CARD: CreditCard = {
   name: "Techcombank Visa",

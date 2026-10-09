@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 
 import { JournalView } from "../../components/journal-view"
-import type { JournalEntry } from "../../types"
+import type { JournalEntry } from "@/lib/journal/types"
 
 // jsdom không đồng bộ innerText <-> innerHTML như trình duyệt thật (set cái này không
 // cập nhật cái kia), nên set cả 2 để mô phỏng đúng trạng thái 1 trình duyệt thật sẽ có.

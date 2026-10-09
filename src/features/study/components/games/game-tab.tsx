@@ -5,7 +5,7 @@ import { ChevronLeft } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { gameDefinition } from "../../game-registry"
-import type { GameHighScores, GameMistake, GameStreak, GameType, VocabEntry } from "../../types"
+import type { GameHighScores, GameMistake, GameStreak, GameType, VocabEntry } from "@/lib/study/types"
 import { GameMenuCard } from "./game-menu-card"
 import { GameResultCard } from "./game-result-card"
 

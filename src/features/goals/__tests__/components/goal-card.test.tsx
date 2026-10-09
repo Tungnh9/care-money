@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest"
 import { render, screen, within } from "@testing-library/react"
 
 import { GoalCard } from "../../components/goal-card"
-import type { Goal } from "../../types"
+import type { Goal } from "@/lib/goals/types"
 
 const BASE_GOAL: Goal = {
   key: "tk",

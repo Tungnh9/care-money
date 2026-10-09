@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest"
 import { fireEvent, render, screen } from "@testing-library/react"
 
-import { DEFAULT_SETTINGS } from "@/lib/settings-storage"
+import { DEFAULT_SETTINGS } from "@/lib/settings/settings-storage"
 import { MoodsCard } from "../../components/moods-card"
 
 // "Tuyệt vời" (điểm 5) và "Vui" (điểm 4).

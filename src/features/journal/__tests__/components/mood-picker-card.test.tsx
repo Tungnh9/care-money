@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest"
 import { fireEvent, render, screen } from "@testing-library/react"
 
-import type { Mood } from "@/lib/settings-storage"
+import type { Mood } from "@/lib/settings/settings-storage"
 import { MoodPickerCard } from "../../components/mood-picker-card"
 
 const MOODS: Mood[] = [

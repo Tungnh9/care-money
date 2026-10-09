@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest"
 import { render, screen, fireEvent } from "@testing-library/react"
 
 import { FundPicker } from "@/components/ob/fund-picker"
-import type { SavingsFund } from "@/features/finance/types"
+import type { SavingsFund } from "@/lib/finance/types"
 
 const SAVINGS: SavingsFund[] = [
   { name: "Quỹ dự phòng", amount: 50_000_000, target: 100_000_000 },

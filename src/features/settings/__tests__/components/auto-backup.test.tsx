@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { render } from "@testing-library/react"
 
-import { setStoredFinance, DEFAULT_FINANCE_STATE } from "@/features/finance/finance-storage"
-import { setStoredJournal, DEFAULT_JOURNAL_STATE } from "@/features/journal/journal-storage"
-import { setStoredBudget, DEFAULT_BUDGET_STATE } from "@/features/budget/budget-storage"
+import { setStoredFinance, DEFAULT_FINANCE_STATE } from "@/lib/finance/finance-storage"
+import { setStoredJournal, DEFAULT_JOURNAL_STATE } from "@/lib/journal/journal-storage"
+import { setStoredBudget, DEFAULT_BUDGET_STATE } from "@/lib/budget/budget-storage"
 import { setSyncSecret } from "@/lib/sync-secret-storage"
-import { setCarGoalFundName } from "@/features/goals/car-goal-storage"
+import { setCarGoalFundName } from "@/lib/goals/car-goal-storage"
 import { getAutoBackupStatus } from "../../auto-backup-storage"
-import { EXPORT_VERSION } from "../../data-transfer"
+import { EXPORT_VERSION } from "@/lib/data-transfer"
 import { AutoBackup } from "../../components/auto-backup"
 
 vi.mock("../../api", () => ({

@@ -1,21 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { act, renderHook } from "@testing-library/react"
 
-import { DEFAULT_FINANCE_STATE, FINANCE_STORAGE_KEY, setStoredFinance } from "@/features/finance/finance-storage"
+import { DEFAULT_FINANCE_STATE, FINANCE_STORAGE_KEY, setStoredFinance } from "@/lib/finance/finance-storage"
 import {
   DEFAULT_JOURNAL_STATE,
   JOURNAL_STORAGE_KEY,
   getStoredJournal,
   setStoredJournal,
-} from "@/features/journal/journal-storage"
-import { DEFAULT_STUDY_STATE, STUDY_STORAGE_KEY } from "@/features/study/study-storage"
-import { BUDGET_STORAGE_KEY, DEFAULT_BUDGET_STATE } from "@/features/budget/budget-storage"
-import { DEFAULT_NET_WORTH_HISTORY, NET_WORTH_HISTORY_KEY } from "@/features/overview/net-worth-history-storage"
+} from "@/lib/journal/journal-storage"
+import { DEFAULT_STUDY_STATE, STUDY_STORAGE_KEY } from "@/lib/study/study-storage"
+import { BUDGET_STORAGE_KEY, DEFAULT_BUDGET_STATE } from "@/lib/budget/budget-storage"
+import { DEFAULT_NET_WORTH_HISTORY, NET_WORTH_HISTORY_KEY } from "@/lib/net-worth/net-worth-history-storage"
 import { onDataChanged } from "@/lib/data-change-bus"
-import { DEFAULT_SETTINGS, SETTINGS_STORAGE_KEY } from "@/lib/settings-storage"
+import { DEFAULT_SETTINGS, SETTINGS_STORAGE_KEY } from "@/lib/settings/settings-storage"
 import { setSyncSecret } from "@/lib/sync-secret-storage"
-import { CAR_GOAL_FUND_KEY, getCarGoalFundName, setCarGoalFundName } from "@/features/goals/car-goal-storage"
-import { EXPORT_VERSION } from "../../data-transfer"
+import { CAR_GOAL_FUND_KEY, getCarGoalFundName, setCarGoalFundName } from "@/lib/goals/car-goal-storage"
+import { EXPORT_VERSION } from "@/lib/data-transfer"
 import { useDataManagement } from "../../hooks/use-data-management"
 
 vi.mock("../../api", () => ({

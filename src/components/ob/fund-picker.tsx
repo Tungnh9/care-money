@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import type { SavingsFund } from "@/features/finance/types"
+import type { SavingsFund } from "@/lib/finance/types"
 
 interface FundPickerProps {
   savings: SavingsFund[]

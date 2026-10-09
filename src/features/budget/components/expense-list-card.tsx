@@ -9,8 +9,8 @@ import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import { formatDayKey } from "@/lib/date"
 import { cn } from "@/lib/utils"
-import { groupExpensesByDay, UNTAGGED_EMOJI, UNTAGGED_LABEL } from "../budget-calculations"
-import type { Expense } from "../types"
+import { groupExpensesByDay, UNTAGGED_EMOJI, UNTAGGED_LABEL } from "@/lib/budget/budget-calculations"
+import type { Expense } from "@/lib/budget/types"
 
 // Mỗi ngày là 1 khối liền (không còn xen kẽ theo từng dòng giao dịch) — 2 tông xen kẽ theo NGÀY
 // để phân biệt ngày này với ngày kế tiếp; trong 1 ngày, các giao dịch chỉ ngăn nhau bằng 1 gạch

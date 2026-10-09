@@ -3,17 +3,17 @@
 import { useEffect, useRef } from "react"
 
 import { onDataChanged } from "@/lib/data-change-bus"
-import { getStoredFinance } from "@/features/finance/finance-storage"
-import { getStoredJournal } from "@/features/journal/journal-storage"
-import { getStoredStudy } from "@/features/study/study-storage"
-import { getStoredBudget } from "@/features/budget/budget-storage"
-import { getStoredNetWorthHistory } from "@/features/overview/net-worth-history-storage"
-import { getCarGoalFundName } from "@/features/goals/car-goal-storage"
-import { getStoredSettings } from "@/lib/settings-storage"
+import { getStoredFinance } from "@/lib/finance/finance-storage"
+import { getStoredJournal } from "@/lib/journal/journal-storage"
+import { getStoredStudy } from "@/lib/study/study-storage"
+import { getStoredBudget } from "@/lib/budget/budget-storage"
+import { getStoredNetWorthHistory } from "@/lib/net-worth/net-worth-history-storage"
+import { getCarGoalFundName } from "@/lib/goals/car-goal-storage"
+import { getStoredSettings } from "@/lib/settings/settings-storage"
 import { getSyncSecret } from "@/lib/sync-secret-storage"
 import { pushSnapshot } from "../api"
 import { getAutoBackupStatus, setAutoBackupStatus } from "../auto-backup-storage"
-import { buildExportPayload } from "../data-transfer"
+import { buildExportPayload } from "@/lib/data-transfer"
 
 const DEBOUNCE_MS = 4000
 

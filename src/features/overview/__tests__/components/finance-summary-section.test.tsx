@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { act, render, screen } from "@testing-library/react"
 
-import { summarizeFinance, type FinanceSummary } from "@/features/finance/finance-calculations"
-import { DEFAULT_FINANCE_STATE } from "@/features/finance/finance-storage"
+import { summarizeFinance, type FinanceSummary } from "@/lib/finance/finance-calculations"
+import { DEFAULT_FINANCE_STATE } from "@/lib/finance/finance-storage"
 import { formatMoney } from "@/lib/format"
 import { FinanceSummarySection } from "../../components/finance-summary-section"
 

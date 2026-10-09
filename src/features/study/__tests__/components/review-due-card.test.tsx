@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from "vitest"
 import { render, screen, fireEvent } from "@testing-library/react"
 
 import { ReviewDueCard } from "../../components/review-due-card"
-import type { VocabEntry } from "../../types"
+import type { VocabEntry } from "@/lib/study/types"
 
 function vocab(id: string): VocabEntry {
   return { id, word: `word-${id}`, meaning: `nghĩa-${id}`, addedAt: "2026-01-01" }

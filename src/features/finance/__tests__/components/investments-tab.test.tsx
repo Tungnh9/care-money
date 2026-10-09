@@ -2,9 +2,9 @@ import { describe, it, expect, vi } from "vitest"
 import { render, screen, fireEvent } from "@testing-library/react"
 
 import { formatMoney } from "@/lib/format"
-import { pct1, summarizeFinance, type FinanceSummary } from "../../finance-calculations"
+import { pct1, summarizeFinance, type FinanceSummary } from "@/lib/finance/finance-calculations"
 import { InvestmentsTab } from "../../components/investments-tab"
-import type { Investment } from "../../types"
+import type { Investment } from "@/lib/finance/types"
 
 const GAINING: Investment = {
   id: 1,

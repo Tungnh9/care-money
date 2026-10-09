@@ -1,7 +1,7 @@
 import Link from "next/link"
 
-import type { JournalEntry } from "@/features/journal/types"
-import { stripHtmlToPlainText } from "@/features/journal/journal-html"
+import type { JournalEntry } from "@/lib/journal/types"
+import { stripHtmlToPlainText } from "@/lib/journal/journal-html"
 import { formatShortDate } from "@/lib/date"
 import { Card } from "@/components/ui/card"
 import { buttonVariants } from "@/components/ui/button"

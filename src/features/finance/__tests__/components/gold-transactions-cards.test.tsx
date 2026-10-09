@@ -2,9 +2,9 @@ import { describe, it, expect, vi } from "vitest"
 import { render, screen, fireEvent } from "@testing-library/react"
 
 import { formatMoney } from "@/lib/format"
-import { phanToChi } from "../../finance-calculations"
+import { phanToChi } from "@/lib/finance/finance-calculations"
 import { GoldTransactionsCards } from "../../components/gold-transactions-cards"
-import type { GoldPurchase, GoldStore } from "../../types"
+import type { GoldPurchase, GoldStore } from "@/lib/finance/types"
 
 const STORES: GoldStore[] = [{ name: "SJC", price: "850.000" }]
 

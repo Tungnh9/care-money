@@ -2,8 +2,8 @@
 
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
-import { phanToChi } from "../finance-calculations"
-import type { GoldStoreSummary } from "../finance-calculations"
+import { phanToChi } from "@/lib/finance/finance-calculations"
+import type { GoldStoreSummary } from "@/lib/finance/finance-calculations"
 import { GoldPLBadge } from "./gold-pl-indicator"
 
 interface GoldStoreSummaryTableProps {

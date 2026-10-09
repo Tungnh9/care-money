@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Fireworks } from "@/components/ob/fireworks"
 import { Monkey } from "@/components/ob/monkey"
-import type { JournalEntry } from "../types"
+import type { JournalEntry } from "@/lib/journal/types"
 
 interface JournalSaveSuccessProps {
   entry: JournalEntry

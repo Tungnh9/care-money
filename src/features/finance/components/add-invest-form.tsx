@@ -4,7 +4,7 @@ import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Field } from "@/components/ui/field"
-import type { Investment } from "../types"
+import type { Investment } from "@/lib/finance/types"
 
 interface AddInvestFormProps {
   onAdd: (invest: Omit<Investment, "id">) => void

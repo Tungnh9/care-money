@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { render, screen, fireEvent, act } from "@testing-library/react"
 
 import { SpellingGame } from "../../../components/games/spelling-game"
-import type { VocabEntry } from "../../../types"
+import type { VocabEntry } from "@/lib/study/types"
 
 vi.mock("@/lib/speak", () => ({ speakWord: vi.fn() }))
 

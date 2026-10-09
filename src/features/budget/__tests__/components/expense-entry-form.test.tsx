@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest"
 import { render, screen, fireEvent } from "@testing-library/react"
 
 import { ExpenseEntryForm } from "../../components/expense-entry-form"
-import type { BudgetTag } from "@/lib/settings-storage"
+import type { BudgetTag } from "@/lib/settings/settings-storage"
 
 const TAGS: BudgetTag[] = [
   { label: "Tiền trọ", emoji: "🏠", desc: "", tint: "#FFF0B8", on: true },

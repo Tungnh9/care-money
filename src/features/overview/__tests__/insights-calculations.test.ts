@@ -6,8 +6,8 @@ import {
   detectMoodSpendingCorrelation,
   samePeriodExpenses,
 } from "../insights-calculations"
-import type { Expense } from "@/features/budget/types"
-import type { JournalEntry } from "@/features/journal/types"
+import type { Expense } from "@/lib/budget/types"
+import type { JournalEntry } from "@/lib/journal/types"
 
 function expense(id: number, dayKey: string, amount: number): Expense {
   return { id, dayKey, amount, tag: null }
@@ -324,7 +324,7 @@ describe("detectMoodSpendingCorrelation", () => {
 })
 
 import { forecastSavingsGoal } from "../insights-calculations"
-import type { NetWorthSnapshot } from "../net-worth-history-storage"
+import type { NetWorthSnapshot } from "@/lib/net-worth/net-worth-history-storage"
 
 function linearHistory(startDate: string, points: number, dailyIncrease: number, startValue: number): NetWorthSnapshot[] {
   return Array.from({ length: points }, (_, i) => {

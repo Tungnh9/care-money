@@ -7,8 +7,8 @@ import { Card } from "@/components/ui/card"
 import { Empty } from "@/components/ob/empty"
 import { Progress } from "@/components/ui/progress"
 import { QUIZ_QUESTION_COUNT } from "../../game-config"
-import { pickQuizOptions, pickRandomSet } from "../../game-calculations"
-import type { GameMistake, VocabEntry } from "../../types"
+import { pickQuizOptions, pickRandomSet } from "@/lib/study/game-calculations"
+import type { GameMistake, VocabEntry } from "@/lib/study/types"
 
 const QUESTION_SECONDS = 10
 

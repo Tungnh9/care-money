@@ -13,7 +13,7 @@ import { formatMoney } from "@/lib/format"
 import { AddCreditCardForm } from "./add-credit-card-form"
 import { EditCreditCardModal } from "./edit-credit-card-modal"
 import { PayCreditCardModal } from "./pay-credit-card-modal"
-import type { CreditCard } from "../types"
+import type { CreditCard } from "@/lib/finance/types"
 
 interface CreditCardsTabProps {
   cards: CreditCard[]

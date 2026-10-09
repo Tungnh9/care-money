@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest"
 import { render, screen, fireEvent } from "@testing-library/react"
 
 import { AddGoldForm } from "../../components/add-gold-form"
-import type { GoldStore } from "../../types"
+import type { GoldStore } from "@/lib/finance/types"
 
 const SJX: GoldStore = { name: "SJX", price: "880.000" }
 const PNJ: GoldStore = { name: "PNJ", price: "870.000" }

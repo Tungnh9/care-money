@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { fireEvent, render, screen } from "@testing-library/react"
 
-import { pickDaily } from "@/features/study/daily-pick"
-import type { GrammarEntry, Task, VocabEntry } from "@/features/study/types"
+import { pickDaily } from "@/lib/study/daily-pick"
+import type { GrammarEntry, Task, VocabEntry } from "@/lib/study/types"
 import { dayKey } from "@/lib/date"
 import { StudySummarySection } from "../../components/study-summary-section"
 

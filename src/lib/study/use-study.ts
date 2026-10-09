@@ -1,0 +1,174 @@
+"use client"
+
+import { useCallback, useEffect, useRef, useState } from "react"
+
+import { dayKey } from "@/lib/date"
+import { useStorageSync } from "@/lib/use-storage-sync"
+import { nextStreak } from "@/lib/study/game-calculations"
+import { applyGrade, ensureReviewStates, initialReviewState, seedLearnedReviewState } from "@/lib/study/srs-calculations"
+import {
+  DEFAULT_STUDY_STATE,
+  STUDY_STORAGE_KEY,
+  getStoredStudy,
+  setStoredStudy,
+  tasksForDay,
+  type StudyState,
+} from "@/lib/study/study-storage"
+import type { GameType, ReviewGrade, VocabEntry } from "@/lib/study/types"
+
+function useStudy() {
+  const [state, setState] = useState<StudyState>(DEFAULT_STUDY_STATE)
+  const [hydrated, setHydrated] = useState(false)
+  // Bản sao "mới nhất" của state, cập nhật ĐỒNG BỘ ngay trong persist() — khác setState (bất
+  // đồng bộ, gộp theo batch). Nhiều action gọi liên tiếp trong cùng 1 tick (vd. onWordReviewed
+  // rồi onFinish khi 1 ván game kết thúc) đều phải đọc state MỚI NHẤT qua ref này, không phải
+  // qua closure `state` của lần render hiện tại — nếu không, action gọi sau sẽ tính "next" từ
+  // state CŨ (chưa thấy thay đổi của action gọi trước), ghi đè mất thay đổi đó.
+  const stateRef = useRef(state)
+
+  useEffect(() => {
+    // localStorage không có lúc SSR, chỉ đọc được thật sau khi mount trên client.
+    const loaded = getStoredStudy()
+    stateRef.current = loaded
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setState(loaded)
+    setHydrated(true)
+  }, [])
+
+  // Tab khác (hay 1 lần nhập file/tải xuống) ghi study-progress → đọc lại. Cập nhật stateRef TRƯỚC
+  // setState, cùng lý do stateRef tồn tại: action gọi ngay sau đó phải thấy dữ liệu mới nhất.
+  const reload = useCallback(() => {
+    const loaded = getStoredStudy()
+    stateRef.current = loaded
+    setState(loaded)
+  }, [])
+  useStorageSync(STUDY_STORAGE_KEY, reload)
+
+  const persist = useCallback((next: StudyState) => {
+    stateRef.current = next
+    setState(next)
+    setStoredStudy(next)
+  }, [])
+
+  const toggleTask = useCallback(
+    (index: number) => {
+      const current = stateRef.current
+      const today = dayKey()
+      // Dựng từ danh sách của HÔM NAY (tick của hôm qua đã về chưa làm) rồi đóng dấu ngày — nếu không,
+      // trang để mở qua đêm tick 1 việc sáng nay sẽ lưu luôn các tick sót lại từ hôm qua thành của hôm nay.
+      const tasks = tasksForDay(current.tasks, current.tasksDay, today).map((task, i) =>
+        i === index ? { ...task, done: !task.done } : task
+      )
+      persist({ ...current, tasks, tasksDay: today })
+    },
+    [persist]
+  )
+
+  const toggleLearned = useCallback(
+    (id: string) => {
+      const current = stateRef.current
+      const today = dayKey()
+      const wasLearned = current.learned.includes(id)
+      const learned = wasLearned ? current.learned.filter((entryId) => entryId !== id) : [...current.learned, id]
+
+      // Chỉ đụng lịch ôn của từ CHƯA từng được chấm thật (lastReviewedAt null: entry cold-seed tự động
+      // của seedReviews, entry seed "đã học", hoặc chưa có entry nào):
+      // - đánh dấu MỚI "đã học" → đẩy lịch ra xa theo seed "learned" (6 ngày), thay vì để nguyên "due
+      //   hôm nay" của lượt cold-seed ban đầu;
+      // - BỎ đánh dấu (vd. bấm nhầm rồi bấm lại ngay) → trả về seed từ mới, tới hạn hôm nay — nếu không,
+      //   từ đó vẫn bị đẩy 6 ngày và lần "Nhớ" đầu tiên nhảy thẳng lên ~15 ngày dù chưa từng học.
+      // Từ ĐÃ có tiến trình ôn thật (lastReviewedAt khác null) thì giữ nguyên ở cả 2 chiều.
+      const existing = current.wordReviews[id]
+      const neverReviewed = !existing || existing.lastReviewedAt === null
+      const wordReviews = neverReviewed
+        ? {
+            ...current.wordReviews,
+            [id]: wasLearned ? initialReviewState(id, today) : seedLearnedReviewState(id, today),
+          }
+        : current.wordReviews
+
+      persist({ ...current, learned, wordReviews })
+    },
+    [persist]
+  )
+
+  const recordGameResult = useCallback(
+    (type: GameType, score: number): { isNewHighScore: boolean } => {
+      const current = stateRef.current
+      const isNewHighScore = score > current.gameHighScores[type]
+      const gameHighScores = {
+        ...current.gameHighScores,
+        [type]: Math.max(current.gameHighScores[type], score),
+      }
+      // nextStreak trả về chính current.gameStreak (cùng reference) khi chơi lại trong cùng
+      // ngày — nhờ đó so sánh === dưới đây phát hiện đúng lúc không có gì thật sự đổi.
+      const gameStreak = nextStreak(current.gameStreak, dayKey())
+      const unchanged = gameHighScores[type] === current.gameHighScores[type] && gameStreak === current.gameStreak
+      if (!unchanged) {
+        persist({ ...current, gameHighScores, gameStreak })
+      }
+      return { isNewHighScore }
+    },
+    [persist]
+  )
+
+  const gradeWord = useCallback(
+    (wordId: string, grade: ReviewGrade) => {
+      const current = stateRef.current
+      const today = dayKey()
+      // Từ chưa từng có entry được tạo ngay tại đây theo đúng loại seed (cold/learned) rồi chấm
+      // luôn trong 1 bước.
+      const existing =
+        current.wordReviews[wordId] ??
+        (current.learned.includes(wordId)
+          ? seedLearnedReviewState(wordId, today)
+          : initialReviewState(wordId, today))
+
+      // Giới hạn 1 lần chấm/từ/ngày, áp dụng chung cho cả chấm tay lẫn tín hiệu tự động từ
+      // mini-game — nếu không, trúng lại đúng 1 từ nhiều lần trong cùng ngày (chơi nhiều ván liên
+      // tiếp) sẽ dồn khoảng cách ôn tăng vọt (1→6→15→...) chỉ trong vài phút, thay vì đúng nhịp
+      // 1 lần/ngày mà SM-2 giả định.
+      const alreadyGradedToday = existing.lastReviewedAt !== null && dayKey(new Date(existing.lastReviewedAt)) === today
+      if (alreadyGradedToday) return
+
+      const wordReviews = {
+        ...current.wordReviews,
+        [wordId]: applyGrade(existing, grade, today, new Date().toISOString()),
+      }
+      persist({ ...current, wordReviews })
+    },
+    [persist]
+  )
+
+  // Ghi lại 1 lần các entry SRS còn thiếu (từ mới, hoặc lần đầu bật tính năng) ngay khi dữ liệu
+  // thật đã tải xong — nếu không, entry "learned" sẽ bị tính lại dueAt = hôm nay + 6 mỗi lần
+  // render (không bao giờ tới hạn thật) thay vì cố định đúng 1 lần tại thời điểm seed.
+  const seedReviews = useCallback(
+    (vocab: VocabEntry[]) => {
+      const current = stateRef.current
+      const wordReviews = ensureReviewStates(current.wordReviews, vocab, current.learned, dayKey())
+      if (wordReviews !== current.wordReviews) {
+        persist({ ...current, wordReviews })
+      }
+    },
+    [persist]
+  )
+
+  return {
+    // Luôn là nhiệm vụ của hôm nay — StudyView, OverviewView, SettingsView đều đọc từ đây.
+    tasks: tasksForDay(state.tasks, state.tasksDay, dayKey()),
+    learned: state.learned,
+    gameHighScores: state.gameHighScores,
+    gameStreak: state.gameStreak,
+    wordReviews: state.wordReviews,
+    hydrated,
+    toggleTask,
+    toggleLearned,
+    recordGameResult,
+    gradeWord,
+    seedReviews,
+    replaceStudy: persist,
+  }
+}
+
+export { useStudy }

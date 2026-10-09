@@ -7,8 +7,8 @@ import { Bold, Italic, List, ListOrdered, Quote, Underline, Heading2 } from "luc
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-import { sanitizeJournalHtml } from "../journal-html"
-import type { JournalEntry, MoodSnapshot } from "../types"
+import { sanitizeJournalHtml } from "@/lib/journal/journal-html"
+import type { JournalEntry, MoodSnapshot } from "@/lib/journal/types"
 
 interface Tool {
   icon: typeof Bold

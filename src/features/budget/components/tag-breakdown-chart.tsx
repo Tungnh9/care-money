@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
-import { CHART_PALETTE, type TagBreakdownEntry } from "../budget-calculations"
+import { CHART_PALETTE, type TagBreakdownEntry } from "@/lib/budget/budget-calculations"
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false })
 

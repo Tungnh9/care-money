@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { fireEvent, render, screen } from "@testing-library/react"
 
 import { JournalEntriesCard } from "../../components/journal-entries-card"
-import type { JournalEntry } from "../../types"
+import type { JournalEntry } from "@/lib/journal/types"
 
 const SHORT_ENTRY: JournalEntry = {
   id: new Date(2026, 7, 10, 9, 0).getTime(),

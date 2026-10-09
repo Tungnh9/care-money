@@ -3,9 +3,9 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 
 import { StudyView } from "../../components/study-view"
 import { dayKey } from "@/lib/date"
-import { pickDaily } from "../../daily-pick"
-import { STUDY_STORAGE_KEY } from "../../study-storage"
-import type { GrammarEntry, VocabEntry } from "../../types"
+import { pickDaily } from "@/lib/study/daily-pick"
+import { STUDY_STORAGE_KEY } from "@/lib/study/study-storage"
+import type { GrammarEntry, VocabEntry } from "@/lib/study/types"
 
 const VOCAB: VocabEntry[] = Array.from({ length: 10 }, (_, i) => ({
   id: `v-${i}`,

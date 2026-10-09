@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { render, screen, fireEvent, act } from "@testing-library/react"
 
 import { MatchGame } from "../../../components/games/match-game"
-import { matchScoreFromFlips } from "../../../game-calculations"
-import type { VocabEntry } from "../../../types"
+import { matchScoreFromFlips } from "@/lib/study/game-calculations"
+import type { VocabEntry } from "@/lib/study/types"
 
 function vocab(id: string): VocabEntry {
   return { id, word: `word-${id}`, meaning: `nghĩa-${id}`, addedAt: "2026-01-01" }

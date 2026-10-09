@@ -5,8 +5,8 @@ import { FundPicker } from "@/components/ob/fund-picker"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
-import type { SavingsFund } from "@/features/finance/types"
-import type { Goal } from "../types"
+import type { SavingsFund } from "@/lib/finance/types"
+import type { Goal } from "@/lib/goals/types"
 
 interface GoalCardProps {
   goal: Goal

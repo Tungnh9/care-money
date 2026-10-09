@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest"
 import { render, screen, fireEvent } from "@testing-library/react"
 
 import { EditSavingsFundModal } from "../../components/edit-savings-fund-modal"
-import type { SavingsFund } from "../../types"
+import type { SavingsFund } from "@/lib/finance/types"
 
 const FUND: SavingsFund = { name: "Quỹ du lịch", amount: 2_000_000, target: 10_000_000, note: "Đi Đà Lạt cuối năm" }
 

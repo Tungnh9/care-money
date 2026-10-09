@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest"
 import { render, screen, fireEvent } from "@testing-library/react"
 
 import { EditGoldStoreModal } from "../../components/edit-gold-store-modal"
-import type { GoldStore } from "../../types"
+import type { GoldStore } from "@/lib/finance/types"
 
 const STORE: GoldStore = { name: "PNJ", price: "7.550.000" }
 

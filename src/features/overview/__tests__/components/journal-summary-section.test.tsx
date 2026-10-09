@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { render, screen } from "@testing-library/react"
 
-import type { JournalEntry } from "@/features/journal/types"
+import type { JournalEntry } from "@/lib/journal/types"
 import { JournalSummarySection } from "../../components/journal-summary-section"
 
 const ENTRY: JournalEntry = {

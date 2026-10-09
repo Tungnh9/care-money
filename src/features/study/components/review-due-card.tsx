@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Empty } from "@/components/ob/empty"
 import { cn } from "@/lib/utils"
-import { DAILY_REVIEW_CAP } from "../srs-calculations"
+import { DAILY_REVIEW_CAP } from "@/lib/study/srs-calculations"
 import { ReviewWordCard } from "./review-word-card"
-import type { ReviewGrade, VocabEntry } from "../types"
+import type { ReviewGrade, VocabEntry } from "@/lib/study/types"
 
 interface ReviewDueCardProps {
   dueWords: VocabEntry[]

@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react"
 
 import { groupVN } from "@/components/ui/field"
 import { EditGoldPurchaseModal } from "../../components/edit-gold-purchase-modal"
-import type { GoldPurchase, GoldStore } from "../../types"
+import type { GoldPurchase, GoldStore } from "@/lib/finance/types"
 
 const PURCHASE: GoldPurchase = { id: 1, date: "10/08/2026", phan: 2, buy: 7_500_000, store: "PNJ" }
 const STORES: GoldStore[] = [{ name: "PNJ", price: "7.550.000" }, { name: "SJC", price: "7.600.000" }]

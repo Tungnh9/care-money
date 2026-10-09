@@ -9,8 +9,8 @@ import { FundPicker } from "@/components/ob/fund-picker"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import { formatMonthKey } from "@/lib/date"
-import type { SavingsFund } from "@/features/finance/types"
-import type { SettlementDirection } from "../types"
+import type { SavingsFund } from "@/lib/finance/types"
+import type { SettlementDirection } from "@/lib/budget/types"
 
 interface SettleMonthModalProps {
   open: boolean

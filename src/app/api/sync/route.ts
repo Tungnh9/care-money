@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { get, put } from "@vercel/blob"
 
-import { parseImportPayload, uploadedSummary } from "@/features/settings/data-transfer"
+import { parseImportPayload, uploadedSummary } from "@/lib/data-transfer"
 
 const SYNC_PATHNAME = "sync/snapshot.json"
 

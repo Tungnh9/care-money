@@ -1,10 +1,10 @@
 "use client"
 
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
-import { goldReferencePricePerPhan, summarizeFinance } from "@/features/finance/finance-calculations"
-import { useFinance } from "@/features/finance/hooks/use-finance"
-import { useCarGoalFund } from "../hooks/use-car-goal-fund"
-import { getGoals } from "../get-goals"
+import { goldReferencePricePerPhan, summarizeFinance } from "@/lib/finance/finance-calculations"
+import { useFinance } from "@/lib/finance/use-finance"
+import { useCarGoalFund } from "@/lib/goals/use-car-goal-fund"
+import { getGoals } from "@/lib/goals/get-goals"
 import { GoalCard } from "./goal-card"
 import { OverallProgressCard } from "./overall-progress-card"
 

@@ -4,8 +4,8 @@ import { render, screen, fireEvent, within, waitFor } from "@testing-library/rea
 import { MoneyVisibilityProvider } from "@/components/money-visibility-provider"
 import { ExpenseListCard } from "../../components/expense-list-card"
 import { formatMoney } from "@/lib/format"
-import { UNTAGGED_EMOJI, UNTAGGED_LABEL } from "../../budget-calculations"
-import type { Expense } from "../../types"
+import { UNTAGGED_EMOJI, UNTAGGED_LABEL } from "@/lib/budget/budget-calculations"
+import type { Expense } from "@/lib/budget/types"
 
 const EXPENSES: Expense[] = [
   { id: 2, dayKey: "2026-09-02", amount: 50_000, tag: { label: "Mua sắm", emoji: "🛍️", tint: "#E7F6EF" } },

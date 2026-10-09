@@ -1,4 +1,4 @@
-import type { JournalEntry } from "./types"
+import type { JournalEntry } from "@/lib/journal/types"
 
 function isSameCalendarDay(a: Date, b: Date): boolean {
   return (

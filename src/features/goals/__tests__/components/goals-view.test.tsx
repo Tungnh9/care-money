@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import { render, screen, waitFor, within, fireEvent } from "@testing-library/react"
 
-import { DEFAULT_FINANCE_STATE, setStoredFinance } from "@/features/finance/finance-storage"
+import { DEFAULT_FINANCE_STATE, setStoredFinance } from "@/lib/finance/finance-storage"
 import { formatMoney } from "@/lib/format"
 import { GoalsView } from "../../components/goals-view"
 

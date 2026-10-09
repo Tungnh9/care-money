@@ -5,8 +5,8 @@ import { Pencil, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
-import { goldMarketPrice, goldPurchasePL, phanToChi } from "../finance-calculations"
-import type { GoldPurchase, GoldStore } from "../types"
+import { goldMarketPrice, goldPurchasePL, phanToChi } from "@/lib/finance/finance-calculations"
+import type { GoldPurchase, GoldStore } from "@/lib/finance/types"
 import { GoldPLBadge } from "./gold-pl-indicator"
 
 interface GoldTransactionsTableProps {

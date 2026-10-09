@@ -1,0 +1,82 @@
+import { describe, it, expect } from "vitest"
+import { z } from "zod"
+
+import { getGrammar, getVocab, parseJsonl } from "@/lib/study/content-loader"
+
+const idSchema = z.object({ id: z.string() })
+
+describe("parseJsonl", () => {
+  it("parses every valid line into an object", () => {
+    const result = parseJsonl('{"id":"a"}\n{"id":"b"}', "test.jsonl", idSchema)
+    expect(result).toEqual([{ id: "a" }, { id: "b" }])
+  })
+
+  it("skips blank lines", () => {
+    const result = parseJsonl('{"id":"a"}\n\n   \n{"id":"b"}', "test.jsonl", idSchema)
+    expect(result).toEqual([{ id: "a" }, { id: "b" }])
+  })
+
+  it("throws an error naming the file and 1-indexed line number when a line is malformed", () => {
+    const raw = '{"id":"a"}\nNOT JSON\n{"id":"c"}'
+    expect(() => parseJsonl(raw, "vocabulary.jsonl", idSchema)).toThrow(/vocabulary\.jsonl:2/)
+  })
+
+  it("throws naming the file, line and field when a line is missing a required field", () => {
+    const schema = z.object({ id: z.string(), word: z.string(), meaning: z.string(), addedAt: z.string() })
+    // Dòng 2 gõ nhầm "Word" thay cho "word" — trước đây lọt qua build rồi làm sập /study, /overview.
+    const raw =
+      '{"id":"v-1","word":"a","meaning":"m","addedAt":"2026-01-01"}\n' +
+      '{"id":"v-2","Word":"b","meaning":"m","addedAt":"2026-01-01"}'
+
+    expect(() => parseJsonl(raw, "vocabulary.jsonl", schema)).toThrow(/vocabulary\.jsonl:2: .*word/)
+  })
+})
+
+describe("getVocab", () => {
+  it("loads a substantial, growing set of real vocabulary entries", () => {
+    const vocab = getVocab()
+
+    expect(vocab.length).toBeGreaterThan(300)
+    expect(vocab[0]).toMatchObject({
+      id: expect.stringMatching(/^v-\d+$/),
+      word: expect.any(String),
+      meaning: expect.any(String),
+      addedAt: expect.any(String),
+    })
+  })
+
+  it("gives every entry a unique id", () => {
+    const vocab = getVocab()
+    const ids = new Set(vocab.map((v) => v.id))
+    expect(ids.size).toBe(vocab.length)
+  })
+})
+
+describe("getGrammar", () => {
+  it("loads a substantial set of real grammar entries", () => {
+    const grammar = getGrammar()
+
+    expect(grammar.length).toBeGreaterThan(30)
+    expect(grammar[0]).toMatchObject({
+      id: expect.stringMatching(/^g-\d+$/),
+      title: expect.any(String),
+      explanation: expect.any(String),
+      addedAt: expect.any(String),
+    })
+  })
+
+  it("gives every entry a unique id", () => {
+    const grammar = getGrammar()
+    const ids = new Set(grammar.map((g) => g.id))
+    expect(ids.size).toBe(grammar.length)
+  })
+
+  it("carries a non-empty structure field for every entry", () => {
+    const grammar = getGrammar()
+    expect(grammar.length).toBeGreaterThan(0)
+    for (const entry of grammar) {
+      expect(typeof entry.structure).toBe("string")
+      expect(entry.structure?.length).toBeGreaterThan(0)
+    }
+  })
+})

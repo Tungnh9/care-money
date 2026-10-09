@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { gameDefinition } from "../../game-registry"
-import type { GameMistake, GameType } from "../../types"
+import type { GameMistake, GameType } from "@/lib/study/types"
 
 interface GameResultCardProps {
   type: GameType

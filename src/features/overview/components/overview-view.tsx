@@ -2,21 +2,21 @@
 
 import { useEffect } from "react"
 
-import { goldReferencePricePerPhan, summarizeFinance } from "@/features/finance/finance-calculations"
-import { useFinance } from "@/features/finance/hooks/use-finance"
+import { goldReferencePricePerPhan, summarizeFinance } from "@/lib/finance/finance-calculations"
+import { useFinance } from "@/lib/finance/use-finance"
 import { getGoals, useCarGoalFund } from "@/features/goals"
-import { useJournal } from "@/features/journal/hooks/use-journal"
-import { useBudget } from "@/features/budget/hooks/use-budget"
-import { remainingToSettle, salaryForMonth, totalExpensesForMonth } from "@/features/budget/budget-calculations"
-import { useStudy } from "@/features/study/hooks/use-study"
-import { ensureReviewStates, getDueWords } from "@/features/study/srs-calculations"
-import type { GrammarEntry, VocabEntry } from "@/features/study/types"
-import { useSettings } from "@/features/settings/hooks/use-settings"
+import { useJournal } from "@/lib/journal/use-journal"
+import { useBudget } from "@/lib/budget/use-budget"
+import { remainingToSettle, salaryForMonth, totalExpensesForMonth } from "@/lib/budget/budget-calculations"
+import { useStudy } from "@/lib/study/use-study"
+import { ensureReviewStates, getDueWords } from "@/lib/study/srs-calculations"
+import type { GrammarEntry, VocabEntry } from "@/lib/study/types"
+import { useSettings } from "@/lib/settings/use-settings"
 import { Monkey } from "@/components/ob/monkey"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { dayKey, longDate, monthKey } from "@/lib/date"
 import { formatMoney } from "@/lib/format"
-import { useNetWorthHistory } from "../hooks/use-net-worth-history"
+import { useNetWorthHistory } from "@/lib/net-worth/use-net-worth-history"
 import {
   detectMoodSpendingCorrelation,
   detectSpendingAnomaly,

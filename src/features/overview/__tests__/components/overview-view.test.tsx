@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 
-import { DEFAULT_SETTINGS, setStoredSettings } from "@/lib/settings-storage"
-import { DEFAULT_FINANCE_STATE, setStoredFinance } from "@/features/finance/finance-storage"
-import { setCarGoalFundName } from "@/features/goals/car-goal-storage"
-import { DEFAULT_BUDGET_STATE, setStoredBudget } from "@/features/budget/budget-storage"
+import { DEFAULT_SETTINGS, setStoredSettings } from "@/lib/settings/settings-storage"
+import { DEFAULT_FINANCE_STATE, setStoredFinance } from "@/lib/finance/finance-storage"
+import { setCarGoalFundName } from "@/lib/goals/car-goal-storage"
+import { DEFAULT_BUDGET_STATE, setStoredBudget } from "@/lib/budget/budget-storage"
 import { formatMoney } from "@/lib/format"
-import type { GrammarEntry, VocabEntry } from "@/features/study/types"
+import type { GrammarEntry, VocabEntry } from "@/lib/study/types"
 import { OverviewView } from "../../components/overview-view"
 
 const VOCAB: VocabEntry[] = Array.from({ length: 10 }, (_, i) => ({
@@ -130,7 +130,7 @@ describe("OverviewView", () => {
   })
 
   it("shows a spending-anomaly insight and dismisses it correctly", async () => {
-    const { setStoredBudget } = await import("@/features/budget/budget-storage")
+    const { setStoredBudget } = await import("@/lib/budget/budget-storage")
     // Hôm nay là 2026-08-14 (beforeEach ở trên đã setSystemTime) → currentMonth = "2026-08",
     // 3 tháng nền = 05/06/07. Nền KHÔNG được bằng nhau hệt nhau (std=0 → detectSpendingAnomaly
     // luôn trả null) — dùng đúng 3 số đã kiểm chứng ở Task 7 (mean=1,000,000, std=100,000),
@@ -167,7 +167,7 @@ describe("OverviewView", () => {
     // `financeHydrated` trước khi ghi — test này xác nhận KHÔNG CÓ lần ghi nào (kể cả tạm thời)
     // mang giá trị 0, không chỉ "tự sửa lại sau".
     const { getStoredNetWorthHistory, NET_WORTH_HISTORY_KEY } = await import(
-      "@/features/overview/net-worth-history-storage"
+      "@/lib/net-worth/net-worth-history-storage"
     )
     setStoredFinance({
       ...DEFAULT_FINANCE_STATE,

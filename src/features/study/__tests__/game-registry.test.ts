@@ -4,7 +4,7 @@ import { GAME_REGISTRY, gameDefinition } from "../game-registry"
 import { MatchGame } from "../components/games/match-game"
 import { QuizGame } from "../components/games/quiz-game"
 import { SpellingGame } from "../components/games/spelling-game"
-import type { GameType } from "../types"
+import type { GameType } from "@/lib/study/types"
 
 describe("GAME_REGISTRY", () => {
   it("has exactly one entry per GameType", () => {

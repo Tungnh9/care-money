@@ -1,9 +1,9 @@
 import { Check } from "lucide-react"
 
-import { pickDaily } from "@/features/study/daily-pick"
-import { DAILY_REVIEW_CAP } from "@/features/study/srs-calculations"
-import { GrammarHighlightCard } from "@/features/study/components/grammar-card"
-import type { GrammarEntry, Task, VocabEntry } from "@/features/study/types"
+import { pickDaily } from "@/lib/study/daily-pick"
+import { DAILY_REVIEW_CAP } from "@/lib/study/srs-calculations"
+import { GrammarHighlightCard } from "@/components/ob/grammar-card"
+import type { GrammarEntry, Task, VocabEntry } from "@/lib/study/types"
 import { Card } from "@/components/ui/card"
 import { Figure } from "@/components/ob/figure"
 import { ImageWithFallback } from "@/components/ob/image-with-fallback"

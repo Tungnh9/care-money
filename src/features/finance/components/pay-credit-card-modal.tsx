@@ -7,7 +7,7 @@ import { Field } from "@/components/ui/field"
 import { Modal } from "@/components/ui/modal"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
-import type { CreditCard } from "../types"
+import type { CreditCard } from "@/lib/finance/types"
 
 interface PayCreditCardModalProps {
   card: CreditCard | null

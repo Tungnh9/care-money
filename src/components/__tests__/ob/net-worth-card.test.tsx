@@ -3,7 +3,7 @@ import { act, render, screen } from "@testing-library/react"
 
 import { formatMoney } from "@/lib/format"
 import { NetWorthCard } from "@/components/ob/net-worth-card"
-import { pct1, type FinanceSummary } from "@/features/finance/finance-calculations"
+import { pct1, type FinanceSummary } from "@/lib/finance/finance-calculations"
 
 function buildSummary(overrides: Partial<FinanceSummary> = {}): FinanceSummary {
   return {

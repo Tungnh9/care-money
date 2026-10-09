@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import type { GoldStore } from "../types"
+import type { GoldStore } from "@/lib/finance/types"
 
 interface GoldStorePickerProps {
   stores: GoldStore[]

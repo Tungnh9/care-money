@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Field } from "@/components/ui/field"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
-import { BUDGET_AMOUNT_LIMIT_HINT, exceedsBudgetAmountLimit } from "../budget-calculations"
+import { BUDGET_AMOUNT_LIMIT_HINT, exceedsBudgetAmountLimit } from "@/lib/budget/budget-calculations"
 
 interface SalaryCardProps {
   month: string

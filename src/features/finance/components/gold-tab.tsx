@@ -21,8 +21,8 @@ import {
   unpricedGoldStores,
   type FinanceSummary,
   type GoldStoreSummary,
-} from "../finance-calculations"
-import type { GoldPurchase, GoldStore } from "../types"
+} from "@/lib/finance/finance-calculations"
+import type { GoldPurchase, GoldStore } from "@/lib/finance/types"
 import { AddGoldForm } from "./add-gold-form"
 import { EditGoldPurchaseModal } from "./edit-gold-purchase-modal"
 import { GoldStoreSummaryCards } from "./gold-store-summary-cards"

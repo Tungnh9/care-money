@@ -1,8 +1,8 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import type { BudgetTag } from "@/lib/settings-storage"
-import type { TagSnapshot } from "../types"
+import type { BudgetTag } from "@/lib/settings/settings-storage"
+import type { TagSnapshot } from "@/lib/budget/types"
 
 interface TagPickerProps {
   tags: BudgetTag[]

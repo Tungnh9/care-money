@@ -1,4 +1,4 @@
-import { parseImportPayload, type ExportPayload, type ImportResult } from "./data-transfer"
+import { parseImportPayload, type ExportPayload, type ImportResult } from "@/lib/data-transfer"
 
 type PushResult = { ok: true; summary: string } | { ok: false; error: string }
 

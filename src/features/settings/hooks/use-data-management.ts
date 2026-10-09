@@ -2,24 +2,24 @@
 
 import { useCallback, useState } from "react"
 
-import { FINANCE_STORAGE_KEY, getStoredFinance, type FinanceState } from "@/features/finance/finance-storage"
+import { FINANCE_STORAGE_KEY, getStoredFinance, type FinanceState } from "@/lib/finance/finance-storage"
 import {
   DEFAULT_JOURNAL_STATE,
   JOURNAL_STORAGE_KEY,
   getStoredJournal,
   type JournalState,
-} from "@/features/journal/journal-storage"
-import { DEFAULT_STUDY_STATE, STUDY_STORAGE_KEY, getStoredStudy, type StudyState } from "@/features/study/study-storage"
-import { BUDGET_STORAGE_KEY, DEFAULT_BUDGET_STATE, getStoredBudget, type BudgetState } from "@/features/budget/budget-storage"
+} from "@/lib/journal/journal-storage"
+import { DEFAULT_STUDY_STATE, STUDY_STORAGE_KEY, getStoredStudy, type StudyState } from "@/lib/study/study-storage"
+import { BUDGET_STORAGE_KEY, DEFAULT_BUDGET_STATE, getStoredBudget, type BudgetState } from "@/lib/budget/budget-storage"
 import {
   DEFAULT_NET_WORTH_HISTORY,
   NET_WORTH_HISTORY_KEY,
   getStoredNetWorthHistory,
   type NetWorthHistory,
-} from "@/features/overview/net-worth-history-storage"
-import { CAR_GOAL_FUND_KEY, getCarGoalFundName, setCarGoalFundName } from "@/features/goals/car-goal-storage"
+} from "@/lib/net-worth/net-worth-history-storage"
+import { CAR_GOAL_FUND_KEY, getCarGoalFundName, setCarGoalFundName } from "@/lib/goals/car-goal-storage"
 import { notifyDataChanged } from "@/lib/data-change-bus"
-import { SETTINGS_STORAGE_KEY, getStoredSettings, type AppSettings } from "@/lib/settings-storage"
+import { SETTINGS_STORAGE_KEY, getStoredSettings, type AppSettings } from "@/lib/settings/settings-storage"
 import { clearSyncSecret } from "@/lib/sync-secret-storage"
 import { pushSnapshot, pullSnapshot } from "../api"
 import {
@@ -29,7 +29,7 @@ import {
   restoreCounts,
   type ExportSnapshot,
   type ImportedSnapshot,
-} from "../data-transfer"
+} from "@/lib/data-transfer"
 
 interface ExportedInfo {
   file: string

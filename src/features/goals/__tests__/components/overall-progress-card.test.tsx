@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest"
 import { render } from "@testing-library/react"
 
 import { OverallProgressCard } from "../../components/overall-progress-card"
-import type { Goal } from "../../types"
+import type { Goal } from "@/lib/goals/types"
 
 function buildGoal(overrides: Partial<Goal> = {}): Goal {
   return {

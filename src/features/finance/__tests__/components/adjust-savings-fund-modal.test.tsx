@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react"
 
 import { formatMoney } from "@/lib/format"
 import { AdjustSavingsFundModal } from "../../components/adjust-savings-fund-modal"
-import type { SavingsFund } from "../../types"
+import type { SavingsFund } from "@/lib/finance/types"
 
 const FUND: SavingsFund = { name: "Quỹ khẩn cấp", amount: 5_000_000, target: 20_000_000 }
 

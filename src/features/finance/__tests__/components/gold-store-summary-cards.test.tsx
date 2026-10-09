@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest"
 import { render, screen } from "@testing-library/react"
 
 import { formatMoney } from "@/lib/format"
-import { phanToChi } from "../../finance-calculations"
+import { phanToChi } from "@/lib/finance/finance-calculations"
 import { GoldStoreSummaryCards } from "../../components/gold-store-summary-cards"
 
 const ZERO_TOTAL = { store: "Tổng cộng", phan: 0, avgBuy: 0, cost: 0, value: 0, pl: 0 }

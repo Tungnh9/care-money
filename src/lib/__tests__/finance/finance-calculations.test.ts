@@ -1,0 +1,477 @@
+import { describe, it, expect } from "vitest"
+
+import {
+  phanToChi,
+  formatPhan,
+  pct1,
+  parseGoldPrice,
+  summarizeFinance,
+  parseDueDay,
+  nearestDueCard,
+  goldReferencePricePerPhan,
+  goldPurchasePL,
+  goldStorePrice,
+  goldMarketPrice,
+  unpricedGoldStores,
+  parseGoldDate,
+  normalizeGoldDate,
+  sortGoldByDate,
+  summarizeGoldByStore,
+} from "@/lib/finance/finance-calculations"
+import { DEFAULT_FINANCE_STATE, type FinanceState } from "@/lib/finance/finance-storage"
+
+describe("phanToChi", () => {
+  it("formats an exact multiple of 10 phân as whole chỉ", () => {
+    expect(phanToChi(60)).toBe("6 chỉ")
+  })
+
+  it("includes the remaining phân when not an exact multiple of 10", () => {
+    expect(phanToChi(63)).toBe("6 chỉ 3 phân")
+  })
+
+  it("shows only phân, with no leading 0 chỉ, when under 1 chỉ", () => {
+    expect(phanToChi(7)).toBe("7 phân")
+  })
+
+  it("rounds a fractional phân left over from old data to 1 decimal with a comma, not floating-point noise", () => {
+    expect(phanToChi(12.3)).toBe("1 chỉ 2,3 phân")
+    expect(phanToChi(0.1 + 0.2)).toBe("0,3 phân")
+  })
+
+  it("carries a value that rounds up to 10 phân into a whole chỉ", () => {
+    expect(phanToChi(9.96)).toBe("1 chỉ")
+  })
+})
+
+describe("pct1", () => {
+  it("formats a positive number with a leading plus and comma decimal", () => {
+    expect(pct1(12.34)).toBe("+12,3%")
+  })
+
+  it("formats a negative number with a minus sign and no double sign", () => {
+    expect(pct1(-4.06)).toBe("−4,1%")
+  })
+
+  it("formats zero as positive", () => {
+    expect(pct1(0)).toBe("+0,0%")
+  })
+})
+
+describe("parseGoldPrice", () => {
+  it("strips thousands separators and parses to a number", () => {
+    expect(parseGoldPrice("935.000")).toBe(935000)
+  })
+
+  it("returns 0 for an empty string", () => {
+    expect(parseGoldPrice("")).toBe(0)
+  })
+})
+
+describe("summarizeFinance", () => {
+  it("returns all zeros when there is no data yet", () => {
+    const summary = summarizeFinance(DEFAULT_FINANCE_STATE)
+
+    expect(summary).toEqual({
+      savingsTotal: 0,
+      debtTotal: 0,
+      goldPhan: 0,
+      goldCost: 0,
+      goldValue: 0,
+      goldPL: 0,
+      goldPct: 0,
+      investCost: 0,
+      investValue: 0,
+      investPL: 0,
+      investPct: 0,
+      net: 0,
+      netPct: 0,
+    })
+  })
+
+  it("sums savings and debt across multiple entries", () => {
+    const state: FinanceState = {
+      ...DEFAULT_FINANCE_STATE,
+      savings: [
+        { name: "Quỹ dự phòng", amount: 5_000_000, target: 20_000_000 },
+        { name: "Quỹ du lịch", amount: 2_000_000, target: 10_000_000 },
+      ],
+      cards: [{ name: "Thẻ A", balance: 1_500_000, min: 200_000, limit: 10_000_000, due: "15" }],
+    }
+
+    const summary = summarizeFinance(state)
+    expect(summary.savingsTotal).toBe(7_000_000)
+    expect(summary.debtTotal).toBe(1_500_000)
+    expect(summary.net).toBe(5_500_000)
+  })
+
+  it("computes gold P&L from cost basis vs. each purchase's own store price", () => {
+    const state: FinanceState = {
+      ...DEFAULT_FINANCE_STATE,
+      gold: [
+        { id: 1, date: "01/01/2026", phan: 20, buy: 900_000, store: "SJC" },
+        { id: 2, date: "02/01/2026", phan: 10, buy: 950_000, store: "SJC" },
+      ],
+      goldStores: [{ name: "SJC", price: "1.000.000" }],
+    }
+
+    const summary = summarizeFinance(state)
+    expect(summary.goldPhan).toBe(30)
+    expect(summary.goldCost).toBe(20 * 900_000 + 10 * 950_000)
+    expect(summary.goldValue).toBe(30 * 1_000_000)
+    expect(summary.goldPL).toBe(summary.goldValue - summary.goldCost)
+    expect(summary.goldPct).toBeCloseTo((summary.goldPL / summary.goldCost) * 100)
+  })
+
+  it("values each purchase against its OWN store's price, not one price for everyone", () => {
+    const state: FinanceState = {
+      ...DEFAULT_FINANCE_STATE,
+      gold: [
+        { id: 1, date: "01/01/2026", phan: 10, buy: 900_000, store: "SJC" },
+        { id: 2, date: "02/01/2026", phan: 10, buy: 900_000, store: "PNJ" },
+      ],
+      goldStores: [
+        { name: "SJC", price: "1.000.000" },
+        { name: "PNJ", price: "800.000" },
+      ],
+    }
+
+    const summary = summarizeFinance(state)
+    // SJC: 10*1.000.000 = 10.000.000 | PNJ: 10*800.000 = 8.000.000 -> tổng 18.000.000,
+    // KHÔNG PHẢI 20 phân * 1 giá chung nào cả.
+    expect(summary.goldValue).toBe(10_000_000 + 8_000_000)
+    expect(summary.goldCost).toBe(9_000_000 + 9_000_000)
+    expect(summary.goldPL).toBe(18_000_000 - 18_000_000)
+  })
+
+  it("computes investment P&L and rolls everything into net worth", () => {
+    const state: FinanceState = {
+      ...DEFAULT_FINANCE_STATE,
+      savings: [{ name: "Quỹ dự phòng", amount: 5_000_000, target: 20_000_000 }],
+      cards: [{ name: "Thẻ A", balance: 1_000_000, min: 100_000, limit: 5_000_000, due: "10" }],
+      gold: [{ id: 1, date: "01/01/2026", phan: 10, buy: 900_000, store: "SJC" }],
+      goldStores: [{ name: "SJC", price: "950.000" }],
+      invests: [{ id: 1, name: "Quỹ cổ phiếu", cost: 10_000_000, value: 12_000_000 }],
+    }
+
+    const summary = summarizeFinance(state)
+    expect(summary.investCost).toBe(10_000_000)
+    expect(summary.investValue).toBe(12_000_000)
+    expect(summary.investPL).toBe(2_000_000)
+    expect(summary.investPct).toBeCloseTo(20)
+    expect(summary.net).toBe(
+      5_000_000 + 10 * 950_000 + 12_000_000 - 1_000_000
+    )
+    expect(summary.netPct).toBeCloseTo(
+      ((summary.goldPL + summary.investPL) / (summary.goldCost + summary.investCost)) * 100
+    )
+  })
+})
+
+describe("goldStorePrice", () => {
+  it("returns the parsed price of the matching store", () => {
+    const stores = [
+      { name: "SJC", price: "1.000.000" },
+      { name: "PNJ", price: "800.000" },
+    ]
+    expect(goldStorePrice(stores, "PNJ")).toBe(800_000)
+  })
+
+  it("returns 0 when no store matches the given name", () => {
+    expect(goldStorePrice([{ name: "SJC", price: "1.000.000" }], "DOJI")).toBe(0)
+  })
+})
+
+describe("goldPurchasePL", () => {
+  it("returns a positive number equal to phan*(price-buy) when the market price is above buy price", () => {
+    const purchase = { id: 1, date: "01/01/2026", phan: 10, buy: 900_000, store: "SJC" }
+    const pl = goldPurchasePL(purchase, 950_000)
+
+    expect(pl).toBe(10 * (950_000 - 900_000))
+    expect(pl).toBeGreaterThan(0)
+  })
+
+  it("returns a negative number when the market price is below buy price", () => {
+    const purchase = { id: 2, date: "02/01/2026", phan: 10, buy: 950_000, store: "SJC" }
+    const pl = goldPurchasePL(purchase, 900_000)
+
+    expect(pl).toBe(10 * (900_000 - 950_000))
+    expect(pl).toBeLessThan(0)
+  })
+
+  it("returns exactly 0 when the market price equals the buy price", () => {
+    const purchase = { id: 3, date: "03/01/2026", phan: 10, buy: 900_000, store: "SJC" }
+
+    expect(goldPurchasePL(purchase, 900_000)).toBe(0)
+  })
+})
+
+describe("parseGoldDate", () => {
+  it("parses a dd/mm/yyyy string into an ascending-comparable timestamp", () => {
+    expect(parseGoldDate("10/08/2026")).toBeLessThan(parseGoldDate("11/08/2026"))
+    expect(parseGoldDate("31/12/2025")).toBeLessThan(parseGoldDate("01/01/2026"))
+  })
+
+  it("falls back to 0 for an empty or malformed date string", () => {
+    expect(parseGoldDate("")).toBe(0)
+    expect(parseGoldDate("not-a-date")).toBe(0)
+  })
+
+  it("sorts other ways of writing the same day exactly like dd/mm/yyyy", () => {
+    const expected = parseGoldDate("10/08/2026")
+    expect(parseGoldDate("10-08-2026")).toBe(expected)
+    expect(parseGoldDate("10.08.2026")).toBe(expected)
+    expect(parseGoldDate("2026-08-10")).toBe(expected)
+  })
+
+  it("does not turn a 2-digit year into the 1900s or roll 31/02 over into March", () => {
+    expect(parseGoldDate("10/08/26")).toBe(0)
+    expect(parseGoldDate("31/02/2026")).toBe(0)
+  })
+})
+
+describe("sortGoldByDate", () => {
+  it("sorts purchases from the latest date to the earliest, regardless of input order", () => {
+    const gold = [
+      { id: 1, date: "03/06/2026", phan: 5, buy: 1_436_000, store: "SJC" },
+      { id: 2, date: "05/05/2026", phan: 2, buy: 1_649_000, store: "SJC" },
+      { id: 3, date: "28/07/2026", phan: 5, buy: 1_420_000, store: "SJC" },
+    ]
+
+    expect(sortGoldByDate(gold).map((p) => p.id)).toEqual([3, 1, 2])
+  })
+
+  it("does not mutate the original array", () => {
+    const gold = [
+      { id: 1, date: "28/07/2026", phan: 5, buy: 1_420_000, store: "SJC" },
+      { id: 2, date: "05/05/2026", phan: 2, buy: 1_649_000, store: "SJC" },
+    ]
+    const original = [...gold]
+
+    sortGoldByDate(gold)
+
+    expect(gold).toEqual(original)
+  })
+})
+
+describe("summarizeGoldByStore", () => {
+  it("returns an empty array when there are no purchases", () => {
+    expect(summarizeGoldByStore([], [])).toEqual([])
+  })
+
+  it("groups multiple purchases from the same store into one row", () => {
+    const gold = [
+      { id: 1, date: "01/01/2026", phan: 10, buy: 900_000, store: "SJC" },
+      { id: 2, date: "02/01/2026", phan: 5, buy: 950_000, store: "SJC" },
+    ]
+    const stores = [{ name: "SJC", price: "1.000.000" }]
+
+    const result = summarizeGoldByStore(gold, stores)
+
+    expect(result).toHaveLength(1)
+    expect(result[0]).toEqual({
+      store: "SJC",
+      phan: 15,
+      avgBuy: Math.round((10 * 900_000 + 5 * 950_000) / 15),
+      cost: 10 * 900_000 + 5 * 950_000,
+      value: 15 * 1_000_000,
+      pl: 15 * 1_000_000 - (10 * 900_000 + 5 * 950_000),
+    })
+  })
+
+  it("keeps purchases from different stores as separate rows, sorted alphabetically by store name", () => {
+    const gold = [
+      { id: 1, date: "01/01/2026", phan: 10, buy: 900_000, store: "SJC" },
+      { id: 2, date: "02/01/2026", phan: 8, buy: 900_000, store: "PNJ" },
+    ]
+    const stores = [
+      { name: "SJC", price: "1.000.000" },
+      { name: "PNJ", price: "800.000" },
+    ]
+
+    const result = summarizeGoldByStore(gold, stores)
+
+    expect(result.map((s) => s.store)).toEqual(["PNJ", "SJC"])
+    expect(result.find((s) => s.store === "PNJ")).toMatchObject({ phan: 8, cost: 7_200_000, value: 6_400_000 })
+    expect(result.find((s) => s.store === "SJC")).toMatchObject({ phan: 10, cost: 9_000_000, value: 10_000_000 })
+  })
+
+  it("sums to the same totals summarizeFinance computes from the same gold/store data", () => {
+    const state: FinanceState = {
+      ...DEFAULT_FINANCE_STATE,
+      gold: [
+        { id: 1, date: "01/01/2026", phan: 10, buy: 900_000, store: "SJC" },
+        { id: 2, date: "02/01/2026", phan: 5, buy: 920_000, store: "SJC" },
+        { id: 3, date: "03/01/2026", phan: 8, buy: 900_000, store: "PNJ" },
+      ],
+      goldStores: [
+        { name: "SJC", price: "950.000" },
+        { name: "PNJ", price: "880.000" },
+      ],
+    }
+
+    const summary = summarizeFinance(state)
+    const byStore = summarizeGoldByStore(state.gold, state.goldStores)
+
+    expect(byStore.reduce((sum, s) => sum + s.phan, 0)).toBe(summary.goldPhan)
+    expect(byStore.reduce((sum, s) => sum + s.cost, 0)).toBe(summary.goldCost)
+    expect(byStore.reduce((sum, s) => sum + s.value, 0)).toBe(summary.goldValue)
+    expect(byStore.reduce((sum, s) => sum + s.pl, 0)).toBe(summary.goldPL)
+  })
+})
+
+describe("goldReferencePricePerPhan", () => {
+  const STORES = [
+    { name: "SJC", price: "1.000.000" },
+    { name: "PNJ", price: "800.000" },
+    { name: "DOJI", price: "" },
+  ]
+
+  it("uses the holdings-weighted price while some gold is held", () => {
+    expect(goldReferencePricePerPhan({ goldPhan: 20, goldValue: 19_000_000 }, STORES)).toBe(950_000)
+  })
+
+  it("falls back to the average price of the stores that have one when no gold is held yet", () => {
+    expect(goldReferencePricePerPhan({ goldPhan: 0, goldValue: 0 }, STORES)).toBe(900_000)
+  })
+
+  it("returns 0 when no gold is held and no store has a price", () => {
+    expect(goldReferencePricePerPhan({ goldPhan: 0, goldValue: 0 }, [{ name: "DOJI", price: "" }])).toBe(0)
+    expect(goldReferencePricePerPhan({ goldPhan: 0, goldValue: 0 }, [])).toBe(0)
+  })
+})
+
+describe("goldMarketPrice", () => {
+  const purchase = { id: 1, date: "10/08/2026", phan: 10, buy: 8_000_000, store: "SJC" }
+
+  it("uses the store's price today when it has one", () => {
+    expect(goldMarketPrice([{ name: "SJC", price: "8.500.000" }], purchase)).toBe(8_500_000)
+  })
+
+  it("falls back to the purchase's own buy price while the store has no price yet", () => {
+    expect(goldMarketPrice([{ name: "SJC", price: "" }], purchase)).toBe(8_000_000)
+  })
+
+  it("falls back to the buy price when the store no longer exists", () => {
+    expect(goldMarketPrice([], purchase)).toBe(8_000_000)
+  })
+})
+
+describe("unpricedGoldStores", () => {
+  it("lists each store without a price once, and only stores that hold gold", () => {
+    const gold = [
+      { id: 1, date: "01/08/2026", phan: 10, buy: 8_000_000, store: "SJC" },
+      { id: 2, date: "02/08/2026", phan: 5, buy: 8_100_000, store: "SJC" },
+      { id: 3, date: "03/08/2026", phan: 5, buy: 8_000_000, store: "PNJ" },
+    ]
+    const stores = [
+      { name: "SJC", price: "" },
+      { name: "PNJ", price: "8.200.000" },
+      { name: "DOJI", price: "" },
+    ]
+
+    expect(unpricedGoldStores(gold, stores)).toEqual(["SJC"])
+  })
+})
+
+describe("summarizeFinance — cửa hàng chưa nhập giá", () => {
+  it("values gold from a store without a price at cost, so net worth does not drop by the whole holding", () => {
+    const state: FinanceState = {
+      ...DEFAULT_FINANCE_STATE,
+      gold: [{ id: 1, date: "10/08/2026", phan: 10, buy: 8_000_000, store: "SJC" }],
+      goldStores: [{ name: "SJC", price: "" }],
+    }
+
+    const summary = summarizeFinance(state)
+
+    expect(summary.goldValue).toBe(80_000_000)
+    expect(summary.goldPL).toBe(0)
+    expect(summary.goldPct).toBe(0)
+    expect(summary.net).toBe(80_000_000)
+  })
+})
+
+describe("normalizeGoldDate", () => {
+  it("keeps a dd/mm/yyyy date as is", () => {
+    expect(normalizeGoldDate("10/08/2026")).toBe("10/08/2026")
+  })
+
+  it("accepts 1-digit day/month and '-' or '.' separators, trims spaces and pads to dd/mm/yyyy", () => {
+    expect(normalizeGoldDate("1/8/2026")).toBe("01/08/2026")
+    expect(normalizeGoldDate("10-08-2026")).toBe("10/08/2026")
+    expect(normalizeGoldDate(" 10.08.2026 ")).toBe("10/08/2026")
+  })
+
+  it("accepts an ISO yyyy-mm-dd date", () => {
+    expect(normalizeGoldDate("2026-08-10")).toBe("10/08/2026")
+  })
+
+  it("rejects a 2-digit year, a day that does not exist, mixed separators and free text", () => {
+    expect(normalizeGoldDate("10/08/26")).toBeNull()
+    expect(normalizeGoldDate("31/02/2026")).toBeNull()
+    expect(normalizeGoldDate("10/08-2026")).toBeNull()
+    expect(normalizeGoldDate("hôm qua")).toBeNull()
+    expect(normalizeGoldDate("")).toBeNull()
+  })
+})
+
+describe("formatPhan", () => {
+  it("prints whole phân as is and rounds a fractional one to 1 decimal with a comma", () => {
+    expect(formatPhan(30)).toBe("30")
+    expect(formatPhan(0.1 + 0.2)).toBe("0,3")
+    expect(formatPhan(12.34)).toBe("12,3")
+  })
+})
+
+describe("parseDueDay", () => {
+  it("reads the day of the month from the usual ways of writing a due date", () => {
+    expect(parseDueDay("15")).toBe(15)
+    expect(parseDueDay("15 hàng tháng")).toBe(15)
+    expect(parseDueDay("05/10")).toBe(5)
+    expect(parseDueDay("ngày 25")).toBe(25)
+  })
+
+  it("returns null when the first number is not a day of the month, or there is none", () => {
+    expect(parseDueDay("0")).toBeNull()
+    expect(parseDueDay("45")).toBeNull()
+    expect(parseDueDay("cuối tháng")).toBeNull()
+  })
+})
+
+describe("nearestDueCard", () => {
+  // 30/09/2026
+  const TODAY = new Date(2026, 8, 30)
+
+  function card(name: string, due: string, balance: number) {
+    return { name, balance, min: 0, limit: 10_000_000, due }
+  }
+
+  it("picks the card whose next due date comes first, not the first card added", () => {
+    const cards = [card("Thẻ A", "25/10", 1_000_000), card("Thẻ B", "05/10", 2_000_000)]
+
+    // A: ngày 25 đã qua trong tháng 9 → 25/10 (25 ngày nữa); B: ngày 5 → 05/10 (5 ngày nữa).
+    expect(nearestDueCard(cards, TODAY)?.name).toBe("Thẻ B")
+  })
+
+  it("ignores cards that are already paid off, and returns null when none still owes", () => {
+    const paid = card("Thẻ C", "01", 0)
+    const owing = card("Thẻ A", "25", 1_000_000)
+
+    expect(nearestDueCard([paid, owing], TODAY)?.name).toBe("Thẻ A")
+    expect(nearestDueCard([paid], TODAY)).toBeNull()
+    expect(nearestDueCard([], TODAY)).toBeNull()
+  })
+
+  it("puts a card whose due date cannot be read after every readable one", () => {
+    const cards = [card("Thẻ không rõ", "cuối tháng", 1_000_000), card("Thẻ rõ", "28", 1_000_000)]
+
+    expect(nearestDueCard(cards, TODAY)?.name).toBe("Thẻ rõ")
+    expect(nearestDueCard([cards[0]], TODAY)?.name).toBe("Thẻ không rõ")
+  })
+
+  it("moves a due day that a short month does not have to that month's last day", () => {
+    // 27/02/2026: hạn "31" rơi vào 28/02 (1 ngày nữa), sớm hơn hạn "5" (05/03, 6 ngày nữa).
+    const cards = [card("Hạn 5", "5", 1_000_000), card("Hạn 31", "31", 1_000_000)]
+
+    expect(nearestDueCard(cards, new Date(2026, 1, 27))?.name).toBe("Hạn 31")
+  })
+})

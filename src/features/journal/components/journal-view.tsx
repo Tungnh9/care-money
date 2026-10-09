@@ -5,15 +5,15 @@ import { useRef, useState } from "react"
 import { AlertDialog } from "@/components/ui/alert-dialog"
 import { longDate } from "@/lib/date"
 import { cn } from "@/lib/utils"
-import { useSettings } from "@/features/settings/hooks/use-settings"
-import { useJournal } from "../hooks/use-journal"
+import { useSettings } from "@/lib/settings/use-settings"
+import { useJournal } from "@/lib/journal/use-journal"
 import { findOnThisDay } from "../journal-calculations"
 import { JournalEditor, type EditorDraft } from "./journal-editor"
 import { JournalEntriesCard } from "./journal-entries-card"
 import { JournalSaveSuccess } from "./journal-save-success"
 import { MoodPickerCard } from "./mood-picker-card"
 import { OnThisDayCard } from "./on-this-day-card"
-import type { JournalEntry, MoodSnapshot } from "../types"
+import type { JournalEntry, MoodSnapshot } from "@/lib/journal/types"
 
 const EMPTY_DRAFT: EditorDraft = { html: "", words: 0 }
 

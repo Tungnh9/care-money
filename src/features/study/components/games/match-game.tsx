@@ -5,8 +5,8 @@ import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { Empty } from "@/components/ob/empty"
 import { Fireworks } from "@/components/ob/fireworks"
-import { matchScoreFromFlips, pickMatchEntries, pickRandomSet } from "../../game-calculations"
-import type { VocabEntry } from "../../types"
+import { matchScoreFromFlips, pickMatchEntries, pickRandomSet } from "@/lib/study/game-calculations"
+import type { VocabEntry } from "@/lib/study/types"
 
 const PAIR_COUNT = 6
 const MISMATCH_DELAY_MS = 800

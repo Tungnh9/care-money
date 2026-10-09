@@ -4,7 +4,7 @@ import dynamic from "next/dynamic"
 
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
-import type { MonthlyExpensePoint } from "../budget-calculations"
+import type { MonthlyExpensePoint } from "@/lib/budget/budget-calculations"
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false })
 

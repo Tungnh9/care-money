@@ -1,4 +1,4 @@
 export { GoalsView } from "./components/goals-view"
-export { getGoals } from "./get-goals"
-export { useCarGoalFund } from "./hooks/use-car-goal-fund"
-export type { Goal, GoalsInput } from "./types"
+export { getGoals } from "@/lib/goals/get-goals"
+export { useCarGoalFund } from "@/lib/goals/use-car-goal-fund"
+export type { Goal, GoalsInput } from "@/lib/goals/types"

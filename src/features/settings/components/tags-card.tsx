@@ -4,7 +4,7 @@ import { useId } from "react"
 
 import { Card } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
-import type { BudgetTag } from "@/lib/settings-storage"
+import type { BudgetTag } from "@/lib/settings/settings-storage"
 
 interface TagsCardProps {
   tags: BudgetTag[]

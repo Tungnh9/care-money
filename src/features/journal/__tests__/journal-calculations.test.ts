@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest"
 
 import { findOnThisDay, isSameCalendarDay } from "../journal-calculations"
-import type { JournalEntry } from "../types"
+import type { JournalEntry } from "@/lib/journal/types"
 
 function entry(id: number, text: string): JournalEntry {
   return { id, text, time: "09:00", date: "01/01", words: 1, mood: null }

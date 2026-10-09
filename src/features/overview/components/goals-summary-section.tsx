@@ -1,6 +1,6 @@
 import Image from "next/image"
 
-import type { SavingsFund } from "@/features/finance/types"
+import type { SavingsFund } from "@/lib/finance/types"
 import type { Goal } from "@/features/goals"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"

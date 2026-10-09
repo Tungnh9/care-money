@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Streak } from "@/components/ob/streak"
 import { dayKey } from "@/lib/date"
-import { activeStreakCount } from "../../game-calculations"
+import { activeStreakCount } from "@/lib/study/game-calculations"
 import { GAME_REGISTRY } from "../../game-registry"
-import type { GameHighScores, GameStreak, GameType } from "../../types"
+import type { GameHighScores, GameStreak, GameType } from "@/lib/study/types"
 
 interface GameMenuCardProps {
   highScores: GameHighScores

@@ -4,7 +4,7 @@ import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Field } from "@/components/ui/field"
-import type { GoldStore } from "../types"
+import type { GoldStore } from "@/lib/finance/types"
 
 interface AddGoldStoreFormProps {
   onAdd: (store: GoldStore) => void

@@ -5,7 +5,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Field } from "@/components/ui/field"
 import { cn } from "@/lib/utils"
-import { EMOJI_PICKER, type Mood } from "@/lib/settings-storage"
+import { EMOJI_PICKER, type Mood } from "@/lib/settings/settings-storage"
 
 interface AddMoodFormProps {
   onAdd: (mood: Omit<Mood, "tint" | "on" | "score">) => void

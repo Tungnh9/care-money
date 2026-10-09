@@ -6,12 +6,12 @@ import {
   DEFAULT_FINANCE_STATE,
   FINANCE_STORAGE_KEY,
   getStoredFinance,
-} from "@/features/finance/finance-storage"
+} from "@/lib/finance/finance-storage"
 import { formatMoney } from "@/lib/format"
-import { setStoredBudget, DEFAULT_BUDGET_STATE, getStoredBudget } from "../../budget-storage"
+import { setStoredBudget, DEFAULT_BUDGET_STATE, getStoredBudget } from "@/lib/budget/budget-storage"
 import { BudgetView } from "../../components/budget-view"
-import { CHART_PALETTE } from "../../budget-calculations"
-import type { Settlement } from "../../types"
+import { CHART_PALETTE } from "@/lib/budget/budget-calculations"
+import type { Settlement } from "@/lib/budget/types"
 
 function settlement(overrides: Partial<Settlement>): Settlement {
   return {

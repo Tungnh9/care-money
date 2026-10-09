@@ -5,7 +5,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Field } from "@/components/ui/field"
 import { Modal } from "@/components/ui/modal"
-import type { SavingsFund } from "../types"
+import type { SavingsFund } from "@/lib/finance/types"
 
 interface EditSavingsFundModalProps {
   fund: SavingsFund | null

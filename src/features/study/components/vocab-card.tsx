@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card"
 import { Confetti } from "@/components/ob/confetti"
 import { cn } from "@/lib/utils"
 import { VocabWordCard } from "./vocab-word-card"
-import type { VocabEntry } from "../types"
+import type { VocabEntry } from "@/lib/study/types"
 
 interface VocabCardProps {
   label: string

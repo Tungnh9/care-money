@@ -1,6 +1,6 @@
 import { CountMoney } from "@/components/ob/count-money"
 import { Card } from "@/components/ui/card"
-import { pct1, type FinanceSummary } from "@/features/finance/finance-calculations"
+import { pct1, type FinanceSummary } from "@/lib/finance/finance-calculations"
 
 interface NetWorthCardProps {
   summary: FinanceSummary

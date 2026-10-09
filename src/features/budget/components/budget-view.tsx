@@ -5,8 +5,8 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
-import { useFinance } from "@/features/finance/hooks/use-finance"
-import { useSettings } from "@/features/settings/hooks/use-settings"
+import { useFinance } from "@/lib/finance/use-finance"
+import { useSettings } from "@/lib/settings/use-settings"
 import { formatMoney } from "@/lib/format"
 import {
   dayKey,
@@ -17,7 +17,7 @@ import {
   monthsThroughYearEnd,
   shiftMonth,
 } from "@/lib/date"
-import { useBudget } from "../hooks/use-budget"
+import { useBudget } from "@/lib/budget/use-budget"
 import {
   breakdownByTag,
   monthlyExpenseTotals,
@@ -27,7 +27,7 @@ import {
   salaryForMonth,
   totalExpensesForMonth,
   unsettledPastMonths,
-} from "../budget-calculations"
+} from "@/lib/budget/budget-calculations"
 import { SalaryCard } from "./salary-card"
 import { ExpenseEntryForm } from "./expense-entry-form"
 import { ExpenseListCard } from "./expense-list-card"
@@ -36,7 +36,7 @@ import { TagBreakdownChart } from "./tag-breakdown-chart"
 import { MonthlyTrendChart } from "./monthly-trend-chart"
 import { MonthlyTagTrendChart } from "./monthly-tag-trend-chart"
 import { SettleMonthModal } from "./settle-month-modal"
-import type { Expense } from "../types"
+import type { Expense } from "@/lib/budget/types"
 
 // Nhắc tất toán bao nhiêu tháng đã qua (Quyết định 1 của plan 2026-09-29-fix-2-budget: chỉ tháng
 // liền trước — đủ cho phần lệch phát sinh quanh lúc sang tháng, không lôi các tháng cũ ra làm phiền).

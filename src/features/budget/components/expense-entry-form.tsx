@@ -5,9 +5,9 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Field } from "@/components/ui/field"
-import type { BudgetTag } from "@/lib/settings-storage"
-import type { TagSnapshot } from "../types"
-import { BUDGET_AMOUNT_LIMIT_HINT, exceedsBudgetAmountLimit } from "../budget-calculations"
+import type { BudgetTag } from "@/lib/settings/settings-storage"
+import type { TagSnapshot } from "@/lib/budget/types"
+import { BUDGET_AMOUNT_LIMIT_HINT, exceedsBudgetAmountLimit } from "@/lib/budget/budget-calculations"
 import { TagPicker } from "./tag-picker"
 
 interface ExpenseEntryFormProps {

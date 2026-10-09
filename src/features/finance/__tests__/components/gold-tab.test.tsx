@@ -2,10 +2,10 @@ import { describe, it, expect, vi } from "vitest"
 import { render, screen, fireEvent, within } from "@testing-library/react"
 
 import { formatMoney } from "@/lib/format"
-import { phanToChi, pct1, summarizeFinance, type FinanceSummary } from "../../finance-calculations"
-import { DEFAULT_FINANCE_STATE } from "../../finance-storage"
+import { phanToChi, pct1, summarizeFinance, type FinanceSummary } from "@/lib/finance/finance-calculations"
+import { DEFAULT_FINANCE_STATE } from "@/lib/finance/finance-storage"
 import { GoldTab } from "../../components/gold-tab"
-import type { GoldStore } from "../../types"
+import type { GoldStore } from "@/lib/finance/types"
 
 const ZERO_SUMMARY: FinanceSummary = {
   savingsTotal: 0,

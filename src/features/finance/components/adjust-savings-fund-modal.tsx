@@ -9,7 +9,7 @@ import { Modal } from "@/components/ui/modal"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { cn } from "@/lib/utils"
 import { formatMoney } from "@/lib/format"
-import type { SavingsFund } from "../types"
+import type { SavingsFund } from "@/lib/finance/types"
 
 type AdjustDirection = "add" | "subtract"
 

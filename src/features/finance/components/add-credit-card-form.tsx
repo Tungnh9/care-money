@@ -4,7 +4,7 @@ import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Field } from "@/components/ui/field"
-import type { CreditCard } from "../types"
+import type { CreditCard } from "@/lib/finance/types"
 
 interface AddCreditCardFormProps {
   onAdd: (card: CreditCard) => void
