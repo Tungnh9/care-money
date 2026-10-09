@@ -141,10 +141,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null
 }
 
-// Dùng chung cho đọc localStorage và cho data-transfer.ts (nhập file / tải xuống từ cloud), để 2
-// đường vào luôn cùng 1 quy tắc — bản nhập vào không reload trang nên phải sạch ngay trong bộ nhớ.
-// Chỉ đọc đúng các field của AppSettings hiện tại — field cũ đã xoá khỏi type (vd. "budget") tự
-// rụng thay vì sống mãi trong storage.
 // Nhật ký nhận diện mood bằng `label` — 2 mood trùng hẳn tên (thêm trước khi addMood chặn trùng, hay
 // từ 1 file sao lưu cũ) không chọn riêng được. Giữ tên mục đầu, các mục sau thành "Tên (2)",
 // "Tên (3)"... (đúng cách Plan 1a xử lý quỹ/thẻ trùng tên); người dùng tự đặt lại tên nếu muốn.
@@ -158,6 +154,10 @@ function dedupeMoodLabels(moods: Mood[]): Mood[] {
   })
 }
 
+// Dùng chung cho đọc localStorage và cho data-transfer.ts (nhập file / tải xuống từ cloud), để 2
+// đường vào luôn cùng 1 quy tắc — bản nhập vào không reload trang nên phải sạch ngay trong bộ nhớ.
+// Chỉ đọc đúng các field của AppSettings hiện tại — field cũ đã xoá khỏi type (vd. "budget") tự
+// rụng thay vì sống mãi trong storage.
 function parseAppSettings(value: unknown): AppSettings {
   const parsed = isRecord(value) ? value : {}
   const rawProfile = isRecord(parsed.profile) ? parsed.profile : {}
