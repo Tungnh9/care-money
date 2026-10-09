@@ -125,7 +125,10 @@ function Modal({
         aria-labelledby={ariaLabelledBy}
         aria-label={ariaLabel}
         className={cn(
-          "relative w-full max-w-[400px] rounded-[var(--ob-radius-lg)] border-[1.5px] border-[var(--ob-color-border)] bg-[var(--ob-color-surface)] p-6 shadow-[var(--ob-shadow-md)]",
+          // Cao tối đa bằng lớp phủ (màn hình trừ đệm p-4), nội dung cao hơn thì tự cuộn bên trong — điện
+          // thoại xoay ngang/cửa sổ thấp vẫn thấy tiêu đề và tới được nút cuối. Cuộn trong hộp chứ không
+          // cuộn cả lớp phủ, để nền mờ absolute vẫn phủ kín màn hình và cuộn được ở mọi chỗ trên hộp.
+          "relative max-h-full w-full max-w-[400px] overflow-y-auto overscroll-contain rounded-[var(--ob-radius-lg)] border-[1.5px] border-[var(--ob-color-border)] bg-[var(--ob-color-surface)] p-6 shadow-[var(--ob-shadow-md)]",
           panelClassName
         )}
       >

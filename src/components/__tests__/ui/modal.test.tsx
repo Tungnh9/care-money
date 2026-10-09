@@ -222,4 +222,25 @@ describe("Modal", () => {
 
     expect(screen.getByRole("button", { name: "Cuối cùng" })).toHaveFocus()
   })
+
+  it("scrolls a dialog taller than the screen inside its own panel instead of cutting off its title and buttons", () => {
+    render(
+      <Modal open onOpenChange={vi.fn()} ariaLabel="Test modal">
+        <button type="button">Xin chào</button>
+      </Modal>
+    )
+
+    // Panel cao tối đa bằng lớp phủ (màn hình trừ đệm p-4) và tự cuộn khi nội dung cao hơn — không còn
+    // tràn đều lên trên/xuống dưới ra ngoài 1 lớp phủ không cuộn được.
+    expect(screen.getByRole("dialog", { name: "Test modal" })).toHaveClass(
+      "max-h-full",
+      "overflow-y-auto",
+      "overscroll-contain"
+    )
+    // Lớp phủ và nền mờ giữ nguyên: cuộn cả lớp phủ sẽ làm nền mờ trôi đi (absolute) hoặc biến vùng mờ
+    // thành chỗ cuộn không được (fixed).
+    const backdrop = screen.getByTestId("modal-backdrop")
+    expect(backdrop.parentElement).toHaveClass("fixed", "inset-0", "flex", "items-center", "justify-center", "p-4")
+    expect(backdrop).toHaveClass("absolute", "inset-0")
+  })
 })
