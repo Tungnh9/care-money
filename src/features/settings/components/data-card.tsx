@@ -164,7 +164,7 @@ function DataCard({
                 </>
               ) : (
                 <>
-                  <strong className="font-bold">Không đọc được file</strong>
+                  <strong className="font-bold">Nhập file không thành công</strong>
                   <br />
                   {imported.error}
                 </>

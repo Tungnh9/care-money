@@ -97,8 +97,18 @@ describe("DataCard", () => {
     rerender(
       <DataCard {...BASE_PROPS} imported={{ ok: false, error: "File không phải JSON hợp lệ." }} />
     )
-    expect(screen.getByText("Không đọc được file")).toBeInTheDocument()
+    expect(screen.getByText("Nhập file không thành công")).toBeInTheDocument()
     expect(screen.getByText("File không phải JSON hợp lệ.")).toBeInTheDocument()
+  })
+
+  it("heads a write failure with the same import-error heading, not 'could not read the file'", () => {
+    const error =
+      "Không ghi được dữ liệu vào máy (bộ nhớ trình duyệt có thể đã đầy). Dữ liệu trên máy vẫn giữ nguyên như trước."
+    render(<DataCard {...BASE_PROPS} imported={{ ok: false, error }} />)
+
+    expect(screen.getByText("Nhập file không thành công")).toBeInTheDocument()
+    expect(screen.getByText(error)).toBeInTheDocument()
+    expect(screen.queryByText("Không đọc được file")).not.toBeInTheDocument()
   })
 
   it("disables the sync buttons until a secret is entered, then calls onPushToCloud/onPullFromCloud with it", () => {
