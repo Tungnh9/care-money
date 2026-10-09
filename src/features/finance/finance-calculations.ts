@@ -1,6 +1,6 @@
 import { formatMoney } from "@/lib/format"
 import type { FinanceState } from "./finance-storage"
-import type { GoldPurchase, GoldStore } from "./types"
+import type { CreditCard, GoldPurchase, GoldStore } from "./types"
 
 // Khối lượng vàng lưu theo phân (10 phân = 1 chỉ). Form chỉ nhận phân nguyên, nhưng dữ liệu cũ có thể
 // có số lẻ (12.3, hay tổng 0.1 + 0.2 = 0.30000000000000004): làm tròn 1 chữ số lẻ, dấu phẩy kiểu Việt.
@@ -186,6 +186,45 @@ function goldReferencePricePerPhan(
   return prices.length ? prices.reduce((sum, price) => sum + price, 0) / prices.length : 0
 }
 
+// Ô "Ngày đến hạn" là chữ tự do ("15", "15 hàng tháng", "05/10"...) nhưng hầu như luôn bắt đầu bằng
+// ngày trong tháng: lấy số đầu tiên trong ô nếu nó là 1–31, không thì null.
+function parseDueDay(due: string): number | null {
+  const match = /\d+/.exec(due)
+  if (!match) return null
+  const day = Number(match[0])
+  return day >= 1 && day <= 31 ? day : null
+}
+
+// Số ngày từ `today` tới lần đến hạn kế tiếp vào ngày `day` hằng tháng (hôm nay đúng hạn = 0). Tháng
+// ngắn hơn `day` (vd. 31 ở tháng 30 ngày) thì hạn rơi vào ngày cuối tháng đó.
+function daysUntilDueDay(day: number, today: Date): number {
+  const year = today.getFullYear()
+  const month = today.getMonth()
+  const date = today.getDate()
+  const daysThisMonth = new Date(year, month + 1, 0).getDate()
+  const dueThisMonth = Math.min(day, daysThisMonth)
+  if (dueThisMonth >= date) return dueThisMonth - date
+  return daysThisMonth - date + Math.min(day, new Date(year, month + 2, 0).getDate())
+}
+
+// Thẻ còn dư nợ có lần đến hạn kế tiếp sớm nhất tính từ `today` — "hạn gần nhất" ở trụ Nợ thẻ và ở
+// Tổng quan. Thẻ đã trả hết không tính; thẻ không đọc được ngày xếp sau cùng; bằng nhau thì giữ thứ
+// tự thêm thẻ. Không thẻ nào còn nợ → null.
+function nearestDueCard(cards: CreditCard[], today: Date): CreditCard | null {
+  let nearest: CreditCard | null = null
+  let nearestDays = Infinity
+  for (const card of cards) {
+    if (card.balance <= 0) continue
+    const day = parseDueDay(card.due)
+    const days = day === null ? Infinity : daysUntilDueDay(day, today)
+    if (nearest === null || days < nearestDays) {
+      nearest = card
+      nearestDays = days
+    }
+  }
+  return nearest
+}
+
 export {
   formatPhan,
   phanToChi,
@@ -194,6 +233,8 @@ export {
   parseGoldPrice,
   summarizeFinance,
   goldReferencePricePerPhan,
+  parseDueDay,
+  nearestDueCard,
   goldPurchasePL,
   goldStorePrice,
   goldMarketPrice,

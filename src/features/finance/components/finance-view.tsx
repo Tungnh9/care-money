@@ -7,7 +7,7 @@ import { NetWorthCard } from "@/components/ob/net-worth-card"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { longDate } from "@/lib/date"
 import { formatMoney } from "@/lib/format"
-import { formatPhan, pct1, summarizeFinance } from "../finance-calculations"
+import { formatPhan, nearestDueCard, pct1, summarizeFinance } from "../finance-calculations"
 import { useFinance } from "../hooks/use-finance"
 import { CreditCardsTab } from "./credit-cards-tab"
 import { GoldTab } from "./gold-tab"
@@ -46,6 +46,8 @@ function FinanceView() {
   } = useFinance()
 
   const summary = summarizeFinance({ savings, cards, gold, goldStores, invests })
+  // "Hạn gần nhất" = thẻ còn nợ đến hạn sớm nhất tính từ hôm nay, không phải thẻ thêm đầu tiên.
+  const nearestCard = nearestDueCard(cards, new Date())
 
   return (
     <div>
@@ -72,7 +74,11 @@ function FinanceView() {
           amount={summary.debtTotal}
           tone="expense"
           hint={
-            cards.length ? `${cards.length} thẻ · hạn gần nhất ${cards[0].due}` : "Chưa có thẻ nào"
+            cards.length
+              ? nearestCard
+                ? `${cards.length} thẻ · hạn gần nhất ${nearestCard.due}`
+                : `${cards.length} thẻ · không nợ`
+              : "Chưa có thẻ nào"
           }
           className="min-w-0 flex-[1_1_260px]"
         />

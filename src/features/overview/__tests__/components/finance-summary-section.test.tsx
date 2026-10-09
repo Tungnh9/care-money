@@ -98,4 +98,33 @@ describe("FinanceSummarySection", () => {
 
     expect(screen.getByText("0,3 phân", { exact: false })).toBeInTheDocument()
   })
+  it("shows the due date of a card that still owes money, skipping a paid-off first card", () => {
+    render(
+      <FinanceSummarySection
+        savings={[]}
+        cards={[
+          { name: "Thẻ A", balance: 0, min: 0, limit: 10_000_000, due: "15" },
+          { name: "Thẻ B", balance: 2_000_000, min: 200_000, limit: 10_000_000, due: "20 hàng tháng" },
+        ]}
+        invests={[]}
+        summary={{ ...ZERO_SUMMARY, debtTotal: 2_000_000 }}
+      />
+    )
+
+    expect(screen.getByText("hạn 20 hàng tháng")).toBeInTheDocument()
+  })
+
+  it("says không nợ when every card is paid off", () => {
+    render(
+      <FinanceSummarySection
+        savings={[]}
+        cards={[{ name: "Thẻ A", balance: 0, min: 0, limit: 10_000_000, due: "15" }]}
+        invests={[]}
+        summary={ZERO_SUMMARY}
+      />
+    )
+
+    expect(screen.getByText("không nợ")).toBeInTheDocument()
+    expect(screen.queryByText("hạn 15")).not.toBeInTheDocument()
+  })
 })

@@ -1,4 +1,4 @@
-import { formatPhan, type FinanceSummary } from "@/features/finance/finance-calculations"
+import { formatPhan, nearestDueCard, type FinanceSummary } from "@/features/finance/finance-calculations"
 import type { CreditCard, Investment, SavingsFund } from "@/features/finance/types"
 import { Card } from "@/components/ui/card"
 import { NetWorthCard } from "@/components/ob/net-worth-card"
@@ -15,6 +15,8 @@ interface FinanceSummarySectionProps {
 
 function FinanceSummarySection({ savings, cards, invests, summary }: FinanceSummarySectionProps) {
   const { hidden } = useMoneyVisibility()
+  // Thẻ đã trả hết (dư nợ 0 ₫) không còn hạn nào phải nhắc.
+  const nearestCard = nearestDueCard(cards, new Date())
 
   return (
     <div className="ob-card-grid flex flex-wrap gap-5">
@@ -69,7 +71,7 @@ function FinanceSummarySection({ savings, cards, invests, summary }: FinanceSumm
             icon="card"
             label="Nợ thẻ"
             value={formatMoney(summary.debtTotal, hidden)}
-            hint={cards.length ? `hạn ${cards[0].due}` : "không nợ"}
+            hint={nearestCard ? `hạn ${nearestCard.due}` : "không nợ"}
             color={summary.debtTotal ? "var(--ob-color-expense)" : undefined}
           />
         </div>

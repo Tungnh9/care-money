@@ -3,6 +3,7 @@ import { act, render, screen, fireEvent, within } from "@testing-library/react"
 
 import { formatMoney } from "@/lib/format"
 import { FinanceView } from "../../components/finance-view"
+import { DEFAULT_FINANCE_STATE, FINANCE_STORAGE_KEY } from "../../finance-storage"
 
 describe("FinanceView", () => {
   beforeEach(() => {
@@ -124,5 +125,38 @@ describe("FinanceView", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Đầu tư" }))
     expect(screen.getByRole("button", { name: "Thêm khoản đầu tư" })).toBeInTheDocument()
+  })
+  it("names the due date of the card that is actually due next, ignoring cards already paid off", () => {
+    // 30/09/2026: thẻ A hạn ngày 25 (→ 25/10), thẻ B hạn ngày 5 (→ 05/10), thẻ C đã trả hết (hạn ngày 1).
+    vi.setSystemTime(new Date(2026, 8, 30, 9, 0))
+    window.localStorage.setItem(
+      FINANCE_STORAGE_KEY,
+      JSON.stringify({
+        ...DEFAULT_FINANCE_STATE,
+        cards: [
+          { name: "Thẻ A", balance: 1_000_000, min: 100_000, limit: 10_000_000, due: "25/10" },
+          { name: "Thẻ B", balance: 2_000_000, min: 200_000, limit: 10_000_000, due: "05/10" },
+          { name: "Thẻ C", balance: 0, min: 0, limit: 5_000_000, due: "01" },
+        ],
+      })
+    )
+
+    render(<FinanceView />)
+
+    expect(screen.getByText("3 thẻ · hạn gần nhất 05/10")).toBeInTheDocument()
+  })
+
+  it("says the cards owe nothing instead of naming a due date once every card is paid off", () => {
+    window.localStorage.setItem(
+      FINANCE_STORAGE_KEY,
+      JSON.stringify({
+        ...DEFAULT_FINANCE_STATE,
+        cards: [{ name: "Thẻ A", balance: 0, min: 0, limit: 10_000_000, due: "15 hàng tháng" }],
+      })
+    )
+
+    render(<FinanceView />)
+
+    expect(screen.getByText("1 thẻ · không nợ")).toBeInTheDocument()
   })
 })

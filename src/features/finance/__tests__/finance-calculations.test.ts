@@ -6,6 +6,8 @@ import {
   pct1,
   parseGoldPrice,
   summarizeFinance,
+  parseDueDay,
+  nearestDueCard,
   goldReferencePricePerPhan,
   goldPurchasePL,
   goldStorePrice,
@@ -417,5 +419,59 @@ describe("formatPhan", () => {
     expect(formatPhan(30)).toBe("30")
     expect(formatPhan(0.1 + 0.2)).toBe("0,3")
     expect(formatPhan(12.34)).toBe("12,3")
+  })
+})
+
+describe("parseDueDay", () => {
+  it("reads the day of the month from the usual ways of writing a due date", () => {
+    expect(parseDueDay("15")).toBe(15)
+    expect(parseDueDay("15 hàng tháng")).toBe(15)
+    expect(parseDueDay("05/10")).toBe(5)
+    expect(parseDueDay("ngày 25")).toBe(25)
+  })
+
+  it("returns null when the first number is not a day of the month, or there is none", () => {
+    expect(parseDueDay("0")).toBeNull()
+    expect(parseDueDay("45")).toBeNull()
+    expect(parseDueDay("cuối tháng")).toBeNull()
+  })
+})
+
+describe("nearestDueCard", () => {
+  // 30/09/2026
+  const TODAY = new Date(2026, 8, 30)
+
+  function card(name: string, due: string, balance: number) {
+    return { name, balance, min: 0, limit: 10_000_000, due }
+  }
+
+  it("picks the card whose next due date comes first, not the first card added", () => {
+    const cards = [card("Thẻ A", "25/10", 1_000_000), card("Thẻ B", "05/10", 2_000_000)]
+
+    // A: ngày 25 đã qua trong tháng 9 → 25/10 (25 ngày nữa); B: ngày 5 → 05/10 (5 ngày nữa).
+    expect(nearestDueCard(cards, TODAY)?.name).toBe("Thẻ B")
+  })
+
+  it("ignores cards that are already paid off, and returns null when none still owes", () => {
+    const paid = card("Thẻ C", "01", 0)
+    const owing = card("Thẻ A", "25", 1_000_000)
+
+    expect(nearestDueCard([paid, owing], TODAY)?.name).toBe("Thẻ A")
+    expect(nearestDueCard([paid], TODAY)).toBeNull()
+    expect(nearestDueCard([], TODAY)).toBeNull()
+  })
+
+  it("puts a card whose due date cannot be read after every readable one", () => {
+    const cards = [card("Thẻ không rõ", "cuối tháng", 1_000_000), card("Thẻ rõ", "28", 1_000_000)]
+
+    expect(nearestDueCard(cards, TODAY)?.name).toBe("Thẻ rõ")
+    expect(nearestDueCard([cards[0]], TODAY)?.name).toBe("Thẻ không rõ")
+  })
+
+  it("moves a due day that a short month does not have to that month's last day", () => {
+    // 27/02/2026: hạn "31" rơi vào 28/02 (1 ngày nữa), sớm hơn hạn "5" (05/03, 6 ngày nữa).
+    const cards = [card("Hạn 5", "5", 1_000_000), card("Hạn 31", "31", 1_000_000)]
+
+    expect(nearestDueCard(cards, new Date(2026, 1, 27))?.name).toBe("Hạn 31")
   })
 })
