@@ -79,4 +79,18 @@ describe("CountMoney", () => {
 
     expect(screen.getByText(/20\.000\.000/)).toBeInTheDocument()
   })
+
+  it("sizes the figure for the final amount from the first frame, so the text doesn't shrink while counting up", () => {
+    render(<CountMoney value={1_234_567_890} />)
+
+    // Đang đếm từ 0: chữ chỉ là "0 ₫" nhưng cỡ chữ đã tính cho "1.234.567.890 ₫" (15 ký tự) —
+    // nếu đếm theo chuỗi đang hiện, chữ sẽ co nhỏ dần theo từng chữ số mới xuất hiện.
+    expect(screen.getByText("0 ₫").style.getPropertyValue("--ob-figure-chars")).toBe("15")
+
+    act(() => {
+      vi.advanceTimersByTime(1500)
+    })
+
+    expect(screen.getByText("1.234.567.890 ₫").style.getPropertyValue("--ob-figure-chars")).toBe("15")
+  })
 })

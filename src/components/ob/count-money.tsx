@@ -67,9 +67,17 @@ interface CountMoneyProps extends Omit<FigureProps, "value" | "unit"> {
   value: number
 }
 
-function CountMoney({ value, ...rest }: CountMoneyProps) {
+function CountMoney({ value, fitChars, ...rest }: CountMoneyProps) {
   const { hidden } = useMoneyVisibility()
-  return <Figure value={formatMoney(useCountUp(value), hidden)} {...rest} />
+  // Cỡ chữ tính theo số ĐÍCH ngay từ khung đầu — nếu để Figure tự đếm chuỗi đang đếm dần, chữ sẽ co
+  // nhỏ dần theo từng chữ số mới xuất hiện trong ~0,8s đầu.
+  return (
+    <Figure
+      value={formatMoney(useCountUp(value), hidden)}
+      fitChars={fitChars ?? formatMoney(value, hidden).length}
+      {...rest}
+    />
+  )
 }
 
 export { useCountUp, CountMoney }

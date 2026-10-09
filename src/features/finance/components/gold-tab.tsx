@@ -59,6 +59,7 @@ function GoldTab({
   const { hidden } = useMoneyVisibility()
   const { goldPhan, goldCost, goldValue, goldPL, goldPct } = summary
   const gain = goldPL >= 0
+  const goldPLText = signedMoney(goldPL, hidden)
   const maxBar = Math.max(goldCost, goldValue, 1)
   const avgCost = goldPhan > 0 ? goldCost / goldPhan : 0
   const avgValue = goldPhan > 0 ? goldValue / goldPhan : 0
@@ -103,9 +104,10 @@ function GoldTab({
                 <span
                   style={{ color: gain ? "var(--ob-color-income)" : "var(--ob-color-expense)" }}
                 >
-                  {signedMoney(goldPL, hidden)}
+                  {goldPLText}
                 </span>
               }
+              fitChars={goldPLText.length}
               delta={pct1(goldPct)}
               direction={gain ? "up" : "down"}
             />

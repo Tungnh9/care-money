@@ -506,4 +506,20 @@ describe("GoldTab", () => {
     expect(onRemoveGold).not.toHaveBeenCalled()
     expect(screen.queryByText("Xoá giao dịch vàng?")).not.toBeInTheDocument()
   })
+
+  it("sizes the P&L figure from the signed amount's length so a large gain stays inside the card", () => {
+    render(
+      <GoldTab
+        summary={{ ...HOLDING_SUMMARY, goldPL: 1_234_567_890 }}
+        stores={[SJC]}
+        gold={[]}
+        {...noopHandlers}
+      />
+    )
+
+    // Value của Figure ở đây là <span> tô màu lãi/lỗ nên Figure không tự đếm được — GoldTab phải
+    // truyền fitChars: "+ 1.234.567.890 ₫" = 17 ký tự.
+    const amount = screen.getByText(`+ ${formatMoney(1_234_567_890)}`)
+    expect(amount.parentElement?.style.getPropertyValue("--ob-figure-chars")).toBe("17")
+  })
 })
