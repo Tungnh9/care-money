@@ -55,4 +55,18 @@ describe("AuthGuard", () => {
     expect(await screen.findByText("login page")).toBeInTheDocument()
     expect(replace).not.toHaveBeenCalled()
   })
+
+  it("sends an already signed-in user from /login to /overview instead of showing the form again", async () => {
+    pathname = "/login"
+    setStoredUser({ email: "a@b.com" })
+
+    render(
+      <AuthGuard>
+        <div>login page</div>
+      </AuthGuard>
+    )
+
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/overview"))
+    expect(screen.queryByText("login page")).not.toBeInTheDocument()
+  })
 })

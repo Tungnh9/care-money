@@ -22,6 +22,13 @@ function AuthGuard({ children }: AuthGuardProps) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setChecked(false)
     if (PUBLIC_PATHS.includes(pathname)) {
+      // Đã đăng nhập mà vẫn ở /login (gõ thẳng địa chỉ, hay bấm Back sau khi đăng nhập) thì về Tổng
+      // quan — không bắt nhập lại mật khẩu, và không để lần gõ sai nào cộng vào khoá 5 lần. Giữ màn
+      // chờ (checked=false) tới khi pathname đổi để không chớp form đăng nhập.
+      if (getStoredUser()) {
+        router.replace("/overview")
+        return
+      }
       setChecked(true)
       return
     }

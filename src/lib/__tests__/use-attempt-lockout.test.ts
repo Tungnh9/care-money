@@ -74,6 +74,31 @@ describe("useAttemptLockout", () => {
     expect(result.current.remainingAttempts).toBe(MAX_ATTEMPTS)
   })
 
+  it("stays locked after a reload while the stored lock has not expired yet", async () => {
+    window.localStorage.setItem(
+      "reload-lockout-test",
+      JSON.stringify({ attempts: MAX_ATTEMPTS, lockedUntil: Date.now() + 5 * 60 * 1000 })
+    )
+
+    // Mount mới = tải lại trang: trạng thái chỉ có thể đến từ localStorage.
+    const { result } = renderHook(() => useAttemptLockout("reload-lockout-test"))
+
+    await waitFor(() => expect(result.current.isLocked).toBe(true))
+    expect(result.current.remainingAttempts).toBe(0)
+  })
+
+  it("starts unlocked after a reload once the stored lock has expired", async () => {
+    window.localStorage.setItem(
+      "reload-lockout-test",
+      JSON.stringify({ attempts: MAX_ATTEMPTS, lockedUntil: Date.now() - 1000 })
+    )
+
+    const { result } = renderHook(() => useAttemptLockout("reload-lockout-test"))
+
+    await waitFor(() => expect(result.current.remainingAttempts).toBe(MAX_ATTEMPTS))
+    expect(result.current.isLocked).toBe(false)
+  })
+
   it("keeps separate lockout state for different storage keys", async () => {
     const login = renderHook(() => useAttemptLockout("login-lockout-test"))
     const reset = renderHook(() => useAttemptLockout("reset-lockout-test"))
