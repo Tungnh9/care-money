@@ -69,7 +69,7 @@ function GoldTab({
   const avgValue = goldPhan > 0 ? goldValue / goldPhan : 0
   const sortedGold = sortGoldByDate(gold)
   const purchasePLs = gold.map((p) => goldPurchasePL(p, goldMarketPrice(stores, p)))
-  const winCount = purchasePLs.filter((pl) => pl >= 0).length
+  const winCount = purchasePLs.filter((pl) => pl > 0).length
   const lossCount = purchasePLs.filter((pl) => pl < 0).length
   const totalWin = purchasePLs.filter((pl) => pl >= 0).reduce((sum, pl) => sum + pl, 0)
   const totalLoss = purchasePLs.filter((pl) => pl < 0).reduce((sum, pl) => sum + pl, 0)

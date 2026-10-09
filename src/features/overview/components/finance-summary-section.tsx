@@ -36,7 +36,9 @@ function FinanceSummarySection({ savings, cards, invests, summary }: FinanceSumm
             label="Vàng"
             value={formatMoney(summary.goldValue, hidden)}
             hint={
-              summary.goldPhan ? (
+              summary.goldPhan && summary.goldPL === 0 ? (
+                `${formatPhan(summary.goldPhan)} phân · hoà vốn`
+              ) : summary.goldPhan ? (
                 <>
                   {formatPhan(summary.goldPhan)} phân ·{" "}
                   <span
@@ -54,8 +56,8 @@ function FinanceSummarySection({ savings, cards, invests, summary }: FinanceSumm
               )
             }
             color={
-              summary.goldPhan
-                ? summary.goldPL >= 0
+              summary.goldPhan && summary.goldPL !== 0
+                ? summary.goldPL > 0
                   ? "var(--ob-color-income)"
                   : "var(--ob-color-expense)"
                 : undefined

@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { act, render, screen } from "@testing-library/react"
 
-import type { FinanceSummary } from "@/features/finance/finance-calculations"
+import { summarizeFinance, type FinanceSummary } from "@/features/finance/finance-calculations"
+import { DEFAULT_FINANCE_STATE } from "@/features/finance/finance-storage"
 import { formatMoney } from "@/lib/format"
 import { FinanceSummarySection } from "../../components/finance-summary-section"
 
@@ -84,6 +85,17 @@ describe("FinanceSummarySection", () => {
     expect(screen.getByText(formatMoney(2_000_000))).toBeInTheDocument()
     expect(screen.getByText("hạn 15/08")).toBeInTheDocument()
     expect(screen.getByText(formatMoney(2_000_000))).toHaveStyle({ color: "var(--ob-color-expense)" })
+  })
+
+  it("calls a break-even gold position hoà vốn in a neutral colour", () => {
+    const stores = [{ name: "SJC", price: "" }]
+    const gold = [{ id: 1, date: "10/08/2026", phan: 10, buy: 8_000_000, store: "SJC" }]
+    const summary = summarizeFinance({ ...DEFAULT_FINANCE_STATE, gold, goldStores: stores })
+    render(<FinanceSummarySection savings={[]} cards={[]} invests={[]} summary={summary} />)
+
+    expect(screen.getByText("10 phân · hoà vốn", { exact: false })).toBeInTheDocument()
+    expect(screen.queryByText("lời", { exact: false })).not.toBeInTheDocument()
+    expect(screen.getByText(formatMoney(summary.goldValue))).not.toHaveStyle({ color: "var(--ob-color-income)" })
   })
 
   it("rounds a fractional gold holding left over from old data in the Vàng hint", () => {

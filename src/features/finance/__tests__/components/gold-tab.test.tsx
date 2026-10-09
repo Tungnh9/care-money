@@ -533,6 +533,15 @@ describe("GoldTab", () => {
     expect(screen.queryByText(pct1(0), { exact: false })).not.toBeInTheDocument()
   })
 
+  it("does not count a break-even purchase as a gain", () => {
+    const stores: GoldStore[] = [{ name: "SJC", price: "" }]
+    const gold = [{ id: 1, date: "10/08/2026", phan: 10, buy: 8_000_000, store: "SJC" }]
+    const summary = summarizeFinance({ ...DEFAULT_FINANCE_STATE, gold, goldStores: stores })
+    render(<GoldTab summary={summary} stores={stores} gold={gold} {...noopHandlers} />)
+
+    expect(screen.getByText("0 lần lãi")).toBeInTheDocument()
+  })
+
   it("values gold from a store with no price yet at its buy price and says so, instead of a full loss", () => {
     const stores: GoldStore[] = [{ name: "SJC", price: "" }]
     const gold = [{ id: 1, date: "10/08/2026", phan: 10, buy: 8_000_000, store: "SJC" }]
