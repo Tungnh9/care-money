@@ -98,6 +98,6 @@ docs: update tech stack section
 ## 6. Testing
 
 - **Test framework: Vitest** + React Testing Library cho component test — đã cài (`npm run test` = `vitest run`), setup file ở `src/test/setup.ts`.
-- Test nằm trong `__tests__/` con của feature, mirror cấu trúc bên trong (`src/features/[ten]/__tests__/components/[ten]-form.test.tsx`) — xem mục 3.
+- Test nằm trong `__tests__/` con của feature, mirror cấu trúc bên trong (`src/features/[ten]/__tests__/components/[ten]-form.test.tsx`) — xem mục 3. Code dùng chung đặt test cạnh nhánh thư mục của nó: `src/lib/__tests__/<domain>/`, `src/components/__tests__/ob/` (hoặc `ui/`).
 - **Quy trình trước khi commit**: viết test cho phần vừa thêm/sửa → chạy test → tự review lại diff → commit.
 - **Trước khi push**: chạy lại toàn bộ test suite. Chưa có hook `pre-push` (Husky) tự chạy `npm run test` — cân nhắc thêm khi test suite đủ lớn để đáng chặn push.

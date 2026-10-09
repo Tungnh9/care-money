@@ -48,7 +48,7 @@ src/
 │   ├── sandbox/page.tsx        # "/sandbox" — xem trực quan component ui/ob, không phải feature
 │   ├── api/sync/route.ts       # "/api/sync" — GET/POST, backup/restore qua Vercel Blob (bearer SYNC_SECRET)
 │   └── (app)/                  # route group — shell cho user đã đăng nhập
-│       ├── layout.tsx          # bọc <MoneyVisibilityProvider>, render Sidebar + <Toaster> + <AutoBackup>
+│       ├── layout.tsx          # bọc <MoneyVisibilityProvider>, render Sidebar + <Toaster> (<AutoBackup> đang tạm ngưng)
 │       ├── _components/sidebar.tsx   # topbar mobile + sidebar desktop, nav lọc theo module bật/tắt trong Cài đặt
 │       ├── overview/page.tsx   # "/overview" — Tổng quan
 │       ├── finance/page.tsx    # "/finance"  — Tài chính
@@ -61,7 +61,7 @@ src/
 │                          # 9 feature hiện có: overview, finance, budget, journal, study, goals, settings, login, calc
 │                          # (xem mục Tính năng dưới để biết mỗi feature làm gì)
 ├── components/
-│   ├── ui/                # 13 component nền shadcn/ui + @base-ui/react, custom theo token --ob-*
+│   ├── ui/                # 12 component nền shadcn/ui + @base-ui/react, custom theo token --ob-*
 │   ├── ob/                 # 15 component riêng Orange Banana (mascot Monkey, Streak, FundPicker, GrammarHighlightCard...)
 │   ├── auth-guard.tsx      # bọc root layout, check localStorage, đẩy về /login nếu chưa đăng nhập
 │   └── money-visibility-provider.tsx  # context "ẩn số tiền", bọc trong layout (app)
@@ -82,7 +82,7 @@ public/assets/             # logo, app-icon, avatar, icons/ (12 icon module dùn
 | `/journal` | `journal` | Nhật ký — ghi chú rich-text hàng ngày (sanitize qua `dompurify`) kèm mood (danh sách mood tuỳ biến ở Cài đặt), có card "On this day" gợi lại bài viết cùng ngày các năm trước |
 | `/study` | `study` | Học tập — 4 tab: **Hôm nay** (task hàng ngày + Pomodoro + pick ngẫu nhiên-nhưng-cố-định-theo-ngày 5 từ vựng/1 điểm ngữ pháp) · **Từ vựng** · **Ngữ pháp** (2 tab sau đọc từ `content/*.jsonl`) · **Trò chơi** (3 mini-game ôn từ vựng — xem chi tiết bên dưới) |
 | `/goals` | `goals` | Mục tiêu — 3 mục tiêu tính từ dữ liệu Tài chính thật, riêng mục "mua xe" có thể gắn thủ công vào 1 quỹ tiết kiệm cụ thể |
-| `/settings` | `settings` | Cài đặt — hồ sơ, danh sách mood, danh sách tag chi tiêu, bật/tắt module (điều khiển sidebar + Tổng quan), xuất/nhập dữ liệu (JSON), đồng bộ 2 chiều qua cloud, xoá toàn bộ dữ liệu, tự động backup nền |
+| `/settings` | `settings` | Cài đặt — hồ sơ, danh sách mood, danh sách tag chi tiêu, bật/tắt module (điều khiển sidebar + Tổng quan), xuất/nhập dữ liệu (JSON), đồng bộ 2 chiều qua cloud, xoá toàn bộ dữ liệu, tự động backup nền (đang tạm ngưng) |
 | _(modal, không có route)_ | `calc` | Máy tính bỏ túi — mở từ sidebar, gõ biểu thức trực tiếp (sanitize trước khi `Function()` eval), xem trước kết quả, lưu 4 phép tính gần nhất |
 | `/login` | `login` | Đăng nhập mock (so khớp tài khoản hardcode trong `src/lib/mock-account.ts`, không có backend thật) — khoá 10 phút sau 5 lần sai (`useAttemptLockout`), bảo vệ toàn app qua `AuthGuard` |
 
@@ -100,7 +100,7 @@ Tab "Trò chơi" gồm 3 mini-game ôn từ vựng, dùng chung 1 khung điều 
 
 ## Component hiện có
 
-### `components/ui/` (13 file) — nền shadcn/ui + `@base-ui/react`, custom theo token `--ob-*`
+### `components/ui/` (12 file) — nền shadcn/ui + `@base-ui/react`, custom theo token `--ob-*`
 
 | Component | Props chính |
 | --- | --- |
