@@ -21,7 +21,11 @@ function Progress({
   hint,
   ...props
 }: ProgressProps) {
-  const pct = Math.max(0, Math.min(100, value ?? 0))
+  // NaN (vd. quỹ 0 ₫ trên mục tiêu 0 ₫ → 0/0) lọt qua Math.min/Math.max, mà Base UI coi mọi giá trị
+  // không hữu hạn là "không xác định": thanh chạy kín 100%, trình đọc màn hình đọc "indeterminate
+  // progress". Đưa NaN về 0; số âm, ±Infinity và > 100 vẫn kẹp về 0–100 như cũ.
+  const raw = value ?? 0
+  const pct = Number.isNaN(raw) ? 0 : Math.max(0, Math.min(100, raw))
   return (
     <ProgressPrimitive.Root
       data-slot="progress"

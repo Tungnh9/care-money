@@ -342,3 +342,20 @@ describe("SavingsTab — tên quỹ trùng", () => {
     expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
   })
 })
+
+describe("SavingsTab — quỹ có mục tiêu 0", () => {
+  it("shows an empty (0%) bar for a fund with 0 ₫ toward a 0 ₫ target, not a full indeterminate one", () => {
+    render(
+      <SavingsTab
+        savings={[{ name: "Quỹ trống", amount: 0, target: 0 }]}
+        onAddSavingsFund={vi.fn()}
+        onUpdateSavingsFund={vi.fn()}
+        onRemoveSavingsFund={vi.fn()}
+      />
+    )
+
+    const bar = screen.getByRole("progressbar")
+    expect(bar).toHaveAttribute("aria-valuenow", "0")
+    expect(bar).not.toHaveAttribute("data-indeterminate")
+  })
+})
