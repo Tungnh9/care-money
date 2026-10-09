@@ -158,6 +158,8 @@ function useDataManagement({
 
   const pushToCloud = useCallback(async (secret: string) => {
     setSyncing(true)
+    // Như pullFromCloud: banner của lần đồng bộ trước không được còn dưới "Đang đồng bộ…".
+    setSyncResult(null)
     const payload = buildExportPayload(readLocalSnapshot(), new Date().toISOString())
     const result = await pushSnapshot(secret, payload)
     setSyncResult(result)
@@ -257,6 +259,7 @@ function useDataManagement({
     clearSyncSecret()
     setExported(null)
     setImported(null)
+    setSyncResult(null)
   }, [onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceBudget, onReplaceNetWorthHistory])
 
   return {

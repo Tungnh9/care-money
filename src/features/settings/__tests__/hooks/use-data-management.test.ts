@@ -295,6 +295,48 @@ describe("useDataManagement", () => {
     expect(result.current.syncing).toBe(false)
   })
 
+  it("pushToCloud clears an old sync result as soon as a new upload starts", async () => {
+    const { result } = renderDataManagement()
+    vi.mocked(pushSnapshot).mockResolvedValueOnce({ ok: false, error: "Sai secret đồng bộ." })
+    let resolvePush!: (value: { ok: true; summary: string }) => void
+    vi.mocked(pushSnapshot).mockReturnValueOnce(new Promise((resolve) => (resolvePush = resolve)))
+
+    await act(async () => {
+      await result.current.pushToCloud("wrong-secret")
+    })
+    expect(result.current.syncResult).toEqual({ ok: false, error: "Sai secret đồng bộ." })
+
+    let pending!: Promise<void>
+    act(() => {
+      pending = result.current.pushToCloud("my-secret")
+    })
+
+    expect(result.current.syncing).toBe(true)
+    expect(result.current.syncResult).toBeNull()
+
+    await act(async () => {
+      resolvePush({ ok: true, summary: "Đã tải lên" })
+      await pending
+    })
+    expect(result.current.syncResult).toEqual({ ok: true, summary: "Đã tải lên" })
+  })
+
+  it("wipeData clears the sync banner left by an earlier upload", async () => {
+    vi.mocked(pushSnapshot).mockResolvedValue({ ok: false, error: "Sai secret đồng bộ." })
+    const { result } = renderDataManagement()
+
+    await act(async () => {
+      await result.current.pushToCloud("wrong-secret")
+    })
+    expect(result.current.syncResult).not.toBeNull()
+
+    act(() => {
+      result.current.wipeData()
+    })
+
+    expect(result.current.syncResult).toBeNull()
+  })
+
   it("pullFromCloud stages the cloud snapshot; confirmRestore applies it and reports the summary", async () => {
     const {
       result,
