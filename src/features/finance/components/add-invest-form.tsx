@@ -41,14 +41,14 @@ function AddInvestForm({ onAdd }: AddInvestFormProps) {
       <div className="flex flex-wrap gap-3">
         <Field
           className="min-w-0 flex-[1_1_220px]"
-          label="Tên khoản"
+          label="Tên khoản đầu tư"
           placeholder="vd: Chứng chỉ quỹ VESAF"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"
-          label="Số tiền đã bỏ vào"
+          label="Vốn đã bỏ ra"
           numeric
           group
           suffix="đ"
@@ -79,7 +79,8 @@ function AddInvestForm({ onAdd }: AddInvestFormProps) {
             onAdd({
               name: name.trim(),
               cost: costValue,
-              value: Number(value) || costValue,
+              // Chỉ lấy bằng vốn khi ô TRỐNG (đúng như hint) — gõ 0 là khoản đã mất trắng, phải lưu 0.
+              value: value.trim() ? Number(value) : costValue,
             })
             reset()
           }}

@@ -92,7 +92,7 @@ describe("InvestmentsTab", () => {
     fireEvent.change(screen.getByLabelText("Tên khoản", { exact: false }), {
       target: { value: "Chứng chỉ quỹ VESAF" },
     })
-    fireEvent.change(screen.getByLabelText("Số tiền đã bỏ vào", { exact: false }), {
+    fireEvent.change(screen.getByLabelText("Vốn đã bỏ ra", { exact: false }), {
       target: { value: "10000000" },
     })
     fireEvent.change(screen.getByLabelText("Giá trị hiện tại", { exact: false }), {
@@ -117,7 +117,7 @@ describe("InvestmentsTab", () => {
     fireEvent.change(screen.getByLabelText("Tên khoản", { exact: false }), {
       target: { value: "Vàng miếng SJC" },
     })
-    fireEvent.change(screen.getByLabelText("Số tiền đã bỏ vào", { exact: false }), {
+    fireEvent.change(screen.getByLabelText("Vốn đã bỏ ra", { exact: false }), {
       target: { value: "3000000" },
     })
 
@@ -130,7 +130,7 @@ describe("InvestmentsTab", () => {
     })
   })
 
-  it("keeps Thêm disabled until name and Số tiền đã bỏ vào are filled in", () => {
+  it("keeps Thêm disabled until name and Vốn đã bỏ ra are filled in", () => {
     render(<InvestmentsTab invests={[]} summary={summaryFor([])} onAddInvest={vi.fn()} onUpdateInvest={vi.fn()} onRemoveInvest={vi.fn()} />)
 
     fireEvent.click(screen.getByRole("button", { name: "Thêm khoản đầu tư" }))
@@ -141,7 +141,7 @@ describe("InvestmentsTab", () => {
     })
     expect(screen.getByRole("button", { name: "Thêm" })).toBeDisabled()
 
-    fireEvent.change(screen.getByLabelText("Số tiền đã bỏ vào", { exact: false }), {
+    fireEvent.change(screen.getByLabelText("Vốn đã bỏ ra", { exact: false }), {
       target: { value: "10000000" },
     })
     expect(screen.getByRole("button", { name: "Thêm" })).not.toBeDisabled()
@@ -212,5 +212,28 @@ describe("InvestmentsTab", () => {
     fireEvent.click(screen.getByRole("button", { name: "Xoá" }))
 
     expect(onRemoveInvest).toHaveBeenCalledWith(GAINING.id)
+  })
+
+  it("uses the same field labels as the edit dialog", () => {
+    render(<InvestmentsTab invests={[]} summary={summaryFor([])} onAddInvest={vi.fn()} onUpdateInvest={vi.fn()} onRemoveInvest={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Thêm khoản đầu tư" }))
+
+    expect(screen.getByLabelText("Tên khoản đầu tư", { exact: false })).toBeInTheDocument()
+    expect(screen.getByLabelText("Vốn đã bỏ ra", { exact: false })).toBeInTheDocument()
+    expect(screen.getByLabelText("Giá trị hiện tại", { exact: false })).toBeInTheDocument()
+  })
+
+  it("keeps a typed 0 as the current value (a written-off investment) instead of replacing it with the cost", () => {
+    const onAddInvest = vi.fn()
+    render(<InvestmentsTab invests={[]} summary={summaryFor([])} onAddInvest={onAddInvest} onUpdateInvest={vi.fn()} onRemoveInvest={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Thêm khoản đầu tư" }))
+    fireEvent.change(screen.getByLabelText("Tên khoản", { exact: false }), { target: { value: "Cổ phiếu phá sản" } })
+    fireEvent.change(screen.getByLabelText("Vốn đã bỏ ra", { exact: false }), { target: { value: "10000000" } })
+    fireEvent.change(screen.getByLabelText("Giá trị hiện tại", { exact: false }), { target: { value: "0" } })
+    fireEvent.click(screen.getByRole("button", { name: "Thêm" }))
+
+    expect(onAddInvest).toHaveBeenCalledWith({ name: "Cổ phiếu phá sản", cost: 10_000_000, value: 0 })
   })
 })
