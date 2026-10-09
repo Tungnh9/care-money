@@ -82,3 +82,15 @@ describe("MoodsCard — xoá tâm trạng", () => {
     expect(onRemove).toHaveBeenCalledWith(0)
   })
 })
+
+describe("MoodsCard — công tắc", () => {
+  it("names each switch after its mood, so a screen reader can tell the switches apart", () => {
+    const onToggle = vi.fn()
+    render(<MoodsCard moods={MOODS} onToggle={onToggle} onRemove={vi.fn()} onAdd={vi.fn()} />)
+
+    expect(screen.getByRole("switch", { name: "Tuyệt vời" })).toBeChecked()
+    fireEvent.click(screen.getByRole("switch", { name: "Vui" }))
+
+    expect(onToggle).toHaveBeenCalledWith(1)
+  })
+})

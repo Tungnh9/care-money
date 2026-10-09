@@ -40,4 +40,14 @@ describe("TagsCard", () => {
     expect(screen.queryByRole("button", { name: /Xoá/ })).not.toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Thêm nhãn" })).not.toBeInTheDocument()
   })
+
+  it("names each switch after its tag, so a screen reader can tell the switches apart", () => {
+    const onToggle = vi.fn()
+    render(<TagsCard tags={TAGS} onToggle={onToggle} />)
+
+    expect(screen.getByRole("switch", { name: "Tiền trọ" })).toBeChecked()
+    fireEvent.click(screen.getByRole("switch", { name: "Mua sắm" }))
+
+    expect(onToggle).toHaveBeenCalledWith(1)
+  })
 })

@@ -1,5 +1,7 @@
 "use client"
 
+import { useId } from "react"
+
 import { Card } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import type { BudgetTag } from "@/lib/settings-storage"
@@ -10,6 +12,11 @@ interface TagsCardProps {
 }
 
 function TagsCard({ tags, onToggle }: TagsCardProps) {
+  // Công tắc của Base UI tự lấy tên từ <label> bọc ngoài — ở đây label chỉ chứa chính công tắc nên tên
+  // rỗng. Trỏ aria-labelledby vào chữ tên nhãn đang hiện bên cạnh (aria-label không dùng được: Base UI
+  // luôn đặt aria-labelledby khi không được truyền, và aria-labelledby thắng aria-label).
+  const idPrefix = useId()
+
   return (
     <Card label="Nhãn dùng trong chi tiêu" className="min-w-0 w-full">
       <p className="mb-[14px] text-[13.5px] leading-[1.55] text-[var(--ob-color-text-muted)]">
@@ -31,10 +38,17 @@ function TagsCard({ tags, onToggle }: TagsCardProps) {
               {t.emoji}
             </span>
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-bold">{t.label}</div>
+              <div id={`${idPrefix}-tag-${i}`} className="text-sm font-bold">
+                {t.label}
+              </div>
               <div className="mt-0.5 text-[12.5px] text-[var(--ob-color-text-subtle)]">{t.desc}</div>
             </div>
-            <Switch checked={t.on} onCheckedChange={() => onToggle(i)} className="flex-none" />
+            <Switch
+              checked={t.on}
+              onCheckedChange={() => onToggle(i)}
+              aria-labelledby={`${idPrefix}-tag-${i}`}
+              className="flex-none"
+            />
           </div>
         ))}
         {!tags.length ? (

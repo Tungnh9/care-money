@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useId, useState } from "react"
 import { Trash2 } from "lucide-react"
 
 import { AlertDialog } from "@/components/ui/alert-dialog"
@@ -21,6 +21,8 @@ function MoodsCard({ moods, onToggle, onRemove, onAdd }: MoodsCardProps) {
   // 3 và màu khác, nên xoá nhầm "Tuyệt vời" (điểm 5) là gợi ý chi tiêu–tâm trạng lệch mãi về sau.
   // Hộp thoại tìm lại mood theo tên lúc xác nhận vì tab khác có thể đã đổi danh sách.
   const [deleting, setDeleting] = useState<string | null>(null)
+  // Như TagsCard: công tắc lấy tên từ chữ tên tâm trạng đang hiện bên cạnh.
+  const idPrefix = useId()
 
   return (
     <Card label="Tâm trạng dùng trong nhật ký" className="min-w-0 w-full">
@@ -43,10 +45,17 @@ function MoodsCard({ moods, onToggle, onRemove, onAdd }: MoodsCardProps) {
               {m.emoji}
             </span>
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-bold">{m.label}</div>
+              <div id={`${idPrefix}-mood-${i}`} className="text-sm font-bold">
+                {m.label}
+              </div>
               <div className="mt-0.5 text-[12.5px] text-[var(--ob-color-text-subtle)]">{m.desc}</div>
             </div>
-            <Switch checked={m.on} onCheckedChange={() => onToggle(i)} className="flex-none" />
+            <Switch
+              checked={m.on}
+              onCheckedChange={() => onToggle(i)}
+              aria-labelledby={`${idPrefix}-mood-${i}`}
+              className="flex-none"
+            />
             <button
               type="button"
               aria-label={"Xoá " + m.label}
