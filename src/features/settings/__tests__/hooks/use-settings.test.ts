@@ -102,6 +102,19 @@ describe("useSettings", () => {
     expect(toast.success).toHaveBeenCalledWith('Đã thêm tâm trạng "Hào hứng"')
   })
 
+  it("saves a new mood under its trimmed name", async () => {
+    const { result } = renderHook(() => useSettings())
+    await waitFor(() => expect(result.current.settings).toEqual(DEFAULT_SETTINGS))
+
+    act(() => {
+      result.current.addMood({ label: "  Hào hứng  ", desc: "Có việc đang mong chờ", emoji: "🥳" })
+    })
+
+    const stored = getStoredSettings().moods
+    expect(stored[stored.length - 1].label).toBe("Hào hứng")
+    expect(toast.success).toHaveBeenCalledWith('Đã thêm tâm trạng "Hào hứng"')
+  })
+
   it("shows an error toast and leaves state unchanged when addMood fails to persist", async () => {
     const { result } = renderHook(() => useSettings())
     await waitFor(() => expect(result.current.settings).toEqual(DEFAULT_SETTINGS))

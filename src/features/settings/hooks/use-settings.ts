@@ -114,10 +114,10 @@ function useSettings() {
       }
       try {
         const tint = TINT_PALETTE[current.moods.length % TINT_PALETTE.length]
-        persist({ ...current, moods: [...current.moods, { ...mood, tint, on: true, score: 3 }] })
-        toast.success(`Đã thêm tâm trạng "${mood.label}"`)
+        persist({ ...current, moods: [...current.moods, { ...mood, label, tint, on: true, score: 3 }] })
+        toast.success(`Đã thêm tâm trạng "${label}"`)
       } catch {
-        toast.error(`Không thể thêm tâm trạng "${mood.label}". Vui lòng thử lại.`)
+        toast.error(`Không thể thêm tâm trạng "${label}". Vui lòng thử lại.`)
       }
     },
     [persist]
