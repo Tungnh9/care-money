@@ -113,3 +113,38 @@ describe("GoldStoresCard", () => {
     expect(screen.getByRole("button", { name: "Thêm" })).not.toBeDisabled()
   })
 })
+
+describe("GoldStoresCard — tên cửa hàng trùng", () => {
+  it("blocks adding a store whose name is already taken and keeps what was typed", () => {
+    const onAdd = vi.fn()
+    render(
+      <GoldStoresCard stores={STORES} gold={[]} onAdd={onAdd} onUpdate={vi.fn()} onRemove={vi.fn()} onSetPrice={vi.fn()} />
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Thêm cửa hàng" }))
+    fireEvent.change(screen.getByLabelText("Tên cửa hàng", { exact: false }), { target: { value: " SJC " } })
+    fireEvent.change(screen.getByLabelText("Giá hôm nay", { exact: false }), { target: { value: "8500000" } })
+
+    expect(screen.getByText("Đã có cửa hàng tên này — chọn tên khác")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Thêm" })).toBeDisabled()
+    fireEvent.click(screen.getByRole("button", { name: "Thêm" }))
+    expect(onAdd).not.toHaveBeenCalled()
+    // Form vẫn mở, chữ đã gõ còn nguyên — trước đây form gọi reset() dù hook từ chối.
+    expect(screen.getByLabelText("Tên cửa hàng", { exact: false })).toHaveValue(" SJC ")
+    expect(screen.getByLabelText("Giá hôm nay", { exact: false })).toHaveValue("8.500.000")
+  })
+
+  it("blocks renaming a store to another store's name from the Sửa form", () => {
+    const onUpdate = vi.fn()
+    render(
+      <GoldStoresCard stores={STORES} gold={[]} onAdd={vi.fn()} onUpdate={onUpdate} onRemove={vi.fn()} onSetPrice={vi.fn()} />
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Sửa SJC" }))
+    fireEvent.change(screen.getByLabelText("Tên cửa hàng", { exact: false }), { target: { value: "PNJ" } })
+
+    expect(screen.getByText("Đã có cửa hàng tên này — chọn tên khác")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
+    expect(onUpdate).not.toHaveBeenCalled()
+  })
+})

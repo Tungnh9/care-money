@@ -57,3 +57,25 @@ describe("EditGoldStoreModal", () => {
     expect(screen.getByLabelText("Tên cửa hàng")).toHaveValue("SJC")
   })
 })
+
+describe("EditGoldStoreModal — tên cửa hàng trùng", () => {
+  it("disables Lưu and explains why when renaming to another store's name", () => {
+    render(
+      <EditGoldStoreModal store={STORE} existingNames={["PNJ", "SJC"]} onOpenChange={vi.fn()} onSave={vi.fn()} />
+    )
+
+    fireEvent.change(screen.getByLabelText("Tên cửa hàng", { exact: false }), { target: { value: "SJC" } })
+
+    expect(screen.getByText("Đã có cửa hàng tên này — chọn tên khác")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
+  })
+
+  it("still allows saving under the store's own current name", () => {
+    render(
+      <EditGoldStoreModal store={STORE} existingNames={["PNJ", "SJC"]} onOpenChange={vi.fn()} onSave={vi.fn()} />
+    )
+
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeEnabled()
+    expect(screen.queryByText("Đã có cửa hàng tên này — chọn tên khác")).not.toBeInTheDocument()
+  })
+})

@@ -22,6 +22,7 @@ interface GoldStoresCardProps {
 function GoldStoresCard({ stores, gold, onAdd, onUpdate, onRemove, onSetPrice }: GoldStoresCardProps) {
   const [editingName, setEditingName] = useState<string | null>(null)
   const [deletingName, setDeletingName] = useState<string | null>(null)
+  const storeNames = stores.map((store) => store.name)
 
   function isInUse(name: string) {
     return gold.some((p) => p.store === name)
@@ -87,9 +88,10 @@ function GoldStoresCard({ stores, gold, onAdd, onUpdate, onRemove, onSetPrice }:
           Chưa có cửa hàng nào. Thêm cửa hàng đầu tiên để bắt đầu theo dõi giá.
         </p>
       )}
-      <AddGoldStoreForm onAdd={onAdd} />
+      <AddGoldStoreForm onAdd={onAdd} existingNames={storeNames} />
       <EditGoldStoreModal
         store={stores.find((s) => s.name === editingName) ?? null}
+        existingNames={storeNames}
         onOpenChange={(open) => !open && setEditingName(null)}
         onSave={(updated) => {
           if (editingName) onUpdate(editingName, updated)

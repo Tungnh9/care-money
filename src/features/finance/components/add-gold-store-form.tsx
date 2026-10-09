@@ -8,9 +8,12 @@ import type { GoldStore } from "../types"
 
 interface AddGoldStoreFormProps {
   onAdd: (store: GoldStore) => void
+  // Tên các cửa hàng đang có — lần mua vàng tham chiếu cửa hàng bằng tên, nên chặn trùng ngay ở form:
+  // nếu chỉ để hook từ chối, form vẫn reset() và mất chữ người dùng đã gõ.
+  existingNames?: string[]
 }
 
-function AddGoldStoreForm({ onAdd }: AddGoldStoreFormProps) {
+function AddGoldStoreForm({ onAdd, existingNames = [] }: AddGoldStoreFormProps) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState("")
   const [price, setPrice] = useState("")
@@ -31,6 +34,8 @@ function AddGoldStoreForm({ onAdd }: AddGoldStoreFormProps) {
     )
   }
 
+  const duplicate = existingNames.includes(name.trim())
+
   return (
     <div className="mt-[18px] border-t border-[var(--ob-color-border)] pt-[18px]">
       <div className="mb-3 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
@@ -43,6 +48,8 @@ function AddGoldStoreForm({ onAdd }: AddGoldStoreFormProps) {
           placeholder="vd: SJC"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          invalid={duplicate}
+          hint={duplicate ? "Đã có cửa hàng tên này — chọn tên khác" : undefined}
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"
@@ -60,7 +67,7 @@ function AddGoldStoreForm({ onAdd }: AddGoldStoreFormProps) {
           variant="primary"
           size="sm"
           type="button"
-          disabled={!name.trim()}
+          disabled={duplicate || !name.trim()}
           onClick={() => {
             onAdd({ name: name.trim(), price: price.trim() })
             reset()
