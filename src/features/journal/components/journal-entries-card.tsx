@@ -92,7 +92,7 @@ function JournalEntriesCard({
                 </div>
                 {isTruncated && !isExpanded ? (
                   <p className="whitespace-pre-wrap text-sm leading-[1.6] text-[var(--ob-color-text-muted)]">
-                    {`${plainText.slice(0, TRUNCATE_LENGTH)}…`}
+                    {`${plainText.slice(0, TRUNCATE_LENGTH).replace(/[\uD800-\uDBFF]$/, "").trimEnd()}…`}
                   </p>
                 ) : (
                   <div

@@ -52,7 +52,7 @@ describe("JournalEntriesCard", () => {
   it("truncates long entries and expands/collapses them on click", () => {
     render(<JournalEntriesCard entries={[LONG_ENTRY]} onDelete={vi.fn()} onEdit={vi.fn()} />)
 
-    expect(screen.getByText(`${LONG_TEXT.slice(0, 180)}…`)).toBeInTheDocument()
+    expect(screen.getByText(`${LONG_TEXT.slice(0, 180).trimEnd()}…`)).toBeInTheDocument()
     expect(screen.queryByText(LONG_TEXT)).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole("button", { name: "Xem thêm" }))
@@ -62,7 +62,7 @@ describe("JournalEntriesCard", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Thu gọn" }))
 
-    expect(screen.getByText(`${LONG_TEXT.slice(0, 180)}…`)).toBeInTheDocument()
+    expect(screen.getByText(`${LONG_TEXT.slice(0, 180).trimEnd()}…`)).toBeInTheDocument()
   })
 
   it("expanding one entry does not affect another entry's truncation state", () => {
@@ -164,6 +164,15 @@ describe("JournalEntriesCard", () => {
       (_, element) => element?.tagName === "P" && element.textContent === `${plain.slice(0, 180)}…`
     )
     expect(preview).toBeInTheDocument()
+  })
+
+  it("ends the collapsed preview with the ellipsis on the same line as the last text", () => {
+    const text = `<div>${"x".repeat(179)}</div><div>${"y".repeat(50)}</div>`
+    render(<JournalEntriesCard entries={[{ ...LONG_ENTRY, text }]} onDelete={vi.fn()} onEdit={vi.fn()} />)
+
+    expect(
+      screen.getByText((_, element) => element?.tagName === "P" && element.textContent === `${"x".repeat(179)}…`)
+    ).toBeInTheDocument()
   })
 
   it("adds the year to the date of an entry written in another year, in the list and in the edit button's name", () => {

@@ -73,6 +73,7 @@ describe("stripHtmlToPlainText", () => {
   it("collapses blank lines and the spaces around a line break into a single line break", () => {
     // Chrome ghi 1 dòng trống thành <div><br></div>.
     expect(stripHtmlToPlainText("Dòng một <div><br></div><div> Dòng ba</div>")).toBe("Dòng một\nDòng ba")
+    expect(stripHtmlToPlainText("<div><br></div>")).toBe("")
   })
 
   it("decodes HTML entities instead of showing them literally", () => {

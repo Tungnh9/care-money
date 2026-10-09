@@ -53,7 +53,7 @@ function stripHtmlToPlainText(html: string): string {
   collectText(root, parts)
   return parts
     .join("")
-    .replace(/ /g, " ") // &nbsp; → dấu cách thường
+    .replace(/\u00a0/g, " ") // &nbsp; → dấu cách thường
     .replace(/ *\n[\n ]*/g, "\n") // dòng trống và dấu cách quanh chỗ xuống dòng → đúng 1 "\n"
     .trim()
 }
