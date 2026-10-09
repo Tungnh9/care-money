@@ -53,3 +53,15 @@ describe("globals.css — giảm chuyển động", () => {
     expect(hidden.sort()).toEqual([".ob-conf", ".ob-firework-spark"])
   })
 })
+
+describe("globals.css — rule phần tử trần nằm trong @layer base", () => {
+  it("keeps the press-scale `button:active` rule only inside @layer base, so a utility on a button can still override it", () => {
+    const rules = rulesFor("button:active")
+    expect(rules.length).toBeGreaterThan(0)
+    for (const rule of rules) expect(wrappersOf(rule)[0]).toBe("layer base")
+  })
+
+  it("has no unlayered `*` rule — Tailwind preflight in @layer base already sets box-sizing", () => {
+    for (const rule of rulesFor("*")) expect(wrappersOf(rule)[0]).toBe("layer base")
+  })
+})

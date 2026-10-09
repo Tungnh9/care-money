@@ -241,10 +241,6 @@
 }
 
 /* ---------- base ---------- */
-* {
-  box-sizing: border-box;
-}
-
 body {
   margin: 0;
   background-color: var(--ob-color-bg);
@@ -492,9 +488,6 @@ body {
   }
   .ob-card-grid > *:nth-child(n + 6) {
     animation-delay: 0.3s;
-  }
-  button:active {
-    transform: scale(0.95);
   }
   .ob-calc-veil {
     animation: ob-veil var(--ob-dur-base) var(--ob-ease-out);
