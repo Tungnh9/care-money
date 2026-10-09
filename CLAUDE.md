@@ -60,6 +60,7 @@ src/
 - **`src/components/ob/`**: component đặc thù của Orange Banana không có primitive shadcn tương ứng (`Figure`, `Streak`...) — viết từ đầu, style bằng token `--ob-*`.
 - Tên file kebab-case khớp tên component PascalCase — ví dụ `button.tsx` export `Button`.
 - Mọi `<button>` mặc định có `cursor: pointer` (reset global trong `src/app/globals.css`, đặt trong `@layer base` để `disabled:cursor-not-allowed` ở utilities layer vẫn override đúng) — không cần set `cursor-pointer` tay ở từng component.
+- `Card` là container (`[container-type:inline-size]` trong `cardVariants`): bố cục bên trong Card (số cột lưới, cỡ chữ) theo bề rộng của chính Card — biến thể container query `@xs:`/`@md:`/`@xl:` (bề rộng nội dung Card ≥ 320/448/576px) hoặc đơn vị `cqi` — thay vì breakpoint màn hình `sm:`/`md:`/`lg:`, vì cùng 1 màn hình 1 Card có lúc chung hàng với Card khác, có lúc chiếm cả hàng. Phần tử cần đo theo 1 vùng hẹp hơn Card (vd. cột số cạnh icon ở `PillarCard`) thì bọc trong 1 div `[container-type:inline-size]` riêng.
 - Server Component là mặc định; chỉ thêm `'use client'` khi thật sự cần state/event/browser API.
 - Định nghĩa `interface`/`type` riêng cho props, không dùng `any`.
 

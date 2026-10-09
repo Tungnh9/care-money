@@ -120,6 +120,33 @@ describe("StudySummarySection", () => {
     expect(onToggleTask).toHaveBeenCalledWith(1)
   })
 
+  it("fits the due-word grid to the card's own width, so long words wrap inside their tile on a phone", () => {
+    const dueWords = [{ ...DUE_WORDS[0], image: "/assets/vocab/v-0010.jpg" }, ...DUE_WORDS.slice(1)]
+    render(
+      <StudySummarySection
+        vocab={VOCAB}
+        grammar={GRAMMAR}
+        tasks={TASKS}
+        onToggleTask={vi.fn()}
+        learned={[]}
+        dueWords={dueWords}
+      />
+    )
+
+    const word = screen.getByText(DUE_WORDS[0].word)
+    const grid = word.closest(".grid") as HTMLElement
+    // 2 cột khi Card hẹp (điện thoại), thêm cột theo bề rộng CARD — không cố định 5 cột.
+    expect(grid).toHaveClass("grid-cols-2", "@xs:grid-cols-3", "@md:grid-cols-4", "@xl:grid-cols-5")
+    expect(grid).not.toHaveClass("grid-cols-5")
+    // @xs:/@md:/@xl: đo container gần nhất — phải là chính Card chứa lưới.
+    expect(grid.closest("section")).toHaveClass("[container-type:inline-size]")
+    // Từ/nghĩa dài xuống dòng trong ô của nó thay vì đè sang ô bên cạnh.
+    expect(word).toHaveClass("wrap-anywhere")
+    expect(screen.getByText(DUE_WORDS[0].meaning)).toHaveClass("wrap-anywhere")
+    // Ảnh xin đủ nét cho ô ~45% bề rộng màn hình khi lưới 2 cột.
+    expect(screen.getByAltText(DUE_WORDS[0].word)).toHaveAttribute("sizes", "(max-width: 639px) 45vw, 140px")
+  })
+
   describe("speak buttons on the due words", () => {
     let speakSpy: ReturnType<typeof vi.fn>
     let cancelSpy: ReturnType<typeof vi.fn>

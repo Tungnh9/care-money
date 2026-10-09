@@ -30,7 +30,7 @@ function VocabTeaserCard({ entry, learned }: { entry: VocabEntry; learned: boole
         src={entry.image}
         alt={entry.word}
         iconSize={18}
-        imageSizes="(max-width: 640px) 20vw, 120px"
+        imageSizes="(max-width: 639px) 45vw, 140px"
         className="overflow-hidden rounded-[var(--ob-radius-sm)]"
       >
         <SpeakButton word={entry.word} size="sm" className="absolute top-1 left-1" />
@@ -43,13 +43,13 @@ function VocabTeaserCard({ entry, learned }: { entry: VocabEntry; learned: boole
       <div className="min-w-0">
         <div
           className={cn(
-            "text-[12.5px] leading-[1.4] font-bold",
+            "text-[12.5px] leading-[1.4] font-bold wrap-anywhere",
             learned ? "text-[var(--ob-color-text-subtle)] line-through" : "text-[var(--ob-color-text)]"
           )}
         >
           {entry.word}
         </div>
-        <div className="text-[11px] leading-[1.4] text-[var(--ob-color-text-subtle)]">{entry.meaning}</div>
+        <div className="text-[11px] leading-[1.4] text-[var(--ob-color-text-subtle)] wrap-anywhere">{entry.meaning}</div>
       </div>
     </div>
   )
@@ -74,7 +74,9 @@ function StudySummarySection({ vocab, grammar, tasks, onToggleTask, learned, due
 
       <Card label="Từ cần ôn hôm nay" className="min-w-0 flex-[1_1_360px]">
         {shownDueWords.length ? (
-          <div className="grid grid-cols-5 gap-[10px]">
+          /* Số cột theo bề rộng Card (container query — Card là container), không theo màn hình: cùng 1
+              màn hình, Card này có lúc chung hàng với "Nhiệm vụ hôm nay", có lúc chiếm cả hàng. */
+          <div className="grid grid-cols-2 gap-[10px] @xs:grid-cols-3 @md:grid-cols-4 @xl:grid-cols-5">
             {shownDueWords.map((entry) => (
               <VocabTeaserCard key={entry.id} entry={entry} learned={learned.includes(entry.id)} />
             ))}
