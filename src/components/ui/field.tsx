@@ -3,7 +3,7 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
-import { groupVN } from "@/lib/format"
+import { groupVN, pastedMoneyDigits } from "@/lib/format"
 import { Input } from "@/components/ui/input"
 
 interface FieldProps
@@ -38,6 +38,7 @@ function Field({
   onChange,
   onFocus,
   onBlur,
+  onPaste,
   ...props
 }: FieldProps) {
   const [focused, setFocused] = React.useState(false)
@@ -51,6 +52,23 @@ function Field({
           onChange({ target: { value: digits } } as React.ChangeEvent<HTMLInputElement>)
         }
       : onChange
+  // Dán số tiền chép từ sao kê/hoá đơn ("1.500.000,00"): handleChange chỉ lọc chữ số trên cả chuỗi
+  // nên ",00" dính vào thành 150.000.000 đ. Ô tiền tự xử lý lần dán — bỏ phần lẻ rồi mới lấy chữ số,
+  // thay đúng vùng đang chọn — và trả về đúng dạng chuỗi chữ số như handleChange.
+  const handlePaste =
+    group && onChange
+      ? (e: React.ClipboardEvent<HTMLInputElement>) => {
+          onPaste?.(e)
+          if (e.defaultPrevented) return
+          e.preventDefault()
+          const input = e.currentTarget
+          const start = input.selectionStart ?? input.value.length
+          const end = input.selectionEnd ?? input.value.length
+          const pasted = pastedMoneyDigits(e.clipboardData.getData("text/plain"))
+          const digits = (input.value.slice(0, start) + pasted + input.value.slice(end)).replace(/\D/g, "")
+          onChange({ target: { value: digits } } as React.ChangeEvent<HTMLInputElement>)
+        }
+      : onPaste
 
   return (
     <label className={cn("block", className)}>
@@ -70,6 +88,7 @@ function Field({
         <Input
           value={shown}
           onChange={handleChange}
+          onPaste={handlePaste}
           onFocus={(e) => {
             setFocused(true)
             onFocus?.(e)
