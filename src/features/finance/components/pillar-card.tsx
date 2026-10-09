@@ -28,10 +28,12 @@ function PillarCard({ icon, label, amount, hint, tone, className }: PillarCardPr
         <span className="flex size-10 flex-none items-center justify-center rounded-[var(--ob-radius-md)] bg-[var(--ob-color-action-soft)] text-[var(--ob-color-action-strong)]">
           <Image src={`/assets/icons/${icon}.svg`} width={23} height={23} alt="" />
         </span>
-        <Figure
-          className="min-w-0"
-          value={<span style={{ color: amountColor }}>{formatMoney(amount, hidden)}</span>}
-        />
+        {/* Ô container riêng: cỡ chữ của Figure (đơn vị cqi) đo đúng cột này — đo cả Card thì số được
+            tính cho bề rộng lớn hơn cột thật ~52px (icon + khe) và tràn khỏi thẻ. Số là chuỗi thuần
+            (màu đặt ở ô này, chữ thừa hưởng) để Figure tự đếm ký tự mà co chữ khi số dài. */}
+        <div className="min-w-0 [container-type:inline-size]" style={{ color: amountColor }}>
+          <Figure value={formatMoney(amount, hidden)} />
+        </div>
         <p className="col-start-2 mt-1.5 min-w-0 text-[12.5px] text-[var(--ob-color-text-subtle)]">
           {hint}
         </p>
