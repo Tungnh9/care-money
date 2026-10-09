@@ -243,4 +243,15 @@ describe("Modal", () => {
     expect(backdrop.parentElement).toHaveClass("fixed", "inset-0", "flex", "items-center", "justify-center", "p-4")
     expect(backdrop).toHaveClass("absolute", "inset-0")
   })
+
+  it("points aria-describedby at the element id it is given", () => {
+    render(
+      <Modal open onOpenChange={vi.fn()} role="alertdialog" ariaLabel="Xoá?" ariaDescribedBy="modal-test-description">
+        <p id="modal-test-description">Không thể hoàn tác.</p>
+        <button type="button">Huỷ</button>
+      </Modal>
+    )
+
+    expect(screen.getByRole("alertdialog", { name: "Xoá?" })).toHaveAccessibleDescription("Không thể hoàn tác.")
+  })
 })

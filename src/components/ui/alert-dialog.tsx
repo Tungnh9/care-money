@@ -33,6 +33,9 @@ function AlertDialog({
       onOpenChange={onOpenChange}
       role="alertdialog"
       ariaLabelledBy="alert-dialog-title"
+      // Câu cảnh báo ("... sẽ không thể hoàn tác") phải được đọc trước khi người dùng bấm xác nhận —
+      // focus tự động rơi vào nút "Huỷ", nên chỉ tên hộp thôi là chưa đủ.
+      ariaDescribedBy={description ? "alert-dialog-description" : undefined}
       backdropTestId="alert-dialog-backdrop"
     >
       <div
@@ -42,7 +45,9 @@ function AlertDialog({
         {title}
       </div>
       {description ? (
-        <p className="mb-5 text-sm leading-[1.6] text-[var(--ob-color-text-muted)]">{description}</p>
+        <p id="alert-dialog-description" className="mb-5 text-sm leading-[1.6] text-[var(--ob-color-text-muted)]">
+          {description}
+        </p>
       ) : null}
       <div className="flex justify-end gap-[10px]">
         <Button variant="ghost" size="sm" type="button" onClick={() => onOpenChange(false)}>

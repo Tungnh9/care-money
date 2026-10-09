@@ -133,4 +133,31 @@ describe("AlertDialog", () => {
     const backdrop = screen.getByTestId("alert-dialog-backdrop")
     expect(backdrop.parentElement?.parentElement).toBe(document.body)
   })
+
+  it("links the description as the dialog's accessible description, so the warning is read with the title", () => {
+    render(
+      <AlertDialog
+        open
+        onOpenChange={vi.fn()}
+        title="Xoá quỹ tiết kiệm?"
+        description={
+          <>
+            Xoá &quot;<strong>Quỹ dự phòng</strong>&quot; sẽ không thể hoàn tác.
+          </>
+        }
+        confirmLabel="Xoá"
+        onConfirm={vi.fn()}
+      />
+    )
+
+    expect(screen.getByRole("alertdialog", { name: "Xoá quỹ tiết kiệm?" })).toHaveAccessibleDescription(
+      'Xoá "Quỹ dự phòng" sẽ không thể hoàn tác.'
+    )
+  })
+
+  it("leaves aria-describedby off when there is no description", () => {
+    render(<AlertDialog open onOpenChange={vi.fn()} title="Xoá quỹ?" onConfirm={vi.fn()} />)
+
+    expect(screen.getByRole("alertdialog", { name: "Xoá quỹ?" })).not.toHaveAttribute("aria-describedby")
+  })
 })

@@ -14,6 +14,8 @@ interface ModalProps {
   children: ReactNode
   role?: "dialog" | "alertdialog"
   ariaLabelledBy?: string
+  // id của đoạn mô tả (vd. câu cảnh báo của AlertDialog) — trình đọc màn hình đọc nó cùng tên hộp.
+  ariaDescribedBy?: string
   ariaLabel?: string
   backdropTestId?: string
   panelClassName?: string
@@ -25,6 +27,7 @@ function Modal({
   children,
   role = "dialog",
   ariaLabelledBy,
+  ariaDescribedBy,
   ariaLabel,
   backdropTestId = "modal-backdrop",
   panelClassName,
@@ -123,6 +126,7 @@ function Modal({
         role={role}
         aria-modal="true"
         aria-labelledby={ariaLabelledBy}
+        aria-describedby={ariaDescribedBy}
         aria-label={ariaLabel}
         className={cn(
           // Cao tối đa bằng lớp phủ (màn hình trừ đệm p-4), nội dung cao hơn thì tự cuộn bên trong — điện
