@@ -4,6 +4,7 @@ import { parseStudyState, type StudyState } from "@/features/study/study-storage
 import { parseBudgetState, type BudgetState } from "@/features/budget/budget-storage"
 import { parseNetWorthHistory, type NetWorthHistory } from "@/features/overview/net-worth-history-storage"
 import { parseAppSettings, type AppSettings } from "@/lib/settings-storage"
+import { dayKey } from "@/lib/date"
 
 const EXPORT_VERSION = 1
 
@@ -36,7 +37,9 @@ function buildExportPayload(snapshot: ExportSnapshot, exportedAt: string): Expor
 }
 
 function exportFileName(exportedAt: string): string {
-  return `orange-banana-${exportedAt.slice(0, 10)}.json`
+  // Ngày theo giờ máy (như mọi chỗ khác trong app), không theo UTC: trước 7:00 sáng giờ Việt Nam,
+  // exportedAt.slice(0, 10) còn là ngày hôm qua — 2 bản sao khác ngày có thể trùng tên.
+  return `orange-banana-${dayKey(new Date(exportedAt))}.json`
 }
 
 // exportedAt: thời điểm bản sao được tạo (null nếu file sửa tay không có) — để hộp xác nhận cho

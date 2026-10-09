@@ -36,8 +36,17 @@ describe("buildExportPayload", () => {
 })
 
 describe("exportFileName", () => {
-  it("uses the date portion of the export timestamp", () => {
-    expect(exportFileName("2026-08-14T09:00:00.000Z")).toBe("orange-banana-2026-08-14.json")
+  it("names the file after the local day of the export", () => {
+    const exportedAt = new Date(2026, 7, 14, 16, 0).toISOString()
+
+    expect(exportFileName(exportedAt)).toBe("orange-banana-2026-08-14.json")
+  })
+
+  it("uses the local day even before 07:00 in Vietnam, when the UTC date is still yesterday", () => {
+    // 06:30 sáng 28/09 theo giờ máy = 23:30 ngày 27/09 UTC khi máy đặt giờ Việt Nam (UTC+7).
+    const exportedAt = new Date(2026, 8, 28, 6, 30).toISOString()
+
+    expect(exportFileName(exportedAt)).toBe("orange-banana-2026-09-28.json")
   })
 })
 
