@@ -33,6 +33,23 @@ function goldStorePrice(stores: GoldStore[], storeName: string): number {
   return store ? parseGoldPrice(store.price) : 0
 }
 
+// Giá hôm nay để định giá 1 lần mua: giá của chính cửa hàng đó. Cửa hàng chưa nhập giá (ô trống/0)
+// hoặc tên không còn trong danh sách thì tạm tính theo giá mua của lần mua — "chưa biết giá thì coi
+// như hoà vốn" — thay vì định giá 0 rồi báo lỗ trọn giá vốn và kéo tụt tài sản ròng.
+function goldMarketPrice(stores: GoldStore[], purchase: GoldPurchase): number {
+  const price = goldStorePrice(stores, purchase.store)
+  return price > 0 ? price : purchase.buy
+}
+
+// Tên các cửa hàng (không trùng, theo thứ tự lần mua) có vàng đang được tạm tính theo giá mua vì
+// chưa có giá hôm nay — GoldTab nhắc người dùng nhập giá cho đúng những cửa hàng này.
+function unpricedGoldStores(gold: GoldPurchase[], stores: GoldStore[]): string[] {
+  const names = gold
+    .filter((purchase) => goldStorePrice(stores, purchase.store) <= 0)
+    .map((purchase) => purchase.store)
+  return Array.from(new Set(names))
+}
+
 function parseGoldDate(date: string): number {
   const [day, month, year] = date.split("/").map(Number)
   if (!day || !month || !year) return 0
@@ -57,7 +74,7 @@ interface GoldStoreSummary {
 function summarizeGoldByStore(gold: GoldPurchase[], stores: GoldStore[]): GoldStoreSummary[] {
   const byStore = new Map<string, { phan: number; cost: number; value: number }>()
   for (const purchase of gold) {
-    const price = goldStorePrice(stores, purchase.store)
+    const price = goldMarketPrice(stores, purchase)
     const entry = byStore.get(purchase.store) ?? { phan: 0, cost: 0, value: 0 }
     entry.phan += purchase.phan
     entry.cost += purchase.phan * purchase.buy
@@ -100,7 +117,7 @@ function summarizeFinance(state: FinanceState): FinanceSummary {
   const goldPhan = state.gold.reduce((sum, purchase) => sum + purchase.phan, 0)
   const goldCost = state.gold.reduce((sum, purchase) => sum + purchase.phan * purchase.buy, 0)
   const goldValue = state.gold.reduce(
-    (sum, purchase) => sum + purchase.phan * goldStorePrice(state.goldStores, purchase.store),
+    (sum, purchase) => sum + purchase.phan * goldMarketPrice(state.goldStores, purchase),
     0
   )
   const goldPL = goldValue - goldCost
@@ -154,9 +171,11 @@ export {
   goldReferencePricePerPhan,
   goldPurchasePL,
   goldStorePrice,
+  goldMarketPrice,
   parseGoldDate,
   sortGoldByDate,
   summarizeGoldByStore,
+  unpricedGoldStores,
   type FinanceSummary,
   type GoldStoreSummary,
 }

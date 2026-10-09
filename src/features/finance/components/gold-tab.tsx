@@ -10,13 +10,14 @@ import { Progress } from "@/components/ui/progress"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import {
+  goldMarketPrice,
   goldPurchasePL,
-  goldStorePrice,
   pct1,
   phanToChi,
   signedMoney,
   sortGoldByDate,
   summarizeGoldByStore,
+  unpricedGoldStores,
   type FinanceSummary,
   type GoldStoreSummary,
 } from "../finance-calculations"
@@ -59,12 +60,14 @@ function GoldTab({
   const { hidden } = useMoneyVisibility()
   const { goldPhan, goldCost, goldValue, goldPL, goldPct } = summary
   const gain = goldPL >= 0
-  const goldPLText = signedMoney(goldPL, hidden)
+  // Hoà vốn (hay chưa có vàng) thì hiện "0 ₫" trơn — "+ 0 ₫" màu xanh là báo lãi không có thật.
+  const goldPLText = goldPL === 0 ? formatMoney(0, hidden) : signedMoney(goldPL, hidden)
+  const unpriced = unpricedGoldStores(gold, stores)
   const maxBar = Math.max(goldCost, goldValue, 1)
   const avgCost = goldPhan > 0 ? goldCost / goldPhan : 0
   const avgValue = goldPhan > 0 ? goldValue / goldPhan : 0
   const sortedGold = sortGoldByDate(gold)
-  const purchasePLs = gold.map((p) => goldPurchasePL(p, goldStorePrice(stores, p.store)))
+  const purchasePLs = gold.map((p) => goldPurchasePL(p, goldMarketPrice(stores, p)))
   const winCount = purchasePLs.filter((pl) => pl >= 0).length
   const lossCount = purchasePLs.filter((pl) => pl < 0).length
   const totalWin = purchasePLs.filter((pl) => pl >= 0).reduce((sum, pl) => sum + pl, 0)
@@ -102,20 +105,37 @@ function GoldTab({
             <Figure
               value={
                 <span
-                  style={{ color: gain ? "var(--ob-color-income)" : "var(--ob-color-expense)" }}
+                  style={{
+                    color:
+                      goldPL > 0
+                        ? "var(--ob-color-income)"
+                        : goldPL < 0
+                          ? "var(--ob-color-expense)"
+                          : undefined,
+                  }}
                 >
                   {goldPLText}
                 </span>
               }
               fitChars={goldPLText.length}
-              delta={pct1(goldPct)}
+              // Hoà vốn (hay chưa có vàng) thì không có ▲/▼: "▲ +0,0%" là báo lãi không có thật.
+              delta={goldPL !== 0 ? pct1(goldPct) : undefined}
               direction={gain ? "up" : "down"}
             />
             <p className="mt-[10px] max-w-[28ch] text-[13.5px] leading-[1.5] text-[var(--ob-color-text-muted)]">
-              {gain
-                ? `Bạn đang lãi ${formatMoney(goldPL, hidden)} so với giá vốn nhờ giá vàng tăng.`
-                : `Bạn đang lỗ ${formatMoney(Math.abs(goldPL), hidden)} so với giá vốn do giá vàng giảm.`}
+              {goldPhan === 0
+                ? "Chưa có vàng nào — thêm lần mua đầu tiên để theo dõi lãi/lỗ."
+                : goldPL > 0
+                  ? `Bạn đang lãi ${formatMoney(goldPL, hidden)} so với giá vốn nhờ giá vàng tăng.`
+                  : goldPL < 0
+                    ? `Bạn đang lỗ ${formatMoney(Math.abs(goldPL), hidden)} so với giá vốn do giá vàng giảm.`
+                    : "Giá hiện tại đang bằng giá vốn — chưa lãi cũng chưa lỗ."}
             </p>
+            {unpriced.length ? (
+              <p className="mt-2 max-w-[28ch] text-[12.5px] leading-[1.5] text-[var(--ob-color-text-subtle)]">
+                {`Chưa nhập giá hôm nay cho ${unpriced.join(", ")} — vàng mua ở đó đang tạm tính theo giá mua.`}
+              </p>
+            ) : null}
           </div>
           <div className="min-w-[240px] flex-1">
             <div className="mb-4">

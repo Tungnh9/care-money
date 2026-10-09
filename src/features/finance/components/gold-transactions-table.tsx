@@ -5,7 +5,7 @@ import { Pencil, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
-import { goldPurchasePL, goldStorePrice, phanToChi } from "../finance-calculations"
+import { goldMarketPrice, goldPurchasePL, phanToChi } from "../finance-calculations"
 import type { GoldPurchase, GoldStore } from "../types"
 import { GoldPLBadge } from "./gold-pl-indicator"
 
@@ -64,7 +64,7 @@ function GoldTransactionsTable({ gold, stores, onRemove, onEdit }: GoldTransacti
         </thead>
         <tbody>
           {gold.map((purchase, index) => {
-            const price = goldStorePrice(stores, purchase.store)
+            const price = goldMarketPrice(stores, purchase)
             const cost = purchase.phan * purchase.buy
             const value = purchase.phan * price
             const pl = goldPurchasePL(purchase, price)

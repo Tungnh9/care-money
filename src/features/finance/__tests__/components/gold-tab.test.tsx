@@ -2,7 +2,8 @@ import { describe, it, expect, vi } from "vitest"
 import { render, screen, fireEvent, within } from "@testing-library/react"
 
 import { formatMoney } from "@/lib/format"
-import { phanToChi, pct1, type FinanceSummary } from "../../finance-calculations"
+import { phanToChi, pct1, summarizeFinance, type FinanceSummary } from "../../finance-calculations"
+import { DEFAULT_FINANCE_STATE } from "../../finance-storage"
 import { GoldTab } from "../../components/gold-tab"
 import type { GoldStore } from "../../types"
 
@@ -44,15 +45,15 @@ const noopHandlers = {
 }
 
 describe("GoldTab", () => {
-  it("shows zeroed-out P&L, stats and the empty transactions state when there is no gold", () => {
+  it("shows a neutral P&L, zeroed stats and the empty transactions state when there is no gold", () => {
     render(<GoldTab summary={ZERO_SUMMARY} stores={[]} gold={[]} {...noopHandlers} />)
 
     // Đang giữ (raw phân) và Quy đổi (phanToChi) đều hiện "0 phân" khi chưa có gì
     expect(screen.getAllByText("0 phân")).toHaveLength(2)
-    expect(
-      screen.getByText(`Bạn đang lãi ${formatMoney(0)} so với giá vốn nhờ giá vàng tăng.`)
-    ).toBeInTheDocument()
-    expect(screen.getByText(pct1(0), { exact: false })).toBeInTheDocument()
+    // Chưa có vàng thì không có lãi/lỗ để báo — không "lãi 0 ₫ … nhờ giá vàng tăng", không "▲ +0,0%".
+    expect(screen.getByText("Chưa có vàng nào — thêm lần mua đầu tiên để theo dõi lãi/lỗ.")).toBeInTheDocument()
+    expect(screen.queryByText(/nhờ giá vàng tăng/)).not.toBeInTheDocument()
+    expect(screen.queryByText(pct1(0), { exact: false })).not.toBeInTheDocument()
     // Thông báo rỗng hiện ở cả GoldTransactionsTable và GoldTransactionsCards (song song trong DOM,
     // chỉ ẩn/hiện qua CSS theo breakpoint), nên xuất hiện 2 lần.
     expect(
@@ -521,5 +522,31 @@ describe("GoldTab", () => {
     // truyền fitChars: "+ 1.234.567.890 ₫" = 17 ký tự.
     const amount = screen.getByText(`+ ${formatMoney(1_234_567_890)}`)
     expect(amount.parentElement?.style.getPropertyValue("--ob-figure-chars")).toBe("17")
+  })
+
+  it("says the price equals the cost, with no ▲ and no 'nhờ giá vàng tăng', at break-even", () => {
+    const BREAK_EVEN: FinanceSummary = { ...ZERO_SUMMARY, goldPhan: 10, goldCost: 8_000_000, goldValue: 8_000_000 }
+    render(<GoldTab summary={BREAK_EVEN} stores={[SJC]} gold={[]} {...noopHandlers} />)
+
+    expect(screen.getByText("Giá hiện tại đang bằng giá vốn — chưa lãi cũng chưa lỗ.")).toBeInTheDocument()
+    expect(screen.queryByText(`+ ${formatMoney(0)}`)).not.toBeInTheDocument()
+    expect(screen.queryByText(pct1(0), { exact: false })).not.toBeInTheDocument()
+  })
+
+  it("values gold from a store with no price yet at its buy price and says so, instead of a full loss", () => {
+    const stores: GoldStore[] = [{ name: "SJC", price: "" }]
+    const gold = [{ id: 1, date: "10/08/2026", phan: 10, buy: 8_000_000, store: "SJC" }]
+    const summary = summarizeFinance({ ...DEFAULT_FINANCE_STATE, gold, goldStores: stores })
+    render(<GoldTab summary={summary} stores={stores} gold={gold} {...noopHandlers} />)
+
+    expect(
+      screen.getByText("Chưa nhập giá hôm nay cho SJC — vàng mua ở đó đang tạm tính theo giá mua.")
+    ).toBeInTheDocument()
+    expect(screen.getByText("Giá hiện tại đang bằng giá vốn — chưa lãi cũng chưa lỗ.")).toBeInTheDocument()
+    expect(screen.queryByText(/do giá vàng giảm/)).not.toBeInTheDocument()
+    // Cột "Giá hiện tại" (thứ 6) của lần mua trong bảng giao dịch bằng giá vốn, không phải 0 ₫.
+    const table = document.querySelector("table") as HTMLTableElement
+    const cells = table.querySelectorAll("tbody tr")[0].querySelectorAll("td")
+    expect(cells[5]).toHaveTextContent(formatMoney(80_000_000))
   })
 })

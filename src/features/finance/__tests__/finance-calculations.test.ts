@@ -8,6 +8,8 @@ import {
   goldReferencePricePerPhan,
   goldPurchasePL,
   goldStorePrice,
+  goldMarketPrice,
+  unpricedGoldStores,
   parseGoldDate,
   sortGoldByDate,
   summarizeGoldByStore,
@@ -310,5 +312,55 @@ describe("goldReferencePricePerPhan", () => {
   it("returns 0 when no gold is held and no store has a price", () => {
     expect(goldReferencePricePerPhan({ goldPhan: 0, goldValue: 0 }, [{ name: "DOJI", price: "" }])).toBe(0)
     expect(goldReferencePricePerPhan({ goldPhan: 0, goldValue: 0 }, [])).toBe(0)
+  })
+})
+
+describe("goldMarketPrice", () => {
+  const purchase = { id: 1, date: "10/08/2026", phan: 10, buy: 8_000_000, store: "SJC" }
+
+  it("uses the store's price today when it has one", () => {
+    expect(goldMarketPrice([{ name: "SJC", price: "8.500.000" }], purchase)).toBe(8_500_000)
+  })
+
+  it("falls back to the purchase's own buy price while the store has no price yet", () => {
+    expect(goldMarketPrice([{ name: "SJC", price: "" }], purchase)).toBe(8_000_000)
+  })
+
+  it("falls back to the buy price when the store no longer exists", () => {
+    expect(goldMarketPrice([], purchase)).toBe(8_000_000)
+  })
+})
+
+describe("unpricedGoldStores", () => {
+  it("lists each store without a price once, and only stores that hold gold", () => {
+    const gold = [
+      { id: 1, date: "01/08/2026", phan: 10, buy: 8_000_000, store: "SJC" },
+      { id: 2, date: "02/08/2026", phan: 5, buy: 8_100_000, store: "SJC" },
+      { id: 3, date: "03/08/2026", phan: 5, buy: 8_000_000, store: "PNJ" },
+    ]
+    const stores = [
+      { name: "SJC", price: "" },
+      { name: "PNJ", price: "8.200.000" },
+      { name: "DOJI", price: "" },
+    ]
+
+    expect(unpricedGoldStores(gold, stores)).toEqual(["SJC"])
+  })
+})
+
+describe("summarizeFinance — cửa hàng chưa nhập giá", () => {
+  it("values gold from a store without a price at cost, so net worth does not drop by the whole holding", () => {
+    const state: FinanceState = {
+      ...DEFAULT_FINANCE_STATE,
+      gold: [{ id: 1, date: "10/08/2026", phan: 10, buy: 8_000_000, store: "SJC" }],
+      goldStores: [{ name: "SJC", price: "" }],
+    }
+
+    const summary = summarizeFinance(state)
+
+    expect(summary.goldValue).toBe(80_000_000)
+    expect(summary.goldPL).toBe(0)
+    expect(summary.goldPct).toBe(0)
+    expect(summary.net).toBe(80_000_000)
   })
 })
