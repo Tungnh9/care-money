@@ -210,6 +210,18 @@ describe("detectTagAnomaly", () => {
     })
   })
 
+  it("does not report a tag decrease in the first 6 days of the month", () => {
+    // Đầu tháng so với "cùng kỳ" chỉ vài ngày thì nhiễu — chưa báo giảm trước ngày 7.
+    const expenses = [
+      taggedExpense(1, "2026-01-02", 500_000, "Ăn uống"),
+      taggedExpense(2, "2026-02-02", 520_000, "Ăn uống"),
+      taggedExpense(3, "2026-03-02", 480_000, "Ăn uống"),
+    ]
+
+    expect(detectTagAnomaly(expenses, "2026-04", "2026-04-02")).toBeNull()
+    expect(detectTagAnomaly(expenses, "2026-04", "2026-04-07")?.text).toContain("giảm")
+  })
+
   it("does not report a 100% decrease for a monthly bill that is simply not due yet this month", () => {
     // Cước điện thoại trả ngày 28 hằng tháng; hôm nay 27/09 thì tháng này chưa trả là bình thường.
     const expenses = [

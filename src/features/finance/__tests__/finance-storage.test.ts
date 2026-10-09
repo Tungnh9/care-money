@@ -7,6 +7,7 @@ import {
   setStoredFinance,
   applySavingsFundDelta,
 } from "../finance-storage"
+import type { CreditCard, SavingsFund } from "../types"
 
 describe("getStoredFinance", () => {
   beforeEach(() => {
@@ -20,6 +21,30 @@ describe("getStoredFinance", () => {
     )
 
     expect(getStoredFinance().savings).toEqual([])
+  })
+
+  it("keeps every field of a savings fund and a credit card through a stored round trip", () => {
+    // Đọc trả về bản đã qua schema (field lạ bị bỏ) — field nào thiếu khỏi schema sẽ âm thầm rụng ở lần
+    // ghi kế tiếp. Required<...>: thêm 1 field vào kiểu thì fixture này buộc phải đổi theo.
+    const fund: Required<SavingsFund> = {
+      name: "Quỹ khẩn cấp",
+      amount: 5_000_000,
+      target: 20_000_000,
+      note: "Giữ đủ 6 tháng chi tiêu",
+    }
+    const card: Required<CreditCard> = {
+      name: "Thẻ Visa",
+      balance: 2_000_000,
+      min: 200_000,
+      limit: 15_000_000,
+      due: "15",
+      color: "#FF8A3D",
+    }
+    const state = { ...DEFAULT_FINANCE_STATE, savings: [fund], cards: [card] }
+
+    setStoredFinance(state)
+
+    expect(getStoredFinance()).toEqual(state)
   })
 
   it("drops only the malformed element of a list field, keeping its valid siblings", () => {
