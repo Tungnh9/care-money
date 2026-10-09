@@ -199,4 +199,19 @@ describe("MatchGame", () => {
       unmount()
     }
   })
+
+  it("lays the board out in 3 columns on phones and lets a long label grow its card instead of cutting it off", () => {
+    render(<MatchGame vocab={VOCAB} onFinish={vi.fn()} />)
+
+    const cards = screen.getAllByRole("button")
+    const board = cards[0].parentElement as HTMLElement
+    // 3 cột dưới 640px (thẻ ~100px ở 360px), 4 cột từ 640px như cũ.
+    expect(board).toHaveClass("grid-cols-3", "sm:grid-cols-4")
+    expect(board).not.toHaveClass("grid-cols-4")
+    for (const card of cards) {
+      // Vuông nhưng không cắt chữ: overflow-hidden làm thẻ cứng đúng hình vuông và xén nghĩa dài.
+      expect(card).toHaveClass("aspect-square", "wrap-anywhere")
+      expect(card).not.toHaveClass("overflow-hidden")
+    }
+  })
 })

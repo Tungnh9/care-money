@@ -100,7 +100,9 @@ function MatchGame({ vocab, onFinish, onWordReviewed }: MatchGameProps) {
   return (
     <div className="relative mx-auto max-w-[560px]">
       {matchBurst !== null ? <Fireworks key={matchBurst} /> : null}
-      <div className="grid grid-cols-4 gap-2.5">
+      {/* 3 cột dưới 640px để thẻ đủ rộng cho nghĩa dài. Thẻ vuông nhưng không overflow-hidden: chữ dài
+          hơn ô thì thẻ tự cao thêm (kích thước tối thiểu theo aspect-ratio) thay vì mất dòng trên/dưới. */}
+      <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4">
         {cards.map((card) => {
           const isMatched = matchedIds.includes(card.vocabId)
           const faceUp = isFaceUp(card)
@@ -112,7 +114,7 @@ function MatchGame({ vocab, onFinish, onWordReviewed }: MatchGameProps) {
               disabled={isMatched}
               onClick={() => handleFlip(card)}
               className={cn(
-                "flex aspect-square items-center justify-center overflow-hidden rounded-[var(--ob-radius-md)] border-[1.5px] p-2 text-center text-[13px] leading-tight font-bold transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)]",
+                "flex aspect-square items-center justify-center rounded-[var(--ob-radius-md)] border-[1.5px] p-2 text-center text-[13px] leading-tight font-bold wrap-anywhere transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)]",
                 isMatched
                   ? "border-transparent bg-[var(--ob-color-income-soft)] text-[var(--ob-color-income)]"
                   : "border-[var(--ob-color-border)] bg-[var(--ob-color-surface)] text-[var(--ob-color-text)] hover:border-[var(--ob-color-action)] hover:bg-[var(--ob-color-action-soft)]"
