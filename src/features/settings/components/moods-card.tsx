@@ -1,7 +1,9 @@
 "use client"
 
+import { useState } from "react"
 import { Trash2 } from "lucide-react"
 
+import { AlertDialog } from "@/components/ui/alert-dialog"
 import { Card } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { AddMoodForm } from "./add-mood-form"
@@ -15,6 +17,10 @@ interface MoodsCardProps {
 }
 
 function MoodsCard({ moods, onToggle, onRemove, onAdd }: MoodsCardProps) {
+  // Xoá hỏi lại trước (như mọi nút xoá ở trang Tài chính): thêm lại qua "Thêm tâm trạng" luôn ra điểm
+  // 3 và màu khác, nên xoá nhầm "Tuyệt vời" (điểm 5) là gợi ý chi tiêu–tâm trạng lệch mãi về sau.
+  const [deleting, setDeleting] = useState<{ index: number; label: string } | null>(null)
+
   return (
     <Card label="Tâm trạng dùng trong nhật ký" className="min-w-0 w-full">
       <p className="mb-[14px] text-[13.5px] leading-[1.55] text-[var(--ob-color-text-muted)]">
@@ -43,7 +49,7 @@ function MoodsCard({ moods, onToggle, onRemove, onAdd }: MoodsCardProps) {
             <button
               type="button"
               aria-label={"Xoá " + m.label}
-              onClick={() => onRemove(i)}
+              onClick={() => setDeleting({ index: i, label: m.label })}
               className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
             >
               <Trash2 size={17} />
@@ -55,6 +61,22 @@ function MoodsCard({ moods, onToggle, onRemove, onAdd }: MoodsCardProps) {
         ) : null}
       </div>
       <AddMoodForm onAdd={onAdd} existingLabels={moods.map((m) => m.label)} />
+      <AlertDialog
+        open={deleting !== null}
+        onOpenChange={(open) => !open && setDeleting(null)}
+        title="Xoá tâm trạng?"
+        description={
+          <>
+            Xoá &quot;<strong>{deleting?.label}</strong>&quot; sẽ không thể hoàn tác — thêm lại sau cũng không lấy
+            lại được màu và điểm tâm trạng cũ. Muốn ẩn khỏi màn Nhật ký thì chỉ cần tắt công tắc.
+          </>
+        }
+        confirmLabel="Xoá"
+        destructive
+        onConfirm={() => {
+          if (deleting) onRemove(deleting.index)
+        }}
+      />
     </Card>
   )
 }

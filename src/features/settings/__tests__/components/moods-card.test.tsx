@@ -33,3 +33,40 @@ describe("MoodsCard — thêm tâm trạng", () => {
     expect(onAdd).toHaveBeenCalledWith({ label: "Hào hứng", desc: "Tâm trạng của riêng bạn", emoji: "🙂" })
   })
 })
+
+describe("MoodsCard — xoá tâm trạng", () => {
+  it("asks for confirmation instead of deleting on the first tap, and points to the switch for hiding", () => {
+    const onRemove = vi.fn()
+    render(<MoodsCard moods={MOODS} onToggle={vi.fn()} onRemove={onRemove} onAdd={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Xoá Tuyệt vời" }))
+
+    expect(screen.getByText("Xoá tâm trạng?")).toBeInTheDocument()
+    expect(screen.getByText("Tuyệt vời", { selector: "strong" }).closest("p")).toHaveTextContent(
+      "Muốn ẩn khỏi màn Nhật ký thì chỉ cần tắt công tắc."
+    )
+    expect(onRemove).not.toHaveBeenCalled()
+  })
+
+  it("deletes the chosen mood by its index once confirmed", () => {
+    const onRemove = vi.fn()
+    render(<MoodsCard moods={MOODS} onToggle={vi.fn()} onRemove={onRemove} onAdd={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Xoá Vui" }))
+    fireEvent.click(screen.getByRole("button", { name: "Xoá" }))
+
+    expect(onRemove).toHaveBeenCalledWith(1)
+    expect(screen.queryByText("Xoá tâm trạng?")).not.toBeInTheDocument()
+  })
+
+  it("keeps the mood when the dialog is cancelled", () => {
+    const onRemove = vi.fn()
+    render(<MoodsCard moods={MOODS} onToggle={vi.fn()} onRemove={onRemove} onAdd={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Xoá Vui" }))
+    fireEvent.click(screen.getByRole("button", { name: "Huỷ" }))
+
+    expect(onRemove).not.toHaveBeenCalled()
+    expect(screen.queryByText("Xoá tâm trạng?")).not.toBeInTheDocument()
+  })
+})
