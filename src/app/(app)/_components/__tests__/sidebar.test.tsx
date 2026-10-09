@@ -156,4 +156,19 @@ describe("Sidebar", () => {
     const brand = screen.getAllByText("Orange")[0].parentElement as HTMLElement
     expect(brand).toHaveClass("min-w-0", "flex-1", "truncate")
   })
+
+  it("keeps every nav link named after its page when the icon-only sidebar hides the label (768–1023px)", () => {
+    render(<Sidebar />)
+
+    const nav = screen.getByRole("navigation")
+    // jsdom không nạp Tailwind nên `md:hidden` không có tác dụng ở đây — ẩn nhãn bằng tay, đúng như ở bề rộng md.
+    for (const link of within(nav).getAllByRole("link")) {
+      const label = link.querySelector("span") as HTMLElement
+      label.style.display = "none"
+    }
+
+    for (const name of ["Tổng quan", "Tài chính", "Chi tiêu", "Nhật ký", "Học tập", "Mục tiêu", "Cài đặt"]) {
+      expect(within(nav).getByRole("link", { name })).toBeInTheDocument()
+    }
+  })
 })
