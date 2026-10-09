@@ -61,10 +61,12 @@ function Field({
           onPaste?.(e)
           if (e.defaultPrevented) return
           e.preventDefault()
+          const pasted = pastedMoneyDigits(e.clipboardData.getData("text/plain"))
+          // Clipboard không có chữ số (ảnh, rỗng, "abc"): giữ nguyên số đang có, kể cả khi đang bôi đen.
+          if (!pasted) return
           const input = e.currentTarget
           const start = input.selectionStart ?? input.value.length
           const end = input.selectionEnd ?? input.value.length
-          const pasted = pastedMoneyDigits(e.clipboardData.getData("text/plain"))
           const digits = (input.value.slice(0, start) + pasted + input.value.slice(end)).replace(/\D/g, "")
           onChange({ target: { value: digits } } as React.ChangeEvent<HTMLInputElement>)
         }

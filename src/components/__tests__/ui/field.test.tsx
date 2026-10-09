@@ -74,6 +74,19 @@ describe("Field — dán số tiền", () => {
     expect(onChange).toHaveBeenLastCalledWith({ target: { value: "1500000" } })
   })
 
+  it("keeps the amount when the paste has no digits", () => {
+    const onChange = vi.fn()
+    render(<Field label="Số tiền" numeric group value="20000000" onChange={onChange} />)
+    const input = screen.getByLabelText("Số tiền", { exact: false }) as HTMLInputElement
+    input.setSelectionRange(0, input.value.length)
+
+    fireEvent.paste(input, { clipboardData: { getData: () => "" } })
+    fireEvent.paste(input, { clipboardData: { getData: () => "abc" } })
+
+    expect(onChange).not.toHaveBeenCalled()
+    expect(input.value).toBe("20.000.000")
+  })
+
   it("leaves pasting into a plain text field to the browser", () => {
     const onChange = vi.fn()
     render(<Field label="Ghi chú" value="" onChange={onChange} />)
