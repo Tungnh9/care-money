@@ -56,10 +56,33 @@ describe("Sidebar", () => {
     await waitFor(() => expect(screen.getByTestId("calculator-result")).toHaveTextContent("0"))
   })
 
-  it("hides Máy tính and Ẩn số tiền when the Tài chính module is off", () => {
+  it("keeps Máy tính and Ẩn số tiền when Tài chính is off but Chi tiêu still shows money", () => {
     window.localStorage.setItem(
       "app-settings",
-      JSON.stringify({ modules: [{ key: "taichinh", label: "Tài chính", hint: "", on: false }] })
+      JSON.stringify({
+        modules: [
+          { key: "taichinh", label: "Tài chính", hint: "", on: false },
+          { key: "muctieu", label: "Mục tiêu", hint: "", on: false },
+        ],
+      })
+    )
+
+    render(<Sidebar />)
+
+    expect(screen.getAllByLabelText("Máy tính").length).toBeGreaterThan(0)
+    expect(screen.getAllByLabelText("Ẩn số tiền").length).toBeGreaterThan(0)
+  })
+
+  it("hides Máy tính and Ẩn số tiền only when Tài chính, Chi tiêu and Mục tiêu are all off", () => {
+    window.localStorage.setItem(
+      "app-settings",
+      JSON.stringify({
+        modules: [
+          { key: "taichinh", label: "Tài chính", hint: "", on: false },
+          { key: "chitieu", label: "Chi tiêu", hint: "", on: false },
+          { key: "muctieu", label: "Mục tiêu", hint: "", on: false },
+        ],
+      })
     )
 
     render(<Sidebar />)

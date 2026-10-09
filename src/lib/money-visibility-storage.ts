@@ -9,7 +9,11 @@ function getHideMoney(): boolean {
 }
 
 function setHideMoney(hidden: boolean) {
-  window.localStorage.setItem(HIDE_MONEY_STORAGE_KEY, hidden ? "1" : "0")
+  try {
+    window.localStorage.setItem(HIDE_MONEY_STORAGE_KEY, hidden ? "1" : "0")
+  } catch {
+    // Bộ nhớ đầy hoặc bị chặn: chỉ mất việc nhớ lựa chọn cho lần tải sau — nút vẫn ẩn/hiện được ngay.
+  }
 }
 
 export { getHideMoney, setHideMoney }

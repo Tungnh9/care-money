@@ -71,6 +71,11 @@ const NAV = [
   { label: "Cài đặt", href: "/settings", icon: Settings, moduleKey: null },
 ] as const
 
+// Máy tính và nút Ẩn/Hiện số tiền phục vụ mọi trang có số tiền (Tài chính, Chi tiêu, Mục tiêu và các
+// thẻ tương ứng ở Tổng quan) — chỉ ẩn khi cả 3 module đều tắt, để không bao giờ kẹt "••••" ở /budget
+// hay /goals mà không còn nút nào để hiện lại.
+const MONEY_MODULE_KEYS = ["taichinh", "chitieu", "muctieu"] as const
+
 function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
@@ -83,7 +88,7 @@ function Sidebar() {
   }
 
   const nav = NAV.filter((item) => !item.moduleKey || isModuleOn(item.moduleKey))
-  const showMoneyTools = isModuleOn("taichinh")
+  const showMoneyTools = MONEY_MODULE_KEYS.some((key) => isModuleOn(key))
 
   function handleLogout() {
     // Secret đồng bộ là credential thật của /api/sync (đọc/ghi được từ bất cứ đâu) — không để lại

@@ -25,11 +25,11 @@ function MoneyVisibilityProvider({ children }: { children: ReactNode }) {
   }, [])
 
   function toggle() {
-    setHidden((prev) => {
-      const next = !prev
-      setHideMoney(next)
-      return next
-    })
+    // Ghi storage NGOÀI updater của setHidden: updater phải thuần (React gọi lại nó lúc render, và 1
+    // lần ghi lỗi trong đó từng làm sập cả cây — không có error boundary nào bắt).
+    const next = !hidden
+    setHidden(next)
+    setHideMoney(next)
   }
 
   return (
