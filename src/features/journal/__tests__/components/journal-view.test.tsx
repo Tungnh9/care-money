@@ -397,6 +397,88 @@ describe("JournalView — sửa, xoá và giữ nội dung đang viết", () => 
     expect(screen.getByRole("textbox")).toHaveTextContent("Nháp bài mới hôm nay")
   })
 
+  it("gives the new-entry draft and its mood back when the entry being edited is deleted", async () => {
+    seedEntries(ENTRY_A, ENTRY_B);
+    render(<JournalView />);
+
+    const editor = await screen.findByRole("textbox");
+    fireEvent.click(screen.getByText("Vui"));
+    typeInto(editor, "Nháp bài mới");
+    fireEvent.click(
+      screen.getByRole("button", { name: "Sửa bài 28/09 20:00" }),
+    );
+    typeInto(screen.getByRole("textbox"), "A sửa dở");
+    fireEvent.click(
+      screen.getByRole("button", { name: "Xoá bài 28/09 20:00" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Xoá" }));
+
+    expect(screen.getByRole("textbox")).toHaveTextContent("Nháp bài mới");
+    expect(screen.getByText("3 từ")).toBeInTheDocument();
+    expect(screen.getByRole("button", { pressed: true })).toHaveTextContent(
+      "Vui",
+    );
+  });
+
+  it("holds the new-entry draft through a failed update and gives it back with its mood after the retry", async () => {
+    seedEntries(ENTRY_A, ENTRY_B);
+    render(<JournalView />);
+
+    const editor = await screen.findByRole("textbox");
+    fireEvent.click(screen.getByText("Vui"));
+    typeInto(editor, "Nháp bài mới");
+    fireEvent.click(
+      screen.getByRole("button", { name: "Sửa bài 28/09 20:00" }),
+    );
+    typeInto(screen.getByRole("textbox"), "A đã sửa");
+    const setItemSpy = vi
+      .spyOn(Storage.prototype, "setItem")
+      .mockImplementationOnce(() => {
+        throw new Error("quota exceeded");
+      });
+    fireEvent.click(screen.getByRole("button", { name: "Cập nhật bài viết" }));
+    setItemSpy.mockRestore();
+
+    expect(screen.getByRole("textbox")).toHaveTextContent("A đã sửa");
+
+    fireEvent.click(screen.getByRole("button", { name: "Cập nhật bài viết" }));
+
+    const stored = JSON.parse(
+      window.localStorage.getItem("journal-entries") ?? "{}",
+    );
+    expect(stored.entries[0]).toMatchObject({ text: "A đã sửa", mood: null });
+    expect(screen.getByRole("textbox")).toHaveTextContent("Nháp bài mới");
+    expect(screen.getByRole("button", { pressed: true })).toHaveTextContent(
+      "Vui",
+    );
+  });
+
+  it("takes a fresh Settings snapshot when the edited entry is given a different mood", async () => {
+    seedEntries(
+      {
+        ...ENTRY_A,
+        mood: { emoji: "old", label: "Vui", tint: "#ABCDEF", score: 3 },
+      },
+      ENTRY_B,
+    );
+    render(<JournalView />);
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Sửa bài 28/09 20:00" }),
+    );
+    fireEvent.click(screen.getByText("Mệt"));
+    typeInto(screen.getByRole("textbox"), "A có mood mới");
+    fireEvent.click(screen.getByRole("button", { name: "Cập nhật bài viết" }));
+
+    const stored = JSON.parse(
+      window.localStorage.getItem("journal-entries") ?? "{}",
+    );
+    expect(stored.entries[0]).toMatchObject({
+      text: "A có mood mới",
+      mood: { emoji: "😴", label: "Mệt", tint: "#EAF1FE", score: 2 },
+    });
+  });
+
   it("asks before discarding unsaved changes when switching from one edited entry to another", async () => {
     seedEntries(ENTRY_A, ENTRY_B)
     render(<JournalView />)
