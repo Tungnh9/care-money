@@ -92,4 +92,24 @@ describe("NetWorthCard", () => {
     expect(screen.queryByTestId("segment-gold")).not.toBeInTheDocument()
     expect(screen.queryByTestId("segment-debt")).not.toBeInTheDocument()
   })
+
+  it("leaves zero-value parts out of the bar so it has no stray gaps, but keeps the full legend", () => {
+    render(<NetWorthCard summary={buildSummary({ goldValue: 0, debtTotal: 0 })} />)
+
+    expect(screen.getByTestId("segment-savings")).toBeInTheDocument()
+    expect(screen.queryByTestId("segment-gold")).not.toBeInTheDocument()
+    expect(screen.queryByTestId("segment-debt")).not.toBeInTheDocument()
+    expect(screen.getByText("Vàng")).toBeInTheDocument()
+    expect(screen.getByText("Nợ thẻ")).toBeInTheDocument()
+  })
+
+  it("settles on whole đồng instead of growing a ',5' when the count-up finishes", () => {
+    render(<NetWorthCard summary={buildSummary({ net: 20_308_642.5 })} />)
+
+    act(() => {
+      vi.advanceTimersByTime(1200)
+    })
+
+    expect(screen.getByText("20.308.643 ₫")).toBeInTheDocument()
+  })
 })

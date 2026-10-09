@@ -30,15 +30,19 @@ function NetWorthCard({ summary }: NetWorthCardProps) {
   return (
     <Card tone="invert" label="Tài sản ròng" className="min-w-0 w-full">
       <CountMoney value={net} delta={pct1(netPct)} direction={netPct >= 0 ? "up" : "down"} />
+      {/* Chỉ vẽ phần có giá trị: phần 0 ₫ rộng 0px nhưng vẫn chiếm 1 khe gap-1.5 (6px), làm thanh hở
+          ở cuối hoặc giữa. Chú giải bên dưới vẫn liệt kê đủ. */}
       <div className="mt-5 flex h-2 gap-1.5 overflow-hidden rounded-[var(--ob-radius-pill)]">
         {total > 0 ? (
-          segments.map((segment) => (
-            <span
-              key={segment.key}
-              data-testid={`segment-${segment.key}`}
-              style={{ flex: segment.value, background: segment.color }}
-            />
-          ))
+          segments
+            .filter((segment) => segment.value > 0)
+            .map((segment) => (
+              <span
+                key={segment.key}
+                data-testid={`segment-${segment.key}`}
+                style={{ flex: segment.value, background: segment.color }}
+              />
+            ))
         ) : (
           <span className="flex-1 bg-[var(--ob-vo-700)]" />
         )}

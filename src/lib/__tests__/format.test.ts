@@ -14,6 +14,17 @@ describe("formatMoney", () => {
   it("shows the real amount when hidden is explicitly false", () => {
     expect(formatMoney(20_000_000, false)).toBe("20.000.000 ₫")
   })
+
+  it("rounds to whole đồng, so a fractional amount never shows a decimal part", () => {
+    // 2,5 phân × 8.123.457 đ/phân = 20.308.642,5 đ
+    expect(formatMoney(2.5 * 8_123_457)).toBe("20.308.643 ₫")
+    expect(formatMoney(0.5 * 8_123_457)).toBe("4.061.729 ₫")
+  })
+
+  it("never prints a negative zero", () => {
+    expect(formatMoney(-0)).toBe("0 ₫")
+    expect(formatMoney(-0.4)).toBe("0 ₫")
+  })
 })
 
 describe("groupVN", () => {
