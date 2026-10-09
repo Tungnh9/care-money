@@ -32,4 +32,10 @@ describe("TaskItem", () => {
     // Input sr-only là position: absolute — label phải là mốc định vị của nó.
     expect(checkbox.closest("label")).toHaveClass("relative")
   })
+
+  it("names a done task's checkbox after the label only, without the tick mark", () => {
+    render(<TaskItem label="Đọc 10 trang" done onToggle={vi.fn()} />)
+
+    expect(screen.getByRole("checkbox", { name: "Đọc 10 trang" })).toBeChecked()
+  })
 })

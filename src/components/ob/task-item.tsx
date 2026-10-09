@@ -26,6 +26,7 @@ function TaskItem({ label, done, onToggle, className }: TaskItemProps) {
           vuông ngay sau tự vẽ vòng focus khi checkbox được focus bằng bàn phím. */}
       <input type="checkbox" checked={!!done} onChange={onToggle} className="peer sr-only" />
       <span
+        aria-hidden="true"
         className={cn(
           "grid size-5 shrink-0 place-items-center rounded-[7px] border-[1.5px] text-xs font-bold text-white peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[color:var(--ob-color-focus)]",
           done
