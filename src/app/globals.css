@@ -415,14 +415,9 @@ body {
 .ob-conf {
   position: absolute;
   top: 0;
-  animation: ob-conf 1.5s var(--ob-ease-out) forwards;
-}
-.ob-tada {
-  animation: ob-tada 0.62s var(--ob-ease-pop) both;
 }
 .ob-firework-spark {
   position: absolute;
-  animation: ob-firework-spark 0.72s var(--ob-ease-out) both;
 }
 .ob-highlight-flash {
   animation: ob-highlight-flash 1.6s var(--ob-ease-out) both;
@@ -443,6 +438,17 @@ body {
 }
 
 @media (prefers-reduced-motion: no-preference) {
+  /* Confetti, pháo hoa, "tada" chỉ chạy khi người dùng không bật "giảm chuyển động" — như mascot, card-rise
+     và hiệu ứng bấm nút bên dưới. */
+  .ob-conf {
+    animation: ob-conf 1.5s var(--ob-ease-out) forwards;
+  }
+  .ob-tada {
+    animation: ob-tada 0.62s var(--ob-ease-pop) both;
+  }
+  .ob-firework-spark {
+    animation: ob-firework-spark 0.72s var(--ob-ease-out) both;
+  }
   .ob-wave-arm {
     animation: ob-wavearm 1.9s ease-in-out infinite;
     transform-origin: 43px 45px;
@@ -504,6 +510,15 @@ body {
   }
   .ob-calc-shake {
     animation: ob-shake 0.4s var(--ob-ease-out);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Không có animation thì mảnh confetti/tia pháo hoa đứng yên ở chỗ xuất phát (đỉnh thẻ, tâm chùm) —
+     ẩn hẳn thay vì để lại các chấm màu đứng im trên thẻ. */
+  .ob-conf,
+  .ob-firework-spark {
+    display: none;
   }
 }
 
