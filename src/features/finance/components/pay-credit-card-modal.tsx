@@ -15,13 +15,6 @@ interface PayCreditCardModalProps {
   onPay: (name: string, amount: number) => void
 }
 
-function todayLabel() {
-  const now = new Date()
-  const day = String(now.getDate()).padStart(2, "0")
-  const month = String(now.getMonth() + 1).padStart(2, "0")
-  return `${day}/${month}/${now.getFullYear()}`
-}
-
 function PayCreditCardModal({ card, onOpenChange, onPay }: PayCreditCardModalProps) {
   const { hidden } = useMoneyVisibility()
   const [amount, setAmount] = useState("")
@@ -60,8 +53,6 @@ function PayCreditCardModal({ card, onOpenChange, onPay }: PayCreditCardModalPro
         onChange={(e) => setAmount(e.target.value)}
         hint={`Dư nợ hiện tại ${formatMoney(card.balance, hidden)}`}
       />
-      <div className="h-[14px]" />
-      <Field label="Ngày trả" placeholder={todayLabel()} />
 
       <div className="mt-5 flex justify-end gap-[10px]">
         <Button variant="ghost" size="sm" type="button" onClick={() => onOpenChange(false)}>

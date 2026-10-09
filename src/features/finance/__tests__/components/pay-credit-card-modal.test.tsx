@@ -77,4 +77,12 @@ describe("PayCreditCardModal", () => {
 
     expect(screen.getByLabelText("Số tiền trả", { exact: false })).toHaveValue("")
   })
+
+  it("only asks for the amount — no payment-date field that would silently be thrown away", () => {
+    render(<PayCreditCardModal card={CARD} onOpenChange={vi.fn()} onPay={vi.fn()} />)
+
+    expect(screen.getByLabelText("Số tiền trả", { exact: false })).toBeInTheDocument()
+    expect(screen.queryByLabelText("Ngày trả", { exact: false })).not.toBeInTheDocument()
+    expect(screen.getAllByRole("textbox")).toHaveLength(1)
+  })
 })
