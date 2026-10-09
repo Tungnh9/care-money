@@ -102,7 +102,7 @@ describe("VocabWordCard", () => {
     it("reads the word aloud when the speak button is clicked", () => {
       render(<VocabWordCard entry={WITH_IMAGE} learned={false} onToggleLearned={vi.fn()} />)
 
-      fireEvent.click(screen.getByRole("button", { name: "Phát âm từ" }))
+      fireEvent.click(screen.getByRole("button", { name: 'Phát âm "university"' }))
 
       expect(cancelSpy).toHaveBeenCalled()
       expect(speakSpy).toHaveBeenCalledTimes(1)
@@ -114,7 +114,7 @@ describe("VocabWordCard", () => {
     it("cancels any in-progress utterance before speaking again on rapid re-clicks", () => {
       render(<VocabWordCard entry={WITH_IMAGE} learned={false} onToggleLearned={vi.fn()} />)
 
-      const button = screen.getByRole("button", { name: "Phát âm từ" })
+      const button = screen.getByRole("button", { name: 'Phát âm "university"' })
       fireEvent.click(button)
       fireEvent.click(button)
 
@@ -128,7 +128,7 @@ describe("VocabWordCard", () => {
       render(<VocabWordCard entry={WITH_IMAGE} learned={false} onToggleLearned={vi.fn()} />)
 
       expect(() =>
-        fireEvent.click(screen.getByRole("button", { name: "Phát âm từ" }))
+        fireEvent.click(screen.getByRole("button", { name: 'Phát âm "university"' }))
       ).not.toThrow()
     })
   })

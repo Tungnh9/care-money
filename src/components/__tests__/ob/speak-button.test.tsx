@@ -24,7 +24,7 @@ describe("SpeakButton", () => {
   it("reads the word aloud when clicked", () => {
     render(<SpeakButton word="university" />)
 
-    fireEvent.click(screen.getByRole("button", { name: "Phát âm từ" }))
+    fireEvent.click(screen.getByRole("button", { name: 'Phát âm "university"' }))
 
     expect(cancelSpy).toHaveBeenCalled()
     expect(speakSpy).toHaveBeenCalledTimes(1)
@@ -36,14 +36,26 @@ describe("SpeakButton", () => {
   it("renders a smaller icon when size is sm", () => {
     render(<SpeakButton word="university" size="sm" />)
 
-    const icon = screen.getByRole("button", { name: "Phát âm từ" }).querySelector("svg")
+    const icon = screen.getByRole("button", { name: 'Phát âm "university"' }).querySelector("svg")
     expect(icon).toHaveAttribute("width", "12")
   })
 
   it("defaults to the md icon size", () => {
     render(<SpeakButton word="university" />)
 
-    const icon = screen.getByRole("button", { name: "Phát âm từ" }).querySelector("svg")
+    const icon = screen.getByRole("button", { name: 'Phát âm "university"' }).querySelector("svg")
     expect(icon).toHaveAttribute("width", "16")
+  })
+
+  it("names the button after the word it reads, so a row of speak buttons can be told apart", () => {
+    render(
+      <>
+        <SpeakButton word="university" />
+        <SpeakButton word="library" />
+      </>
+    )
+
+    expect(screen.getByRole("button", { name: 'Phát âm "university"' })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: 'Phát âm "library"' })).toBeInTheDocument()
   })
 })

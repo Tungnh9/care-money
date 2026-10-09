@@ -69,7 +69,7 @@ describe("StudySummarySection", () => {
       />
     )
 
-    expect(screen.getAllByRole("button", { name: "Phát âm từ" })).toHaveLength(5)
+    expect(screen.getAllByRole("button", { name: /^Phát âm "/ })).toHaveLength(5)
   })
 
   it("shows an empty-state message when nothing is due", () => {
@@ -177,7 +177,7 @@ describe("StudySummarySection", () => {
         />
       )
 
-      fireEvent.click(screen.getAllByRole("button", { name: "Phát âm từ" })[0])
+      fireEvent.click(screen.getByRole("button", { name: `Phát âm "${DUE_WORDS[0].word}"` }))
 
       expect(cancelSpy).toHaveBeenCalled()
       expect(speakSpy).toHaveBeenCalledTimes(1)
@@ -198,7 +198,9 @@ describe("StudySummarySection", () => {
         />
       )
 
-      expect(screen.getAllByRole("button", { name: "Phát âm từ" })).toHaveLength(5)
+      for (const entry of DUE_WORDS) {
+        expect(screen.getByRole("button", { name: `Phát âm "${entry.word}"` })).toBeInTheDocument()
+      }
     })
   })
 })
