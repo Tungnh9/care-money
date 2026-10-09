@@ -198,28 +198,34 @@ function detectMoodSpendingCorrelation(expenses: Expense[], entries: JournalEntr
 }
 
 function forecastSavingsGoal(history: NetWorthSnapshot[], target: number, today: string): Insight | null {
-  if (history.length < FORECAST_MIN_POINTS) return null
+  // Lần đầu mở Tổng quan (hay ngay sau "Xoá toàn bộ dữ liệu") đã ghi 1 điểm savingsTotal = 0 trước khi
+  // người dùng kịp nhập các quỹ đang có; bước nhảy 0 → số dư sẵn có đó không phải nhịp tiết kiệm, mà
+  // vì hồi quy luôn dùng cả lịch sử nên nó làm dự báo lạc quan sai suốt nhiều tháng. Bỏ mọi điểm 0
+  // ở ĐẦU chuỗi rồi mới xét đủ điểm/đủ ngày và hồi quy.
+  const firstSaved = history.findIndex((h) => h.savingsTotal !== 0)
+  const points = firstSaved === -1 ? [] : history.slice(firstSaved)
+  if (points.length < FORECAST_MIN_POINTS) return null
 
-  const n = history.length
+  const n = points.length
   // Tiết kiệm thường dồn theo lương (1 lần/tháng), không đều mỗi ngày — nếu khoảng dữ liệu còn
   // quá ngắn (vd. chỉ 13-14 ngày), 1 lần nhận lương rơi đúng giữa khoảng đó có thể làm độ dốc bị
   // thổi phồng rất nhiều (trông như tiết kiệm nhanh hơn hẳn thực tế). Cần ít nhất 1 chu kỳ lương
   // thật (~30 ngày) đã trôi qua mới đủ tin cậy để dự báo.
-  if (daysBetween(history[0].date, history[n - 1].date) < FORECAST_MIN_SPAN_DAYS) return null
+  if (daysBetween(points[0].date, points[n - 1].date) < FORECAST_MIN_SPAN_DAYS) return null
 
   // Hồi quy theo SỐ NGÀY THỰC đã trôi qua kể từ điểm đầu tiên, KHÔNG theo chỉ số phần tử — snapshot
   // chỉ được ghi khi người dùng mở app, nên có thể có khoảng trống (bỏ lỡ vài ngày không mở app).
   // Nếu hồi quy theo chỉ số, độ dốc sẽ bị tính theo "đơn vị/lần ghi" thay vì "đơn vị/ngày", làm dự
   // báo sai lệch (nhanh hơn thực tế) đúng theo tỷ lệ mật độ ghi thưa hay dày.
-  const xs = history.map((h) => daysBetween(history[0].date, h.date))
-  const ys = history.map((h) => h.savingsTotal)
+  const xs = points.map((h) => daysBetween(points[0].date, h.date))
+  const ys = points.map((h) => h.savingsTotal)
   const meanX = mean(xs)
   const meanY = mean(ys)
   const numerator = xs.reduce((sum, x, i) => sum + (x - meanX) * (ys[i] - meanY), 0)
   const denominator = xs.reduce((sum, x) => sum + (x - meanX) ** 2, 0)
   const slope = denominator === 0 ? 0 : numerator / denominator
 
-  const currentSavings = history[n - 1].savingsTotal
+  const currentSavings = points[n - 1].savingsTotal
   if (currentSavings >= target || slope <= 0) return null
 
   const daysToTarget = Math.ceil((target - currentSavings) / slope)

@@ -412,6 +412,31 @@ describe("forecastSavingsGoal", () => {
     const history = linearHistory("2026-08-15", 31, 50, 5_000_000)
     expect(forecastSavingsGoal(history, 10_000_000, "2026-09-14")).toBeNull()
   })
+
+  it("ignores the leading 0 snapshot recorded before any savings were entered", () => {
+    // Ngày đầu mở Tổng quan ghi 1 điểm 0 (chưa nhập quỹ nào); hôm sau nhập 50 triệu đang có sẵn rồi
+    // để yên 31 ngày. Bước nhảy 0 → 50 triệu không phải nhịp tiết kiệm — không được dự báo gì.
+    const history = [
+      { date: "2026-08-01", net: 0, savingsTotal: 0 },
+      ...linearHistory("2026-08-02", 31, 0, 50_000_000),
+    ]
+
+    expect(forecastSavingsGoal(history, 100_000_000, "2026-09-01")).toBeNull()
+  })
+
+  it("forecasts from the real saving trend that follows a leading 0 snapshot", () => {
+    const history = [
+      { date: "2026-08-14", net: 0, savingsTotal: 0 },
+      ...linearHistory("2026-08-15", 31, 100_000, 5_000_000),
+    ]
+
+    // Bỏ điểm 0 thì y hệt test "forecasts the correct target date for a steady upward trend": còn thiếu
+    // 2.000.000, nhịp 100.000/ngày → 20 ngày nữa → 04/10 (giữ điểm 0 thì nhịp bị thổi lên ~128.000/ngày → 30/09).
+    expect(forecastSavingsGoal(history, 10_000_000, "2026-09-14")).toEqual({
+      id: "savings-forecast-2026-09",
+      text: expect.stringContaining("04/10"),
+    })
+  })
 })
 
 describe("samePeriodExpenses", () => {
