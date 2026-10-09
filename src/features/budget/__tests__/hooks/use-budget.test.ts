@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { act, renderHook, waitFor } from "@testing-library/react"
+import { createElement, type ReactNode } from "react"
 import { toast } from "sonner"
 
+import { MoneyVisibilityProvider, useMoneyVisibility } from "@/components/money-visibility-provider"
 import { useBudget } from "../../hooks/use-budget"
 import { BUDGET_STORAGE_KEY, DEFAULT_BUDGET_STATE, getStoredBudget, setStoredBudget } from "../../budget-storage"
 import {
@@ -165,6 +167,22 @@ describe("useBudget", () => {
 
       expect(result.current.settlements).toEqual([])
       expect(toast.error).toHaveBeenCalled()
+    })
+
+    it("hides the amount in the not-enough-balance toast while money is hidden", async () => {
+      window.localStorage.setItem("hide-money", "1")
+      const wrapper = ({ children }: { children: ReactNode }) =>
+        createElement(MoneyVisibilityProvider, null, children)
+      const { result } = renderHook(() => ({ budget: useBudget(), visibility: useMoneyVisibility() }), {
+        wrapper,
+      })
+      await waitFor(() => expect(result.current.visibility.hidden).toBe(true))
+
+      act(() => {
+        result.current.budget.confirmSettlement("2026-09", "Quỹ A", "withdraw", 999_999)
+      })
+
+      expect(toast.error).toHaveBeenCalledWith('Quỹ "Quỹ A" không đủ số dư để rút •••••••• ₫.')
     })
 
     it("two settlements in the same month for the same fund both persist", async () => {

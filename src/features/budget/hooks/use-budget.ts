@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useState } from "react"
 
 import { toast } from "sonner"
+import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { applySavingsFundDelta } from "@/features/finance/finance-storage"
 import { formatMonthKey } from "@/lib/date"
+import { formatMoney } from "@/lib/format"
 import { nextId } from "@/lib/next-id"
 import { useStorageSync } from "@/lib/use-storage-sync"
 import {
@@ -45,6 +47,7 @@ function applyFundDeltaSafely(
 
 function useBudget() {
   const [state, setState] = useState<BudgetState>(DEFAULT_BUDGET_STATE)
+  const { hidden } = useMoneyVisibility()
 
   useEffect(() => {
     // localStorage không có lúc SSR, chỉ đọc được thật sau khi mount trên client.
@@ -138,7 +141,7 @@ function useBudget() {
         toast.error(
           result.reason === "fund-not-found"
             ? `Không tìm thấy quỹ "${fundName}".`
-            : `Quỹ "${fundName}" không đủ số dư để rút ${amount.toLocaleString("vi-VN")} đ.`
+            : `Quỹ "${fundName}" không đủ số dư để rút ${formatMoney(amount, hidden)}.`
         )
         return false
       }
@@ -170,7 +173,7 @@ function useBudget() {
       toast.success("Đã tất toán tháng")
       return true
     },
-    [persist]
+    [persist, hidden]
   )
 
   return {
