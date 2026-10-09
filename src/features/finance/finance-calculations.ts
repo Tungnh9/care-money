@@ -2,11 +2,19 @@ import { formatMoney } from "@/lib/format"
 import type { FinanceState } from "./finance-storage"
 import type { GoldPurchase, GoldStore } from "./types"
 
+// Khối lượng vàng lưu theo phân (10 phân = 1 chỉ). Form chỉ nhận phân nguyên, nhưng dữ liệu cũ có thể
+// có số lẻ (12.3, hay tổng 0.1 + 0.2 = 0.30000000000000004): làm tròn 1 chữ số lẻ, dấu phẩy kiểu Việt.
+function formatPhan(phan: number): string {
+  return (Math.round(phan * 10) / 10).toLocaleString("vi-VN", { maximumFractionDigits: 1 })
+}
+
 function phanToChi(phan: number): string {
-  const chi = Math.floor(phan / 10)
-  const rest = phan % 10
-  if (chi === 0) return `${rest} phân`
-  return `${chi} chỉ${rest ? ` ${rest} phân` : ""}`
+  // Làm tròn tới 0,1 phân TRƯỚC khi tách chỉ/phân — 9,96 phân thành "1 chỉ", không phải "10 phân".
+  const tenths = Math.round(phan * 10)
+  const chi = Math.floor(tenths / 100)
+  const rest = (tenths % 100) / 10
+  if (chi === 0) return `${formatPhan(rest)} phân`
+  return `${chi} chỉ${rest ? ` ${formatPhan(rest)} phân` : ""}`
 }
 
 function signedMoney(n: number, hidden = false): string {
@@ -179,6 +187,7 @@ function goldReferencePricePerPhan(
 }
 
 export {
+  formatPhan,
   phanToChi,
   signedMoney,
   pct1,

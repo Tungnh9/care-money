@@ -40,9 +40,11 @@ function EditGoldPurchaseModal({ purchase, stores, onOpenChange, onSave }: EditG
   const normalizedDate = normalizeGoldDate(date)
   // Lần mua cũ đã lưu sai dạng (vd. "10/08/26") hiện đỏ ngay khi mở — phải sửa ngày mới lưu được.
   const dateInvalid = date.trim() !== "" && normalizedDate === null
-  // Number("1e400") = Infinity vẫn > 0, nhưng JSON.stringify lưu nó thành null và lần đọc sau purchase
-  // bị bỏ — chỉ nhận số hữu hạn.
-  const phanValid = Number.isFinite(Number(phan)) && Number(phan) > 0
+  // Chỉ nhận phân nguyên dương: giá cửa hàng tính theo phân, số lẻ thì hiện nhiễu số thực ("1 chỉ
+  // 2.3000000000000007 phân"), còn "1,5" (dấu phẩy) là NaN. Number.isInteger(Infinity) = false nên
+  // "1e400" vẫn bị chặn như trước (JSON.stringify lưu Infinity thành null, lần đọc sau purchase bị bỏ).
+  const phanValid = Number.isInteger(Number(phan)) && Number(phan) > 0
+  const phanInvalid = phan.trim() !== "" && !phanValid
   const disabled = !normalizedDate || !phanValid || !buy.trim() || !store
 
   function handleSave() {
@@ -79,7 +81,8 @@ function EditGoldPurchaseModal({ purchase, stores, onOpenChange, onSave }: EditG
           placeholder="0"
           value={phan}
           onChange={(e) => setPhan(e.target.value)}
-          hint="10 phân = 1 chỉ"
+          invalid={phanInvalid}
+          hint={phanInvalid ? "Nhập số phân nguyên lớn hơn 0 (10 phân = 1 chỉ)" : "10 phân = 1 chỉ"}
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"

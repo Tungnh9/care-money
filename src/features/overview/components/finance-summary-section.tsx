@@ -1,4 +1,4 @@
-import type { FinanceSummary } from "@/features/finance/finance-calculations"
+import { formatPhan, type FinanceSummary } from "@/features/finance/finance-calculations"
 import type { CreditCard, Investment, SavingsFund } from "@/features/finance/types"
 import { Card } from "@/components/ui/card"
 import { NetWorthCard } from "@/components/ob/net-worth-card"
@@ -36,7 +36,7 @@ function FinanceSummarySection({ savings, cards, invests, summary }: FinanceSumm
             hint={
               summary.goldPhan ? (
                 <>
-                  {summary.goldPhan} phân ·{" "}
+                  {formatPhan(summary.goldPhan)} phân ·{" "}
                   <span
                     className="font-bold"
                     style={{

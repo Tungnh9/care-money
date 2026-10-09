@@ -1,3 +1,4 @@
+import { formatPhan } from "@/features/finance/finance-calculations"
 import type { SavingsFund } from "@/features/finance/types"
 import { formatMoney } from "@/lib/format"
 
@@ -6,9 +7,12 @@ import type { Goal, GoalsInput } from "./types"
 const GOLD_TARGET_PHAN = 180 // 18 chỉ
 
 function formatChi(phan: number): string {
-  const chi = Math.floor(phan / 10)
-  const rest = phan % 10
-  return `${chi} chỉ${rest ? ` ${rest} phân` : ""}`
+  // Làm tròn tới 0,1 phân trước khi tách chỉ/phân — dữ liệu cũ có thể có phân lẻ (12.3 từng hiện
+  // "1 chỉ 2.3000000000000007 phân"). Khác phanToChi: luôn có tiền tố "N chỉ", kể cả "0 chỉ".
+  const tenths = Math.round(phan * 10)
+  const chi = Math.floor(tenths / 100)
+  const rest = (tenths % 100) / 10
+  return `${chi} chỉ${rest ? ` ${formatPhan(rest)} phân` : ""}`
 }
 
 // Đủ (hoặc vượt) mục tiêu thì báo đã đạt — không bao giờ in "Còn -2 chỉ · tương đương -… ₫". Chưa

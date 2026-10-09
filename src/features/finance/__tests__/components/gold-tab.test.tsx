@@ -549,4 +549,11 @@ describe("GoldTab", () => {
     const cells = table.querySelectorAll("tbody tr")[0].querySelectorAll("td")
     expect(cells[5]).toHaveTextContent(formatMoney(80_000_000))
   })
+
+  it("shows a fractional holding left over from old data rounded to 1 decimal, without floating-point noise", () => {
+    render(<GoldTab summary={{ ...ZERO_SUMMARY, goldPhan: 0.1 + 0.2 }} stores={[]} gold={[]} {...noopHandlers} />)
+
+    // Đang giữ (formatPhan) và Quy đổi (phanToChi) đều hiện "0,3 phân".
+    expect(screen.getAllByText("0,3 phân")).toHaveLength(2)
+  })
 })

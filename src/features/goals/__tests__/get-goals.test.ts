@@ -142,4 +142,8 @@ describe("formatChi", () => {
   it("includes the remaining phân when not an exact multiple of 10", () => {
     expect(formatChi(63)).toBe("6 chỉ 3 phân")
   })
+
+  it("rounds a fractional phân left over from old data instead of printing floating-point noise", () => {
+    expect(formatChi(12.3)).toBe("1 chỉ 2,3 phân")
+  })
 })

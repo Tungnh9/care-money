@@ -99,4 +99,13 @@ describe("EditGoldPurchaseModal", () => {
 
     expect(onSave).toHaveBeenCalledWith(1, { date: "10/08/2026", phan: PURCHASE.phan, buy: PURCHASE.buy, store: "PNJ" })
   })
+
+  it("disables Lưu and explains why for a fractional khối lượng", () => {
+    render(<EditGoldPurchaseModal purchase={PURCHASE} stores={STORES} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+
+    fireEvent.change(screen.getByLabelText("Khối lượng", { exact: false }), { target: { value: "2.5" } })
+
+    expect(screen.getByText("Nhập số phân nguyên lớn hơn 0 (10 phân = 1 chỉ)")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
+  })
 })

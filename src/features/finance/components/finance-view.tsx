@@ -7,7 +7,7 @@ import { NetWorthCard } from "@/components/ob/net-worth-card"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { longDate } from "@/lib/date"
 import { formatMoney } from "@/lib/format"
-import { pct1, summarizeFinance } from "../finance-calculations"
+import { formatPhan, pct1, summarizeFinance } from "../finance-calculations"
 import { useFinance } from "../hooks/use-finance"
 import { CreditCardsTab } from "./credit-cards-tab"
 import { GoldTab } from "./gold-tab"
@@ -81,7 +81,7 @@ function FinanceView() {
           label="Tích lũy vàng"
           amount={summary.goldValue}
           tone={summary.goldPL >= 0 ? "income" : "expense"}
-          hint={`${summary.goldPhan} phân · ${pct1(summary.goldPct)}`}
+          hint={`${formatPhan(summary.goldPhan)} phân · ${pct1(summary.goldPct)}`}
           className="min-w-0 flex-[1_1_260px]"
         />
         <PillarCard

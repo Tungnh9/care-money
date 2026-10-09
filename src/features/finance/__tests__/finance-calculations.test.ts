@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest"
 
 import {
   phanToChi,
+  formatPhan,
   pct1,
   parseGoldPrice,
   summarizeFinance,
@@ -28,6 +29,15 @@ describe("phanToChi", () => {
 
   it("shows only phân, with no leading 0 chỉ, when under 1 chỉ", () => {
     expect(phanToChi(7)).toBe("7 phân")
+  })
+
+  it("rounds a fractional phân left over from old data to 1 decimal with a comma, not floating-point noise", () => {
+    expect(phanToChi(12.3)).toBe("1 chỉ 2,3 phân")
+    expect(phanToChi(0.1 + 0.2)).toBe("0,3 phân")
+  })
+
+  it("carries a value that rounds up to 10 phân into a whole chỉ", () => {
+    expect(phanToChi(9.96)).toBe("1 chỉ")
   })
 })
 
@@ -399,5 +409,13 @@ describe("normalizeGoldDate", () => {
     expect(normalizeGoldDate("10/08-2026")).toBeNull()
     expect(normalizeGoldDate("hôm qua")).toBeNull()
     expect(normalizeGoldDate("")).toBeNull()
+  })
+})
+
+describe("formatPhan", () => {
+  it("prints whole phân as is and rounds a fractional one to 1 decimal with a comma", () => {
+    expect(formatPhan(30)).toBe("30")
+    expect(formatPhan(0.1 + 0.2)).toBe("0,3")
+    expect(formatPhan(12.34)).toBe("12,3")
   })
 })

@@ -85,4 +85,17 @@ describe("FinanceSummarySection", () => {
     expect(screen.getByText("hạn 15/08")).toBeInTheDocument()
     expect(screen.getByText(formatMoney(2_000_000))).toHaveStyle({ color: "var(--ob-color-expense)" })
   })
+
+  it("rounds a fractional gold holding left over from old data in the Vàng hint", () => {
+    render(
+      <FinanceSummarySection
+        savings={[]}
+        cards={[]}
+        invests={[]}
+        summary={{ ...ZERO_SUMMARY, goldPhan: 0.1 + 0.2, goldValue: 300_000 }}
+      />
+    )
+
+    expect(screen.getByText("0,3 phân", { exact: false })).toBeInTheDocument()
+  })
 })

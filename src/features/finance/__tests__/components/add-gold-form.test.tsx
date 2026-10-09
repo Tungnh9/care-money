@@ -83,3 +83,19 @@ describe("AddGoldForm — ngày mua", () => {
     expect(screen.getByRole("button", { name: "Thêm" })).toBeDisabled()
   })
 })
+
+describe("AddGoldForm — khối lượng", () => {
+  it("explains and blocks a fractional or comma-decimal khối lượng instead of silently disabling Thêm", () => {
+    render(<AddGoldForm stores={[SJX]} onAdd={vi.fn()} />)
+    openForm()
+    fireEvent.click(screen.getByRole("button", { name: "SJX" }))
+    fillValidPurchase()
+    expect(screen.getByText("10 phân = 1 chỉ")).toBeInTheDocument()
+
+    for (const value of ["12.3", "1,5"]) {
+      fireEvent.change(screen.getByLabelText("Khối lượng (phân)", { exact: false }), { target: { value } })
+      expect(screen.getByText("Nhập số phân nguyên lớn hơn 0 (10 phân = 1 chỉ)")).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: "Thêm" })).toBeDisabled()
+    }
+  })
+})

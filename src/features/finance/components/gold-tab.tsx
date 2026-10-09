@@ -10,6 +10,7 @@ import { Progress } from "@/components/ui/progress"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import {
+  formatPhan,
   goldMarketPrice,
   goldPurchasePL,
   pct1,
@@ -91,7 +92,7 @@ function GoldTab({
   const isGoldListExpanded = visibleGoldCount >= sortedGold.length
 
   const stats = [
-    ["Đang giữ", `${goldPhan} phân`],
+    ["Đang giữ", `${formatPhan(goldPhan)} phân`],
     ["Quy đổi", phanToChi(goldPhan)],
     ["Giá vốn bình quân", `${formatMoney(Math.round(avgCost), hidden)} / phân`],
     ["Giá trị bình quân", `${formatMoney(Math.round(avgValue), hidden)} / phân`],
