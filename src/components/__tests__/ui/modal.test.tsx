@@ -254,4 +254,42 @@ describe("Modal", () => {
 
     expect(screen.getByRole("alertdialog", { name: "Xoá?" })).toHaveAccessibleDescription("Không thể hoàn tác.")
   })
+
+  it("traps Tab on a textarea or select, not only on buttons and inputs", () => {
+    render(
+      <Modal open onOpenChange={vi.fn()} ariaLabel="Test modal">
+        <button type="button">Đầu tiên</button>
+        <select aria-label="Loại">
+          <option>Một</option>
+        </select>
+        <textarea aria-label="Ghi chú" />
+      </Modal>
+    )
+
+    screen.getByRole("textbox", { name: "Ghi chú" }).focus()
+    fireEvent.keyDown(window, { key: "Tab" })
+    expect(screen.getByRole("button", { name: "Đầu tiên" })).toHaveFocus()
+
+    fireEvent.keyDown(window, { key: "Tab", shiftKey: true })
+    expect(screen.getByRole("textbox", { name: "Ghi chú" })).toHaveFocus()
+  })
+
+  it("never auto-focuses or wraps Tab onto disabled, hidden or tabIndex=-1 inputs", async () => {
+    render(
+      <Modal open onOpenChange={vi.fn()} ariaLabel="Test modal">
+        <input aria-label="Đã khoá" disabled />
+        <button type="button">Đầu tiên</button>
+        <button type="button">Cuối cùng</button>
+        <input type="hidden" name="secret" />
+        {/* Như input ẩn mà Switch/Checkbox của Base UI render kèm. */}
+        <input aria-label="Input ẩn của công tắc" tabIndex={-1} aria-hidden="true" />
+      </Modal>
+    )
+
+    await vi.waitFor(() => expect(screen.getByRole("button", { name: "Đầu tiên" })).toHaveFocus())
+
+    screen.getByRole("button", { name: "Cuối cùng" }).focus()
+    fireEvent.keyDown(window, { key: "Tab" })
+    expect(screen.getByRole("button", { name: "Đầu tiên" })).toHaveFocus()
+  })
 })

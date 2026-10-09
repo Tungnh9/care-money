@@ -6,7 +6,17 @@ import { createPortal } from "react-dom"
 
 import { cn } from "@/lib/utils"
 
-const FOCUSABLE_SELECTOR = 'button:not([disabled]),[href],input,[tabindex]:not([tabindex="-1"])'
+// Phần tử nhận Tab được trong panel — dùng cho cả focus tự động lúc mở lẫn 2 đầu của bẫy Tab. Input bị
+// khoá, input type="hidden" và input ẩn tabIndex=-1 (Switch/Checkbox của Base UI render kèm 1 cái) không
+// nhận focus được nên không được làm đầu/cuối vòng Tab.
+const FOCUSABLE_SELECTOR = [
+  "button:not([disabled])",
+  "[href]",
+  'input:not([disabled]):not([type="hidden"]):not([tabindex="-1"])',
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  '[tabindex]:not([tabindex="-1"])',
+].join(",")
 
 interface ModalProps {
   open: boolean
