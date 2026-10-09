@@ -160,4 +160,32 @@ describe("AlertDialog", () => {
 
     expect(screen.getByRole("alertdialog", { name: "Xoá quỹ?" })).not.toHaveAttribute("aria-describedby")
   })
+
+  it("keeps each dialog's own title and description when two are open at once", () => {
+    render(
+      <>
+        <AlertDialog
+          open
+          onOpenChange={vi.fn()}
+          title="Xoá tâm trạng?"
+          description="Cảnh báo A"
+          onConfirm={vi.fn()}
+        />
+        <AlertDialog
+          open
+          onOpenChange={vi.fn()}
+          title="Thay dữ liệu trên máy này?"
+          description="Cảnh báo B"
+          onConfirm={vi.fn()}
+        />
+      </>
+    )
+
+    const dialogs = screen.getAllByRole("alertdialog")
+    expect(dialogs).toHaveLength(2)
+    expect(dialogs[0]).toHaveAccessibleName("Xoá tâm trạng?")
+    expect(dialogs[0]).toHaveAccessibleDescription("Cảnh báo A")
+    expect(dialogs[1]).toHaveAccessibleName("Thay dữ liệu trên máy này?")
+    expect(dialogs[1]).toHaveAccessibleDescription("Cảnh báo B")
+  })
 })

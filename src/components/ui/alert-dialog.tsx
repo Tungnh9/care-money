@@ -1,5 +1,6 @@
 "use client"
 
+import { useId } from "react"
 import type { ReactNode } from "react"
 
 import { Button } from "./button"
@@ -27,25 +28,27 @@ function AlertDialog({
   onConfirm,
   destructive,
 }: AlertDialogProps) {
+  // id riêng cho từng hộp: 2 hộp xác nhận có thể mở cùng lúc (vd. cloud pull async xong khi 1 hộp khác đang mở).
+  const id = useId()
   return (
     <Modal
       open={open}
       onOpenChange={onOpenChange}
       role="alertdialog"
-      ariaLabelledBy="alert-dialog-title"
+      ariaLabelledBy={`${id}-title`}
       // Câu cảnh báo ("... sẽ không thể hoàn tác") phải được đọc trước khi người dùng bấm xác nhận —
       // focus tự động rơi vào nút "Huỷ", nên chỉ tên hộp thôi là chưa đủ.
-      ariaDescribedBy={description ? "alert-dialog-description" : undefined}
+      ariaDescribedBy={description ? `${id}-description` : undefined}
       backdropTestId="alert-dialog-backdrop"
     >
       <div
-        id="alert-dialog-title"
+        id={`${id}-title`}
         className={cn("mb-2 text-[17px] font-bold", destructive && "text-[var(--ob-color-expense)]")}
       >
         {title}
       </div>
       {description ? (
-        <p id="alert-dialog-description" className="mb-5 text-sm leading-[1.6] text-[var(--ob-color-text-muted)]">
+        <p id={`${id}-description`} className="mb-5 text-sm leading-[1.6] text-[var(--ob-color-text-muted)]">
           {description}
         </p>
       ) : null}
