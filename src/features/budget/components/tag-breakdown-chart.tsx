@@ -108,12 +108,18 @@ function declutterAngles(trueAngles: number[]): number[] {
   return result
 }
 
+interface RingCalloutsProps {
+  items: CalloutItem[]
+  width: number
+  centerX: number
+}
+
 // Callout kiểu "icon badge + đường nối + %/tên" quanh vòng — ApexCharts không có label renderer
 // nhận toạ độ từng lát như recharts, phải tự tính góc giữa mỗi lát từ % cộng dồn rồi overlay 1
 // lớp SVG riêng đè lên chart. % cộng dồn (mid) được tính sẵn trong TagBreakdownChart bằng
 // slice/reduce thuần (không dùng biến let cộng dồn qua từng vòng lặp) vì eslint's
 // react-hooks/immutability rule chặn reassign biến trong lúc render.
-function RingCallouts({ items, width, centerX }: { items: CalloutItem[]; width: number; centerX: number }) {
+function RingCallouts({ items, width, centerX }: RingCalloutsProps) {
   const trueAngles = items.map((item) => item.mid * 2 * Math.PI)
   const labelAngles = declutterAngles(trueAngles)
 

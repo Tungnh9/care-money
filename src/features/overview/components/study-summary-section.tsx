@@ -23,7 +23,12 @@ interface StudySummarySectionProps {
   dueWords: VocabEntry[]
 }
 
-function VocabTeaserCard({ entry, learned }: { entry: VocabEntry; learned: boolean }) {
+interface VocabTeaserCardProps {
+  entry: VocabEntry
+  learned: boolean
+}
+
+function VocabTeaserCard({ entry, learned }: VocabTeaserCardProps) {
   return (
     <div className="flex flex-col gap-[6px]">
       <ImageWithFallback

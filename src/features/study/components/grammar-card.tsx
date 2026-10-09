@@ -9,15 +9,13 @@ import { buildVocabIndex } from "../highlight-vocab"
 import { HighlightedSentence } from "./highlighted-sentence"
 import type { GrammarEntry, VocabEntry } from "../types"
 
-function ExampleSentence({
-  sentence,
-  translation,
-  vocabIndex,
-}: {
+interface ExampleSentenceProps {
   sentence: string
   translation?: string
   vocabIndex: Map<string, string>
-}) {
+}
+
+function ExampleSentence({ sentence, translation, vocabIndex }: ExampleSentenceProps) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -41,15 +39,13 @@ function ExampleSentence({
   )
 }
 
-function ExampleList({
-  examples,
-  translations,
-  vocab,
-}: {
+interface ExampleListProps {
   examples?: string[]
   translations?: string[]
   vocab: VocabEntry[]
-}) {
+}
+
+function ExampleList({ examples, translations, vocab }: ExampleListProps) {
   // Build the vocab lookup once per (grammar entry × vocab list) instead of once per sentence.
   const vocabIndex = useMemo(() => buildVocabIndex(vocab), [vocab])
 
@@ -63,7 +59,11 @@ function ExampleList({
   )
 }
 
-function StructureBadge({ structure }: { structure?: string }) {
+interface StructureBadgeProps {
+  structure?: string
+}
+
+function StructureBadge({ structure }: StructureBadgeProps) {
   if (!structure) return null
   return (
     <span className="rounded-[var(--ob-radius-pill)] bg-[var(--ob-color-action-soft)] px-[11px] py-[5px] [font-family:var(--ob-font-num)] text-[12px] font-bold text-[var(--ob-color-action-strong)]">

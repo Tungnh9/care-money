@@ -15,7 +15,11 @@ const MoneyVisibilityContext = createContext<MoneyVisibilityContextValue>({
   toggle: () => {},
 })
 
-function MoneyVisibilityProvider({ children }: { children: ReactNode }) {
+interface MoneyVisibilityProviderProps {
+  children: ReactNode
+}
+
+function MoneyVisibilityProvider({ children }: MoneyVisibilityProviderProps) {
   const [hidden, setHidden] = useState(false)
 
   useEffect(() => {
