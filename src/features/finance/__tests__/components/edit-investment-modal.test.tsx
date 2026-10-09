@@ -45,10 +45,11 @@ describe("EditInvestmentModal", () => {
     expect(onSave).not.toHaveBeenCalled()
   })
 
-  it("disables Lưu while name, cost or value is empty", () => {
+  it.each(["Tên khoản đầu tư", "Vốn đã bỏ ra", "Giá trị hiện tại"])("disables Lưu while %s is empty", (label) => {
     render(<EditInvestmentModal investment={INVESTMENT} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeEnabled()
 
-    fireEvent.change(screen.getByLabelText("Tên khoản đầu tư", { exact: false }), { target: { value: "" } })
+    fireEvent.change(screen.getByLabelText(label, { exact: false }), { target: { value: "" } })
 
     expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
   })

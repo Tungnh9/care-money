@@ -57,12 +57,23 @@ describe("EditCreditCardModal", () => {
     expect(onSave).not.toHaveBeenCalled()
   })
 
-  it("disables Lưu until name, balance, limit and due are filled", () => {
+  it.each(["Tên thẻ", "Dư nợ hiện tại", "Hạn mức", "Ngày đến hạn"])("disables Lưu while %s is empty", (label) => {
     render(<EditCreditCardModal card={CARD} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeEnabled()
 
-    fireEvent.change(screen.getByLabelText("Tên thẻ", { exact: false }), { target: { value: "" } })
+    fireEvent.change(screen.getByLabelText(label, { exact: false }), { target: { value: "" } })
 
     expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
+  })
+
+  it("still saves when the optional Số tiền tối thiểu is cleared", () => {
+    const onSave = vi.fn()
+    render(<EditCreditCardModal card={CARD} onOpenChange={vi.fn()} onSave={onSave} />)
+
+    fireEvent.change(screen.getByLabelText("Số tiền tối thiểu", { exact: false }), { target: { value: "" } })
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
+
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ name: CARD.name, min: 0, limit: CARD.limit }))
   })
 
   it("prefills and preserves the card's color", () => {

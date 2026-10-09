@@ -53,12 +53,25 @@ describe("EditSavingsFundModal", () => {
     expect(onOpenChange).toHaveBeenCalledWith(false)
   })
 
-  it("disables Lưu while name, amount, or target is empty", () => {
+  // Mỗi ô bắt buộc 1 test riêng: trước đây chỉ xoá ô tên, nên bỏ kiểm số tiền/mục tiêu đi thì test vẫn xanh
+  // — và lưu với số tiền trống sẽ ghi 0 (Number("") || 0), xoá mất số dư của quỹ.
+  it.each(["Tên quỹ", "Số tiền hiện có", "Mục tiêu"])("disables Lưu while %s is empty", (label) => {
     render(<EditSavingsFundModal fund={FUND} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeEnabled()
 
-    fireEvent.change(screen.getByLabelText("Tên quỹ"), { target: { value: "" } })
+    fireEvent.change(screen.getByLabelText(label, { exact: false }), { target: { value: "" } })
 
     expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
+  })
+
+  it("still saves when the optional Ghi chú is cleared", () => {
+    const onSave = vi.fn()
+    render(<EditSavingsFundModal fund={FUND} onOpenChange={vi.fn()} onSave={onSave} />)
+
+    fireEvent.change(screen.getByLabelText("Ghi chú", { exact: false }), { target: { value: "" } })
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
+
+    expect(onSave).toHaveBeenCalledWith({ name: "Quỹ du lịch", amount: 2_000_000, target: 10_000_000 })
   })
 
   it("reseeds fields when switching to a different fund while already open", () => {
