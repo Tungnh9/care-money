@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest"
 
-import { detectSpendingAnomaly, detectTagAnomaly, detectMoodSpendingCorrelation } from "../insights-calculations"
+import {
+  detectSpendingAnomaly,
+  detectTagAnomaly,
+  detectMoodSpendingCorrelation,
+  samePeriodExpenses,
+} from "../insights-calculations"
 import type { Expense } from "@/features/budget/types"
 import type { JournalEntry } from "@/features/journal/types"
 
@@ -49,21 +54,22 @@ describe("detectSpendingAnomaly", () => {
     })
   })
 
-  it("suppresses a 'thấp hơn' (lower) signal while the month is still in progress", () => {
+  it("reports a 'thấp hơn' (lower) signal mid-month when spending so far is below the same days of the 3 prior months", () => {
     const expenses = [
       expense(1, "2026-01-15", 1_000_000),
       expense(2, "2026-02-15", 1_100_000),
       expense(3, "2026-03-15", 900_000),
-      // Tháng 4 (30 ngày) mới đến ngày 15 (giữa tháng), chi 500k — thấp hơn hẳn TB 3 tháng trước
-      // (1tr) nhưng tháng còn CHƯA qua hết nên đây chỉ là "chưa tới lúc chi", không phải bất
-      // thường thật — không nên báo giữa chừng.
+      // Tới ngày 15/04 mới chi 500k, trong khi cùng kỳ (ngày 1 → 15) của 3 tháng trước đều đã chi ~1tr.
       expense(4, "2026-04-10", 500_000),
     ]
 
-    expect(detectSpendingAnomaly(expenses, "2026-04", "2026-04-15")).toBeNull()
+    expect(detectSpendingAnomaly(expenses, "2026-04", "2026-04-15")).toEqual({
+      id: "spending-anomaly-2026-04",
+      text: "Tính tới hôm nay, tháng này bạn chi tiêu thấp hơn khoảng 50% so với cùng kỳ 3 tháng gần đây.",
+    })
   })
 
-  it("reports a genuine 'thấp hơn' (lower) signal once the month is nearly complete", () => {
+  it("still reports a genuine 'thấp hơn' (lower) signal near the end of the month", () => {
     const expenses = [
       expense(1, "2026-01-15", 1_000_000),
       expense(2, "2026-02-15", 1_100_000),
@@ -71,11 +77,54 @@ describe("detectSpendingAnomaly", () => {
       expense(4, "2026-04-10", 500_000),
     ]
 
-    const insight = detectSpendingAnomaly(expenses, "2026-04", "2026-04-29")
-
-    expect(insight).toEqual({
+    expect(detectSpendingAnomaly(expenses, "2026-04", "2026-04-29")).toEqual({
       id: "spending-anomaly-2026-04",
-      text: "Tháng này bạn chi tiêu thấp hơn khoảng 50% so với trung bình 3 tháng gần đây.",
+      text: "Tính tới hôm nay, tháng này bạn chi tiêu thấp hơn khoảng 50% so với cùng kỳ 3 tháng gần đây.",
+    })
+  })
+
+  it("does not report 'thấp hơn' near month end just because a fixed late-month payment has not come due yet", () => {
+    // Mỗi tháng: chi ~1tr quanh ngày 10 + 2tr cố định ngày 29. Hôm nay 27/09 (đã qua 90% tháng): khoản
+    // ngày 29 chưa tới — so với cả tháng trọn vẹn thì như "thấp hơn 67%", so cùng kỳ thì bằng nhau.
+    const expenses = [
+      expense(1, "2026-06-10", 1_000_000),
+      expense(2, "2026-06-29", 2_000_000),
+      expense(3, "2026-07-10", 1_100_000),
+      expense(4, "2026-07-29", 2_000_000),
+      expense(5, "2026-08-10", 900_000),
+      expense(6, "2026-08-29", 2_000_000),
+      expense(7, "2026-09-10", 1_000_000),
+    ]
+
+    expect(detectSpendingAnomaly(expenses, "2026-09", "2026-09-27")).toBeNull()
+  })
+
+  it("does not report a change smaller than 10%, even when very stable prior months make it statistically unusual", () => {
+    // Std 3 tháng trước chỉ 50k → 8,4tr là z = 3, nhưng chỉ cao hơn khoảng 2% — không đáng báo.
+    const expenses = [
+      expense(1, "2026-01-15", 8_200_000),
+      expense(2, "2026-02-15", 8_250_000),
+      expense(3, "2026-03-15", 8_300_000),
+      expense(4, "2026-04-12", 8_400_000),
+    ]
+
+    expect(detectSpendingAnomaly(expenses, "2026-04", "2026-04-12")).toBeNull()
+  })
+
+  it("does not report lower spending in the first 6 days of the month", () => {
+    // Đầu tháng chưa chi gì là bình thường: cùng kỳ (ngày 1-2) tháng trước có chi, nên không được báo "thấp hơn".
+    const priorOnly = [
+      expense(1, "2026-01-01", 100_000),
+      expense(2, "2026-02-02", 150_000),
+      expense(3, "2026-03-01", 120_000),
+    ]
+    expect(detectSpendingAnomaly(priorOnly, "2026-04", "2026-04-02")).toBeNull()
+
+    // Đủ 7 ngày: cùng kỳ (ngày 1-7) tháng này chỉ chi 10k so với TB ~123k → báo "thấp hơn" bình thường.
+    const withSpend = [...priorOnly, expense(4, "2026-04-03", 10_000)]
+    expect(detectSpendingAnomaly(withSpend, "2026-04", "2026-04-07")).toEqual({
+      id: "spending-anomaly-2026-04",
+      text: "Tính tới hôm nay, tháng này bạn chi tiêu thấp hơn khoảng 92% so với cùng kỳ 3 tháng gần đây.",
     })
   })
 
@@ -133,20 +182,21 @@ describe("detectTagAnomaly", () => {
     expect(detectTagAnomaly(expenses, "2026-04", "2026-04-20")).toBeNull()
   })
 
-  it("suppresses a 'giảm' (decrease) signal while the month is still in progress", () => {
+  it("reports a 'giảm' (decrease) signal mid-month against the same days of the 3 prior months", () => {
     const expenses = [
       taggedExpense(1, "2026-01-10", 500_000, "Ăn uống"),
       taggedExpense(2, "2026-02-10", 520_000, "Ăn uống"),
       taggedExpense(3, "2026-03-10", 480_000, "Ăn uống"),
-      // Tháng 4 (30 ngày) mới đến ngày 15, chi 200k — thấp hơn nhiều so với TB 3 tháng trước
-      // (500k) nhưng tháng còn CHƯA qua hết, nên đây là tín hiệu giả, chưa nên báo.
       taggedExpense(4, "2026-04-10", 200_000, "Ăn uống"),
     ]
 
-    expect(detectTagAnomaly(expenses, "2026-04", "2026-04-15")).toBeNull()
+    expect(detectTagAnomaly(expenses, "2026-04", "2026-04-15")).toEqual({
+      id: "tag-anomaly-2026-04",
+      text: 'Tính tới hôm nay, chi tiêu cho "🛍️ Ăn uống" tháng này giảm 60% so với cùng kỳ 3 tháng trước.',
+    })
   })
 
-  it("reports a 'giảm' (decrease) signal once the month is nearly complete", () => {
+  it("still reports a 'giảm' (decrease) signal near the end of the month", () => {
     const expenses = [
       taggedExpense(1, "2026-01-10", 500_000, "Ăn uống"),
       taggedExpense(2, "2026-02-10", 520_000, "Ăn uống"),
@@ -154,12 +204,21 @@ describe("detectTagAnomaly", () => {
       taggedExpense(4, "2026-04-10", 200_000, "Ăn uống"),
     ]
 
-    const insight = detectTagAnomaly(expenses, "2026-04", "2026-04-29")
-
-    expect(insight).toEqual({
+    expect(detectTagAnomaly(expenses, "2026-04", "2026-04-29")).toEqual({
       id: "tag-anomaly-2026-04",
-      text: 'Chi tiêu cho "🛍️ Ăn uống" tháng này giảm 60% so với trung bình 3 tháng trước.',
+      text: 'Tính tới hôm nay, chi tiêu cho "🛍️ Ăn uống" tháng này giảm 60% so với cùng kỳ 3 tháng trước.',
     })
+  })
+
+  it("does not report a 100% decrease for a monthly bill that is simply not due yet this month", () => {
+    // Cước điện thoại trả ngày 28 hằng tháng; hôm nay 27/09 thì tháng này chưa trả là bình thường.
+    const expenses = [
+      taggedExpense(1, "2026-06-28", 200_000, "Điện thoại"),
+      taggedExpense(2, "2026-07-28", 200_000, "Điện thoại"),
+      taggedExpense(3, "2026-08-28", 200_000, "Điện thoại"),
+    ]
+
+    expect(detectTagAnomaly(expenses, "2026-09", "2026-09-27")).toBeNull()
   })
 
   it("ignores a tag that only has spending in 1 of the 3 prior months (not enough baseline yet)", () => {
@@ -352,5 +411,18 @@ describe("forecastSavingsGoal", () => {
     // thay vì hiện 1 ngày xa viển vông.
     const history = linearHistory("2026-08-15", 31, 50, 5_000_000)
     expect(forecastSavingsGoal(history, 10_000_000, "2026-09-14")).toBeNull()
+  })
+})
+
+describe("samePeriodExpenses", () => {
+  it("keeps only expenses from day 1 up to today's day of the month, in every month", () => {
+    const expenses = [
+      expense(1, "2026-08-05", 100),
+      expense(2, "2026-08-27", 200),
+      expense(3, "2026-08-28", 300),
+      expense(4, "2026-09-27", 400),
+    ]
+
+    expect(samePeriodExpenses(expenses, "2026-09-27").map((e) => e.id)).toEqual([1, 2, 4])
   })
 })
