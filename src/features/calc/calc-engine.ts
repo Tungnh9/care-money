@@ -26,7 +26,12 @@ function formatResult(n: number): string {
  * KHÔNG có dấu chấm phân tách hàng nghìn.
  */
 function toMachineString(n: number): string {
-  return String(round6(n)).replace(".", ",")
+  // String() đổi sang dạng mũ khi |n| ≥ 1e21 ("1e+22"), mà evalExpr lọc mất chữ "e" rồi cộng phần
+  // định trị với số mũ (1e22 + 1 = 24) — in đủ chữ số, không dấu ngăn nghìn, tối đa 6 chữ số lẻ.
+  // `|| 0` đổi -0 thành 0 (toLocaleString in -0 thành "-0").
+  return (round6(n) || 0)
+    .toLocaleString("en-US", { useGrouping: false, maximumFractionDigits: 6 })
+    .replace(".", ",")
 }
 
 /**
@@ -44,7 +49,10 @@ function evalExpr(raw: string): number | null {
     .replace(/[^0-9+\-*/().%]/g, "")
     .replace(/(^|[^\d.])0+(\d)/g, "$1$2")
 
-  if (!clean) return null
+  // "**" là luỹ thừa JS (5××2 = 25), "/*" và "*/" mở/đóng comment JS (5÷×2×÷+3 = 8), "//" là comment
+  // tới hết dòng — không cặp nào là phép tính người dùng định gõ. use-calculator đã thay phép tính
+  // bấm lặp; đây là lưới an toàn cho mọi đường nhập còn lại.
+  if (!clean || /\*\*|\/\*|\*\/|\/\//.test(clean)) return null
 
   try {
     // `clean` ở trên chỉ còn số và ký hiệu toán học (chữ/dấu chấm phẩy/backtick đã bị lọc sạch),

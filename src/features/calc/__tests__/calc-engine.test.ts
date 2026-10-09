@@ -137,3 +137,33 @@ describe("nextParen", () => {
     expect(nextParen("800+()")).toBe("(")
   })
 })
+
+describe("evalExpr - phép tính bấm lặp không bị hiểu thành cú pháp JS khác", () => {
+  it("'××' không thành luỹ thừa JS: 5××2 -> null (không phải 25)", () => {
+    expect(evalExpr("5××2")).toBeNull()
+  })
+
+  it("'÷×' / '×÷' không mở/đóng comment JS: 5÷×2×÷+3 -> null (không phải 8)", () => {
+    expect(evalExpr("5÷×2×÷+3")).toBeNull()
+  })
+
+  it("vẫn nhân/chia được với số âm: 5×−2 = -10, 10÷−4 = -2.5", () => {
+    expect(evalExpr("5×−2")).toBe(-10)
+    expect(evalExpr("10÷−4")).toBe(-2.5)
+  })
+})
+
+describe("toMachineString - số rất lớn", () => {
+  it("không bao giờ ra dạng mũ: 1e22 -> '10000000000000000000000'", () => {
+    expect(toMachineString(1e22)).toBe("10000000000000000000000")
+    expect(toMachineString(1.5e22)).toBe("15000000000000000000000")
+  })
+
+  it("kết quả rất lớn nạp lại rồi tính tiếp vẫn đúng: 1e22 + 1 không ra 24", () => {
+    expect(evalExpr(toMachineString(1e22) + "+1")).toBe(1e22 + 1)
+  })
+
+  it("số 0 âm vẫn ra '0'", () => {
+    expect(toMachineString(-0)).toBe("0")
+  })
+})

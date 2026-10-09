@@ -13,6 +13,22 @@ interface HistoryItem {
 
 const MAX_HISTORY = 4
 
+const OPERATORS = ["+", "−", "×", "÷"]
+
+/**
+ * Nối 1 phím vào biểu thức. Bấm 2 phép tính liền nhau thì phép sau THAY phép trước (như máy tính
+ * điện thoại) — nối thẳng thì "××" thành luỹ thừa JS và "÷×" mở comment JS. Riêng "−" sau "×"/"÷"
+ * được giữ để nhập số âm (5×−2); đang có cụm "×−"/"÷−" thì thêm "−" nữa không đổi gì, còn phép khác
+ * thay cả cụm.
+ */
+function appendToken(expr: string, t: string): string {
+  const last = expr.slice(-1)
+  if (!OPERATORS.includes(t) || !OPERATORS.includes(last)) return expr + t
+  if (/[×÷]−$/.test(expr)) return t === "−" ? expr : expr.slice(0, -2) + t
+  if (t === "−" && (last === "×" || last === "÷")) return expr + t
+  return expr.slice(0, -1) + t
+}
+
 /**
  * State + hành vi của Máy tính — port 1:1 từ thuật toán trong file thiết kế tham khảo
  * (chuỗi biểu thức thô, xem trước kết quả khi đang gõ, lịch sử tối đa 4 dòng).
@@ -31,7 +47,7 @@ function useCalculator() {
       // tiếp từ kết quả cũ (fresh=false).
       const fresh = justEvaluated && /^[0-9,(]$/.test(t)
       setJustEvaluated(false)
-      const next = fresh ? (t === "," ? "0," : t) : expr + t
+      const next = fresh ? (t === "," ? "0," : t) : appendToken(expr, t)
       const v = evalExpr(next)
       if (v !== null) setOut(formatResult(v))
       else if (fresh) setOut("0")

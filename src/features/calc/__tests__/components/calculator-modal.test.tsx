@@ -340,4 +340,34 @@ describe("CalculatorModal", () => {
     expect(screen.getByTestId("calculator-result")).toHaveTextContent("10")
     expect(screen.getAllByTestId("calculator-history-item")).toHaveLength(1)
   })
+
+  it("bấm 2 phép tính liền nhau thì phép sau thay phép trước: 5 × × 2 = 10, 5 ÷ × 2 = 10", () => {
+    render(<CalculatorModal open onOpenChange={vi.fn()} />)
+
+    type(["5", "×", "×", "2", "="])
+    expect(screen.getByTestId("calculator-result")).toHaveTextContent("10")
+
+    click("Xoá hết")
+    type(["5", "÷", "×", "2"])
+    expect(screen.getByTestId("calculator-expr")).toHaveTextContent("5×2")
+    click("=")
+    expect(screen.getByTestId("calculator-result")).toHaveTextContent("10")
+  })
+
+  it("vẫn nhập được số âm sau × hoặc ÷: 5 × − 2 = -10", () => {
+    render(<CalculatorModal open onOpenChange={vi.fn()} />)
+
+    type(["5", "×", "−", "2", "="])
+
+    expect(screen.getByTestId("calculator-result")).toHaveTextContent("-10")
+  })
+
+  it("bàn phím thật: gõ '*' 2 lần cũng chỉ là 1 phép nhân", () => {
+    render(<CalculatorModal open onOpenChange={vi.fn()} />)
+
+    for (const key of ["5", "*", "*", "2"]) fireEvent.keyDown(window, { key })
+    fireEvent.keyDown(window, { key: "Enter" })
+
+    expect(screen.getByTestId("calculator-result")).toHaveTextContent("10")
+  })
 })
