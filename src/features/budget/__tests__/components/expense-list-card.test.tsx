@@ -12,6 +12,12 @@ const EXPENSES: Expense[] = [
   { id: 1, dayKey: "2026-09-01", amount: 3_000_000, tag: null, note: "Tiền nhà" },
 ]
 
+function expandAllDays() {
+  for (const header of screen.getAllByTestId("expense-day-header")) {
+    if (header.getAttribute("aria-expanded") === "false") fireEvent.click(header)
+  }
+}
+
 describe("ExpenseListCard", () => {
   beforeEach(() => window.localStorage.clear())
 
@@ -29,6 +35,7 @@ describe("ExpenseListCard", () => {
 
   it("renders each expense's amount, tag label (or untagged) and note", () => {
     render(<ExpenseListCard expenses={EXPENSES} onRemove={vi.fn()} onEdit={vi.fn()} />)
+    expandAllDays()
 
     expect(screen.getAllByText("50.000 ₫").length).toBeGreaterThan(0)
     expect(screen.getByText("Mua sắm")).toBeInTheDocument()
@@ -75,6 +82,7 @@ describe("ExpenseListCard", () => {
   it("keeps the expense when the confirmation is cancelled", () => {
     const onRemove = vi.fn()
     render(<ExpenseListCard expenses={EXPENSES} onRemove={onRemove} onEdit={vi.fn()} />)
+    expandAllDays()
 
     fireEvent.click(screen.getByRole("button", { name: "Xoá khoản chi Không gắn thẻ" }))
     fireEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Huỷ" }))
@@ -124,6 +132,7 @@ describe("ExpenseListCard", () => {
 
   it("alternates the day block's background between consecutive days", () => {
     render(<ExpenseListCard expenses={EXPENSES} onRemove={vi.fn()} onEdit={vi.fn()} />)
+    expandAllDays()
 
     const rows = screen.getAllByTestId("expense-row")
     const bgClass = [...rows[0].classList].find((c) => c.startsWith("bg-"))
@@ -165,5 +174,54 @@ describe("ExpenseListCard", () => {
     const row = screen.getByTestId("expense-row")
     expect(row).toHaveTextContent(UNTAGGED_LABEL)
     expect(row).toHaveTextContent(UNTAGGED_EMOJI)
+  })
+
+  it("opens only the most recent day; older days show just the date, total and item count", () => {
+    render(<ExpenseListCard expenses={EXPENSES} onRemove={vi.fn()} onEdit={vi.fn()} />)
+
+    const [latest, older] = screen.getAllByTestId("expense-day-header")
+    expect(latest).toHaveAttribute("aria-expanded", "true")
+    expect(older).toHaveAttribute("aria-expanded", "false")
+    expect(older).toHaveTextContent("01/09")
+    expect(older).toHaveTextContent(formatMoney(3_000_000))
+    expect(older).toHaveTextContent("1 khoản")
+
+    const [latestRows, olderRows] = screen.getAllByTestId("expense-day-rows")
+    expect(latestRows).not.toHaveAttribute("inert")
+    expect(latestRows).toHaveClass("grid-rows-[1fr]")
+    expect(olderRows).toHaveAttribute("inert")
+    expect(olderRows).toHaveClass("grid-rows-[0fr]")
+    expect(within(olderRows).getByText("Tiền nhà")).toBeInTheDocument()
+  })
+
+  it("expands and collapses a day when its header is clicked", () => {
+    render(<ExpenseListCard expenses={EXPENSES} onRemove={vi.fn()} onEdit={vi.fn()} />)
+    const [latest, older] = screen.getAllByTestId("expense-day-header")
+    const [latestRows, olderRows] = screen.getAllByTestId("expense-day-rows")
+
+    fireEvent.click(older)
+    expect(older).toHaveAttribute("aria-expanded", "true")
+    expect(olderRows).not.toHaveAttribute("inert")
+    expect(olderRows).toHaveClass("grid-rows-[1fr]")
+
+    fireEvent.click(older)
+    expect(olderRows).toHaveAttribute("inert")
+
+    fireEvent.click(latest)
+    expect(latest).toHaveAttribute("aria-expanded", "false")
+    expect(latestRows).toHaveAttribute("inert")
+  })
+
+  it("keeps a day open by date, not position, when a newer day appears above it", () => {
+    const { rerender } = render(<ExpenseListCard expenses={EXPENSES} onRemove={vi.fn()} onEdit={vi.fn()} />)
+    fireEvent.click(screen.getAllByTestId("expense-day-header")[1])
+
+    const newer: Expense = { id: 3, dayKey: "2026-09-03", amount: 20_000, tag: null, note: "Cà phê" }
+    rerender(<ExpenseListCard expenses={[newer, ...EXPENSES]} onRemove={vi.fn()} onEdit={vi.fn()} />)
+
+    const headers = screen.getAllByTestId("expense-day-header")
+    expect(headers.map((h) => h.getAttribute("aria-expanded"))).toEqual(["true", "false", "true"])
+    const rows = screen.getAllByTestId("expense-day-rows")
+    expect(rows.map((r) => r.hasAttribute("inert"))).toEqual([false, true, false])
   })
 })
