@@ -36,6 +36,18 @@ function goldPurchasePL(purchase: GoldPurchase, price: number): number {
   return purchase.phan * price - purchase.phan * purchase.buy
 }
 
+type GoldPLTone = "gain" | "loss" | "even"
+
+// Làm tròn về đồng trước khi xét dấu: cộng dồn phan * price của dữ liệu cũ có phân lẻ có thể ra
+// -1e-13 thay vì 0 đúng, khiến hoà vốn bị hiện thành "lỗ 0 ₫". Hoà vốn (gồm cả cửa hàng chưa nhập
+// giá, vốn tạm tính theo giá mua) là trung tính — không phải lãi.
+function goldPLTone(pl: number): GoldPLTone {
+  const rounded = Math.round(pl)
+  if (rounded > 0) return "gain"
+  if (rounded < 0) return "loss"
+  return "even"
+}
+
 function goldStorePrice(stores: GoldStore[], storeName: string): number {
   const store = stores.find((s) => s.name === storeName)
   return store ? parseGoldPrice(store.price) : 0
@@ -78,6 +90,28 @@ function parseGoldDate(date: string): number {
   if (!normalized) return 0
   const [day, month, year] = normalized.split("/").map(Number)
   return new Date(year, month - 1, day).getTime()
+}
+
+// Phần đuôi tên nút Sửa/Xoá của từng lần mua, duy nhất trong danh sách đang hiện: thường chỉ cần
+// ngày; mua nhiều lần trong 1 ngày thì thêm cửa hàng + khối lượng, vẫn trùng hết (mua y hệt nhau) thì
+// thêm "lần N" — để trình đọc màn hình vẫn tách được từng nút thay vì nghe 2 nút cùng tên.
+function goldPurchaseLabels(gold: GoldPurchase[]): Map<number, string> {
+  const dateCount = new Map<string, number>()
+  for (const p of gold) dateCount.set(p.date, (dateCount.get(p.date) ?? 0) + 1)
+
+  const detailSeen = new Map<string, number>()
+  const labels = new Map<number, string>()
+  for (const p of gold) {
+    if ((dateCount.get(p.date) ?? 0) < 2) {
+      labels.set(p.id, p.date)
+      continue
+    }
+    const detail = `${p.date} · ${p.store} · ${phanToChi(p.phan)}`
+    const n = (detailSeen.get(detail) ?? 0) + 1
+    detailSeen.set(detail, n)
+    labels.set(p.id, n > 1 ? `${detail} (lần ${n})` : detail)
+  }
+  return labels
 }
 
 function sortGoldByDate(gold: GoldPurchase[]): GoldPurchase[] {
@@ -235,7 +269,9 @@ export {
   goldReferencePricePerPhan,
   parseDueDay,
   nearestDueCard,
+  goldPurchaseLabels,
   goldPurchasePL,
+  goldPLTone,
   goldStorePrice,
   goldMarketPrice,
   normalizeGoldDate,
@@ -244,5 +280,6 @@ export {
   summarizeGoldByStore,
   unpricedGoldStores,
   type FinanceSummary,
+  type GoldPLTone,
   type GoldStoreSummary,
 }

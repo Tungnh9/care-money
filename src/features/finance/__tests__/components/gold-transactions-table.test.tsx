@@ -119,6 +119,30 @@ describe("GoldTransactionsTable", () => {
     expect(losingRow).toHaveClass("bg-[var(--ob-color-surface-sunken)]")
   })
 
+  it("shows a break-even purchase (store has no price yet) in a neutral tone, not as a gain", () => {
+    const unpriced: GoldStore[] = [{ name: "SJC", price: "" }]
+    render(<GoldTransactionsTable gold={[PURCHASES[0]]} stores={unpriced} onRemove={vi.fn()} onEdit={vi.fn()} />)
+
+    const badge = screen.getByText(formatMoney(0)).closest("[data-tone]") as HTMLElement
+    expect(badge).toHaveAttribute("data-tone", "even")
+    expect(badge).not.toHaveClass("text-[var(--ob-color-income)]")
+    const firstCell = badge.closest("tr")?.querySelector("td") as HTMLTableCellElement
+    expect(firstCell).toHaveClass("border-l-[var(--ob-color-border)]")
+  })
+
+  it("gives purchases on the same date distinct button labels", () => {
+    const sameDay: GoldPurchase[] = [
+      { id: 1, date: "01/08/2026", phan: 10, buy: 800_000, store: "SJC" },
+      { id: 2, date: "01/08/2026", phan: 5, buy: 900_000, store: "SJC" },
+    ]
+    const onRemove = vi.fn()
+    render(<GoldTransactionsTable gold={sameDay} stores={STORES} onRemove={onRemove} onEdit={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole("button", { name: `Xoá giao dịch vàng 01/08/2026 · SJC · ${phanToChi(5)}` }))
+
+    expect(onRemove).toHaveBeenCalledWith(2)
+  })
+
   it("pushes each row's edit and delete buttons together to the end of the row", () => {
     render(
       <GoldTransactionsTable

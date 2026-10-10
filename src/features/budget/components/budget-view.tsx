@@ -101,7 +101,12 @@ function BudgetView() {
       </p>
       <div className="ob-card-grid flex flex-col gap-5">
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <SalaryCard month={currentMonth} salary={salary} onSave={setSalary} />
+          <SalaryCard
+            month={currentMonth}
+            salary={salary}
+            recorded={salaries.some((s) => s.month === currentMonth)}
+            onSave={setSalary}
+          />
 
           <Card label="Tất toán tháng" className="min-w-0">
             <p className="mb-[14px] text-[13.5px] leading-[1.55] text-[var(--ob-color-text-muted)]">

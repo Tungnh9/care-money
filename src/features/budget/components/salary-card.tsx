@@ -12,25 +12,29 @@ import { BUDGET_AMOUNT_LIMIT_HINT, exceedsBudgetAmountLimit } from "@/lib/budget
 interface SalaryCardProps {
   month: string
   salary: number
+  // salary=0 alone can't tell "not entered" from "saved 0 ₫"
+  recorded?: boolean
   onSave: (month: string, amount: number) => void
 }
 
-function SalaryCard({ month, salary, onSave }: SalaryCardProps) {
+function SalaryCard({ month, salary, recorded = salary > 0, onSave }: SalaryCardProps) {
   const { hidden } = useMoneyVisibility()
-  const [amount, setAmount] = useState(String(salary || ""))
+  const savedText = recorded ? String(salary) : ""
+  const [amount, setAmount] = useState(savedText)
   const [saved, setSaved] = useState(false)
 
   // useBudget() starts at salary=0 before its localStorage-hydration effect runs, then
   // re-renders once with the real value — resync the field when that happens instead of
   // trusting whatever `salary` was at this component's very first render.
-  const [prevSalary, setPrevSalary] = useState(salary)
-  if (salary !== prevSalary) {
-    setAmount(String(salary || ""))
-    setPrevSalary(salary)
+  const [prevSavedText, setPrevSavedText] = useState(savedText)
+  if (savedText !== prevSavedText) {
+    setAmount(savedText)
+    setPrevSavedText(savedText)
   }
 
   const tooLarge = exceedsBudgetAmountLimit(amount)
-  const disabled = !amount.trim() || Number(amount) === salary || tooLarge
+  const unchanged = recorded && Number(amount) === salary
+  const disabled = !amount.trim() || unchanged || tooLarge
 
   function handleSave() {
     onSave(month, Number(amount) || 0)

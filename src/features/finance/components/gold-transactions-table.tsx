@@ -5,7 +5,13 @@ import { Pencil, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
-import { goldMarketPrice, goldPurchasePL, phanToChi } from "@/lib/finance/finance-calculations"
+import {
+  goldMarketPrice,
+  goldPLTone,
+  goldPurchaseLabels,
+  goldPurchasePL,
+  phanToChi,
+} from "@/lib/finance/finance-calculations"
 import type { GoldPurchase, GoldStore } from "@/lib/finance/types"
 import { GoldPLBadge } from "./gold-pl-indicator"
 
@@ -38,6 +44,8 @@ function GoldTransactionsTable({ gold, stores, onRemove, onEdit }: GoldTransacti
     )
   }
 
+  const labels = goldPurchaseLabels(gold)
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[720px] border-collapse">
@@ -68,7 +76,7 @@ function GoldTransactionsTable({ gold, stores, onRemove, onEdit }: GoldTransacti
             const cost = purchase.phan * purchase.buy
             const value = purchase.phan * price
             const pl = goldPurchasePL(purchase, price)
-            const positive = pl >= 0
+            const tone = goldPLTone(pl)
             return (
               <tr
                 key={purchase.id}
@@ -80,7 +88,11 @@ function GoldTransactionsTable({ gold, stores, onRemove, onEdit }: GoldTransacti
                 <td
                   className={cn(
                     "whitespace-nowrap py-[10px] px-[12px] text-[13px] [font-family:var(--ob-font-num)] tabular-nums border-l",
-                    positive ? "border-l-[var(--ob-color-income)]" : "border-l-[var(--ob-color-expense)]"
+                    tone === "gain"
+                      ? "border-l-[var(--ob-color-income)]"
+                      : tone === "loss"
+                        ? "border-l-[var(--ob-color-expense)]"
+                        : "border-l-[var(--ob-color-border)]"
                   )}
                 >
                   {purchase.date}
@@ -107,7 +119,7 @@ function GoldTransactionsTable({ gold, stores, onRemove, onEdit }: GoldTransacti
                   <div className="flex items-center justify-end gap-1">
                     <button
                       type="button"
-                      aria-label={`Sửa giao dịch vàng ${purchase.date}`}
+                      aria-label={`Sửa giao dịch vàng ${labels.get(purchase.id)}`}
                       onClick={() => onEdit(purchase)}
                       className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-info)]"
                     >
@@ -115,7 +127,7 @@ function GoldTransactionsTable({ gold, stores, onRemove, onEdit }: GoldTransacti
                     </button>
                     <button
                       type="button"
-                      aria-label={`Xoá giao dịch vàng ${purchase.date}`}
+                      aria-label={`Xoá giao dịch vàng ${labels.get(purchase.id)}`}
                       onClick={() => onRemove(purchase.id)}
                       className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
                     >

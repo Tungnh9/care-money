@@ -45,15 +45,19 @@ function EditGoldPurchaseModal({ purchase, stores, onOpenChange, onSave }: EditG
   // "1e400" vẫn bị chặn như trước (JSON.stringify lưu Infinity thành null, lần đọc sau purchase bị bỏ).
   const phanValid = Number.isInteger(Number(phan)) && Number(phan) > 0
   const phanInvalid = phan.trim() !== "" && !phanValid
-  const disabled = !normalizedDate || !phanValid || !buy.trim() || !store
+  // Cửa hàng đang chọn có thể vừa bị đổi tên/xoá ở thẻ "Giá thị trường hôm nay" trong lúc modal còn
+  // mở — chỉ coi là đã chọn khi tên đó vẫn còn trong danh sách, giống AddGoldForm, để không ghi đè
+  // lại tên cũ lên lần mua (huỷ mất phần đổi tên đã cascade) và trỏ vào cửa hàng không tồn tại.
+  const selectedStore = stores.some((s) => s.name === store) ? store : ""
+  const disabled = !normalizedDate || !phanValid || !buy.trim() || !selectedStore
 
   function handleSave() {
-    if (!normalizedDate) return
+    if (!normalizedDate || !selectedStore) return
     onSave(currentId, {
       date: normalizedDate,
       phan: Number(phan) || 0,
       buy: Number(buy) || 0,
-      store,
+      store: selectedStore,
     })
     onOpenChange(false)
   }
@@ -96,7 +100,7 @@ function EditGoldPurchaseModal({ purchase, stores, onOpenChange, onSave }: EditG
         />
       </div>
       <div className="mt-3">
-        <GoldStorePicker stores={stores} selected={store} onSelect={setStore} />
+        <GoldStorePicker stores={stores} selected={selectedStore} onSelect={setStore} />
       </div>
 
       <div className="mt-5 flex justify-end gap-[10px]">

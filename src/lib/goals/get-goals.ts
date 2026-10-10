@@ -18,7 +18,8 @@ function formatChi(phan: number): string {
 // Đủ (hoặc vượt) mục tiêu thì báo đã đạt — không bao giờ in "Còn -2 chỉ · tương đương -… ₫". Chưa
 // biết giá quy đổi (<= 0: chưa cửa hàng nào có giá) thì bỏ phần "tương đương" thay vì in "0 ₫".
 function goldRemainingNote(goldPhan: number, target: number, goldPricePerPhan: number, hidden: boolean): string {
-  const remaining = target - goldPhan
+  // Round to 0.1 phân so float noise (e.g. 149.99999) doesn't print "15,0" or "Còn 0,0 chỉ".
+  const remaining = Math.round((target - goldPhan) * 10) / 10
   if (remaining <= 0) return `Đã đạt mục tiêu ${formatChi(target)}`
   const remainingChi =
     remaining % 10 === 0 ? String(remaining / 10) : (remaining / 10).toFixed(1).replace(".", ",")

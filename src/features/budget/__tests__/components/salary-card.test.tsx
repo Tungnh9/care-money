@@ -25,6 +25,23 @@ describe("SalaryCard", () => {
     expect(screen.getByLabelText("Số tiền", { exact: false })).toHaveValue("10.000.000")
   })
 
+  it("shows a recorded 0 đ salary as 0 (not blank) and keeps save disabled until it changes", () => {
+    render(<SalaryCard month="2026-09" salary={0} recorded onSave={vi.fn()} />)
+
+    expect(screen.getByLabelText("Số tiền", { exact: false })).toHaveValue("0")
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
+  })
+
+  it("lets the user save 0 đ for a month that has no salary yet", () => {
+    const onSave = vi.fn()
+    render(<SalaryCard month="2026-09" salary={0} recorded={false} onSave={onSave} />)
+
+    fireEvent.change(screen.getByLabelText("Số tiền", { exact: false }), { target: { value: "0" } })
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
+
+    expect(onSave).toHaveBeenCalledWith("2026-09", 0)
+  })
+
   it("disables save until the amount changes", () => {
     render(<SalaryCard month="2026-09" salary={20_000_000} onSave={vi.fn()} />)
 

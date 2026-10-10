@@ -37,6 +37,19 @@ describe("EditGoldPurchaseModal", () => {
     expect(onOpenChange).toHaveBeenCalledWith(false)
   })
 
+  it("blocks saving once the purchase's store has been deleted, until another store is picked", () => {
+    const onSave = vi.fn()
+    const remaining = STORES.filter((s) => s.name !== "PNJ")
+    render(<EditGoldPurchaseModal purchase={PURCHASE} stores={remaining} onOpenChange={vi.fn()} onSave={onSave} />)
+
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
+
+    fireEvent.click(screen.getByRole("button", { name: "SJC" }))
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
+
+    expect(onSave).toHaveBeenCalledWith(1, expect.objectContaining({ store: "SJC" }))
+  })
+
   it("closes without saving on Huỷ", () => {
     const onSave = vi.fn()
     render(<EditGoldPurchaseModal purchase={PURCHASE} stores={STORES} onOpenChange={vi.fn()} onSave={onSave} />)

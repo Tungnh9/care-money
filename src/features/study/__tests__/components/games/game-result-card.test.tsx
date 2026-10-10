@@ -134,23 +134,26 @@ describe("GameResultCard", () => {
   })
   it("renders two mistakes that share the same word (different vocab entries) without a React key clash", () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
-    render(
-      <GameResultCard
-        type="quiz"
-        score={8}
-        total={10}
-        isNewHighScore={false}
-        mistakes={[
-          { wordId: "pay-1", word: "pay", correctMeaning: "trả tiền", chosenMeaning: "quả cam" },
-          { wordId: "pay-2", word: "pay", correctMeaning: "tiền lương", chosenMeaning: null },
-        ]}
-        onPlayAgain={vi.fn()}
-        onBackToMenu={vi.fn()}
-      />
-    )
+    try {
+      render(
+        <GameResultCard
+          type="quiz"
+          score={8}
+          total={10}
+          isNewHighScore={false}
+          mistakes={[
+            { wordId: "pay-1", word: "pay", correctMeaning: "trả tiền", chosenMeaning: "quả cam" },
+            { wordId: "pay-2", word: "pay", correctMeaning: "tiền lương", chosenMeaning: null },
+          ]}
+          onPlayAgain={vi.fn()}
+          onBackToMenu={vi.fn()}
+        />
+      )
 
-    expect(screen.getAllByText("pay")).toHaveLength(2)
-    expect(consoleError.mock.calls.some((c) => String(c[0]).includes("same key"))).toBe(false)
-    consoleError.mockRestore()
+      expect(screen.getAllByText("pay")).toHaveLength(2)
+      expect(consoleError.mock.calls.some((c) => String(c[0]).includes("same key"))).toBe(false)
+    } finally {
+      consoleError.mockRestore()
+    }
   })
 })

@@ -17,7 +17,10 @@ import {
   normalizeGoldDate,
   sortGoldByDate,
   summarizeGoldByStore,
+  goldPLTone,
+  goldPurchaseLabels,
 } from "@/lib/finance/finance-calculations"
+import type { GoldPurchase } from "@/lib/finance/types"
 import { DEFAULT_FINANCE_STATE, type FinanceState } from "@/lib/finance/finance-storage"
 
 describe("phanToChi", () => {
@@ -473,5 +476,44 @@ describe("nearestDueCard", () => {
     const cards = [card("Hạn 5", "5", 1_000_000), card("Hạn 31", "31", 1_000_000)]
 
     expect(nearestDueCard(cards, new Date(2026, 1, 27))?.name).toBe("Hạn 31")
+  })
+})
+
+describe("goldPLTone", () => {
+  it("treats a P/L that rounds to 0 đ as break-even, not gain or loss", () => {
+    expect(goldPLTone(0)).toBe("even")
+    expect(goldPLTone(0.3)).toBe("even")
+    expect(goldPLTone(-0.4)).toBe("even")
+    expect(goldPLTone(1)).toBe("gain")
+    expect(goldPLTone(-1)).toBe("loss")
+  })
+})
+
+describe("goldPurchaseLabels", () => {
+  const purchase = (id: number, date: string, store: string, phan: number): GoldPurchase => ({
+    id,
+    date,
+    store,
+    phan,
+    buy: 9_000_000,
+  })
+
+  it("uses just the date when no other purchase shares it", () => {
+    const labels = goldPurchaseLabels([purchase(1, "01/02/2026", "SJC", 10)])
+
+    expect(labels.get(1)).toBe("01/02/2026")
+  })
+
+  it("adds store and weight for purchases on the same date, and a counter for exact repeats", () => {
+    const labels = goldPurchaseLabels([
+      purchase(1, "01/02/2026", "SJC", 10),
+      purchase(2, "01/02/2026", "PNJ", 10),
+      purchase(3, "01/02/2026", "SJC", 10),
+    ])
+
+    expect(labels.get(1)).toBe(`01/02/2026 · SJC · ${phanToChi(10)}`)
+    expect(labels.get(2)).toBe(`01/02/2026 · PNJ · ${phanToChi(10)}`)
+    expect(labels.get(3)).toBe(`01/02/2026 · SJC · ${phanToChi(10)} (lần 2)`)
+    expect(new Set(labels.values()).size).toBe(3)
   })
 })

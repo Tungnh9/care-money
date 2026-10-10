@@ -68,6 +68,15 @@ describe("getGoals", () => {
     expect(goldGoal?.note).toBe("Còn 12 chỉ")
   })
 
+  it("rounds float noise in the owned phân before formatting the remaining chỉ", () => {
+    const note = (goldPhan: number) =>
+      getGoals({ ...GOALS_INPUT, goldPhan, goldPricePerPhan: 0 }).goals.find((g) => g.key === "gold")?.note
+
+    expect(note(30.000000001)).toBe("Còn 15 chỉ")
+    expect(note(179.99999999)).toBe("Đã đạt mục tiêu 18 chỉ")
+    expect(note(12.3)).toBe("Còn 16,8 chỉ")
+  })
+
   it("defaults the car goal to zeroed placeholder when no fund is linked", () => {
     const { goals } = getGoals(GOALS_INPUT)
 

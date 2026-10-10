@@ -4,7 +4,7 @@ import { Pencil, Trash2 } from "lucide-react"
 
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
-import { goldMarketPrice, goldPurchasePL, phanToChi } from "@/lib/finance/finance-calculations"
+import { goldMarketPrice, goldPurchaseLabels, goldPurchasePL, phanToChi } from "@/lib/finance/finance-calculations"
 import type { GoldPurchase, GoldStore } from "@/lib/finance/types"
 import { GoldPLBox } from "./gold-pl-indicator"
 
@@ -31,6 +31,8 @@ function GoldTransactionsCards({
     )
   }
 
+  const labels = goldPurchaseLabels(gold)
+
   return (
     <div className="flex flex-col gap-3">
       {gold.map((purchase) => {
@@ -53,7 +55,7 @@ function GoldTransactionsCards({
               <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  aria-label={`Sửa giao dịch vàng ${purchase.date}`}
+                  aria-label={`Sửa giao dịch vàng ${labels.get(purchase.id)}`}
                   onClick={() => onEdit(purchase)}
                   className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-info)]"
                 >
@@ -61,7 +63,7 @@ function GoldTransactionsCards({
                 </button>
                 <button
                   type="button"
-                  aria-label={`Xoá giao dịch vàng ${purchase.date}`}
+                  aria-label={`Xoá giao dịch vàng ${labels.get(purchase.id)}`}
                   onClick={() => onRemove(purchase.id)}
                   className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
                 >

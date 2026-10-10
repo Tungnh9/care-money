@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card"
+import { formatShortDate } from "@/lib/date"
 import { sanitizeJournalHtml } from "@/lib/journal/journal-html"
 import type { OnThisDayResult } from "../journal-calculations"
 
@@ -19,7 +20,9 @@ function OnThisDayCard({ result }: OnThisDayCardProps) {
           {entry.mood?.emoji ?? "📝"}
         </span>
         <span className="[font-family:var(--ob-font-num)] text-[12px] opacity-[.75]">
-          {entry.date} · {entry.time}
+          {/* entry.date chỉ lưu dd/mm — lấy ngày từ entry.id (timestamp lúc lưu) để bài "1 năm trước" hiện kèm
+              năm, không lẫn với cùng ngày năm nay; giống danh sách bài ở JournalEntriesCard. */}
+          {formatShortDate(new Date(entry.id))} · {entry.time}
         </span>
         {entry.mood ? <span className="text-[12.5px] font-semibold">{entry.mood.label}</span> : null}
       </div>

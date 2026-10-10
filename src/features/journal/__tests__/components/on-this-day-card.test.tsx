@@ -5,11 +5,12 @@ import { OnThisDayCard } from "../../components/on-this-day-card"
 import type { OnThisDayResult } from "../../journal-calculations"
 
 describe("OnThisDayCard", () => {
-  it("renders the label, date/time, mood and full text of the matched entry", () => {
+  it("renders the label, date/time (with the year, for an entry from last year), mood and full text", () => {
+    const lastYear = new Date().getFullYear() - 1
     const result: OnThisDayResult = {
       label: "1 năm trước",
       entry: {
-        id: 1,
+        id: new Date(lastYear, 7, 10, 20, 15).getTime(),
         text: "Hôm nay trời đẹp, mình đi dạo công viên.",
         time: "20:15",
         date: "10/08",
@@ -20,7 +21,7 @@ describe("OnThisDayCard", () => {
     render(<OnThisDayCard result={result} />)
 
     expect(screen.getByText("1 năm trước, bạn đã viết")).toBeInTheDocument()
-    expect(screen.getByText("10/08 · 20:15")).toBeInTheDocument()
+    expect(screen.getByText(`10/08/${lastYear} · 20:15`)).toBeInTheDocument()
     expect(screen.getByText("Vui")).toBeInTheDocument()
     expect(screen.getByText("🙂")).toBeInTheDocument()
     expect(
@@ -37,6 +38,24 @@ describe("OnThisDayCard", () => {
     render(<OnThisDayCard result={result} />)
 
     expect(screen.getByText(longText)).toBeInTheDocument()
+  })
+
+  it("shows just dd/mm, without the year, for an entry from earlier this year", () => {
+    const thisYear = new Date().getFullYear()
+    const result: OnThisDayResult = {
+      label: "1 tuần trước",
+      entry: {
+        id: new Date(thisYear, 0, 3, 7, 0).getTime(),
+        text: "Đầu năm",
+        time: "07:00",
+        date: "03/01",
+        words: 2,
+        mood: null,
+      },
+    }
+    render(<OnThisDayCard result={result} />)
+
+    expect(screen.getByText("03/01 · 07:00")).toBeInTheDocument()
   })
 
   it("falls back to a neutral emoji and no mood label when the entry has no mood", () => {
