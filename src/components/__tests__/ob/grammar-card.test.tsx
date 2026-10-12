@@ -112,4 +112,12 @@ describe("GrammarListCard", () => {
     expect(rows[1]).not.toHaveClass("bg-[var(--ob-color-reward)]")
     expect(rows[2]).toHaveClass("bg-[var(--ob-color-reward)]")
   })
+
+  it("wraps a long unbroken run in the explanation inside the card, so a 320px phone never scrolls sideways", () => {
+    const entry: GrammarEntry = { ...WITHOUT_STRUCTURE, explanation: "I + am. He/She/It + is. You/We/They + are." }
+    render(<GrammarListCard entries={[entry]} vocab={[]} />)
+
+    // "He/She/It" không có chỗ ngắt dòng — ở 320px nó tràn 2px làm cả trang cuộn ngang.
+    expect(screen.getByText(entry.explanation)).toHaveClass("wrap-anywhere")
+  })
 })

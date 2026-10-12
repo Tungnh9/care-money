@@ -110,7 +110,8 @@ function GrammarListCard({ entries, vocab }: GrammarListCardProps) {
             {entry.title}
             <StructureBadge structure={entry.structure} />
           </div>
-          <div className="mb-[5px] text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)]">
+          {/* wrap-anywhere: cụm không có chỗ ngắt như "He/She/It" tràn 2px ở máy 320px làm cả trang cuộn ngang. */}
+          <div className="mb-[5px] text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)] wrap-anywhere">
             {entry.explanation}
           </div>
           <ExampleList examples={entry.examples} translations={entry.translations} vocab={vocab} />
