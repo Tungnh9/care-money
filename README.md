@@ -56,9 +56,10 @@ src/
 │       ├── journal/page.tsx    # "/journal"  — Nhật ký
 │       ├── study/page.tsx      # "/study"    — Học tập
 │       ├── goals/page.tsx      # "/goals"    — Mục tiêu
+│       ├── work/page.tsx       # "/work"     — Làm việc (đang phát triển)
 │       └── settings/page.tsx   # "/settings" — Cài đặt
 ├── features/             # business logic theo feature — xem CLAUDE.md mục Feature Rules
-│                          # 9 feature hiện có: overview, finance, budget, journal, study, goals, settings, login, calc
+│                          # 10 feature hiện có: overview, finance, budget, journal, study, goals, work, settings, login, calc
 │                          # (xem mục Tính năng dưới để biết mỗi feature làm gì)
 ├── components/
 │   ├── ui/                # 12 component nền shadcn/ui + @base-ui/react, custom theo token --ob-*
@@ -82,6 +83,7 @@ public/assets/             # logo, app-icon, avatar, icons/ (12 icon module dùn
 | `/journal` | `journal` | Nhật ký — ghi chú rich-text hàng ngày (sanitize qua `dompurify`) kèm mood (danh sách mood tuỳ biến ở Cài đặt), có card "On this day" gợi lại bài viết cùng ngày các năm trước |
 | `/study` | `study` | Học tập — 4 tab: **Hôm nay** (task hàng ngày + Pomodoro + pick ngẫu nhiên-nhưng-cố-định-theo-ngày 5 từ vựng/1 điểm ngữ pháp) · **Từ vựng** · **Ngữ pháp** (2 tab sau đọc từ `content/*.jsonl`) · **Trò chơi** (3 mini-game ôn từ vựng — xem chi tiết bên dưới) |
 | `/goals` | `goals` | Mục tiêu — 3 mục tiêu tính từ dữ liệu Tài chính thật, riêng mục "mua xe" có thể gắn thủ công vào 1 quỹ tiết kiệm cụ thể |
+| `/work` | `work` | Làm việc — trang chứa các công cụ làm việc, hiện đang phát triển (chỉ có dòng "Đang phát triển") |
 | `/settings` | `settings` | Cài đặt — hồ sơ, danh sách mood, danh sách tag chi tiêu, bật/tắt module (điều khiển sidebar + Tổng quan), xuất/nhập dữ liệu (JSON), đồng bộ 2 chiều qua cloud, xoá toàn bộ dữ liệu, tự động backup nền (đang tạm ngưng) |
 | _(modal, không có route)_ | `calc` | Máy tính bỏ túi — mở từ sidebar, gõ biểu thức trực tiếp (sanitize trước khi `Function()` eval), xem trước kết quả, lưu 4 phép tính gần nhất |
 | `/login` | `login` | Đăng nhập mock (so khớp tài khoản hardcode trong `src/lib/mock-account.ts`, không có backend thật) — khoá 10 phút sau 5 lần sai (`useAttemptLockout`), bảo vệ toàn app qua `AuthGuard` |

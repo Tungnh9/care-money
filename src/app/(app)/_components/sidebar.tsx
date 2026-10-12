@@ -6,6 +6,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
   BookOpen,
+  Briefcase,
   Calculator,
   Eye,
   EyeOff,
@@ -68,6 +69,7 @@ const NAV = [
   { label: "Nhật ký", href: "/journal", icon: BookOpen, moduleKey: "nhatky" },
   { label: "Học tập", href: "/study", icon: GraduationCap, moduleKey: "hoctap" },
   { label: "Mục tiêu", href: "/goals", icon: Target, moduleKey: "muctieu" },
+  { label: "Làm việc", href: "/work", icon: Briefcase, moduleKey: "lamviec" },
   { label: "Cài đặt", href: "/settings", icon: Settings, moduleKey: null },
 ] as const
 
@@ -151,7 +153,7 @@ function Sidebar() {
           </span>
         </div>
 
-        {/* Điện thoại: 7 mục chia nhau đúng bề rộng thanh — mục rộng theo nhãn nhưng co được (min-w-0
+        {/* Điện thoại: 8 mục chia nhau đúng bề rộng thanh — mục rộng theo nhãn nhưng co được (min-w-0
             flex-auto), đệm ngang 2px, không khe giữa các mục; thiếu chỗ thì nhãn cắt "…" thay vì đẩy
             "Cài đặt" ra ngoài thanh cố định (không cuộn tới được). Từ md trở lên giữ nguyên cột dọc. */}
         <nav className="flex min-w-0 flex-1 items-center justify-around md:flex-none md:flex-col md:items-stretch md:justify-start md:gap-1">

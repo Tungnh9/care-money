@@ -114,7 +114,7 @@ describe("Sidebar", () => {
     expect(window.localStorage.getItem("sync-secret")).toBeNull()
   })
 
-  it("lets the 7 bottom-nav links shrink to share a phone-width bar instead of pushing Cài đặt off screen", () => {
+  it("lets the 8 bottom-nav links shrink to share a phone-width bar instead of pushing Cài đặt off screen", () => {
     render(<Sidebar />)
 
     // Thanh dưới là position: fixed nên phần tràn không cuộn tới được: nav phải co về đúng bề rộng
@@ -131,6 +131,7 @@ describe("Sidebar", () => {
       "Nhật ký",
       "Học tập",
       "Mục tiêu",
+      "Làm việc",
       "Cài đặt",
     ])
     for (const link of links) {
@@ -167,8 +168,28 @@ describe("Sidebar", () => {
       label.style.display = "none"
     }
 
-    for (const name of ["Tổng quan", "Tài chính", "Chi tiêu", "Nhật ký", "Học tập", "Mục tiêu", "Cài đặt"]) {
+    for (const name of ["Tổng quan", "Tài chính", "Chi tiêu", "Nhật ký", "Học tập", "Mục tiêu", "Làm việc", "Cài đặt"]) {
       expect(within(nav).getByRole("link", { name })).toBeInTheDocument()
     }
+  })
+
+  it("shows a Làm việc nav link pointing at /work", () => {
+    render(<Sidebar />)
+
+    expect(within(screen.getByRole("navigation")).getByRole("link", { name: "Làm việc" })).toHaveAttribute(
+      "href",
+      "/work"
+    )
+  })
+
+  it("hides the Làm việc link when its module is turned off in Cài đặt", () => {
+    window.localStorage.setItem(
+      "app-settings",
+      JSON.stringify({ modules: [{ key: "lamviec", label: "Làm việc", hint: "", on: false }] })
+    )
+
+    render(<Sidebar />)
+
+    expect(within(screen.getByRole("navigation")).queryByRole("link", { name: "Làm việc" })).not.toBeInTheDocument()
   })
 })
