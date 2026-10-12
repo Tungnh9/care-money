@@ -147,6 +147,27 @@ describe("StudySummarySection", () => {
     expect(screen.getByAltText(DUE_WORDS[0].word)).toHaveAttribute("sizes", "(max-width: 639px) 45vw, 140px")
   })
 
+  it("lets the task card fill its row when it wraps alone on a phone, but stay ~280px beside the due words", () => {
+    render(
+      <StudySummarySection
+        vocab={VOCAB}
+        grammar={GRAMMAR}
+        tasks={TASKS}
+        onToggleTask={vi.fn()}
+        learned={[]}
+        dueWords={DUE_WORDS}
+      />
+    )
+
+    const taskCard = screen.getByText("Nhiệm vụ hôm nay").closest("section") as HTMLElement
+    const dueCard = screen.getByText("Từ cần ôn hôm nay").closest("section") as HTMLElement
+    // Grow 1 (không phải 0): đứng một mình trên hàng thì giãn hết bề ngang thay vì kẹt 280px.
+    expect(taskCard).toHaveClass("flex-[1_1_280px]")
+    expect(taskCard).not.toHaveClass("flex-[0_1_280px]")
+    // Chung hàng thì gần như toàn bộ chỗ dư về thẻ từ vựng (999:1) — thẻ nhiệm vụ vẫn ~280px như trước.
+    expect(dueCard).toHaveClass("flex-[999_1_360px]")
+  })
+
   describe("speak buttons on the due words", () => {
     let speakSpy: ReturnType<typeof vi.fn>
     let cancelSpy: ReturnType<typeof vi.fn>

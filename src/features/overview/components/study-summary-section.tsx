@@ -68,7 +68,9 @@ function StudySummarySection({ vocab, grammar, tasks, onToggleTask, learned, due
 
   return (
     <div className="ob-card-grid flex flex-wrap gap-5">
-      <Card label="Nhiệm vụ hôm nay" className="min-w-0 flex-[0_1_280px]">
+      {/* Grow 1:999 — chung hàng thì gần như toàn bộ chỗ dư về thẻ "Từ cần ôn" (thẻ nhiệm vụ vẫn ~280px),
+          còn khi xuống hàng riêng (điện thoại, máy tính bảng hẹp) mỗi thẻ tự giãn hết bề ngang. */}
+      <Card label="Nhiệm vụ hôm nay" className="min-w-0 flex-[1_1_280px]">
         <Figure value={String(doneTasks)} unit={`/${tasks.length}`} size="sm" className="mb-[14px]" />
         <div className="flex flex-col gap-[6px]">
           {tasks.map((task, i) => (
@@ -77,7 +79,7 @@ function StudySummarySection({ vocab, grammar, tasks, onToggleTask, learned, due
         </div>
       </Card>
 
-      <Card label="Từ cần ôn hôm nay" className="min-w-0 flex-[1_1_360px]">
+      <Card label="Từ cần ôn hôm nay" className="min-w-0 flex-[999_1_360px]">
         {shownDueWords.length ? (
           /* Số cột theo bề rộng Card (container query — Card là container), không theo màn hình: cùng 1
               màn hình, Card này có lúc chung hàng với "Nhiệm vụ hôm nay", có lúc chiếm cả hàng. */
