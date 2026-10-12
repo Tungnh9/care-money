@@ -153,9 +153,11 @@ function Sidebar() {
           </span>
         </div>
 
-        {/* Điện thoại: 8 mục chia nhau đúng bề rộng thanh — mục rộng theo nhãn nhưng co được (min-w-0
-            flex-auto), đệm ngang 2px, không khe giữa các mục; thiếu chỗ thì nhãn cắt "…" thay vì đẩy
-            "Cài đặt" ra ngoài thanh cố định (không cuộn tới được). Từ md trở lên giữ nguyên cột dọc. */}
+        {/* Điện thoại: 8 mục chia đều bề rộng thanh (flex-1 basis-0), chỉ hiện icon — riêng trang đang mở
+            hiện thêm chữ dưới icon (8 nhãn cùng lúc ở ~45px/mục thì mục nào cũng bị cắt "…"). Ô đều nhau
+            nên mục có chữ không phình ra làm icon khác xô lệch; min-h-12 giữ thanh cao như nhau dù đang ở
+            trang có chữ hay không. Không khe giữa các mục, nên "Cài đặt" không bị đẩy ra ngoài thanh cố
+            định (không cuộn tới được). Từ md trở lên giữ nguyên cột dọc. */}
         <nav className="flex min-w-0 flex-1 items-center justify-around md:flex-none md:flex-col md:items-stretch md:justify-start md:gap-1">
           {nav.map(({ label, href, icon: ItemIcon }) => {
             const active = pathname === href
@@ -167,14 +169,18 @@ function Sidebar() {
                 // aria-label trùng đúng chữ nhãn nên tên đọc lên luôn khớp chữ người dùng thấy ở mobile/lg.
                 aria-label={label}
                 className={cn(
-                  "flex min-h-[var(--ob-hit-min)] min-w-0 flex-auto flex-col items-center justify-center gap-0.5 rounded-[var(--ob-radius-md)] px-0.5 py-1.5 text-center text-[10.5px] leading-[var(--ob-lh-normal)] no-underline transition-[background-color,color] duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] md:flex-none md:flex-row md:justify-center md:gap-[11px] md:px-[14px] md:py-[11px] md:text-left md:text-[length:var(--ob-size-sm)] lg:justify-start",
+                  "flex min-h-12 min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-0.5 rounded-[var(--ob-radius-md)] px-0.5 py-1.5 text-center text-[10.5px] leading-[var(--ob-lh-normal)] no-underline transition-[background-color,color] duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] md:min-h-[var(--ob-hit-min)] md:flex-none md:flex-row md:justify-center md:gap-[11px] md:px-[14px] md:py-[11px] md:text-left md:text-[length:var(--ob-size-sm)] lg:justify-start",
                   active
                     ? "bg-[var(--ob-color-action-soft)] font-bold text-[var(--ob-color-action-strong)]"
                     : "font-medium text-[var(--ob-color-text-muted)] hover:bg-[var(--ob-color-action-soft)] hover:text-[var(--ob-color-action-strong)]"
                 )}
               >
                 <ItemIcon size={18} />
-                <span className="max-w-full truncate md:hidden lg:inline">{label}</span>
+                {/* Ô ~45px hẹp hơn "Tổng quan": nhãn trang đang mở tràn nhẹ ra 2 bên (ô cạnh chỉ có icon nên
+                    còn chỗ) thay vì cắt "Tổng …"; ô min-w-0 basis-0 nên chữ tràn không làm ô phình. */}
+                <span className={active ? "whitespace-nowrap md:hidden lg:inline" : "hidden lg:inline"}>
+                  {label}
+                </span>
               </Link>
             )
           })}

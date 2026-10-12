@@ -135,11 +135,30 @@ describe("Sidebar", () => {
       "Cài đặt",
     ])
     for (const link of links) {
-      // Mục rộng theo nhãn nhưng co được; từ md trở lên không co giãn như cũ.
-      expect(link).toHaveClass("min-w-0", "flex-auto", "px-0.5", "md:flex-none")
-      expect(link).not.toHaveClass("px-2")
-      // Thiếu chỗ (máy < ~340px) thì nhãn cắt "…" trong mục của nó thay vì đẩy mục khác ra ngoài.
-      expect(link.querySelector("span")).toHaveClass("max-w-full", "truncate")
+      // 8 mục chia đều bề rộng thanh (flex 1 1 0) — mục đang chọn có chữ cũng không phình ra làm các
+      // icon khác xô lệch khi chuyển trang; từ md trở lên không co giãn như cũ.
+      expect(link).toHaveClass("min-w-0", "flex-1", "basis-0", "px-0.5", "md:flex-none")
+      expect(link).not.toHaveClass("flex-auto")
+    }
+  })
+
+  it("shows only icons in the phone bar, with the label under the current page's icon alone", () => {
+    render(<Sidebar />)
+
+    const nav = screen.getByRole("navigation")
+    // usePathname được mock là "/overview" → chỉ "Tổng quan" hiện chữ ở điện thoại.
+    const active = within(nav).getByRole("link", { name: "Tổng quan" })
+    const activeLabel = active.querySelector("span") as HTMLElement
+    expect(activeLabel).not.toHaveClass("hidden")
+    // Ô ~45px hẹp hơn "Tổng quan": nhãn tràn nhẹ ra 2 bên (ô bên cạnh chỉ có icon nên còn chỗ) thay vì
+    // cắt "Tổng …". Ô vẫn min-w-0 basis-0 nên chữ tràn không làm ô phình; ở md vẫn ẩn, lg hiện như cũ.
+    expect(activeLabel).toHaveClass("whitespace-nowrap", "md:hidden", "lg:inline")
+    expect(activeLabel).not.toHaveClass("truncate")
+
+    for (const name of ["Tài chính", "Chi tiêu", "Nhật ký", "Học tập", "Mục tiêu", "Làm việc", "Cài đặt"]) {
+      const label = within(nav).getByRole("link", { name }).querySelector("span") as HTMLElement
+      // Ẩn ở điện thoại và md, hiện lại ở lg (sidebar có chữ) — tên đọc lên vẫn từ aria-label.
+      expect(label).toHaveClass("hidden", "lg:inline")
     }
   })
 
