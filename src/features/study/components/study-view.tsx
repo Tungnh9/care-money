@@ -67,7 +67,12 @@ function StudyView({ vocab, grammar }: StudyViewProps) {
             <Pomodoro />
           </div>
           {hydrated ? (
-            <ReviewDueCard dueWords={dueWords} onGrade={gradeWord} className="min-w-0 flex-[1_1_100%]" />
+            <ReviewDueCard
+              dueWords={dueWords}
+              // Chấm tay ở thẻ ôn: "Nhớ"/"Dễ" tính luôn là đã học (mini-game bên dưới thì không).
+              onGrade={(wordId, grade) => gradeWord(wordId, grade, { markLearned: true })}
+              className="min-w-0 flex-[1_1_100%]"
+            />
           ) : null}
           {dailyGrammar ? <GrammarHighlightCard key={dailyGrammar.id} entry={dailyGrammar} vocab={vocab} /> : null}
           <TasksCard tasks={tasks} onToggle={toggleTask} className="min-w-0 flex-[1_1_300px]" />

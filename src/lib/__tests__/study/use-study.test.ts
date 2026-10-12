@@ -206,6 +206,77 @@ describe("useStudy", () => {
     expect(getStoredStudy().wordReviews["v-0001"]).toEqual(afterFirst)
   })
 
+  describe("gradeWord from the review card (markLearned)", () => {
+    it.each(["good", "easy"] as const)("adds the word to learned when graded %s on the review card", async (grade) => {
+      const { result } = renderHook(() => useStudy())
+      await waitFor(() => expect(result.current.tasks).toEqual(DEFAULT_STUDY_STATE.tasks))
+
+      act(() => {
+        result.current.gradeWord("v-0001", grade, { markLearned: true })
+      })
+
+      expect(result.current.learned).toEqual(["v-0001"])
+      // Ghi xuống storage — "Tải lên" ở Cài đặt đọc thẳng từ đây (readLocalSnapshot → getStoredStudy).
+      expect(getStoredStudy().learned).toEqual(["v-0001"])
+      expect(getStoredStudy().wordReviews["v-0001"].repetitions).toBe(1)
+    })
+
+    it.each(["again", "hard"] as const)("leaves learned alone when graded %s on the review card", async (grade) => {
+      const { result } = renderHook(() => useStudy())
+      await waitFor(() => expect(result.current.tasks).toEqual(DEFAULT_STUDY_STATE.tasks))
+
+      act(() => {
+        result.current.gradeWord("v-0001", grade, { markLearned: true })
+      })
+
+      expect(result.current.learned).toEqual([])
+      expect(result.current.wordReviews["v-0001"]).toBeDefined()
+    })
+
+    it("never marks a word learned from a mini-game answer (no markLearned)", async () => {
+      const { result } = renderHook(() => useStudy())
+      await waitFor(() => expect(result.current.tasks).toEqual(DEFAULT_STUDY_STATE.tasks))
+
+      act(() => {
+        result.current.gradeWord("v-0001", "good")
+      })
+
+      expect(result.current.learned).toEqual([])
+      expect(getStoredStudy().learned).toEqual([])
+    })
+
+    it("does not list a word twice when it was already marked learned", async () => {
+      const { result } = renderHook(() => useStudy())
+      await waitFor(() => expect(result.current.tasks).toEqual(DEFAULT_STUDY_STATE.tasks))
+
+      act(() => {
+        result.current.toggleLearned("v-0001")
+      })
+      act(() => {
+        result.current.gradeWord("v-0001", "easy", { markLearned: true })
+      })
+
+      expect(getStoredStudy().learned).toEqual(["v-0001"])
+    })
+
+    it("still marks the word learned when a mini-game already graded it today, without grading it twice", async () => {
+      const { result } = renderHook(() => useStudy())
+      await waitFor(() => expect(result.current.tasks).toEqual(DEFAULT_STUDY_STATE.tasks))
+
+      act(() => {
+        result.current.gradeWord("v-0001", "good")
+      })
+      const afterGame = result.current.wordReviews["v-0001"]
+      act(() => {
+        result.current.gradeWord("v-0001", "good", { markLearned: true })
+      })
+
+      expect(getStoredStudy().learned).toEqual(["v-0001"])
+      // Vẫn giữ giới hạn 1 lần chấm/từ/ngày — lịch ôn không bị cộng dồn.
+      expect(getStoredStudy().wordReviews["v-0001"]).toEqual(afterGame)
+    })
+  })
+
   it("does not lose a grade when gradeWord and recordGameResult are called in the same tick", async () => {
     const { result } = renderHook(() => useStudy())
     await waitFor(() => expect(result.current.tasks).toEqual(DEFAULT_STUDY_STATE.tasks))

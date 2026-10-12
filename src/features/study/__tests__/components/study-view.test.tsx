@@ -148,6 +148,29 @@ describe("StudyView", () => {
     expect(screen.getByText(VOCAB[0].word)).toBeInTheDocument()
   })
 
+  it("counts a due word as learned once it is graded Nhớ on Hôm nay, so Tải lên carries it", async () => {
+    render(<StudyView vocab={VOCAB} grammar={GRAMMAR} />)
+
+    fireEvent.click(screen.getAllByRole("button", { name: /Hiện nghĩa/ })[0])
+    fireEvent.click(screen.getByRole("button", { name: "Nhớ" }))
+
+    await waitFor(() =>
+      expect(JSON.parse(window.localStorage.getItem(STUDY_STORAGE_KEY) ?? "{}").learned).toEqual([VOCAB[0].id])
+    )
+    // Thẻ tiến độ ở tab Hôm nay cập nhật theo: 1/10 từ.
+    expect(screen.getByText("Thuộc 10% kho từ")).toBeInTheDocument()
+  })
+
+  it("does not count a due word as learned when it is graded Quên", async () => {
+    render(<StudyView vocab={VOCAB} grammar={GRAMMAR} />)
+
+    fireEvent.click(screen.getAllByRole("button", { name: /Hiện nghĩa/ })[0])
+    fireEvent.click(screen.getByRole("button", { name: "Quên" }))
+
+    await waitFor(() => expect(screen.getByText("✓ Đã chấm: Quên")).toBeInTheDocument())
+    expect(JSON.parse(window.localStorage.getItem(STUDY_STORAGE_KEY) ?? "{}").learned).toEqual([])
+  })
+
   it("feeds mini-game results into the SRS schedule via gradeWord", async () => {
     render(<StudyView vocab={VOCAB} grammar={GRAMMAR} />)
 

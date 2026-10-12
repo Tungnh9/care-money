@@ -113,7 +113,7 @@ function useStudy() {
   )
 
   const gradeWord = useCallback(
-    (wordId: string, grade: ReviewGrade) => {
+    (wordId: string, grade: ReviewGrade, { markLearned = false }: { markLearned?: boolean } = {}) => {
       const current = stateRef.current
       const today = dayKey()
       // Từ chưa từng có entry được tạo ngay tại đây theo đúng loại seed (cold/learned) rồi chấm
@@ -129,13 +129,18 @@ function useStudy() {
       // tiếp) sẽ dồn khoảng cách ôn tăng vọt (1→6→15→...) chỉ trong vài phút, thay vì đúng nhịp
       // 1 lần/ngày mà SM-2 giả định.
       const alreadyGradedToday = existing.lastReviewedAt !== null && dayKey(new Date(existing.lastReviewedAt)) === today
-      if (alreadyGradedToday) return
 
-      const wordReviews = {
-        ...current.wordReviews,
-        [wordId]: applyGrade(existing, grade, today, new Date().toISOString()),
-      }
-      persist({ ...current, wordReviews })
+      // Bấm tay "Nhớ"/"Dễ" ở thẻ ôn = đã học thật → vào learned (nếu không, từ học qua thẻ ôn không bao
+      // giờ có trong learned, kể cả bản "Tải lên"). Mini-game không truyền markLearned: đoán trúng chưa
+      // chắc là đã học. "Quên"/"Khó" không thêm cũng không bỏ đánh dấu.
+      const addToLearned = markLearned && (grade === "good" || grade === "easy") && !current.learned.includes(wordId)
+      if (alreadyGradedToday && !addToLearned) return
+
+      const wordReviews = alreadyGradedToday
+        ? current.wordReviews
+        : { ...current.wordReviews, [wordId]: applyGrade(existing, grade, today, new Date().toISOString()) }
+      const learned = addToLearned ? [...current.learned, wordId] : current.learned
+      persist({ ...current, learned, wordReviews })
     },
     [persist]
   )
