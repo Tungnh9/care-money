@@ -9,7 +9,6 @@ import { DEFAULT_NET_WORTH_HISTORY } from "@/lib/net-worth/net-worth-history-sto
 import { DEFAULT_SETTINGS } from "@/lib/settings/settings-storage"
 import { clearSyncSecret, setSyncSecret } from "@/lib/sync-secret-storage"
 import type { PendingRestore } from "../../hooks/use-data-management"
-import { setAutoBackupStatus } from "../../auto-backup-storage"
 import { DataCard } from "../../components/data-card"
 
 const BASE_PROPS = {
@@ -191,30 +190,6 @@ describe("DataCard", () => {
     rerender(<DataCard {...BASE_PROPS} syncResult={{ ok: false, error: "Sai secret đồng bộ." }} />)
     expect(screen.getByText("Đồng bộ không thành công")).toBeInTheDocument()
     expect(screen.getByText("Sai secret đồng bộ.")).toBeInTheDocument()
-  })
-
-  it("shows auto-backup as temporarily disabled when no secret is configured", () => {
-    render(<DataCard {...BASE_PROPS} />)
-
-    expect(screen.getByText("tạm ngưng", { exact: false })).toBeInTheDocument()
-  })
-
-  it("shows auto-backup as temporarily disabled even when a secret is configured", () => {
-    // Tự động tải lên đang tạm ngưng bất kể có secret hay không — tránh 2 máy âm thầm ghi đè
-    // dữ liệu của nhau (chỉ tự động tải lên, không tự động tải xuống hay gộp dữ liệu).
-    setSyncSecret("abc123")
-    render(<DataCard {...BASE_PROPS} />)
-
-    expect(screen.getByText("tạm ngưng", { exact: false })).toBeInTheDocument()
-  })
-
-  it("still surfaces the last real auto-backup time and error for context, even while disabled", () => {
-    setSyncSecret("abc123")
-    setAutoBackupStatus({ lastSyncedAt: "2026-08-14T09:05:00.000Z", lastError: "Sai secret đồng bộ." })
-    render(<DataCard {...BASE_PROPS} />)
-
-    expect(screen.getByText("Lần tự động gần nhất", { exact: false })).toBeInTheDocument()
-    expect(screen.getByText("Lần gần nhất lỗi: Sai secret đồng bộ.")).toBeInTheDocument()
   })
 
   it("asks before replacing this device's data, showing when the incoming copy was made and both sets of counts", () => {

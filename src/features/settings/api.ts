@@ -17,6 +17,9 @@ function mapErrorStatus(status: number, serverError?: string): string {
   return serverError ?? "Đồng bộ không thành công."
 }
 
+// Chỉ gọi khi người dùng bấm "Tải lên": bản tải lên GHI ĐÈ toàn bộ snapshot trên cloud, nên 2 máy dùng
+// chung secret mà tự động tải lên sẽ âm thầm xoá thay đổi máy kia chưa kịp tải xuống (lý do đã bỏ hẳn
+// tính năng tự động sao lưu, 2026-10-12 — chỉ cân nhắc lại khi có tải xuống tự động hoặc gộp dữ liệu).
 async function pushSnapshot(secret: string, payload: ExportPayload): Promise<PushResult> {
   if (hasUnsendableChar(secret)) return { ok: false, error: SECRET_CHARSET_ERROR }
   try {

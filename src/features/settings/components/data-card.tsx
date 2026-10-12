@@ -9,17 +9,9 @@ import { Card } from "@/components/ui/card"
 import { Field } from "@/components/ui/field"
 import { onDataChanged } from "@/lib/data-change-bus"
 import { getSyncSecret, setSyncSecret } from "@/lib/sync-secret-storage"
-import { getAutoBackupStatus, type AutoBackupStatus } from "../auto-backup-storage"
 import type { ExportedInfo, ImportedInfo, PendingRestore, SyncResult } from "../hooks/use-data-management"
 
-function formatAutoBackupTime(iso: string): string {
-  const d = new Date(iso)
-  const time = d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
-  const date = `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`
-  return `${time} ngày ${date}`
-}
-
-// Có cả năm (khác formatAutoBackupTime): bản sao cũ cả năm trời vẫn phải nhận ra được là cũ.
+// Có cả năm: bản sao cũ cả năm trời vẫn phải nhận ra được là cũ.
 function formatSnapshotTime(iso: string | null): string {
   const d = iso ? new Date(iso) : null
   if (!d || Number.isNaN(d.getTime())) return "không rõ thời điểm"
@@ -58,13 +50,11 @@ function DataCard({
   const fileRef = useRef<HTMLInputElement>(null)
   const [secret, setSecret] = useState("")
   const [copied, setCopied] = useState(false)
-  const [autoBackup, setAutoBackup] = useState<AutoBackupStatus | null>(null)
 
   useEffect(() => {
     // localStorage không có lúc SSR, chỉ đọc được thật sau khi mount trên client.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSecret(getSyncSecret())
-    setAutoBackup(getAutoBackupStatus())
   }, [])
 
   useEffect(() => {
@@ -181,25 +171,6 @@ function DataCard({
         <p className="mb-[14px] text-[13.5px] leading-[1.55] text-[var(--ob-color-text-muted)]">
           Tuỳ chọn — đồng bộ dữ liệu giữa các thiết bị của bạn. Chỉ bạn giữ secret bên dưới.
         </p>
-        {autoBackup ? (
-          <p className="mb-[14px] text-[13px] leading-[1.5] text-[var(--ob-color-text-subtle)]">
-            {/* Tạm ngưng tự động tải lên (2026-09-22) — nghi ngờ 2 máy ghi đè dữ liệu của nhau vì
-                cơ chế hiện tại chỉ tự động TẢI LÊN, không tự động tải xuống hay gộp dữ liệu, nên
-                máy nào tải lên sau sẽ âm thầm xoá mất thay đổi máy kia chưa kịp tải xuống. Trước
-                khi bật lại: xác nhận đã có tải xuống tự động (hoặc gộp dữ liệu) để tránh mất dữ
-                liệu tương tự. */}
-            Tự động sao lưu: <strong className="font-semibold">tạm ngưng</strong> — dùng nút &quot;Tải
-            lên&quot;/&quot;Tải xuống&quot; bên dưới để đồng bộ thủ công.
-            {autoBackup.lastSyncedAt ? (
-              <> Lần tự động gần nhất: {formatAutoBackupTime(autoBackup.lastSyncedAt)}.</>
-            ) : null}
-            {autoBackup.lastError ? (
-              <span className="mt-1 block text-[var(--ob-color-expense)]">
-                Lần gần nhất lỗi: {autoBackup.lastError}
-              </span>
-            ) : null}
-          </p>
-        ) : null}
         <Field
           label="Secret đồng bộ"
           type="password"

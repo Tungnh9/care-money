@@ -257,6 +257,8 @@ function useDataManagement({
     setCarGoalFundName(null)
     // "Làm lại từ đầu" trên máy này — không giữ lại credential đồng bộ.
     clearSyncSecret()
+    // Trạng thái của tính năng tự động sao lưu đã bỏ (2026-10-12) — không còn gì đọc tới, dọn luôn.
+    window.localStorage.removeItem("auto-backup-status")
     setExported(null)
     setImported(null)
     setSyncResult(null)

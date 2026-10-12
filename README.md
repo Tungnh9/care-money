@@ -48,7 +48,7 @@ src/
 │   ├── sandbox/page.tsx        # "/sandbox" — xem trực quan component ui/ob, không phải feature
 │   ├── api/sync/route.ts       # "/api/sync" — GET/POST, backup/restore qua Vercel Blob (bearer SYNC_SECRET)
 │   └── (app)/                  # route group — shell cho user đã đăng nhập
-│       ├── layout.tsx          # bọc <MoneyVisibilityProvider>, render Sidebar + <Toaster> (<AutoBackup> đang tạm ngưng)
+│       ├── layout.tsx          # bọc <MoneyVisibilityProvider>, render Sidebar + <Toaster>
 │       ├── _components/sidebar.tsx   # topbar mobile + sidebar desktop, nav lọc theo module bật/tắt trong Cài đặt
 │       ├── overview/page.tsx   # "/overview" — Tổng quan
 │       ├── finance/page.tsx    # "/finance"  — Tài chính
@@ -84,7 +84,7 @@ public/assets/             # logo, app-icon, avatar, icons/ (12 icon module dùn
 | `/study` | `study` | Học tập — 4 tab: **Hôm nay** (task hàng ngày + Pomodoro + pick ngẫu nhiên-nhưng-cố-định-theo-ngày 5 từ vựng/1 điểm ngữ pháp) · **Từ vựng** · **Ngữ pháp** (2 tab sau đọc từ `content/*.jsonl`) · **Trò chơi** (3 mini-game ôn từ vựng — xem chi tiết bên dưới) |
 | `/goals` | `goals` | Mục tiêu — 3 mục tiêu tính từ dữ liệu Tài chính thật, riêng mục "mua xe" có thể gắn thủ công vào 1 quỹ tiết kiệm cụ thể |
 | `/work` | `work` | Làm việc — trang chứa các công cụ làm việc, hiện đang phát triển (chỉ có dòng "Đang phát triển") |
-| `/settings` | `settings` | Cài đặt — hồ sơ, danh sách mood, danh sách tag chi tiêu, bật/tắt module (điều khiển sidebar + Tổng quan), xuất/nhập dữ liệu (JSON), đồng bộ 2 chiều qua cloud, xoá toàn bộ dữ liệu, tự động backup nền (đang tạm ngưng) |
+| `/settings` | `settings` | Cài đặt — hồ sơ, danh sách mood, danh sách tag chi tiêu, bật/tắt module (điều khiển sidebar + Tổng quan), xuất/nhập dữ liệu (JSON), đồng bộ 2 chiều qua cloud (bấm tay "Tải lên"/"Tải xuống"), xoá toàn bộ dữ liệu |
 | _(modal, không có route)_ | `calc` | Máy tính bỏ túi — mở từ sidebar, gõ biểu thức trực tiếp (sanitize trước khi `Function()` eval), xem trước kết quả, lưu 4 phép tính gần nhất |
 | `/login` | `login` | Đăng nhập mock (so khớp tài khoản hardcode trong `src/lib/mock-account.ts`, không có backend thật) — khoá 10 phút sau 5 lần sai (`useAttemptLockout`), bảo vệ toàn app qua `AuthGuard` |
 

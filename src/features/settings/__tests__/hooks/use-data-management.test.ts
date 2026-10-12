@@ -267,6 +267,17 @@ describe("useDataManagement", () => {
     expect(window.localStorage.getItem("sync-secret")).toBeNull()
   })
 
+  it("wipeData also clears the leftover status of the removed auto-backup feature", () => {
+    window.localStorage.setItem("auto-backup-status", JSON.stringify({ lastSyncedAt: null, lastError: "Sai secret đồng bộ." }))
+    const { result } = renderDataManagement()
+
+    act(() => {
+      result.current.wipeData()
+    })
+
+    expect(window.localStorage.getItem("auto-backup-status")).toBeNull()
+  })
+
   it("pushToCloud sends a snapshot of every feature's storage and reports the result", async () => {
     setStoredJournal({
       entries: [{ id: 1, text: "Bài 1", time: "09:00", date: "10/08", words: 2, mood: null }],
