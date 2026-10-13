@@ -69,8 +69,8 @@ src/
 ├── lib/                   # helper + data layer dùng chung ≥ 2 feature (finance/, budget/, goals/, journal/, study/, net-worth/, settings/) — xem bảng ở mục Component hiện có
 └── test/                  # setup file cho Vitest
 
-content/                   # vocabulary.jsonl (380 từ, 333 từ đầu đã có ảnh minh hoạ), grammar.jsonl — dữ liệu học tập, không phải code
-public/assets/             # logo, app-icon, avatar, icons/ (12 icon module dùng ở goals/overview...), vocab/ (333 ảnh minh hoạ từ vựng)
+content/                   # vocabulary.jsonl (380 từ, mỗi từ đã có ảnh minh hoạ), grammar.jsonl — dữ liệu học tập, không phải code
+public/assets/             # logo, app-icon, avatar, icons/ (12 icon module dùng ở goals/overview...), vocab/ (380 ảnh minh hoạ từ vựng)
 ```
 
 ## Tính năng
