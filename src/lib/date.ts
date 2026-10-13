@@ -69,6 +69,21 @@ function daysInMonth(month: string): number {
   return new Date(y, m, 0).getDate()
 }
 
+// Ngày người dùng gõ tay (d/m/yyyy, dd-mm-yyyy, dd.mm.yyyy hoặc yyyy-mm-dd) → dayKey, ngày không tồn tại
+// (31/04, 29/02 năm thường) hay năm < 1000 → null.
+function parseDayInput(text: string): string | null {
+  const value = text.trim()
+  const dmy = /^(\d{1,2})([/.-])(\d{1,2})\2(\d{4})$/.exec(value)
+  const ymd = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(value)
+  const parts = dmy ? [dmy[1], dmy[3], dmy[4]] : ymd ? [ymd[3], ymd[2], ymd[1]] : null
+  if (!parts) return null
+  const [day, month, year] = parts.map(Number)
+  if (year < 1000) return null
+  const date = new Date(year, month - 1, day)
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null
+  return dayKey(date)
+}
+
 function daysBetween(from: string, to: string): number {
   const [y1, m1, d1] = from.split("-").map(Number)
   const [y2, m2, d2] = to.split("-").map(Number)
@@ -89,6 +104,7 @@ export {
   monthKeyFromDayKey,
   monthsFrom,
   monthsThroughYearEnd,
+  parseDayInput,
   shiftDay,
   shiftMonth,
 }
