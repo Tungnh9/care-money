@@ -38,4 +38,10 @@ describe("TaskItem", () => {
 
     expect(screen.getByRole("checkbox", { name: "Đọc 10 trang" })).toBeChecked()
   })
+
+  it("wraps a long unbroken label (a URL, a ticket path) inside the row instead of widening the page", () => {
+    render(<TaskItem label="https://example.com/a/very/long/path/without/any/spaces" onToggle={vi.fn()} />)
+
+    expect(screen.getByText("https://example.com/a/very/long/path/without/any/spaces")).toHaveClass("min-w-0", "wrap-anywhere")
+  })
 })

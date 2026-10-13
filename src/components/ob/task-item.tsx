@@ -36,7 +36,9 @@ function TaskItem({ label, done, onToggle, className }: TaskItemProps) {
       >
         {done ? "✓" : ""}
       </span>
-      <span className={done ? "line-through" : ""}>{label}</span>
+      {/* min-w-0 + wrap-anywhere: nhãn dài liền mạch (URL, mã ticket) xuống dòng trong hàng, không đẩy trang
+          rộng ra ở máy 320px. */}
+      <span className={cn("min-w-0 wrap-anywhere", done && "line-through")}>{label}</span>
     </label>
   )
 }

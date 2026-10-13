@@ -6,6 +6,8 @@ import { DEFAULT_STUDY_STATE } from "@/lib/study/study-storage"
 import { DEFAULT_BUDGET_STATE } from "@/lib/budget/budget-storage"
 import { DEFAULT_NET_WORTH_HISTORY } from "@/lib/net-worth/net-worth-history-storage"
 import { DEFAULT_SETTINGS } from "@/lib/settings/settings-storage"
+import { DEFAULT_COLUMNS } from "@/lib/work/board"
+import { DEFAULT_WORK_STATE } from "@/lib/work/work-storage"
 import {
   EXPORT_VERSION,
   buildExportPayload,
@@ -24,6 +26,7 @@ describe("buildExportPayload", () => {
         settings: DEFAULT_SETTINGS,
         budget: DEFAULT_BUDGET_STATE,
         netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
+        work: DEFAULT_WORK_STATE,
         goals: { carFundName: "Quỹ mua xe" },
       },
       "2026-08-14T09:00:00.000Z"
@@ -73,6 +76,7 @@ describe("parseImportPayload", () => {
       expect(result.data.settings).toEqual(DEFAULT_SETTINGS)
       expect(result.data.budget).toEqual(DEFAULT_BUDGET_STATE)
       expect(result.data.netWorthHistory).toEqual(DEFAULT_NET_WORTH_HISTORY)
+      expect(result.data.work).toEqual(DEFAULT_WORK_STATE)
       expect(result.data.goals).toBeUndefined()
     }
   })
@@ -465,8 +469,56 @@ describe("parseImportPayload", () => {
   })
 })
 
+describe("parseImportPayload — work", () => {
+  const TASK = {
+    id: 1,
+    title: "Gửi báo cáo",
+    dueDate: "2026-10-13",
+    priority: "high",
+    done: false,
+    doneAt: null,
+    createdAt: "2026-10-12",
+  }
+
+  it("restores the board's columns, tasks and standups from the file", () => {
+    const columns = [{ id: 1, title: "Việc mới" }, { id: 7, title: "Xong" }]
+    const done = { ...TASK, id: 2, columnId: 7, done: true, doneAt: "2026-10-13" }
+    const standup = { day: "2026-10-13", yesterday: "- A", today: "- B", blockers: "" }
+    const work = { columns, tasks: [{ ...TASK, columnId: 1 }, done], standups: [standup] }
+    const result = parseImportPayload(JSON.stringify({ version: EXPORT_VERSION, work }))
+
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(result.data.work).toEqual(work)
+  })
+
+  it("puts tasks from a file saved before the board existed onto the default columns", () => {
+    const finished = { ...TASK, id: 2, done: true, doneAt: "2026-10-12" }
+    const result = parseImportPayload(JSON.stringify({ version: EXPORT_VERSION, work: { tasks: [TASK, finished], standups: [] } }))
+
+    expect(result.ok).toBe(true)
+    if (result.ok)
+      expect(result.data.work).toEqual({
+        columns: DEFAULT_COLUMNS,
+        tasks: [
+          { ...TASK, columnId: 1 },
+          { ...finished, columnId: 3 },
+        ],
+        standups: [],
+      })
+  })
+
+  it("drops only the broken task, keeping the valid ones", () => {
+    const result = parseImportPayload(
+      JSON.stringify({ version: EXPORT_VERSION, work: { tasks: [TASK, { id: 2, title: "Hỏng" }], standups: "x" } })
+    )
+
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(result.data.work).toEqual({ columns: DEFAULT_COLUMNS, tasks: [{ ...TASK, columnId: 1 }], standups: [] })
+  })
+})
+
 describe("restoreCounts", () => {
-  it("lists journal entries, expenses, savings funds, gold purchases and learned words", () => {
+  it("lists journal entries, expenses, savings funds, gold purchases, learned words and work tasks", () => {
     const result = parseImportPayload(
       JSON.stringify({
         version: EXPORT_VERSION,
@@ -485,7 +537,7 @@ describe("restoreCounts", () => {
     expect(result.ok).toBe(true)
     if (result.ok) {
       expect(restoreCounts(result.data)).toBe(
-        "1 bài nhật ký · 2 khoản chi · 1 quỹ tiết kiệm · 0 lần mua vàng · 3 từ đã học"
+        "1 bài nhật ký · 2 khoản chi · 1 quỹ tiết kiệm · 0 lần mua vàng · 3 từ đã học · 0 việc"
       )
     }
   })

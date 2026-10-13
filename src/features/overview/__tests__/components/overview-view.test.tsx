@@ -5,6 +5,7 @@ import { DEFAULT_SETTINGS, setStoredSettings } from "@/lib/settings/settings-sto
 import { DEFAULT_FINANCE_STATE, setStoredFinance } from "@/lib/finance/finance-storage"
 import { setCarGoalFundName } from "@/lib/goals/car-goal-storage"
 import { DEFAULT_BUDGET_STATE, setStoredBudget } from "@/lib/budget/budget-storage"
+import { DEFAULT_WORK_STATE, getStoredWork, setStoredWork } from "@/lib/work/work-storage"
 import { formatMoney } from "@/lib/format"
 import type { GrammarEntry, VocabEntry } from "@/lib/study/types"
 import { OverviewView } from "../../components/overview-view"
@@ -73,6 +74,35 @@ describe("OverviewView", () => {
 
     await waitFor(() => expect(screen.getByText("Tài chính")).toBeInTheDocument())
     expect(screen.queryByText("Chi tiêu tháng này")).not.toBeInTheDocument()
+  })
+
+  it("shows today's work tasks and ticks one through useWork()", async () => {
+    setStoredWork({
+      ...DEFAULT_WORK_STATE,
+      tasks: [
+        { id: 1, title: "Gửi báo cáo", dueDate: "2026-08-14", priority: "high", columnId: 1, done: false, doneAt: null, createdAt: "2026-08-13" },
+      ],
+    })
+
+    render(<OverviewView vocab={VOCAB} grammar={GRAMMAR} />)
+
+    const checkbox = await screen.findByRole("checkbox", { name: "Gửi báo cáo" })
+    expect(screen.getByText("Việc hôm nay")).toBeInTheDocument()
+    fireEvent.click(checkbox)
+
+    await waitFor(() => expect(getStoredWork().tasks[0]).toMatchObject({ columnId: 3, done: true, doneAt: "2026-08-14" }))
+  })
+
+  it("hides the work section when the lamviec module is turned off", async () => {
+    setStoredSettings({
+      ...DEFAULT_SETTINGS,
+      modules: DEFAULT_SETTINGS.modules.map((m) => (m.key === "lamviec" ? { ...m, on: false } : m)),
+    })
+
+    render(<OverviewView vocab={VOCAB} grammar={GRAMMAR} />)
+
+    await waitFor(() => expect(screen.getByText("Tài chính")).toBeInTheDocument())
+    expect(screen.queryByText("Việc hôm nay")).not.toBeInTheDocument()
   })
 
   it("ticks the real task through useStudy(), not a mock", async () => {

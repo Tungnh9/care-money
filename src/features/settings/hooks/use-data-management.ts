@@ -20,6 +20,7 @@ import {
 import { CAR_GOAL_FUND_KEY, getCarGoalFundName, setCarGoalFundName } from "@/lib/goals/car-goal-storage"
 import { notifyDataChanged } from "@/lib/data-change-bus"
 import { SETTINGS_STORAGE_KEY, getStoredSettings, type AppSettings } from "@/lib/settings/settings-storage"
+import { DEFAULT_WORK_STATE, WORK_STORAGE_KEY, getStoredWork, type WorkState } from "@/lib/work/work-storage"
 import { clearSyncSecret } from "@/lib/sync-secret-storage"
 import { pushSnapshot, pullSnapshot } from "../api"
 import {
@@ -57,6 +58,7 @@ interface UseDataManagementOptions {
   onReplaceSettings: (settings: AppSettings) => void
   onReplaceBudget: (budget: BudgetState) => void
   onReplaceNetWorthHistory: (history: NetWorthHistory) => void
+  onReplaceWork: (work: WorkState) => void
 }
 
 // Mọi key mà 1 lần nạp bản sao ghi đè — chụp lại chuỗi thô trước khi ghi để trả về nguyên trạng
@@ -69,6 +71,7 @@ const RESTORE_KEYS = [
   SETTINGS_STORAGE_KEY,
   BUDGET_STORAGE_KEY,
   NET_WORTH_HISTORY_KEY,
+  WORK_STORAGE_KEY,
   CAR_GOAL_FUND_KEY,
 ]
 
@@ -109,6 +112,7 @@ function readLocalSnapshot(): ExportSnapshot {
     settings: getStoredSettings(),
     budget: getStoredBudget(),
     netWorthHistory: getStoredNetWorthHistory(),
+    work: getStoredWork(),
     goals: { carFundName: getCarGoalFundName() },
   }
 }
@@ -130,6 +134,7 @@ function useDataManagement({
   onReplaceSettings,
   onReplaceBudget,
   onReplaceNetWorthHistory,
+  onReplaceWork,
 }: UseDataManagementOptions) {
   const [exported, setExported] = useState<ExportedInfo | null>(null)
   const [imported, setImported] = useState<ImportedInfo | null>(null)
@@ -146,6 +151,7 @@ function useDataManagement({
         onReplaceStudy(data.study)
         onReplaceSettings(data.settings)
         onReplaceBudget(data.budget)
+        onReplaceWork(data.work)
         onReplaceNetWorthHistory(data.netWorthHistory)
         if (data.goals) setCarGoalFundName(data.goals.carFundName)
       } catch (error) {
@@ -153,7 +159,15 @@ function useDataManagement({
         throw error
       }
     },
-    [onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceSettings, onReplaceBudget, onReplaceNetWorthHistory]
+    [
+      onReplaceJournal,
+      onReplaceFinance,
+      onReplaceStudy,
+      onReplaceSettings,
+      onReplaceBudget,
+      onReplaceNetWorthHistory,
+      onReplaceWork,
+    ]
   )
 
   const pushToCloud = useCallback(async (secret: string) => {
@@ -254,6 +268,7 @@ function useDataManagement({
     onReplaceStudy(DEFAULT_STUDY_STATE)
     onReplaceBudget(DEFAULT_BUDGET_STATE)
     onReplaceNetWorthHistory(DEFAULT_NET_WORTH_HISTORY)
+    onReplaceWork(DEFAULT_WORK_STATE)
     setCarGoalFundName(null)
     // "Làm lại từ đầu" trên máy này — không giữ lại credential đồng bộ.
     clearSyncSecret()
@@ -262,7 +277,7 @@ function useDataManagement({
     setExported(null)
     setImported(null)
     setSyncResult(null)
-  }, [onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceBudget, onReplaceNetWorthHistory])
+  }, [onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceBudget, onReplaceNetWorthHistory, onReplaceWork])
 
   return {
     exported,

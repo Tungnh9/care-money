@@ -13,6 +13,7 @@ import { useStudy } from "@/lib/study/use-study"
 import { ensureReviewStates, getDueWords } from "@/lib/study/srs-calculations"
 import type { GrammarEntry, VocabEntry } from "@/lib/study/types"
 import { useSettings } from "@/lib/settings/use-settings"
+import { useWork } from "@/lib/work/use-work"
 import { Monkey } from "@/components/ob/monkey"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { dayKey, longDate, monthKey } from "@/lib/date"
@@ -33,6 +34,7 @@ import { InsightsSection } from "./insights-section"
 import { JournalSummarySection } from "./journal-summary-section"
 import { SectionHead } from "./section-head"
 import { StudySummarySection } from "./study-summary-section"
+import { WorkSummarySection } from "./work-summary-section"
 
 interface OverviewViewProps {
   vocab: VocabEntry[]
@@ -47,6 +49,7 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
   const { salaries, expenses, settlements } = useBudget()
   const { tasks, toggleTask, learned, wordReviews } = useStudy()
   const { fundName } = useCarGoalFund()
+  const { tasks: workTasks, toggleTask: toggleWorkTask } = useWork()
 
   function enabled(key: string): boolean {
     return settings.modules.find((m) => m.key === key)?.on ?? true
@@ -172,6 +175,13 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
             learned={learned}
             dueWords={dueWords}
           />
+        </>
+      ) : null}
+
+      {enabled("lamviec") ? (
+        <>
+          <SectionHead icon="check" title="Làm việc" href="/work" />
+          <WorkSummarySection tasks={workTasks} today={today} onToggleTask={toggleWorkTask} />
         </>
       ) : null}
 

@@ -10,6 +10,7 @@ import {
   formatShortDate,
   monthKey,
   monthKeyFromDayKey,
+  parseDayInput,
   monthsFrom,
   monthsThroughYearEnd,
   shiftDay,
@@ -165,5 +166,30 @@ describe("formatShortDate", () => {
   it("adds the year for a date in another year", () => {
     expect(formatShortDate(new Date(2025, 8, 29, 8, 30), now)).toBe("29/09/2025")
     expect(formatShortDate(new Date(2027, 0, 5), now)).toBe("05/01/2027")
+  })
+})
+
+describe("parseDayInput", () => {
+  it("reads dd/mm/yyyy, dd-mm-yyyy, dd.mm.yyyy and yyyy-mm-dd into a dayKey", () => {
+    expect(parseDayInput("13/10/2026")).toBe("2026-10-13")
+    expect(parseDayInput("3/1/2026")).toBe("2026-01-03")
+    expect(parseDayInput("03-01-2026")).toBe("2026-01-03")
+    expect(parseDayInput("03.01.2026")).toBe("2026-01-03")
+    expect(parseDayInput("2026-01-03")).toBe("2026-01-03")
+    expect(parseDayInput("  13/10/2026  ")).toBe("2026-10-13")
+  })
+
+  it("rejects dates that do not exist, mixed separators and other text", () => {
+    expect(parseDayInput("31/04/2026")).toBeNull()
+    expect(parseDayInput("29/02/2026")).toBeNull()
+    expect(parseDayInput("13/10-2026")).toBeNull()
+    expect(parseDayInput("13/10")).toBeNull()
+    expect(parseDayInput("01/01/0999")).toBeNull()
+    expect(parseDayInput("hôm nay")).toBeNull()
+    expect(parseDayInput("")).toBeNull()
+  })
+
+  it("accepts 29/02 in a leap year", () => {
+    expect(parseDayInput("29/02/2028")).toBe("2028-02-29")
   })
 })
