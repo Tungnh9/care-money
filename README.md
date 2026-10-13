@@ -31,6 +31,7 @@ Tính năng đồng bộ dữ liệu qua nhiều máy (`/api/sync`, backend Verc
 | State | Zustand (`useSettings`) + `useState` đọc/ghi localStorage riêng từng feature (finance, budget, journal, study, goals) |
 | UI primitive | `@base-ui/react`, custom qua CVA (`class-variance-authority`) để khớp token `--ob-*` |
 | Biểu đồ | ApexCharts (`apexcharts` + `react-apexcharts`) — dùng ở trang Chi tiêu |
+| Kéo thả | dnd-kit (`@dnd-kit/core` + `@dnd-kit/sortable`) — bảng Kanban trang Làm việc |
 | Rich text / an toàn | `dompurify` — sanitize nội dung nhật ký (HTML do người dùng nhập) |
 | Thông báo / icon | `sonner` (toast), `lucide-react` (icon) |
 | Backend đồng bộ | `@vercel/blob` — lưu 1 file snapshot JSON cho `/api/sync` |
@@ -56,13 +57,13 @@ src/
 │       ├── journal/page.tsx    # "/journal"  — Nhật ký
 │       ├── study/page.tsx      # "/study"    — Học tập
 │       ├── goals/page.tsx      # "/goals"    — Mục tiêu
-│       ├── work/page.tsx       # "/work"     — Làm việc (đang phát triển)
+│       ├── work/page.tsx       # "/work"     — Làm việc (bảng Kanban, standup, báo cáo tuần)
 │       └── settings/page.tsx   # "/settings" — Cài đặt
 ├── features/             # business logic theo feature — xem CLAUDE.md mục Feature Rules
 │                          # 10 feature hiện có: overview, finance, budget, journal, study, goals, work, settings, login, calc
 │                          # (xem mục Tính năng dưới để biết mỗi feature làm gì)
 ├── components/
-│   ├── ui/                # 12 component nền shadcn/ui + @base-ui/react, custom theo token --ob-*
+│   ├── ui/                # 14 component nền shadcn/ui + @base-ui/react, custom theo token --ob-*
 │   ├── ob/                 # 15 component riêng Orange Banana (mascot Monkey, Streak, FundPicker, GrammarHighlightCard...)
 │   ├── auth-guard.tsx      # bọc root layout, check localStorage, đẩy về /login nếu chưa đăng nhập
 │   └── money-visibility-provider.tsx  # context "ẩn số tiền", bọc trong layout (app)
@@ -83,7 +84,7 @@ public/assets/             # logo, app-icon, avatar, icons/ (12 icon module dùn
 | `/journal` | `journal` | Nhật ký — ghi chú rich-text hàng ngày (sanitize qua `dompurify`) kèm mood (danh sách mood tuỳ biến ở Cài đặt), có card "On this day" gợi lại bài viết cùng ngày các năm trước |
 | `/study` | `study` | Học tập — 4 tab: **Hôm nay** (task hàng ngày + Pomodoro + pick ngẫu nhiên-nhưng-cố-định-theo-ngày 5 từ vựng/1 điểm ngữ pháp) · **Từ vựng** · **Ngữ pháp** (2 tab sau đọc từ `content/*.jsonl`) · **Trò chơi** (3 mini-game ôn từ vựng — xem chi tiết bên dưới) |
 | `/goals` | `goals` | Mục tiêu — 3 mục tiêu tính từ dữ liệu Tài chính thật, riêng mục "mua xe" có thể gắn thủ công vào 1 quỹ tiết kiệm cụ thể |
-| `/work` | `work` | Làm việc — trang chứa các công cụ làm việc, hiện đang phát triển (chỉ có dòng "Đang phát triển") |
+| `/work` | `work` | Làm việc — 3 tab: **Việc cần làm** (bảng Kanban kiểu Trello: cột tuỳ biến — mặc định Bắt đầu / Đang làm / Hoàn thành, đổi tên/thêm/xoá/đổi chỗ được, cột cuối luôn là cột "đã xong"; kéo thả thẻ giữa các cột và trong cột, hoặc chọn "Chuyển sang…"; "+ Thêm thẻ" cuối mỗi cột; bấm thẻ để sửa hạn, ưu tiên Cao/Thường/Thấp, xoá) · **Standup** (Hôm qua / Hôm nay / Vướng mắc, tự điền gợi ý từ danh sách việc, nút Copy) · **Báo cáo tuần** (việc đã xong, việc còn dở, vướng mắc, nút Copy). Thẻ "Việc hôm nay" ở Tổng quan |
 | `/settings` | `settings` | Cài đặt — hồ sơ, danh sách mood, danh sách tag chi tiêu, bật/tắt module (điều khiển sidebar + Tổng quan), xuất/nhập dữ liệu (JSON), đồng bộ 2 chiều qua cloud (bấm tay "Tải lên"/"Tải xuống"), xoá toàn bộ dữ liệu |
 | _(modal, không có route)_ | `calc` | Máy tính bỏ túi — mở từ sidebar, gõ biểu thức trực tiếp (sanitize trước khi `Function()` eval), xem trước kết quả, lưu 4 phép tính gần nhất |
 | `/login` | `login` | Đăng nhập mock (so khớp tài khoản hardcode trong `src/lib/mock-account.ts`, không có backend thật) — khoá 10 phút sau 5 lần sai (`useAttemptLockout`), bảo vệ toàn app qua `AuthGuard` |
@@ -102,18 +103,20 @@ Tab "Trò chơi" gồm 3 mini-game ôn từ vựng, dùng chung 1 khung điều 
 
 ## Component hiện có
 
-### `components/ui/` (12 file) — nền shadcn/ui + `@base-ui/react`, custom theo token `--ob-*`
+### `components/ui/` (14 file) — nền shadcn/ui + `@base-ui/react`, custom theo token `--ob-*`
 
 | Component | Props chính |
 | --- | --- |
 | `AlertDialog` | `open` · `onOpenChange` · `title` · `description` · `confirmLabel` · `cancelLabel` · `onConfirm` · `destructive` |
 | `Button` | `variant` primary/secondary/reward/ghost/**outline** · `size` sm/md/lg · `fullWidth` |
 | `Card` | `tone` plain/invert/reward/soft · `label` · `action` · `elevated` |
+| `DropdownMenu` | `DropdownMenuTrigger` · `DropdownMenuContent` (`align`, `side` — portal, không bị khung cuộn cắt) · `DropdownMenuLabel` · `DropdownMenuItem` · `DropdownMenuRadioGroup` (`value`, `onValueChange`) + `DropdownMenuRadioItem` (`closeOnClick`) — menu `@base-ui/react`, dùng cho nút "Chuyển" trên thẻ Kanban |
 | `Field` | `label` · `hint` · `prefix` · `suffix` · `numeric` · `group` (format số kiểu `vi-VN`) · `invalid` |
 | `Modal` | `open` · `onOpenChange` · `role` dialog/alertdialog · `ariaLabelledBy`/`ariaLabel` · `panelClassName` — portal, focus trap, khoá scroll, nền cho `AlertDialog` và mọi modal chỉnh sửa trong các feature |
 | `Progress` | `value` · `track` · `tone` reward/action/expense · `label` · `hint` |
 | `Switch` | `label` · `hint` · `checked` · `onCheckedChange` · `disabled` |
 | `Tag` | `module` taichinh/hoctap/ghichu/tamtrang/muctieu/kehoach |
+| `Textarea` | `label` · `hint` (nối bằng `aria-describedby`) · `rows` · props của `<textarea>` — ô nhiều dòng cùng khung với `Field` |
 | `Toaster` (sonner) | wrapper `sonner`, theme + icon + màu đã khớp token `--ob-*` |
 | `Checkbox`, `Input`, `Label` | primitive gốc shadcn/`@base-ui/react` — dùng làm nền cho các component trên, ít khi gọi trực tiếp |
 
@@ -150,7 +153,7 @@ Tab "Trò chơi" gồm 3 mini-game ôn từ vựng, dùng chung 1 khung điều 
 
 | File | Vai trò |
 | --- | --- |
-| `finance/` · `budget/` · `goals/` · `journal/` · `study/` · `net-worth/` · `settings/` | Data layer của từng domain mà ≥ 2 feature cùng đọc/ghi: `types.ts`, `*-storage.ts` (đọc/ghi localStorage + hàm `parse*`), `*-calculations.ts` (hàm thuần), hook `use-*.ts`. `settings/` gồm `settings-storage.ts` (`AppSettings` + default `DEFAULT_SETTINGS`/`DEFAULT_MODULES`/`DEFAULT_TAGS`, `TINT_PALETTE`/`EMOJI_PICKER`), `use-settings.ts`, `greeting.ts` (`splitGreeting`); `study/` có thêm `content-loader.ts` (đọc `content/*.jsonl`, chỉ dùng phía server) |
+| `finance/` · `budget/` · `goals/` · `journal/` · `study/` · `net-worth/` · `settings/` · `work/` | Data layer của từng domain mà ≥ 2 feature cùng đọc/ghi: `types.ts`, `*-storage.ts` (đọc/ghi localStorage + hàm `parse*`), `*-calculations.ts` (hàm thuần), hook `use-*.ts`. `settings/` gồm `settings-storage.ts` (`AppSettings` + default `DEFAULT_SETTINGS`/`DEFAULT_MODULES`/`DEFAULT_TAGS`, `TINT_PALETTE`/`EMOJI_PICKER`), `use-settings.ts`, `greeting.ts` (`splitGreeting`); `study/` có thêm `content-loader.ts` (đọc `content/*.jsonl`, chỉ dùng phía server) |
 | `auth.ts` | Auth mock qua localStorage: `getStoredUser` · `setStoredUser` · `clearStoredUser` |
 | `data-change-bus.ts` | Pub/sub nhỏ (`notifyDataChanged` · `onDataChanged`) báo hiệu dữ liệu vừa đổi giữa các component không liên quan trực tiếp |
 | `data-transfer.ts` | Định dạng bản sao xuất/nhập/đồng bộ: `buildExportPayload` · `parseImportPayload` · `exportFileName` · `uploadedSummary` · `EXPORT_VERSION` — dùng bởi Cài đặt và route `/api/sync` |
