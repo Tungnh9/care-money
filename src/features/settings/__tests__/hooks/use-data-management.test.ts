@@ -11,6 +11,8 @@ import {
 import { DEFAULT_STUDY_STATE, STUDY_STORAGE_KEY } from "@/lib/study/study-storage"
 import { BUDGET_STORAGE_KEY, DEFAULT_BUDGET_STATE } from "@/lib/budget/budget-storage"
 import { DEFAULT_NET_WORTH_HISTORY, NET_WORTH_HISTORY_KEY } from "@/lib/net-worth/net-worth-history-storage"
+import { DEFAULT_WORK_STATE, WORK_STORAGE_KEY } from "@/lib/work/work-storage"
+import type { WorkState } from "@/lib/work/types"
 import { onDataChanged } from "@/lib/data-change-bus"
 import { DEFAULT_SETTINGS, SETTINGS_STORAGE_KEY } from "@/lib/settings/settings-storage"
 import { setSyncSecret } from "@/lib/sync-secret-storage"
@@ -28,6 +30,17 @@ import { pushSnapshot, pullSnapshot } from "../../api"
 const WRITE_FAILED =
   "Không ghi được dữ liệu vào máy (bộ nhớ trình duyệt có thể đã đầy). Dữ liệu trên máy vẫn giữ nguyên như trước."
 
+const RESTORED_WORK: WorkState = {
+  columns: [
+    { id: 1, title: "Việc mới" },
+    { id: 2, title: "Xong" },
+  ],
+  tasks: [
+    { id: 1, title: "Gửi báo cáo", dueDate: "2026-10-13", priority: "high", columnId: 1, done: false, doneAt: null, createdAt: "2026-10-12" },
+  ],
+  standups: [],
+}
+
 const LOCAL_JOURNAL = {
   entries: [{ id: 9, text: "Bài trên máy", time: "08:00", date: "01/08", words: 3, mood: null }],
 }
@@ -39,6 +52,7 @@ function renderDataManagement() {
   const onReplaceSettings = vi.fn()
   const onReplaceBudget = vi.fn()
   const onReplaceNetWorthHistory = vi.fn()
+  const onReplaceWork = vi.fn()
   const { result } = renderHook(() =>
     useDataManagement({
       onReplaceJournal,
@@ -47,6 +61,7 @@ function renderDataManagement() {
       onReplaceSettings,
       onReplaceBudget,
       onReplaceNetWorthHistory,
+      onReplaceWork,
     })
   )
   return {
@@ -57,6 +72,7 @@ function renderDataManagement() {
     onReplaceSettings,
     onReplaceBudget,
     onReplaceNetWorthHistory,
+    onReplaceWork,
   }
 }
 
@@ -114,6 +130,7 @@ describe("useDataManagement", () => {
       onReplaceSettings,
       onReplaceBudget,
       onReplaceNetWorthHistory,
+      onReplaceWork,
     } = renderDataManagement()
 
     const journal = {
@@ -132,6 +149,7 @@ describe("useDataManagement", () => {
       settings,
       budget,
       netWorthHistory,
+      work: RESTORED_WORK,
     }
     const file = new File([JSON.stringify(payload)], "backup.json", { type: "application/json" })
 
@@ -145,8 +163,8 @@ describe("useDataManagement", () => {
       source: "file",
       fileName: "backup.json",
       exportedAt: "2026-09-20T02:00:00.000Z",
-      incomingCounts: "1 bài nhật ký · 0 khoản chi · 1 quỹ tiết kiệm · 0 lần mua vàng · 0 từ đã học",
-      localCounts: "1 bài nhật ký · 0 khoản chi · 0 quỹ tiết kiệm · 0 lần mua vàng · 0 từ đã học",
+      incomingCounts: "1 bài nhật ký · 0 khoản chi · 1 quỹ tiết kiệm · 0 lần mua vàng · 0 từ đã học · 1 việc",
+      localCounts: "1 bài nhật ký · 0 khoản chi · 0 quỹ tiết kiệm · 0 lần mua vàng · 0 từ đã học · 0 việc",
     })
 
     act(() => {
@@ -159,6 +177,7 @@ describe("useDataManagement", () => {
     expect(onReplaceSettings).toHaveBeenCalledWith(settings)
     expect(onReplaceBudget).toHaveBeenCalledWith(budget)
     expect(onReplaceNetWorthHistory).toHaveBeenCalledWith(netWorthHistory)
+    expect(onReplaceWork).toHaveBeenCalledWith(RESTORED_WORK)
     expect(result.current.pendingRestore).toBeNull()
     expect(result.current.imported).toEqual({
       ok: true,
@@ -192,6 +211,7 @@ describe("useDataManagement", () => {
       onReplaceSettings,
       onReplaceBudget,
       onReplaceNetWorthHistory,
+      onReplaceWork,
     } = renderDataManagement()
 
     const file = new File(["not json"], "bad.json", { type: "application/json" })
@@ -206,6 +226,7 @@ describe("useDataManagement", () => {
     expect(onReplaceSettings).not.toHaveBeenCalled()
     expect(onReplaceBudget).not.toHaveBeenCalled()
     expect(onReplaceNetWorthHistory).not.toHaveBeenCalled()
+    expect(onReplaceWork).not.toHaveBeenCalled()
   })
 
   it("importData clears an old result banner as soon as a new file is staged", async () => {
@@ -236,7 +257,7 @@ describe("useDataManagement", () => {
 
   it("wipeData replaces journal/finance/study/budget/net-worth-history with empty defaults but keeps the gold stores", () => {
     setStoredFinance({ ...DEFAULT_FINANCE_STATE, goldStores: [{ name: "SJC", price: "935.000" }] })
-    const { result, onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceBudget, onReplaceNetWorthHistory } =
+    const { result, onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceBudget, onReplaceNetWorthHistory, onReplaceWork } =
       renderDataManagement()
 
     act(() => {
@@ -254,6 +275,7 @@ describe("useDataManagement", () => {
     expect(onReplaceStudy).toHaveBeenCalledWith(DEFAULT_STUDY_STATE)
     expect(onReplaceBudget).toHaveBeenCalledWith(DEFAULT_BUDGET_STATE)
     expect(onReplaceNetWorthHistory).toHaveBeenCalledWith(DEFAULT_NET_WORTH_HISTORY)
+    expect(onReplaceWork).toHaveBeenCalledWith(DEFAULT_WORK_STATE)
   })
 
   it("wipeData also forgets the sync secret saved on this device", () => {
@@ -299,6 +321,7 @@ describe("useDataManagement", () => {
         settings: DEFAULT_SETTINGS,
         budget: DEFAULT_BUDGET_STATE,
         netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
+        work: DEFAULT_WORK_STATE,
         goals: { carFundName: null },
       })
     )
@@ -357,6 +380,7 @@ describe("useDataManagement", () => {
       onReplaceSettings,
       onReplaceBudget,
       onReplaceNetWorthHistory,
+      onReplaceWork,
     } = renderDataManagement()
 
     const journal = {
@@ -373,6 +397,7 @@ describe("useDataManagement", () => {
         settings: DEFAULT_SETTINGS,
         budget,
         netWorthHistory,
+        work: RESTORED_WORK,
       },
       summary: "5 bài nhật ký",
       exportedAt: "2026-09-20T02:00:00.000Z",
@@ -397,6 +422,7 @@ describe("useDataManagement", () => {
     expect(onReplaceSettings).toHaveBeenCalledWith(DEFAULT_SETTINGS)
     expect(onReplaceBudget).toHaveBeenCalledWith(budget)
     expect(onReplaceNetWorthHistory).toHaveBeenCalledWith(netWorthHistory)
+    expect(onReplaceWork).toHaveBeenCalledWith(RESTORED_WORK)
     expect(result.current.syncResult).toEqual({ ok: true, summary: "5 bài nhật ký" })
   })
 
@@ -412,6 +438,7 @@ describe("useDataManagement", () => {
         onReplaceSettings: vi.fn(),
         onReplaceBudget: vi.fn(),
         onReplaceNetWorthHistory: vi.fn(),
+        onReplaceWork: vi.fn(),
       })
     )
 
@@ -430,6 +457,7 @@ describe("useDataManagement", () => {
           settings: DEFAULT_SETTINGS,
           budget: DEFAULT_BUDGET_STATE,
           netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
+          work: DEFAULT_WORK_STATE,
         },
         summary: "ok",
         exportedAt: null,
@@ -449,6 +477,7 @@ describe("useDataManagement", () => {
       onReplaceSettings,
       onReplaceBudget,
       onReplaceNetWorthHistory,
+      onReplaceWork,
     } = renderDataManagement()
     vi.mocked(pullSnapshot).mockResolvedValue({ ok: false, error: "Sai secret đồng bộ." })
 
@@ -463,6 +492,7 @@ describe("useDataManagement", () => {
     expect(onReplaceSettings).not.toHaveBeenCalled()
     expect(onReplaceBudget).not.toHaveBeenCalled()
     expect(onReplaceNetWorthHistory).not.toHaveBeenCalled()
+    expect(onReplaceWork).not.toHaveBeenCalled()
   })
 
   it("pullFromCloud clears an old sync result as soon as a new pull starts", async () => {
@@ -477,6 +507,7 @@ describe("useDataManagement", () => {
         settings: DEFAULT_SETTINGS,
         budget: DEFAULT_BUDGET_STATE,
         netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
+        work: DEFAULT_WORK_STATE,
       },
       summary: "ok",
       exportedAt: null,
@@ -568,6 +599,7 @@ describe("useDataManagement", () => {
         settings: DEFAULT_SETTINGS,
         budget: DEFAULT_BUDGET_STATE,
         netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
+        work: DEFAULT_WORK_STATE,
       },
       summary: "1 bài nhật ký",
       exportedAt: null,
@@ -589,6 +621,7 @@ describe("useDataManagement", () => {
       [STUDY_STORAGE_KEY]: '{ "seed" :  "study" }',
       [SETTINGS_STORAGE_KEY]: '{ "seed" :  "settings" }',
       [NET_WORTH_HISTORY_KEY]: '{ "seed" :  "net-worth" }',
+      [WORK_STORAGE_KEY]: '{ "seed" :  "work" }',
       [CAR_GOAL_FUND_KEY]: "Quỹ mua xe",
     }
     for (const [key, raw] of Object.entries(seeds)) window.localStorage.setItem(key, raw)
@@ -602,6 +635,7 @@ describe("useDataManagement", () => {
       onReplaceSettings,
       onReplaceBudget,
       onReplaceNetWorthHistory,
+      onReplaceWork,
     } = renderDataManagement()
     // Mỗi onReplace* ghi thẳng 1 chuỗi khác vào key của nó (không qua setStored* nên không notify);
     // net-worth ghi xong mới lỗi, như localStorage hết dung lượng ở lần ghi cuối. Liên kết quỹ mua xe
@@ -612,6 +646,7 @@ describe("useDataManagement", () => {
     onReplaceStudy.mockImplementation(writeOther(STUDY_STORAGE_KEY))
     onReplaceSettings.mockImplementation(writeOther(SETTINGS_STORAGE_KEY))
     onReplaceBudget.mockImplementation(writeOther(BUDGET_STORAGE_KEY))
+    onReplaceWork.mockImplementation(writeOther(WORK_STORAGE_KEY))
     onReplaceNetWorthHistory.mockImplementation(() => {
       writeOther(NET_WORTH_HISTORY_KEY)()
       window.localStorage.setItem(CAR_GOAL_FUND_KEY, "Quỹ đã ghi")
@@ -714,6 +749,7 @@ describe("useDataManagement", () => {
           settings: DEFAULT_SETTINGS,
           budget: DEFAULT_BUDGET_STATE,
           netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
+          work: DEFAULT_WORK_STATE,
           goals: { carFundName: "Quỹ mua xe" },
         },
         summary: "ok",
@@ -737,6 +773,7 @@ describe("useDataManagement", () => {
           settings: DEFAULT_SETTINGS,
           budget: DEFAULT_BUDGET_STATE,
           netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
+          work: DEFAULT_WORK_STATE,
           goals: { carFundName: null },
         },
         summary: "ok",
@@ -760,6 +797,7 @@ describe("useDataManagement", () => {
           settings: DEFAULT_SETTINGS,
           budget: DEFAULT_BUDGET_STATE,
           netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
+          work: DEFAULT_WORK_STATE,
         },
         summary: "ok",
         exportedAt: null,

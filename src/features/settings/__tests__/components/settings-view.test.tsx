@@ -7,6 +7,7 @@ import { setStoredBudget, DEFAULT_BUDGET_STATE } from "@/lib/budget/budget-stora
 import { setStoredNetWorthHistory } from "@/lib/net-worth/net-worth-history-storage"
 import { setStoredStudy, DEFAULT_STUDY_STATE } from "@/lib/study/study-storage"
 import { getStoredSettings } from "@/lib/settings/settings-storage"
+import { DEFAULT_WORK_STATE, setStoredWork } from "@/lib/work/work-storage"
 import { MOCK_ACCOUNT } from "@/lib/mock-account"
 import { EXPORT_VERSION } from "@/lib/data-transfer"
 import { SettingsView } from "../../components/settings-view"
@@ -105,6 +106,24 @@ describe("SettingsView", () => {
     expect(screen.getByText(/tháng lương/)).toHaveTextContent(
       "tiến độ ôn 1 từ, điểm cao mini-game, chuỗi ngày chơi mini-game, 1 tháng lương, 1 lần tất toán, 2 ngày lịch sử tài sản"
     )
+  })
+
+  it("counts work tasks and standups too, since wiping deletes them", async () => {
+    setStoredWork({
+      ...DEFAULT_WORK_STATE,
+      tasks: [
+        { id: 1, title: "A", dueDate: null, priority: "normal", columnId: 1, done: false, doneAt: null, createdAt: "2026-10-12" },
+        { id: 2, title: "B", dueDate: null, priority: "normal", columnId: 3, done: true, doneAt: "2026-10-12", createdAt: "2026-10-12" },
+      ],
+      standups: [{ day: "2026-10-12", yesterday: "", today: "- A", blockers: "" }],
+    })
+
+    render(<SettingsView />)
+    await waitFor(() => expect(screen.getByText("Module hiển thị")).toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole("button", { name: "Xoá toàn bộ dữ liệu" }))
+
+    expect(screen.getByText(/bản standup/)).toHaveTextContent("2 việc, 1 bản standup")
   })
 
   it("restores settings from an imported backup and shows the success banner", async () => {

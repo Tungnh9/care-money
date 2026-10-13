@@ -4,6 +4,7 @@ import { parseStudyState, type StudyState } from "@/lib/study/study-storage"
 import { parseBudgetState, type BudgetState } from "@/lib/budget/budget-storage"
 import { parseNetWorthHistory, type NetWorthHistory } from "@/lib/net-worth/net-worth-history-storage"
 import { parseAppSettings, type AppSettings } from "@/lib/settings/settings-storage"
+import { parseWorkState, type WorkState } from "@/lib/work/work-storage"
 import { dayKey } from "@/lib/date"
 
 const EXPORT_VERSION = 1
@@ -15,6 +16,7 @@ interface ExportSnapshot {
   settings: AppSettings
   budget: BudgetState
   netWorthHistory: NetWorthHistory
+  work: WorkState
   goals: GoalsSnapshot
 }
 
@@ -89,9 +91,12 @@ function parseImportPayload(raw: string): ImportResult {
   // bản nhập vào không reload trang, nên phải sạch ngay trong bộ nhớ chứ không đợi lần đọc sau.
   const settings: AppSettings = parseAppSettings(parsed.settings)
 
+  // Thêm sau (v1 chưa có) — bản sao cũ không có "work" thì về trống, giống budget/netWorthHistory.
+  const work: WorkState = parseWorkState(parsed.work)
+
   const goals = parseGoalsSnapshot(parsed.goals)
 
-  const data: ImportedSnapshot = { journal, finance, study, settings, budget, netWorthHistory, goals }
+  const data: ImportedSnapshot = { journal, finance, study, settings, budget, netWorthHistory, work, goals }
   const exportedAt = typeof parsed.exportedAt === "string" ? parsed.exportedAt : null
   return { ok: true, data, summary: restoredSummary(data), exportedAt }
 }
@@ -119,6 +124,7 @@ function restoreCounts(snapshot: ImportedSnapshot): string {
     `${snapshot.finance.savings.length} quỹ tiết kiệm`,
     `${snapshot.finance.gold.length} lần mua vàng`,
     `${snapshot.study.learned.length} từ đã học`,
+    `${snapshot.work.tasks.length} việc`,
   ].join(" · ")
 }
 
