@@ -15,14 +15,14 @@ Chủ repo thấy ba chỗ khó dùng. Cả ba đã được kiểm trong code:
 ## Chủ repo đã chốt (trao đổi ngày 19/10/2026, có duyệt bản phác)
 
 - **Lịch sử tất toán chỉ để xem lại.** Không cần hoàn tác.
-- **Lịch sử nằm ngay trong danh sách "Khoản chi tháng này".** Mỗi lần tất toán là một dòng, đặt ở đúng ngày anh bấm tất toán. Không làm thẻ lịch sử riêng.
+- **Lịch sử nằm ngay trong danh sách "Khoản chi tháng này".** Các lần tất toán gom thành một khối "Chốt sổ" ở đầu danh sách (đầu danh sách là cuối tháng), không chen vào các ngày chi tiêu bình thường. Không làm thẻ lịch sử riêng.
   - Chủ repo biết và chấp nhận một hệ quả: danh sách chỉ hiện tháng đang chạy, nên sang tháng sau, dòng tất toán của tháng trước không còn chỗ xem lại.
-  - Ban đầu chủ repo chọn một thẻ lịch sử riêng gom theo tháng, sau đó đổi sang cách này.
+  - Ban đầu chủ repo chọn một thẻ lịch sử riêng gom theo tháng. Sau đó đổi sang dòng trong danh sách chi, rồi chốt là khối "Chốt sổ" ở đầu danh sách.
 - **Nội dung một dòng tất toán:**
   - tất toán cho tháng nào;
   - nạp vào hay rút từ sổ nào;
   - số dư của sổ trước → sau lần đó;
-  - nằm ở ngày bấm;
+  - ngày bấm;
   - số tiền có dấu và có màu;
   - bật "Ẩn số tiền" thì mọi con số bị che;
   - sổ đã đổi tên thì hiện tên mới; sổ đã xoá thì hiện tên cũ kèm "(đã xoá)";
@@ -41,7 +41,7 @@ Những điểm dưới đây ghi **(Claude)** là do Claude tự quyết khi ch
 
 ## Mục tiêu
 
-1. Mỗi lần tất toán hiện thành một dòng trong "Khoản chi tháng này", ở ngày bấm tất toán, theo đúng nội dung ở trên.
+1. Mỗi lần tất toán hiện thành một dòng trong khối "Chốt sổ" ở đầu "Khoản chi tháng này", trong suốt tháng anh bấm, theo đúng nội dung ở trên.
 2. Thẻ "Tất toán tháng" liệt kê **mọi** tháng đã qua có lương mà số cần tất toán ≠ 0, tháng mới nhất ở trên. Tháng đó còn lệch thì còn hiện, không có hạn chót.
 3. Nút chọn sổ hiện số dư rút gọn theo kiểu A, ở cả hai nơi đang dùng `FundPicker`: hộp tất toán và phần chọn sổ của mục tiêu "Mua xe ô tô".
 
@@ -78,52 +78,48 @@ Những điểm dưới đây ghi **(Claude)** là do Claude tự quyết khi ch
 
 ## Thiết kế
 
-### 1. Dòng tất toán trong "Khoản chi tháng này"
+### 1. Khối "Chốt sổ" trong "Khoản chi tháng này"
 
-**Dòng nào được hiện**
-- Là những lần tất toán có **ngày theo giờ máy** của `at` nằm trong tháng đang chạy. Lọc theo `at`, không theo `month`, vì `month` là tháng được tất toán.
-  - Ví dụ: tất toán tháng 9 vào 01/10 thì dòng nằm ở ngày 01/10, trong danh sách tháng 10.
+Chủ repo đã duyệt bản phác lần 2:
+- **Các lần tất toán gom thành một khối "Chốt sổ" riêng**, đứng ở **đầu** danh sách "Khoản chi tháng này". Danh sách xếp ngày mới nhất ở trên, nên đầu danh sách chính là cuối tháng.
+- **Khối không chen vào nhóm ngày nào.** Lý do của chủ repo: chốt sổ là việc cuối tháng, chen vào các ngày bình thường là thừa.
+
+**Lần tất toán nào vào khối**
+- Là những lần có **ngày theo giờ máy** của `at` nằm trong tháng đang chạy, tức những lần anh bấm trong tháng này. Lọc theo `at`, không theo `month`, vì `month` là tháng được tất toán.
+  - Thường ngày: 31/10 chốt sổ tháng 10 thì khối của tháng 10 có dòng "Tất toán tháng 10".
+  - **(Claude, chủ repo đã duyệt qua bản phác)** Trường hợp quên, tới 02/11 mới chốt sổ tháng 10: khối của tháng 11 có dòng "Tất toán tháng 10 · bấm ngày 02/11". Như vậy lần nào anh bấm cũng có chỗ xem lại trong suốt tháng anh bấm.
 - `at` là chuỗi ISO giờ UTC, do `confirmSettlement` ghi bằng `new Date().toISOString()`.
 - Cần thêm một hàm chung trong `src/lib/date.ts` để đổi chuỗi ISO sang `dayKey` theo giờ máy. Hàm này trả `null` nếu chuỗi không hợp lệ.
-  - **Cấm** dùng `at.slice(0, 10)`: cách đó lấy ngày UTC, nên lần tất toán lúc 06:30 sáng 01/10 (giờ Việt Nam) sẽ rơi sang ngày 30/09.
-- `at` không hợp lệ (chỉ có thể đến từ file sửa tay hoặc file nhập) thì bỏ dòng đó khỏi danh sách. Bản ghi vẫn được tính vào số cần tất toán như trước.
+  - **Cấm** dùng `at.slice(0, 10)`: cách đó lấy ngày UTC, nên lần tất toán lúc 06:30 sáng 01/10 (giờ Việt Nam) sẽ rơi sang ngày 30/09, tức sang tháng trước.
+- `at` không hợp lệ (chỉ có thể đến từ file sửa tay hoặc file nhập) thì bỏ dòng đó khỏi khối. Bản ghi vẫn được tính vào số cần tất toán như trước.
+- Thứ tự trong khối: lần mới nhất ở trên. So `at` bằng thời điểm thật (`Date.parse`), không so chuỗi. Bằng nhau thì so `id` lớn hơn.
 - **Không** biến lần tất toán thành `Expense`, và không gộp vào `monthExpenses`. Gộp vào là nó lọt vào "đã chi", biểu đồ và gợi ý.
 
-**Xếp vào ngày**
-- Dòng tất toán nằm trong đúng nhóm ngày của khoản chi cùng ngày: mỗi `dayKey` chỉ có một nhóm. Nhờ vậy:
-  - trạng thái mở/đóng của từng ngày (`openDays` theo `dayKey`) giữ nguyên;
-  - quy tắc "ngày mới nhất mở sẵn" giữ nguyên.
-- Ngày chỉ có tất toán mà không có khoản chi vẫn thành một nhóm riêng.
-- Dòng tất toán nằm trong cùng khung thu/mở với khoản chi, nên khi ngày bị đóng thì dòng cũng bị `inert` như khoản chi.
-- **(Claude)** Trong một ngày, dòng tất toán nằm **dưới** các khoản chi.
-  - Lý do: khoản chi không có giờ nên không xen kẽ đúng thứ tự được, và tổng tiền trên tiêu đề ngày đứng sát những dòng được cộng.
-  - Giữa các dòng tất toán với nhau thì lần mới nhất ở trên. So `at` bằng thời điểm thật (`Date.parse`), không so chuỗi. Bằng nhau thì so `id` lớn hơn.
-
-**Tiêu đề ngày** (Claude)
-- Tổng tiền chỉ cộng khoản chi. Ngày chỉ có tất toán thì hiện `0 ₫`.
-- Phần tóm tắt khi ngày đang đóng giữ "· N khoản", nhưng bỏ đi khi N = 0, rồi thêm "· M tất toán" khi M > 0. Ví dụ: "· 2 khoản · 1 tất toán".
-
-**Câu báo trống** (Claude)
-- "Chưa có khoản chi nào trong tháng này." vẫn hiện khi tháng có tất toán mà chưa có khoản chi, vì câu đó vẫn đúng. Thêm khoảng cách phía trên khi đã có nhóm ngày phía trên.
+**Vị trí và dáng khối**
+- Khối nằm trong thẻ "Khoản chi tháng này", phía trên nhóm ngày đầu tiên. Có nhãn nhỏ "Chốt sổ". Khung và nền nhẹ khác nhóm ngày, dùng token `--ob-*`.
+- Tháng này chưa có lần tất toán nào thì không có khối.
+- Khối không thu/mở được, luôn hiện đủ các dòng.
+- Nhóm ngày giữ nguyên như hiện nay: cách thu/mở, ngày mới nhất mở sẵn, tổng tiền, "· N khoản". `groupExpensesByDay` và `DayGroup` không đổi.
+- **(Claude)** Câu báo trống "Chưa có khoản chi nào trong tháng này." vẫn hiện, ở dưới khối, khi tháng có tất toán mà chưa có khoản chi.
 
 **Nội dung một dòng**
 - **Biểu tượng:** chỉ để trang trí, ẩn với trình đọc màn hình.
-- **Tiêu đề:** "Tất toán tháng 9".
+- **Tiêu đề:** "Tất toán tháng 10".
   - **(Claude)** Thêm năm khi năm của tháng được tất toán khác năm hiện tại, ví dụ "Tất toán tháng 12, 2025". Không còn hạn chót nên tháng được tất toán có thể thuộc năm trước.
   - `month` sai định dạng thì chỉ ghi "Tất toán".
-- **Dòng phụ:** "Nạp vào sổ X" hoặc "Rút từ sổ X". Thêm " (đã xoá)" nếu X không còn trong danh sách sổ hiện tại.
-  - Danh sách sổ lấy từ `useFinance().savings`, mà `budget-view.tsx` đã có sẵn.
+- **Dòng phụ:** "Rút từ sổ X" hoặc "Nạp vào sổ X", rồi ngày bấm, ví dụ "Rút từ sổ Dự phòng · 31/10".
+  - Thêm " (đã xoá)" sau tên sổ nếu X không còn trong danh sách sổ hiện tại. Danh sách sổ lấy từ `useFinance().savings`, mà `budget-view.tsx` đã có sẵn.
   - Sổ đổi tên thì không cần làm gì: `updateSavingsFund` đã tự đổi tên trong các bản ghi tất toán (`renameFundInSettlements`).
-- **Số dư sổ:** phần nhìn thấy là "100.000 ₫ → 400.000 ₫", ẩn với trình đọc màn hình. Kèm một câu chỉ trình đọc màn hình đọc: "Số dư sổ từ 100.000 ₫ thành 400.000 ₫".
+  - **(Claude)** Khi chốt trễ, tức tháng được tất toán khác tháng anh bấm, ngày ghi là "· bấm ngày 02/11".
+- **Số dư sổ:** phần nhìn thấy là "10.000.000 ₫ → 8.500.000 ₫", ẩn với trình đọc màn hình. Kèm một câu chỉ trình đọc màn hình đọc: "Số dư sổ từ 10.000.000 ₫ thành 8.500.000 ₫".
 - **Số tiền:** nạp ghi "+ 300.000 ₫" màu xanh (`--ob-color-income`), rút ghi "− 300.000 ₫" màu đỏ (`--ob-color-expense`). Dùng lại `signedMoney` trong `src/lib/finance/finance-calculations.ts`. Màu không phải tín hiệu duy nhất, vì dấu +/− và chữ "Nạp/Rút" đã nói rõ hướng.
-- **Không có nút nào**, không bấm được, không nhận focus. Hàng Sửa/Xoá chỉ thuộc về khoản chi.
-- **Che số:** bật "Ẩn số tiền" thì mọi con số đi qua `formatMoney(…, hidden)` / `signedMoney(…, hidden)`. Tên sổ và chữ "(đã xoá)" không phải tiền nên vẫn hiện.
+- **Không có nút nào**, không bấm được, không nhận focus.
+- **Che số:** bật "Ẩn số tiền" thì mọi con số đi qua `formatMoney(…, hidden)` / `signedMoney(…, hidden)`. Tên sổ, ngày và chữ "(đã xoá)" không phải tiền nên vẫn hiện.
 - **Kỹ thuật:**
-  - Key của React phải có tiền tố, ví dụ `settlement-${id}`, vì `id` khoản chi và `id` tất toán là hai dãy số riêng và có thể trùng nhau.
-  - `data-testid` khác với dòng khoản chi, để các test đang có về dòng khoản chi không đếm nhầm.
-  - Đường kẻ và bo góc của dòng cuối trong ngày tính trên cả hai loại dòng.
+  - Dòng tất toán có `data-testid` riêng, khác dòng khoản chi, để các test đang có về dòng khoản chi không đếm nhầm.
   - Prop mới của `ExpenseListCard` (các dòng tất toán, danh sách tên sổ nếu cần) là **tuỳ chọn, mặc định rỗng**. Nếu bắt buộc, 18 lần render trong `expense-list-card.test.tsx` sẽ lỗi kiểu (TS2739). Vitest vẫn qua, nhưng `tsc` và `next build` thì không.
-- **Màn hẹp:** không thêm khoảng đệm cố định để canh số tiền với cột Sửa/Xoá. Số tiền không xuống dòng; tên sổ dài được xuống dòng.
+  - Không đặt số tiền thành một phần tử riêng mà toàn bộ chữ trùng đúng một giá trị `formatMoney` mà các test của `BudgetView` đang tìm bằng `getByText`. Ví dụ phần "trước → sau" nằm chung một phần tử.
+- **Màn hẹp:** số tiền không xuống dòng; tên sổ dài được xuống dòng; không có khoảng đệm cố định.
 
 **Giới hạn đã biết** (Claude chấp nhận, không làm thêm)
 - App nhận diện sổ chỉ bằng tên. Giả sử xoá sổ "X", sau đó tạo sổ mới cũng tên "X" hoặc đổi tên sổ khác thành "X":
@@ -216,26 +212,24 @@ Phần kiểm thử bắt buộc. Chi tiết từng test để cho plan.
 - **Hàm đổi ISO sang `dayKey`:**
   - ra ngày theo giờ máy, không phải ngày UTC. Dựng `at` bằng `new Date(y, m, d, h).toISOString()` để test đúng ở mọi múi giờ;
   - chuỗi rỗng hoặc sai trả `null`.
-- **Lấy và xếp dòng tất toán của tháng:**
+- **Lấy dòng tất toán của tháng:**
   - lọc theo ngày giờ máy của `at`. Lần tất toán lúc 00:30 ngày 01/09 thuộc tháng 9; lúc 23:30 ngày 31/08 thì không;
   - bỏ `at` sai;
   - thứ tự mới nhất trước, so theo thời điểm thật; bằng nhau thì xét `id`;
-  - cờ "(đã xoá)";
-  - nhóm theo ngày: tổng ngày không cộng tất toán; ngày chỉ có tất toán vẫn thành nhóm.
+  - cờ "(đã xoá)".
 - **`ExpenseListCard`:**
-  - dòng nạp và dòng rút: chữ, dấu, màu, câu cho trình đọc màn hình;
+  - khối "Chốt sổ" nằm trên nhóm ngày đầu tiên; không có tất toán thì không có khối;
+  - dòng nạp và dòng rút: chữ, ngày bấm, dấu, màu, câu cho trình đọc màn hình;
+  - dòng chốt trễ ghi "bấm ngày …";
   - dòng không có nút;
-  - tổng tiền trên tiêu đề ngày;
-  - ngày chỉ có tất toán: mở sẵn nếu là ngày mới nhất, tóm tắt "1 tất toán";
-  - đường kẻ và bo góc của dòng cuối;
+  - nhóm ngày, tổng tiền và "· N khoản" không đổi khi có tất toán;
   - che số khi ẩn số tiền;
   - "(đã xoá)";
   - năm trong tiêu đề khi khác năm;
-  - không có cảnh báo trùng key khi `id` khoản chi và `id` tất toán trùng nhau;
-  - câu báo trống.
+  - câu báo trống vẫn hiện dưới khối khi chưa có khoản chi.
   - Lưu ý: chữ dành cho trình đọc màn hình cũng nằm trong `textContent`, nên đừng so cả chuỗi "A → B" trên cả dòng.
 - **`BudgetView`:**
-  - tất toán xong thì dòng tất toán hiện dưới ngày hôm đó, còn "đã chi" không đổi;
+  - tất toán xong thì dòng hiện trong khối "Chốt sổ", còn "đã chi" không đổi;
   - lần tất toán làm lúc 31/08 không hiện trong tháng 9;
   - liệt kê mọi tháng cũ có lương, mới nhất trước, và có thể khác năm;
   - tháng cũ không có lương thì không hiện;
@@ -270,13 +264,13 @@ Phần kiểm thử bắt buộc. Chi tiết từng test để cho plan.
 - **`useBudget`:** ghi lại hợp đồng của `at` (chuỗi ISO của thời điểm xác nhận).
 - **Schema:** bản ghi tất toán có `fundAmountBefore/After` lẻ thập phân vẫn đọc được.
 - **Test đang có phải sửa** (đã chạy thử trên bản nháp):
-  - `budget-calculations.test.ts`: 5 test của `unsettledPastMonths` (gọi 5 tham số, fixture có lương tháng 7), và test `groupExpensesByDay` so khớp tuyệt đối với `toEqual` nếu `DayGroup` được thêm trường;
+  - `budget-calculations.test.ts`: 5 test của `unsettledPastMonths` (gọi 5 tham số, fixture có lương tháng 7);
   - `budget-view.test.tsx`: "does not bring up months older than last month" phải đảo lại thành "liệt kê mọi tháng cũ có lương".
   - Mọi test tìm nút sổ theo tên giữ nguyên, với điều kiện số dư không lọt vào tên nút.
 
 ## Tài liệu cần cập nhật
 
-- `README.md`, dòng mô tả `/budget`: thẻ tất toán liệt kê mọi tháng cũ có lương; dòng tất toán nằm trong "Khoản chi tháng này"; nút chọn sổ hiện số dư rút gọn. Dùng chữ "tất toán" thay cho "chốt".
+- `README.md`, dòng mô tả `/budget`: thẻ tất toán liệt kê mọi tháng cũ có lương; khối "Chốt sổ" ở đầu "Khoản chi tháng này"; nút chọn sổ hiện số dư rút gọn. Dùng chữ "tất toán" thay cho "chốt" khi nói về hành động.
 - `README.md`, dòng `FundPicker`: thêm số dư rút gọn, mô tả đầy đủ qua `aria-describedby`, tự che khi ẩn số; đổi "Chi tiêu (chốt tháng)" thành "Chi tiêu (tất toán tháng)".
 - `README.md`, dòng `date.ts`: thêm hàm đổi chuỗi ISO sang `dayKey` theo giờ máy.
 - `README.md`, dòng `src/lib/format.ts`: thêm `formatMoneyCompact`, và bổ sung `pastedMoneyDigits` đang thiếu.
@@ -284,7 +278,7 @@ Phần kiểm thử bắt buộc. Chi tiết từng test để cho plan.
 
 ## Để lại cho người làm
 
-- Tách dòng tất toán thành component riêng hay viết ngay trong `ExpenseListCard`.
+- Tách khối "Chốt sổ" thành component riêng hay viết ngay trong `ExpenseListCard`.
 - Tên chính xác của hàm đổi ISO sang `dayKey` và của hàm lấy dòng tất toán trong tháng.
 - Class Tailwind cụ thể và biểu tượng, miễn dùng token `--ob-*`.
 - Cách chặn lời nhắc "chưa nhập lương" chớp hiện lúc tải. Ví dụ thêm cờ `hydrated` cho `useBudget` như `useFinance`.
