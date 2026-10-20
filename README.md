@@ -157,7 +157,7 @@ Tab "Trò chơi" gồm 3 mini-game ôn từ vựng, dùng chung 1 khung điều 
 | `auth.ts` | Auth mock qua localStorage: `getStoredUser` · `setStoredUser` · `clearStoredUser` |
 | `data-change-bus.ts` | Pub/sub nhỏ (`notifyDataChanged` · `onDataChanged`) báo hiệu dữ liệu vừa đổi giữa các component không liên quan trực tiếp |
 | `data-transfer.ts` | Định dạng bản sao xuất/nhập/đồng bộ: `buildExportPayload` · `parseImportPayload` · `exportFileName` · `uploadedSummary` · `EXPORT_VERSION` — dùng bởi Cài đặt và route `/api/sync` |
-| `date.ts` | Helper ngày/tháng tiếng Việt: `longDate` · `dayKey` · `dayKeyFromIso` (chuỗi ISO → ngày theo giờ máy) · `formatDayKey` · `monthKey` · `monthKeyFromDayKey` · `monthsFrom` · `shiftMonth` · `shiftDay` · `monthsThroughYearEnd` · `formatMonthKey` |
+| `date.ts` | Helper ngày/tháng tiếng Việt: `longDate` · `dayKey` · `dayKeyFromIso` (chuỗi ISO → ngày theo giờ máy) · `formatDayKey` · `monthKey` · `monthKeyFromDayKey` · `isMonthKey` (key tháng đúng dạng YYYY-MM, tháng 01–12) · `monthsFrom` · `shiftMonth` · `shiftDay` · `monthsThroughYearEnd` · `formatMonthKey` |
 | `format.ts` | `formatMoney(n, hidden)` (VNĐ, ẩn bằng dấu chấm khi bật "ẩn số tiền") · `groupVN(value)` (nhóm số hàng nghìn cho input) · `formatMoneyCompact(n, hidden)` (rút gọn, cắt xuống: 8k · 50xu · 500k · 1,5tr · 2 tỷ; ẩn → `•••`) · `pastedMoneyDigits(text)` (lấy chữ số từ số tiền dán vào) |
 | `mock-account.ts` | `MOCK_ACCOUNT` — tài khoản demo hardcode cho `login` |
 | `money-visibility-storage.ts` | Đọc/ghi localStorage cờ "ẩn số tiền": `getHideMoney` · `setHideMoney` |

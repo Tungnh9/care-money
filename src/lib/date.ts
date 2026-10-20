@@ -31,6 +31,12 @@ function monthKeyFromDayKey(key: string): string {
   return key.slice(0, 7)
 }
 
+// Key tháng hợp lệ: YYYY-MM, tháng 01–12. Dữ liệu import hay sửa tay có thể mang key sai dạng ("2026-9",
+// "2026-13") — key sai dạng so chuỗi không còn là so thời gian, và không đọc ra được tháng nào.
+function isMonthKey(month: string): boolean {
+  return /^\d{4}-(0[1-9]|1[0-2])$/.test(month)
+}
+
 function monthsFrom(startMonth: string, count: number): string[] {
   const [y, m] = startMonth.split("-").map(Number)
   return Array.from({ length: count }, (_, i) => {
@@ -110,6 +116,7 @@ export {
   formatDayKeyWithYear,
   formatMonthKey,
   formatShortDate,
+  isMonthKey,
   monthKey,
   monthKeyFromDayKey,
   monthsFrom,

@@ -4,7 +4,7 @@ import { ArrowDownToLine, ArrowUpFromLine, type LucideIcon } from "lucide-react"
 
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
-import { monthKeyFromDayKey } from "@/lib/date"
+import { isMonthKey, monthKeyFromDayKey } from "@/lib/date"
 import { signedMoney } from "@/lib/finance/finance-calculations"
 import { cn } from "@/lib/utils"
 import type { SettlementListItem } from "@/lib/budget/budget-calculations"
@@ -34,8 +34,6 @@ const DIRECTIONS: Record<SettlementDirection, DirectionStyle> = {
   },
 }
 
-const MONTH_KEY = /^\d{4}-(0[1-9]|1[0-2])$/
-
 // "2026-09-30" → "30/09"
 function shortDay(dayKey: string): string {
   const [, month, day] = dayKey.split("-")
@@ -46,7 +44,7 @@ function shortDay(dayKey: string): string {
 // tháng cũ không còn hạn chót nên có thể thuộc năm trước. `month` sai định dạng (chỉ từ file sửa tay) thì
 // không đoán, chỉ ghi "Tất toán".
 function settlementTitle(month: string, madeDayKey: string): string {
-  if (!MONTH_KEY.test(month)) return "Tất toán"
+  if (!isMonthKey(month)) return "Tất toán"
   const year = month.slice(0, 4)
   const yearSuffix = year === madeDayKey.slice(0, 4) ? "" : `, ${year}`
   return `Tất toán tháng ${Number(month.slice(5))}${yearSuffix}`

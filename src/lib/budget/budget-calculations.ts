@@ -1,12 +1,9 @@
-import { dayKeyFromIso, monthKeyFromDayKey } from "@/lib/date"
+import { dayKeyFromIso, isMonthKey, monthKeyFromDayKey } from "@/lib/date"
 import type { Expense, MonthlySalary, Settlement } from "@/lib/budget/types"
 
 const UNTAGGED_LABEL = "Không gắn thẻ"
 const UNTAGGED_EMOJI = "🏷️"
 const UNTAGGED_TINT = "#F2E9DC"
-
-// Key tháng hợp lệ: YYYY-MM, tháng 01–12.
-const MONTH_KEY_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/
 
 // Trần số tiền gõ tay ở 3 form Chi tiêu (lương, ghi khoản chi, sửa khoản chi). budget-storage đọc số
 // tiền bằng z.number().int(), mà zod 4 coi số > Number.MAX_SAFE_INTEGER là không hợp lệ — 1 số 16–17
@@ -74,7 +71,7 @@ function unsettledPastMonths(
 ): UnsettledMonth[] {
   // YYYY-MM đệm số 0 nên so chuỗi cũng là so thời gian — nhưng chỉ khi key đúng dạng, vì vậy lọc dạng trước.
   const months = [...new Set(salaries.map((s) => s.month))].filter(
-    (month) => MONTH_KEY_PATTERN.test(month) && month < currentMonth
+    (month) => isMonthKey(month) && month < currentMonth
   )
   return months
     .sort((a, b) => (a < b ? 1 : -1))

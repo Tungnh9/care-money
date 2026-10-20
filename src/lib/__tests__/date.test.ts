@@ -9,6 +9,7 @@ import {
   formatDayKeyWithYear,
   formatMonthKey,
   formatShortDate,
+  isMonthKey,
   monthKey,
   monthKeyFromDayKey,
   parseDayInput,
@@ -71,6 +72,19 @@ describe("monthKeyFromDayKey", () => {
   it("derives the yyyy-mm prefix from a yyyy-mm-dd day key", () => {
     expect(monthKeyFromDayKey("2026-01-05")).toBe("2026-01")
     expect(monthKeyFromDayKey("2026-11-20")).toBe("2026-11")
+  })
+})
+
+describe("isMonthKey", () => {
+  it("accepts a yyyy-mm key", () => {
+    expect(isMonthKey("2026-09")).toBe(true)
+  })
+
+  it("rejects an empty string, an unpadded month and a month outside 01–12", () => {
+    expect(isMonthKey("")).toBe(false)
+    expect(isMonthKey("2026-9")).toBe(false)
+    expect(isMonthKey("2026-13")).toBe(false)
+    expect(isMonthKey("2026-00")).toBe(false)
   })
 })
 
