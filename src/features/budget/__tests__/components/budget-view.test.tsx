@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
-import { render, screen, waitFor, fireEvent, within } from "@testing-library/react"
+import { act, render, screen, waitFor, fireEvent, within } from "@testing-library/react"
+import { renderToString } from "react-dom/server"
 
 import {
   setStoredFinance,
@@ -485,5 +486,217 @@ describe("BudgetView", () => {
     render(<BudgetView />)
 
     expect(await screen.findByText("Nạp vào sổ Quỹ cũ (đã xoá) · 10/09")).toBeInTheDocument()
+  })
+
+  it("locks this month's settle button and asks for the salary when this month has no salary record", async () => {
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      expenses: [{ id: 1, dayKey: "2026-09-02", amount: 200_000, tag: null }],
+    })
+
+    render(<BudgetView />)
+
+    expect(
+      await screen.findByText("Chưa nhập lương tháng này. Nhập lương (kể cả 0 đ) ở thẻ Lương tháng này rồi mới tất toán.")
+    ).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Tất toán tháng" })).toBeDisabled()
+    expect(screen.queryByText(/Bạn đang thiếu/)).not.toBeInTheDocument()
+  })
+
+  it("unlocks this month's settle button once a salary is saved, even 0 đ", async () => {
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      expenses: [{ id: 1, dayKey: "2026-09-02", amount: 200_000, tag: null }],
+    })
+
+    render(<BudgetView />)
+    await screen.findByText(/Chưa nhập lương tháng này/)
+    const salaryCard = screen.getByText("Lương tháng này").closest("section") as HTMLElement
+    fireEvent.change(within(salaryCard).getByLabelText("Số tiền", { exact: false }), { target: { value: "0" } })
+    fireEvent.click(within(salaryCard).getByRole("button", { name: "Lưu" }))
+
+    await waitFor(() => expect(screen.getByRole("button", { name: "Tất toán tháng" })).not.toBeDisabled())
+    expect(screen.queryByText(/Chưa nhập lương tháng này/)).not.toBeInTheDocument()
+    expect(screen.getByText(/Bạn đang thiếu/)).toBeInTheDocument()
+  })
+
+  it("moves focus to the next past month's button after a past month is settled in full", async () => {
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ A", amount: 100_000, target: 500_000 }] })
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [
+        { month: "2026-07", amount: 1_000_000 },
+        { month: "2026-08", amount: 1_000_000 },
+      ],
+      expenses: [{ id: 1, dayKey: "2026-08-20", amount: 850_000, tag: null }],
+    })
+
+    render(<BudgetView />)
+    // Trình duyệt focus nút khi bấm, fireEvent.click thì không — focus tay để Modal nhớ đúng nút mở nó.
+    const opener = await screen.findByRole("button", { name: "Tất toán tháng 8, 2026" })
+    opener.focus()
+    fireEvent.click(opener)
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Quỹ A" }))
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Xác nhận" }))
+
+    await waitFor(() => expect(screen.getByRole("button", { name: "Tất toán tháng 7, 2026" })).toHaveFocus())
+    // Modal trả focus trong setTimeout(0): chờ qua lượt đó rồi kiểm lại, để bắt trường hợp focus bị giật lại.
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(screen.getByRole("button", { name: "Tất toán tháng 7, 2026" })).toHaveFocus()
+  })
+
+  it("moves focus to this month's settle button when the last past month is settled and this month can be settled", async () => {
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ A", amount: 100_000, target: 500_000 }] })
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [
+        { month: "2026-08", amount: 1_000_000 },
+        { month: "2026-09", amount: 1_000_000 },
+      ],
+      expenses: [
+        { id: 1, dayKey: "2026-08-20", amount: 850_000, tag: null },
+        { id: 2, dayKey: "2026-09-02", amount: 200_000, tag: null },
+      ],
+    })
+
+    render(<BudgetView />)
+    // Trình duyệt focus nút khi bấm, fireEvent.click thì không — focus tay để Modal nhớ đúng nút mở nó.
+    const opener = await screen.findByRole("button", { name: "Tất toán tháng 8, 2026" })
+    opener.focus()
+    fireEvent.click(opener)
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Quỹ A" }))
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Xác nhận" }))
+
+    await waitFor(() => expect(screen.getByRole("button", { name: "Tất toán tháng" })).toHaveFocus())
+    // Modal trả focus trong setTimeout(0): chờ qua lượt đó rồi kiểm lại, để bắt trường hợp focus bị giật lại.
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(screen.getByRole("button", { name: "Tất toán tháng" })).toHaveFocus()
+  })
+
+  it("moves focus to the settle card when nothing is left to settle", async () => {
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ A", amount: 100_000, target: 500_000 }] })
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [{ month: "2026-08", amount: 1_000_000 }],
+      expenses: [{ id: 1, dayKey: "2026-08-20", amount: 850_000, tag: null }],
+    })
+
+    render(<BudgetView />)
+    // Trình duyệt focus nút khi bấm, fireEvent.click thì không — focus tay để Modal nhớ đúng nút mở nó.
+    const opener = await screen.findByRole("button", { name: "Tất toán tháng 8, 2026" })
+    opener.focus()
+    fireEvent.click(opener)
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Quỹ A" }))
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Xác nhận" }))
+
+    await waitFor(() => expect(screen.getByRole("region", { name: "Tất toán tháng" })).toHaveFocus())
+    // Modal trả focus trong setTimeout(0): chờ qua lượt đó rồi kiểm lại, để bắt trường hợp focus bị giật lại.
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(screen.getByRole("region", { name: "Tất toán tháng" })).toHaveFocus()
+  })
+
+  it("does not flash the missing-salary hint before the stored salary has been read", () => {
+    setStoredBudget({ ...DEFAULT_BUDGET_STATE, salaries: [{ month: "2026-09", amount: 1_000_000 }] })
+
+    // render của RTL chạy effect trước khi trả về nên không thấy lần vẽ đầu; vẽ phía server thì thấy.
+    expect(renderToString(<BudgetView />)).not.toContain("Chưa nhập lương tháng này")
+  })
+
+  it("leaves focus on a past month's button when that month is only partly settled", async () => {
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ A", amount: 100_000, target: 500_000 }] })
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [
+        { month: "2026-07", amount: 1_000_000 },
+        { month: "2026-08", amount: 1_000_000 },
+      ],
+      expenses: [{ id: 1, dayKey: "2026-08-20", amount: 850_000, tag: null }],
+    })
+
+    render(<BudgetView />)
+    // Tháng 7 đứng sau tháng 8 trong danh sách: nếu focus bị chuyển đi thì nó sẽ sang nút tháng 8.
+    const opener = await screen.findByRole("button", { name: "Tất toán tháng 7, 2026" })
+    opener.focus()
+    fireEvent.click(opener)
+    const modal = screen.getByRole("dialog")
+    fireEvent.click(within(modal).getByRole("button", { name: "Quỹ A" }))
+    fireEvent.change(within(modal).getByLabelText("Số tiền", { exact: false }), { target: { value: "400000" } })
+    fireEvent.click(within(modal).getByRole("button", { name: "Xác nhận" }))
+
+    expect(getStoredBudget().settlements).toHaveLength(1)
+    expect(getStoredBudget().settlements[0]).toMatchObject({ month: "2026-07", amount: 400_000 })
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+    // Chưa tới lượt setTimeout(0) của Modal: focus không được nhảy sang nút khác dù chỉ trong chốc lát.
+    expect(opener).toHaveFocus()
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(opener).toHaveFocus()
+  })
+
+  it("leaves focus on this month's settle button after settling this month, even with a past month listed", async () => {
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ A", amount: 100_000, target: 500_000 }] })
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [
+        { month: "2026-08", amount: 1_000_000 },
+        { month: "2026-09", amount: 1_000_000 },
+      ],
+      expenses: [
+        { id: 1, dayKey: "2026-08-20", amount: 850_000, tag: null },
+        { id: 2, dayKey: "2026-09-02", amount: 200_000, tag: null },
+      ],
+    })
+
+    render(<BudgetView />)
+    await screen.findByRole("button", { name: "Tất toán tháng 8, 2026" })
+    const opener = screen.getByRole("button", { name: "Tất toán tháng" })
+    await waitFor(() => expect(opener).not.toBeDisabled())
+    opener.focus()
+    fireEvent.click(opener)
+    const modal = screen.getByRole("dialog")
+    fireEvent.click(within(modal).getByRole("button", { name: "Quỹ A" }))
+    // Tháng này còn dư 800.000: chỉ tất toán 300.000 để nút vẫn bấm được và còn giữ được focus.
+    fireEvent.change(within(modal).getByLabelText("Số tiền", { exact: false }), { target: { value: "300000" } })
+    fireEvent.click(within(modal).getByRole("button", { name: "Xác nhận" }))
+
+    expect(getStoredBudget().settlements).toHaveLength(1)
+    expect(getStoredBudget().settlements[0]).toMatchObject({ month: "2026-09", amount: 300_000 })
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+    // Chưa tới lượt setTimeout(0) của Modal: focus không được nhảy sang nút tháng cũ dù chỉ trong chốc lát.
+    expect(opener).toHaveFocus()
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(opener).toHaveFocus()
+  })
+
+  it("does not pull focus back to the settle card on later renders", async () => {
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ A", amount: 100_000, target: 500_000 }] })
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [{ month: "2026-08", amount: 1_000_000 }],
+      expenses: [{ id: 1, dayKey: "2026-08-20", amount: 850_000, tag: null }],
+    })
+
+    render(<BudgetView />)
+    const opener = await screen.findByRole("button", { name: "Tất toán tháng 8, 2026" })
+    opener.focus()
+    fireEvent.click(opener)
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Quỹ A" }))
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Xác nhận" }))
+    await waitFor(() => expect(screen.getByRole("region", { name: "Tất toán tháng" })).toHaveFocus())
+    await new Promise((resolve) => setTimeout(resolve, 20))
+
+    // Người dùng chuyển sang gõ ở ô khác; 1 lần ghi dữ liệu (vd. từ tab khác) làm BudgetView vẽ lại.
+    const salaryCard = screen.getByText("Lương tháng này").closest("section") as HTMLElement
+    const salaryInput = within(salaryCard).getByLabelText("Số tiền", { exact: false })
+    salaryInput.focus()
+    act(() => {
+      setStoredBudget({
+        ...getStoredBudget(),
+        expenses: [...getStoredBudget().expenses, { id: 2, dayKey: "2026-09-03", amount: 50_000, tag: null }],
+      })
+    })
+
+    // Dòng đầu trang đổi theo khoản chi mới: BudgetView đã vẽ lại rồi mới kiểm focus.
+    await screen.findByText(`Lương ${formatMoney(0)} · đã chi ${formatMoney(50_000)} tháng này`)
+    expect(salaryInput).toHaveFocus()
   })
 })

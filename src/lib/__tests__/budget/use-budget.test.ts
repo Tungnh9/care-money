@@ -35,6 +35,18 @@ describe("useBudget", () => {
     expect(result.current.settlements).toEqual([])
   })
 
+  it("reports hydrated only once the stored data has been read", async () => {
+    const seen: boolean[] = []
+    renderHook(() => {
+      const budget = useBudget()
+      seen.push(budget.hydrated)
+      return budget
+    })
+
+    expect(seen[0]).toBe(false)
+    await waitFor(() => expect(seen[seen.length - 1]).toBe(true))
+  })
+
   it("setSalary creates a new entry when none exists for that month", async () => {
     const { result } = renderHook(() => useBudget())
     await waitFor(() => expect(result.current.salaries).toEqual([]))
@@ -223,6 +235,17 @@ describe("useBudget", () => {
 
       expect(outcomes).toEqual([true, false, false])
       expect(toast.success).toHaveBeenCalledTimes(1)
+    })
+
+    it("names the settled month in the success toast", async () => {
+      const { result } = renderHook(() => useBudget())
+      await waitFor(() => expect(result.current.settlements).toEqual([]))
+
+      act(() => {
+        result.current.confirmSettlement("2026-08", "Quỹ A", "deposit", 50_000)
+      })
+
+      expect(toast.success).toHaveBeenCalledWith("Đã tất toán tháng 8, 2026")
     })
 
     it("takes a deposit back out of the fund when the settlement history cannot be saved", async () => {
