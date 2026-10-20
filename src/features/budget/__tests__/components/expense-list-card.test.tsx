@@ -329,7 +329,10 @@ describe("ExpenseListCard", () => {
 
     const headers = screen.getAllByTestId("expense-day-header")
     expect(headers).toHaveLength(2)
-    expect(headers[0]).toHaveTextContent(formatMoney(50_000))
+    // Nhóm 02/09 là nhóm duy nhất mà tất toán lọt vào sẽ làm đổi. getByText khớp CẢ chuỗi (toHaveTextContent chỉ khớp
+    // một phần: "1.550.000 ₫" vẫn chứa "50.000 ₫"), còn "· 1 khoản" bắt thêm một khoản chi giả trong nhóm.
+    expect(within(headers[0]).getByText(formatMoney(50_000))).toBeInTheDocument()
+    expect(headers[0]).toHaveTextContent("· 1 khoản")
     expect(headers[1]).toHaveTextContent("1 khoản")
   })
 

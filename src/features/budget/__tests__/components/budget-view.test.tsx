@@ -368,6 +368,8 @@ describe("BudgetView", () => {
     fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }))
 
     const block = await screen.findByTestId("closing-block")
+    // Khoản chi duy nhất ở 01/09, lần tất toán ở 15/09: nếu tất toán lọt vào monthExpenses sẽ có thêm nhóm ngày thứ 2.
+    expect(screen.getAllByTestId("expense-day-header")).toHaveLength(1)
     expect(within(block).getByText("Tất toán tháng 9")).toBeInTheDocument()
     expect(within(block).getByText("Nạp vào sổ Quỹ A · 15/09")).toBeInTheDocument()
     expect(screen.getByText(`Lương ${formatMoney(1_000_000)} · đã chi ${formatMoney(200_000)} tháng này`)).toBeInTheDocument()
