@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 
-import { formatMoney, groupVN, pastedMoneyDigits } from "../format"
+import { formatMoney, formatMoneyCompact, groupVN, pastedMoneyDigits } from "../format"
 
 describe("formatMoney", () => {
   it("formats a number as Vietnamese currency by default", () => {
@@ -61,5 +61,72 @@ describe("pastedMoneyDigits", () => {
 
   it("returns an empty string when the text has no digits", () => {
     expect(pastedMoneyDigits("abc")).toBe("")
+  })
+})
+
+describe("formatMoneyCompact", () => {
+  it("writes the owner's examples", () => {
+    expect(formatMoneyCompact(8_000)).toBe("8k")
+    expect(formatMoneyCompact(50_000)).toBe("50xu")
+    expect(formatMoneyCompact(500_000)).toBe("500k")
+    expect(formatMoneyCompact(1_500_000)).toBe("1,5tr")
+    expect(formatMoneyCompact(5_000_000)).toBe("5tr")
+    expect(formatMoneyCompact(2_000_000_000)).toBe("2 tỷ")
+  })
+
+  it("uses 'xu' for tens of thousands, as the owner chose (not 'k')", () => {
+    expect(formatMoneyCompact(10_000)).toBe("10xu")
+    expect(formatMoneyCompact(20_000)).toBe("20xu")
+    expect(formatMoneyCompact(99_999)).toBe("99xu")
+  })
+
+  it("cuts down at every band edge instead of carrying into the next unit", () => {
+    expect(formatMoneyCompact(9_999)).toBe("9,9k")
+    expect(formatMoneyCompact(100_000)).toBe("100k")
+    expect(formatMoneyCompact(999_999)).toBe("999k")
+    expect(formatMoneyCompact(1_000_000)).toBe("1tr")
+    expect(formatMoneyCompact(999_999_999)).toBe("999,9tr")
+    expect(formatMoneyCompact(1_000_000_000)).toBe("1 tỷ")
+  })
+
+  it("keeps at most one decimal, with a comma, and drops ',0'", () => {
+    expect(formatMoneyCompact(1_500)).toBe("1,5k")
+    expect(formatMoneyCompact(12_500)).toBe("12xu")
+    expect(formatMoneyCompact(123_456)).toBe("123k")
+    expect(formatMoneyCompact(1_050_000)).toBe("1tr")
+    expect(formatMoneyCompact(1_990_000)).toBe("1,9tr")
+    expect(formatMoneyCompact(12_500_000)).toBe("12,5tr")
+    expect(formatMoneyCompact(1_500_000_000)).toBe("1,5 tỷ")
+    expect(formatMoneyCompact(1_234_567_000_000)).toBe("1.234,5 tỷ")
+  })
+
+  it("shows amounts under 1.000 in whole đồng", () => {
+    expect(formatMoneyCompact(0)).toBe("0đ")
+    expect(formatMoneyCompact(500)).toBe("500đ")
+    expect(formatMoneyCompact(999)).toBe("999đ")
+  })
+
+  it("drops fractions of a đồng instead of rounding up", () => {
+    expect(formatMoneyCompact(999.5)).toBe("999đ")
+    expect(formatMoneyCompact(9_999.6)).toBe("9,9k")
+    expect(formatMoneyCompact(99_999.5)).toBe("99xu")
+    expect(formatMoneyCompact(150_000.5)).toBe("150k")
+  })
+
+  it("puts '-' in front of a negative balance but never prints '-0'", () => {
+    expect(formatMoneyCompact(-8_000)).toBe("-8k")
+    expect(formatMoneyCompact(-1_500_000)).toBe("-1,5tr")
+    expect(formatMoneyCompact(-500)).toBe("-500đ")
+    expect(formatMoneyCompact(-0)).toBe("0đ")
+    expect(formatMoneyCompact(-0.4)).toBe("0đ")
+  })
+
+  it("treats NaN as 0", () => {
+    expect(formatMoneyCompact(Number.NaN)).toBe("0đ")
+  })
+
+  it("masks the amount and its unit while money is hidden", () => {
+    expect(formatMoneyCompact(50_000, true)).toBe("•••")
+    expect(formatMoneyCompact(2_000_000_000, true)).toBe("•••")
   })
 })
