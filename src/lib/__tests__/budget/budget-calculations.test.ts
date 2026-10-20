@@ -472,13 +472,14 @@ describe("settlementsMadeInMonth", () => {
   })
 
   it("puts the newest first by real instant, then the higher id", () => {
-    const sameInstantOffset = settlement({ id: 1, at: "2026-09-10T09:00:00+07:00" })
-    const sameInstantUtc = settlement({ id: 2, at: "2026-09-10T02:00:00.000Z" })
-    const later = settlement({ id: 3, at: new Date(2026, 8, 12, 8).toISOString() })
+    // Lần mới nhất mang id THẤP nhất: sắp chỉ theo id thì nó xuống cuối, nên test này bắt được.
+    const sameInstantOffset = settlement({ id: 2, at: "2026-09-10T09:00:00+07:00" })
+    const sameInstantUtc = settlement({ id: 3, at: "2026-09-10T02:00:00.000Z" })
+    const later = settlement({ id: 1, at: new Date(2026, 8, 12, 8).toISOString() })
 
     const ids = settlementsMadeInMonth([sameInstantOffset, later, sameInstantUtc], "2026-09", ["Quỹ A"]).map((s) => s.id)
 
-    expect(ids).toEqual([3, 2, 1])
+    expect(ids).toEqual([1, 3, 2])
   })
 
   it("flags a settlement whose fund is no longer among the savings funds", () => {
