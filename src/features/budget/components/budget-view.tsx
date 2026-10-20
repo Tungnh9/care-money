@@ -79,8 +79,10 @@ function BudgetView() {
   // thẻ "Chi tiêu tháng này" ở Tổng quan.
   const spent = totalExpensesForMonth(expenses, currentMonth)
   const monthExpenses = expenses.filter((e) => monthKeyFromDayKey(e.dayKey) === currentMonth)
-  // Khối "Chốt sổ" chỉ để xem lại: tính riêng, KHÔNG gộp vào monthExpenses (gộp là lọt vào "đã chi", biểu đồ
-  // và gợi ý). Lọc theo ngày BẤM chứ không theo tháng được tất toán — xem settlementsMadeInMonth.
+  // Khối "Chốt sổ" chỉ để xem lại: tính riêng, KHÔNG gộp vào monthExpenses. monthExpenses chỉ đi vào danh sách
+  // khoản chi, nên gộp vào thì lần tất toán thành 1 dòng chi trong nhóm ngày, bị cộng vào tổng ngày và "· N khoản"
+  // ("đã chi" và các biểu đồ đọc thẳng `expenses` nên không đổi). Lọc theo ngày BẤM chứ không theo tháng được
+  // tất toán — xem settlementsMadeInMonth.
   const monthSettlements = settlementsMadeInMonth(settlements, currentMonth, savings.map((f) => f.name))
   const remaining = remainingToSettle(salaries, expenses, settlements, currentMonth)
   const tagBreakdown = breakdownByTag(expenses, currentMonth)
