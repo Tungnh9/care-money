@@ -299,6 +299,19 @@ describe("useBudget", () => {
       expect(getStoredFinance().savings[0].amount).toBe(100_000)
       expect(getStoredBudget().settlements).toEqual([])
     })
+
+    it("keeps the settlement after a reload when the fund balance had a fraction of a đồng", async () => {
+      setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ A", amount: 150_000.5, target: 500_000 }] })
+      const { result } = renderHook(() => useBudget())
+      await waitFor(() => expect(result.current.settlements).toEqual([]))
+
+      act(() => {
+        result.current.confirmSettlement("2026-09", "Quỹ A", "deposit", 300_000)
+      })
+
+      expect(getStoredBudget().settlements).toHaveLength(1)
+      expect(getStoredBudget().settlements[0]).toMatchObject({ fundAmountBefore: 150_000.5, fundAmountAfter: 450_000.5 })
+    })
   })
 })
 
