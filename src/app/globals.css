@@ -1,4 +1,7 @@
 @import "tailwindcss";
+/* Tailwind tự quét mọi file trong repo để tìm class. Bỏ docs/ ra: tài liệu chép nguyên văn class mẫu
+   có dấu `*` nên Tailwind sinh ra CSS lỗi, làm hỏng biên dịch. Đường dẫn tính từ file này. */
+@source not "../../docs";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
