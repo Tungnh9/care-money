@@ -40,8 +40,9 @@ const settlementSchema: z.ZodType<Settlement> = z.object({
   direction: z.enum(["deposit", "withdraw"]),
   amount: z.number().int().positive(),
   fundName: z.string(),
-  fundAmountBefore: z.number().int(),
-  fundAmountAfter: z.number().int(),
+  // Số dư sổ có thể lẻ khi nhập từ file (savingsFundSchema.amount là z.number()); bỏ bản ghi thì tháng mở lại, dễ bị tất toán hai lần.
+  fundAmountBefore: z.number(),
+  fundAmountAfter: z.number(),
 })
 
 // expenses/settlements là lịch sử tích luỹ dài hạn — 1 bản ghi hỏng chỉ bị bỏ riêng nó (safeArray),

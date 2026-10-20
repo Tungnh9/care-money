@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { render, screen, fireEvent, waitFor } from "@testing-library/react"
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react"
 
 import { MoneyVisibilityProvider } from "@/components/money-visibility-provider"
 import { SettleMonthModal } from "../../components/settle-month-modal"
@@ -175,5 +175,28 @@ describe("SettleMonthModal", () => {
     await waitFor(() => expect(screen.getByLabelText("Số tiền", { exact: false })).toHaveValue(""))
     expect(screen.getByLabelText("Số tiền", { exact: false })).toHaveAttribute("placeholder", "••••••••")
     expect(screen.queryByText(/200\.000/)).not.toBeInTheDocument()
+  })
+
+  it("shows each fund's balance on its chip", () => {
+    render(
+      <SettleMonthModal open onOpenChange={vi.fn()} month="2026-09" remaining={-150_000} savings={SAVINGS} onConfirm={vi.fn()} />
+    )
+
+    expect(within(screen.getByRole("button", { name: "Quỹ A" })).getByText("100k")).toBeInTheDocument()
+    expect(within(screen.getByRole("button", { name: "Quỹ B" })).getByText("20xu")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Quỹ B" })).toHaveAccessibleDescription("Số dư 20.000 ₫")
+  })
+
+  it("masks the fund balances on the chips while money is hidden", async () => {
+    window.localStorage.setItem("hide-money", "1")
+    render(
+      <MoneyVisibilityProvider>
+        <SettleMonthModal open onOpenChange={vi.fn()} month="2026-09" remaining={-150_000} savings={SAVINGS} onConfirm={vi.fn()} />
+      </MoneyVisibilityProvider>
+    )
+
+    await waitFor(() => expect(screen.getAllByText("•••")).toHaveLength(2))
+    expect(screen.queryByText("100k")).not.toBeInTheDocument()
+    expect(screen.queryByText("20xu")).not.toBeInTheDocument()
   })
 })

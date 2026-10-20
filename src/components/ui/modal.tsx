@@ -84,9 +84,12 @@ function Modal({
       // Defer the restore instead of calling it here directly: if this cleanup turns out to be
       // Strict Mode's simulated one, the immediately-following re-setup above cancels it before
       // it fires. A real close/unmount has no such re-setup, so it fires and restores focus.
+      // Skip an opener that has since been removed or disabled: browsers ignore focus() on it
+      // anyway, but jsdom focuses a disabled button that carries a tabindex (Base UI's do) and
+      // would steal focus from wherever the page moved it.
       pendingRestoreRef.current = window.setTimeout(() => {
         pendingRestoreRef.current = null
-        previouslyFocused?.focus()
+        if (previouslyFocused?.isConnected && !previouslyFocused.matches(":disabled")) previouslyFocused.focus()
       }, 0)
     }
   }, [open, previouslyFocused])

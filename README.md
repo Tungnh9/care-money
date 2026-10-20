@@ -80,7 +80,7 @@ public/assets/             # logo, app-icon, avatar, icons/ (12 icon module dùn
 | --- | --- | --- |
 | `/overview` | `overview` | Tổng quan — tổng hợp số liệu từ finance/budget/goals/journal/study, không có state riêng, mỗi phần bị ẩn nếu module tương ứng đang tắt ở Cài đặt |
 | `/finance` | `finance` | Tài chính — 4 tab: Tiết kiệm · Nợ thẻ tín dụng (có màu tuỳ chỉnh) · Tích lũy vàng (nhiều cửa hàng, mỗi cửa hàng 1 giá riêng) · Đầu tư |
-| `/budget` | `budget` | Chi tiêu — nhập lương hàng tháng, ghi từng khoản chi kèm tag tuỳ biến (cấu hình ở Cài đặt), xem biểu đồ theo tag và theo tháng (ApexCharts), "chốt" tháng: dư thì cộng vào 1 quỹ tiết kiệm, thiếu thì rút từ 1 quỹ — số tiền "còn phải chốt" luôn tính lại từ dữ liệu gốc, không khoá sau khi chốt 1 lần |
+| `/budget` | `budget` | Chi tiêu — nhập lương hàng tháng, ghi từng khoản chi kèm tag tuỳ biến (cấu hình ở Cài đặt), xem biểu đồ theo tag và theo tháng (ApexCharts), "tất toán" tháng: dư thì cộng vào 1 quỹ tiết kiệm, thiếu thì rút từ 1 quỹ (nút chọn quỹ hiện số dư rút gọn) — số tiền còn phải tất toán luôn tính lại từ dữ liệu gốc; mọi tháng cũ có lương mà còn lệch đều được nhắc cho tới khi tất toán xong; tháng đang chạy phải có lương (kể cả 0 đ) mới tất toán được; các lần tất toán bấm trong tháng hiện ở khối "Chốt sổ" đầu danh sách "Khoản chi tháng này" (không cộng vào số đã chi) |
 | `/journal` | `journal` | Nhật ký — ghi chú rich-text hàng ngày (sanitize qua `dompurify`) kèm mood (danh sách mood tuỳ biến ở Cài đặt), có card "On this day" gợi lại bài viết cùng ngày các năm trước |
 | `/study` | `study` | Học tập — 4 tab: **Hôm nay** (task hàng ngày + Pomodoro + pick ngẫu nhiên-nhưng-cố-định-theo-ngày 5 từ vựng/1 điểm ngữ pháp) · **Từ vựng** · **Ngữ pháp** (2 tab sau đọc từ `content/*.jsonl`) · **Trò chơi** (3 mini-game ôn từ vựng — xem chi tiết bên dưới) |
 | `/goals` | `goals` | Mục tiêu — 3 mục tiêu tính từ dữ liệu Tài chính thật, riêng mục "mua xe" có thể gắn thủ công vào 1 quỹ tiết kiệm cụ thể |
@@ -134,7 +134,7 @@ Tab "Trò chơi" gồm 3 mini-game ôn từ vựng, dùng chung 1 khung điều 
 | `TaskItem` | `label` · `done` · `onToggle` |
 | `Confetti` | `n` (số lượng mảnh confetti) |
 | `Fireworks` | `sparksPerBurst` — hiệu ứng pháo hoa CSS, dùng khi ghép đúng cặp thẻ trong mini-game Ghép cặp |
-| `FundPicker` | `savings` · `selected` · `onSelect` — chọn 1 quỹ tiết kiệm, dùng chung ở Mục tiêu (gắn quỹ mua xe) và Chi tiêu (chốt tháng) |
+| `FundPicker` | `savings` · `selected` · `onSelect` — chọn 1 quỹ tiết kiệm, dùng chung ở Mục tiêu (gắn quỹ mua xe) và Chi tiêu (tất toán tháng); mỗi nút hiện số dư rút gọn cạnh tên quỹ (`formatMoneyCompact`: 8k · 50xu · 500k · 1,5tr · 2 tỷ), số dư đầy đủ đọc qua `aria-describedby`, tự che khi bật "ẩn số tiền" |
 | `ImageWithFallback` | `src` · `alt` · `iconSize` · `imageSizes` — wrapper `next/image` tự rơi về icon khi thiếu ảnh hoặc load lỗi (dùng cho ảnh minh hoạ từ vựng) |
 | `SpeakButton` | `word` · `size` sm/md — phát âm 1 từ tiếng Anh qua Web Speech API (`speakWord`) |
 | `GrammarHighlightCard` · `GrammarListCard` | `entry` / `entries` · `vocab` — thẻ "Ngữ pháp hôm nay" (dùng ở Học tập và Tổng quan) và danh sách ngữ pháp, tô sáng từ vựng trong câu ví dụ, có nút dịch từng câu |
@@ -157,8 +157,8 @@ Tab "Trò chơi" gồm 3 mini-game ôn từ vựng, dùng chung 1 khung điều 
 | `auth.ts` | Auth mock qua localStorage: `getStoredUser` · `setStoredUser` · `clearStoredUser` |
 | `data-change-bus.ts` | Pub/sub nhỏ (`notifyDataChanged` · `onDataChanged`) báo hiệu dữ liệu vừa đổi giữa các component không liên quan trực tiếp |
 | `data-transfer.ts` | Định dạng bản sao xuất/nhập/đồng bộ: `buildExportPayload` · `parseImportPayload` · `exportFileName` · `uploadedSummary` · `EXPORT_VERSION` — dùng bởi Cài đặt và route `/api/sync` |
-| `date.ts` | Helper ngày/tháng tiếng Việt: `longDate` · `dayKey` · `formatDayKey` · `monthKey` · `monthKeyFromDayKey` · `monthsFrom` · `shiftMonth` · `shiftDay` · `monthsThroughYearEnd` · `formatMonthKey` |
-| `format.ts` | `formatMoney(n, hidden)` (VNĐ, ẩn bằng dấu chấm khi bật "ẩn số tiền") · `groupVN(value)` (nhóm số hàng nghìn cho input) |
+| `date.ts` | Helper ngày/tháng tiếng Việt: `longDate` · `dayKey` · `dayKeyFromIso` (chuỗi ISO → ngày theo giờ máy) · `formatDayKey` · `monthKey` · `monthKeyFromDayKey` · `isMonthKey` (key tháng đúng dạng YYYY-MM, tháng 01–12) · `monthsFrom` · `shiftMonth` · `shiftDay` · `monthsThroughYearEnd` · `formatMonthKey` |
+| `format.ts` | `formatMoney(n, hidden)` (VNĐ, ẩn bằng dấu chấm khi bật "ẩn số tiền") · `groupVN(value)` (nhóm số hàng nghìn cho input) · `formatMoneyCompact(n, hidden)` (rút gọn, cắt xuống: 8k · 50xu · 500k · 1,5tr · 2 tỷ; ẩn → `•••`) · `pastedMoneyDigits(text)` (lấy chữ số từ số tiền dán vào) |
 | `mock-account.ts` | `MOCK_ACCOUNT` — tài khoản demo hardcode cho `login` |
 | `money-visibility-storage.ts` | Đọc/ghi localStorage cờ "ẩn số tiền": `getHideMoney` · `setHideMoney` |
 | `next-id.ts` | `nextId(existing)` — sinh id số nguyên tiếp theo (`max(id hiện có) + 1`), dùng chung bởi `use-finance.ts` và `use-budget.ts` |

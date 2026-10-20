@@ -6,6 +6,7 @@ import { toast } from "sonner"
 import { MoneyVisibilityProvider, useMoneyVisibility } from "@/components/money-visibility-provider"
 import { useBudget } from "@/lib/budget/use-budget"
 import { BUDGET_STORAGE_KEY, DEFAULT_BUDGET_STATE, getStoredBudget, setStoredBudget } from "@/lib/budget/budget-storage"
+import { dayKeyFromIso } from "@/lib/date"
 import {
   DEFAULT_FINANCE_STATE,
   FINANCE_STORAGE_KEY,
@@ -32,6 +33,18 @@ describe("useBudget", () => {
     await waitFor(() => expect(result.current.salaries).toEqual(DEFAULT_BUDGET_STATE.salaries))
     expect(result.current.expenses).toEqual([])
     expect(result.current.settlements).toEqual([])
+  })
+
+  it("reports hydrated only once the stored data has been read", async () => {
+    const seen: boolean[] = []
+    renderHook(() => {
+      const budget = useBudget()
+      seen.push(budget.hydrated)
+      return budget
+    })
+
+    expect(seen[0]).toBe(false)
+    await waitFor(() => expect(seen[seen.length - 1]).toBe(true))
   })
 
   it("setSalary creates a new entry when none exists for that month", async () => {
@@ -145,6 +158,20 @@ describe("useBudget", () => {
       })
     })
 
+    it("stamps the settlement with the moment of confirmation as an ISO string", async () => {
+      vi.setSystemTime(new Date(2026, 8, 30, 23, 30))
+      const { result } = renderHook(() => useBudget())
+      await waitFor(() => expect(result.current.settlements).toEqual([]))
+
+      act(() => {
+        result.current.confirmSettlement("2026-09", "Quỹ A", "deposit", 50_000)
+      })
+
+      const at = result.current.settlements[0].at
+      expect(at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
+      expect(dayKeyFromIso(at)).toBe("2026-09-30")
+    })
+
     it("aborts and writes nothing to budget storage when the fund no longer exists", async () => {
       const { result } = renderHook(() => useBudget())
       await waitFor(() => expect(result.current.settlements).toEqual([]))
@@ -208,6 +235,17 @@ describe("useBudget", () => {
 
       expect(outcomes).toEqual([true, false, false])
       expect(toast.success).toHaveBeenCalledTimes(1)
+    })
+
+    it("names the settled month in the success toast", async () => {
+      const { result } = renderHook(() => useBudget())
+      await waitFor(() => expect(result.current.settlements).toEqual([]))
+
+      act(() => {
+        result.current.confirmSettlement("2026-08", "Quỹ A", "deposit", 50_000)
+      })
+
+      expect(toast.success).toHaveBeenCalledWith("Đã tất toán tháng 8, 2026")
     })
 
     it("takes a deposit back out of the fund when the settlement history cannot be saved", async () => {
@@ -298,6 +336,19 @@ describe("useBudget", () => {
       expect(toast.success).not.toHaveBeenCalled()
       expect(getStoredFinance().savings[0].amount).toBe(100_000)
       expect(getStoredBudget().settlements).toEqual([])
+    })
+
+    it("keeps the settlement after a reload when the fund balance had a fraction of a đồng", async () => {
+      setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ A", amount: 150_000.5, target: 500_000 }] })
+      const { result } = renderHook(() => useBudget())
+      await waitFor(() => expect(result.current.settlements).toEqual([]))
+
+      act(() => {
+        result.current.confirmSettlement("2026-09", "Quỹ A", "deposit", 300_000)
+      })
+
+      expect(getStoredBudget().settlements).toHaveLength(1)
+      expect(getStoredBudget().settlements[0]).toMatchObject({ fundAmountBefore: 150_000.5, fundAmountAfter: 450_000.5 })
     })
   })
 })

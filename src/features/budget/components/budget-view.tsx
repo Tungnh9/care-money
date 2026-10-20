@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useId, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -20,11 +20,13 @@ import {
 import { useBudget } from "@/lib/budget/use-budget"
 import {
   breakdownByTag,
+  hasSalaryRecord,
   monthlyExpenseTotals,
   monthlyTagBreakdown,
   tagChartColors,
   remainingToSettle,
   salaryForMonth,
+  settlementsMadeInMonth,
   totalExpensesForMonth,
   unsettledPastMonths,
 } from "@/lib/budget/budget-calculations"
@@ -38,9 +40,9 @@ import { MonthlyTagTrendChart } from "./monthly-tag-trend-chart"
 import { SettleMonthModal } from "./settle-month-modal"
 import type { Expense } from "@/lib/budget/types"
 
-// Nhắc tất toán bao nhiêu tháng đã qua (Quyết định 1 của plan 2026-09-29-fix-2-budget: chỉ tháng
-// liền trước — đủ cho phần lệch phát sinh quanh lúc sang tháng, không lôi các tháng cũ ra làm phiền).
-const PAST_MONTHS_TO_SETTLE = 1
+// Thay câu "Bạn đang dư/thiếu" ở thẻ Tất toán khi tháng này chưa có bản ghi lương (kể cả 0 đ).
+const MISSING_SALARY_HINT =
+  "Chưa nhập lương tháng này. Nhập lương (kể cả 0 đ) ở thẻ Lương tháng này rồi mới tất toán."
 
 function BudgetView() {
   const { hidden } = useMoneyVisibility()
@@ -48,6 +50,7 @@ function BudgetView() {
     salaries,
     expenses,
     settlements,
+    hydrated,
     setSalary,
     addExpense,
     updateExpense,
@@ -56,9 +59,17 @@ function BudgetView() {
   } = useBudget()
   const { savings } = useFinance()
   const { settings } = useSettings()
-  // null = modal tất toán đang đóng; ngược lại là tháng đang tất toán (tháng này, hoặc tháng trước còn lệch).
+  // null = modal tất toán đang đóng; ngược lại là tháng đang tất toán (tháng này, hoặc 1 tháng đã qua còn lệch).
   const [settleMonth, setSettleMonth] = useState<string | null>(null)
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
+  const settleCardRef = useRef<HTMLElement>(null)
+  const settleButtonRef = useRef<HTMLButtonElement>(null)
+  // Tháng (tháng này hoặc tháng cũ) vừa tất toán xong qua hộp thoại, chờ effect bên dưới xem có phải chuyển
+  // focus không: ghi ở onConfirm, đọc ở effect.
+  const settledMonthRef = useRef<string | null>(null)
+  // Nút "Tất toán tháng" khoá vì thiếu lương thì lấy lời nhắc làm mô tả (aria-describedby): trình đọc màn hình
+  // đọc được lý do khoá, còn tên nút vẫn đúng là "Tất toán tháng".
+  const missingSalaryHintId = useId()
 
   const currentMonth = monthKey()
 
@@ -68,11 +79,43 @@ function BudgetView() {
   // thẻ "Chi tiêu tháng này" ở Tổng quan.
   const spent = totalExpensesForMonth(expenses, currentMonth)
   const monthExpenses = expenses.filter((e) => monthKeyFromDayKey(e.dayKey) === currentMonth)
+  // Khối "Chốt sổ" chỉ để xem lại: tính riêng, KHÔNG gộp vào monthExpenses. monthExpenses chỉ đi vào danh sách
+  // khoản chi, nên gộp vào thì lần tất toán thành 1 dòng chi trong nhóm ngày, bị cộng vào tổng ngày và "· N khoản"
+  // ("đã chi" và các biểu đồ đọc thẳng `expenses` nên không đổi). Lọc theo ngày BẤM chứ không theo tháng được
+  // tất toán — xem settlementsMadeInMonth.
+  const monthSettlements = settlementsMadeInMonth(settlements, currentMonth, savings.map((f) => f.name))
   const remaining = remainingToSettle(salaries, expenses, settlements, currentMonth)
   const tagBreakdown = breakdownByTag(expenses, currentMonth)
-  const pastUnsettled = unsettledPastMonths(salaries, expenses, settlements, currentMonth, PAST_MONTHS_TO_SETTLE)
+  const pastUnsettled = unsettledPastMonths(salaries, expenses, settlements, currentMonth)
   const settleTarget = settleMonth ?? currentMonth
   const settleRemaining = remainingToSettle(salaries, expenses, settlements, settleTarget)
+  const salaryRecorded = hasSalaryRecord(salaries, currentMonth)
+  // Khoá nút khi không còn gì để tất toán, hoặc khi tháng này chưa có bản ghi lương: salary mặc định 0 nên
+  // "Bạn đang thiếu" sẽ đúng bằng cả số đã chi, và tất toán sẽ rút từ quỹ cả tháng chi tiêu.
+  const settleDisabled = remaining === 0 || !salaryRecorded
+  // Chỉ nhắc khi đã đọc xong storage: trước đó salaries là mặc định rỗng, "chưa có lương" chỉ là chưa đọc xong.
+  const showMissingSalaryHint = hydrated && !salaryRecorded
+
+  // Modal chỉ biết trả focus về đúng nút đã mở nó, mà sau khi tất toán đủ thì nút đó không dùng được nữa:
+  // nút của tháng cũ bị gỡ khỏi danh sách, còn nút "Tất toán tháng" của tháng này tự khoá vì không còn gì để
+  // tất toán. focus() lên phần tử đã gỡ hay đã khoá không làm gì, nên focus rơi xuống <body>. Effect này chạy
+  // sau mỗi lần render: thấy nút mở hộp thoại không còn dùng được thì chuyển focus tới nút của tháng cũ đầu
+  // tiên còn lại, hết tháng cũ thì tới nút "Tất toán tháng" nếu bấm được, không thì tới chính thẻ Tất toán
+  // (tabIndex=-1). Tất toán một phần thì nút vẫn ở đó, vẫn bấm được và Modal tự trả focus về nó — chỉ xoá ghi nhớ.
+  useEffect(() => {
+    const settledMonth = settledMonthRef.current
+    if (settledMonth === null) return
+    settledMonthRef.current = null
+    const openerStillUsable =
+      settledMonth === currentMonth ? !settleDisabled : pastUnsettled.some((past) => past.month === settledMonth)
+    if (openerStillUsable) return
+
+    const target =
+      settleCardRef.current?.querySelector<HTMLElement>("[data-settle-month]") ??
+      (settleDisabled ? null : settleButtonRef.current) ??
+      settleCardRef.current
+    target?.focus()
+  })
 
   // Chart "Chi tiêu theo tháng" bắt đầu từ tháng hiện tại, kéo dài tới hết tháng 12 cùng năm —
   // sang năm mới, currentMonth tự đổi theo giờ hệ thống nên chart tự cập nhật lại đúng từ tháng 1
@@ -100,30 +143,46 @@ function BudgetView() {
         Lương {formatMoney(salary, hidden)} · đã chi {formatMoney(spent, hidden)} tháng này
       </p>
       <div className="ob-card-grid flex flex-col gap-5">
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        {/* Chỉ thẻ Lương (con đầu) không giãn theo hàng: thẻ Tất toán dài ra theo số tháng cũ thì thẻ Lương vẫn
+            gọn, còn lúc thẻ Tất toán ngắn hơn thì nó giãn ra, 2 thẻ cao bằng nhau như trước. */}
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 [&>:first-child]:self-start">
           <SalaryCard
             month={currentMonth}
             salary={salary}
-            recorded={salaries.some((s) => s.month === currentMonth)}
+            recorded={salaryRecorded}
             onSave={setSalary}
           />
 
-          <Card label="Tất toán tháng" className="min-w-0">
+          <Card
+            ref={settleCardRef}
+            tabIndex={-1}
+            aria-label="Tất toán tháng"
+            label="Tất toán tháng"
+            className="min-w-0"
+          >
             <p className="mb-[14px] text-[13.5px] leading-[1.55] text-[var(--ob-color-text-muted)]">
-              {remaining >= 0 ? "Bạn đang dư " : "Bạn đang thiếu "}
-              <span
-                className="font-bold"
-                style={{ color: remaining >= 0 ? "var(--ob-color-income)" : "var(--ob-color-expense)" }}
-              >
-                {formatMoney(Math.abs(remaining), hidden)}
-              </span>{" "}
-              tháng này.
+              {showMissingSalaryHint ? (
+                <span id={missingSalaryHintId}>{MISSING_SALARY_HINT}</span>
+              ) : (
+                <>
+                  {remaining >= 0 ? "Bạn đang dư " : "Bạn đang thiếu "}
+                  <span
+                    className="font-bold"
+                    style={{ color: remaining >= 0 ? "var(--ob-color-income)" : "var(--ob-color-expense)" }}
+                  >
+                    {formatMoney(Math.abs(remaining), hidden)}
+                  </span>{" "}
+                  tháng này.
+                </>
+              )}
             </p>
             <Button
+              ref={settleButtonRef}
               variant="primary"
               size="sm"
               type="button"
-              disabled={remaining === 0}
+              disabled={settleDisabled}
+              aria-describedby={showMissingSalaryHint ? missingSalaryHintId : undefined}
               onClick={() => setSettleMonth(currentMonth)}
             >
               Tất toán tháng
@@ -141,7 +200,13 @@ function BudgetView() {
                   </span>{" "}
                   chưa tất toán.
                 </p>
-                <Button variant="secondary" size="sm" type="button" onClick={() => setSettleMonth(past.month)}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  type="button"
+                  data-settle-month={past.month}
+                  onClick={() => setSettleMonth(past.month)}
+                >
                   Tất toán {formatMonthKey(past.month).toLowerCase()}
                 </Button>
               </div>
@@ -160,7 +225,12 @@ function BudgetView() {
           </Card>
         </div>
 
-        <ExpenseListCard expenses={monthExpenses} onRemove={removeExpense} onEdit={setEditingExpense} />
+        <ExpenseListCard
+          expenses={monthExpenses}
+          settlements={monthSettlements}
+          onRemove={removeExpense}
+          onEdit={setEditingExpense}
+        />
 
         <Card label="Chi tiêu theo tháng" className="min-w-0 w-full">
           <MonthlyTrendChart data={monthlyExpenses} currentMonth={currentMonth} />
@@ -179,7 +249,13 @@ function BudgetView() {
         month={settleTarget}
         remaining={settleRemaining}
         savings={savings}
-        onConfirm={(fundName, direction, amount) => confirmSettlement(settleTarget, fundName, direction, amount)}
+        onConfirm={(fundName, direction, amount) => {
+          const settled = confirmSettlement(settleTarget, fundName, direction, amount)
+          // Ghi nhớ mọi tháng vừa tất toán, kể cả tháng này: tất toán đủ tháng này thì nút "Tất toán tháng" tự
+          // khoá và Modal không trả focus về nó được. Effect ở trên quyết định có phải chuyển focus hay không.
+          if (settled) settledMonthRef.current = settleTarget
+          return settled
+        }}
       />
 
       <EditExpenseModal

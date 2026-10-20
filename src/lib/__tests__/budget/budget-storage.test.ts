@@ -146,6 +146,38 @@ describe("getStoredBudget", () => {
 
     expect(getStoredBudget().settlements).toEqual([settlement])
   })
+
+  it("keeps a settlement whose fund balances are fractional, as a fund read from an imported file can be", () => {
+    const settlement = {
+      id: 1,
+      month: "2026-09",
+      at: "2026-09-30T00:00:00.000Z",
+      direction: "deposit",
+      amount: 300_000,
+      fundName: "Quỹ A",
+      fundAmountBefore: 150_000.5,
+      fundAmountAfter: 450_000.5,
+    }
+    window.localStorage.setItem(BUDGET_STORAGE_KEY, JSON.stringify({ ...DEFAULT_BUDGET_STATE, settlements: [settlement] }))
+
+    expect(getStoredBudget().settlements).toEqual([settlement])
+  })
+
+  it("still drops a settlement whose fund balance is not a number", () => {
+    const settlement = {
+      id: 1,
+      month: "2026-09",
+      at: "2026-09-30T00:00:00.000Z",
+      direction: "deposit",
+      amount: 300_000,
+      fundName: "Quỹ A",
+      fundAmountBefore: "150000",
+      fundAmountAfter: 450_000,
+    }
+    window.localStorage.setItem(BUDGET_STORAGE_KEY, JSON.stringify({ ...DEFAULT_BUDGET_STATE, settlements: [settlement] }))
+
+    expect(getStoredBudget().settlements).toEqual([])
+  })
 })
 
 describe("renameFundInSettlements", () => {

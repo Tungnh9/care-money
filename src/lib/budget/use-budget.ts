@@ -47,12 +47,16 @@ function applyFundDeltaSafely(
 
 function useBudget() {
   const [state, setState] = useState<BudgetState>(DEFAULT_BUDGET_STATE)
+  // false cho tới khi effect mount đọc xong localStorage: trước đó `state` là DEFAULT_BUDGET_STATE nên
+  // "chưa có lương" chỉ là chưa đọc, không phải chưa nhập — chỗ nào hiện lời nhắc thì chờ cờ này.
+  const [hydrated, setHydrated] = useState(false)
   const { hidden } = useMoneyVisibility()
 
   useEffect(() => {
     // localStorage không có lúc SSR, chỉ đọc được thật sau khi mount trên client.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setState(getStoredBudget())
+    setHydrated(true)
   }, [])
 
   // Tab khác thêm khoản chi, hay 1 lần tải xuống/nhập file ghi budget-data sau khi trang này đã mở.
@@ -170,7 +174,7 @@ function useBudget() {
         )
         return false
       }
-      toast.success("Đã tất toán tháng")
+      toast.success(`Đã tất toán ${formatMonthKey(month).toLowerCase()}`)
       return true
     },
     [persist, hidden]
@@ -180,6 +184,7 @@ function useBudget() {
     salaries: state.salaries,
     expenses: state.expenses,
     settlements: state.settlements,
+    hydrated,
     setSalary,
     addExpense,
     updateExpense,
