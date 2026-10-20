@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useId, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -67,6 +67,9 @@ function BudgetView() {
   // Tháng (tháng này hoặc tháng cũ) vừa tất toán xong qua hộp thoại, chờ effect bên dưới xem có phải chuyển
   // focus không: ghi ở onConfirm, đọc ở effect.
   const settledMonthRef = useRef<string | null>(null)
+  // Nút "Tất toán tháng" khoá vì thiếu lương thì lấy lời nhắc làm mô tả (aria-describedby): trình đọc màn hình
+  // đọc được lý do khoá, còn tên nút vẫn đúng là "Tất toán tháng".
+  const missingSalaryHintId = useId()
 
   const currentMonth = monthKey()
 
@@ -155,7 +158,7 @@ function BudgetView() {
           >
             <p className="mb-[14px] text-[13.5px] leading-[1.55] text-[var(--ob-color-text-muted)]">
               {showMissingSalaryHint ? (
-                MISSING_SALARY_HINT
+                <span id={missingSalaryHintId}>{MISSING_SALARY_HINT}</span>
               ) : (
                 <>
                   {remaining >= 0 ? "Bạn đang dư " : "Bạn đang thiếu "}
@@ -175,6 +178,7 @@ function BudgetView() {
               size="sm"
               type="button"
               disabled={settleDisabled}
+              aria-describedby={showMissingSalaryHint ? missingSalaryHintId : undefined}
               onClick={() => setSettleMonth(currentMonth)}
             >
               Tất toán tháng

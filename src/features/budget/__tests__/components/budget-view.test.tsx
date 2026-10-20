@@ -520,6 +520,36 @@ describe("BudgetView", () => {
     expect(screen.getByText(/Bạn đang thiếu/)).toBeInTheDocument()
   })
 
+  it("tells screen readers why this month's settle button is locked when there is no salary record", async () => {
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      expenses: [{ id: 1, dayKey: "2026-09-02", amount: 200_000, tag: null }],
+    })
+
+    render(<BudgetView />)
+    await screen.findByText(/Chưa nhập lương tháng này/)
+
+    expect(screen.getByRole("button", { name: "Tất toán tháng" })).toHaveAccessibleDescription(
+      "Chưa nhập lương tháng này. Nhập lương (kể cả 0 đ) ở thẻ Lương tháng này rồi mới tất toán."
+    )
+  })
+
+  it("gives this month's settle button no description once a salary is recorded, even while it stays locked", async () => {
+    // Lương đã nhập, chi vừa hết: nút vẫn khoá (không còn gì để tất toán) nhưng không còn lời nhắc để làm mô tả.
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [{ month: "2026-09", amount: 1_000_000 }],
+      expenses: [{ id: 1, dayKey: "2026-09-02", amount: 1_000_000, tag: null }],
+    })
+
+    render(<BudgetView />)
+    await screen.findByText(`Lương ${formatMoney(1_000_000)} · đã chi ${formatMoney(1_000_000)} tháng này`)
+
+    const button = screen.getByRole("button", { name: "Tất toán tháng" })
+    expect(button).toBeDisabled()
+    expect(button).not.toHaveAccessibleDescription()
+  })
+
   it("moves focus to the next past month's button after a past month is settled in full", async () => {
     setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ A", amount: 100_000, target: 500_000 }] })
     setStoredBudget({
