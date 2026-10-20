@@ -81,6 +81,7 @@ describe("formatMoneyCompact", () => {
   })
 
   it("cuts down at every band edge instead of carrying into the next unit", () => {
+    expect(formatMoneyCompact(1_000)).toBe("1k")
     expect(formatMoneyCompact(9_999)).toBe("9,9k")
     expect(formatMoneyCompact(100_000)).toBe("100k")
     expect(formatMoneyCompact(999_999)).toBe("999k")
