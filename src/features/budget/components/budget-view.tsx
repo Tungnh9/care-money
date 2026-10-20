@@ -141,7 +141,9 @@ function BudgetView() {
         Lương {formatMoney(salary, hidden)} · đã chi {formatMoney(spent, hidden)} tháng này
       </p>
       <div className="ob-card-grid flex flex-col gap-5">
-        <div className="grid grid-cols-1 items-start gap-5 sm:grid-cols-2">
+        {/* Chỉ thẻ Lương (con đầu) không giãn theo hàng: thẻ Tất toán dài ra theo số tháng cũ thì thẻ Lương vẫn
+            gọn, còn lúc thẻ Tất toán ngắn hơn thì nó giãn ra, 2 thẻ cao bằng nhau như trước. */}
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 [&>:first-child]:self-start">
           <SalaryCard
             month={currentMonth}
             salary={salary}
