@@ -134,7 +134,7 @@ Tab "Trò chơi" gồm 3 mini-game ôn từ vựng, dùng chung 1 khung điều 
 | `TaskItem` | `label` · `done` · `onToggle` |
 | `Confetti` | `n` (số lượng mảnh confetti) |
 | `Fireworks` | `sparksPerBurst` — hiệu ứng pháo hoa CSS, dùng khi ghép đúng cặp thẻ trong mini-game Ghép cặp |
-| `FundPicker` | `savings` · `selected` · `onSelect` — chọn 1 quỹ tiết kiệm, dùng chung ở Mục tiêu (gắn quỹ mua xe) và Chi tiêu (chốt tháng) |
+| `FundPicker` | `savings` · `selected` · `onSelect` — chọn 1 quỹ tiết kiệm, dùng chung ở Mục tiêu (gắn quỹ mua xe) và Chi tiêu (tất toán tháng); mỗi nút hiện số dư rút gọn cạnh tên quỹ (`formatMoneyCompact`: 8k · 50xu · 500k · 1,5tr · 2 tỷ), số dư đầy đủ đọc qua `aria-describedby`, tự che khi bật "ẩn số tiền" |
 | `ImageWithFallback` | `src` · `alt` · `iconSize` · `imageSizes` — wrapper `next/image` tự rơi về icon khi thiếu ảnh hoặc load lỗi (dùng cho ảnh minh hoạ từ vựng) |
 | `SpeakButton` | `word` · `size` sm/md — phát âm 1 từ tiếng Anh qua Web Speech API (`speakWord`) |
 | `GrammarHighlightCard` · `GrammarListCard` | `entry` / `entries` · `vocab` — thẻ "Ngữ pháp hôm nay" (dùng ở Học tập và Tổng quan) và danh sách ngữ pháp, tô sáng từ vựng trong câu ví dụ, có nút dịch từng câu |
@@ -158,7 +158,7 @@ Tab "Trò chơi" gồm 3 mini-game ôn từ vựng, dùng chung 1 khung điều 
 | `data-change-bus.ts` | Pub/sub nhỏ (`notifyDataChanged` · `onDataChanged`) báo hiệu dữ liệu vừa đổi giữa các component không liên quan trực tiếp |
 | `data-transfer.ts` | Định dạng bản sao xuất/nhập/đồng bộ: `buildExportPayload` · `parseImportPayload` · `exportFileName` · `uploadedSummary` · `EXPORT_VERSION` — dùng bởi Cài đặt và route `/api/sync` |
 | `date.ts` | Helper ngày/tháng tiếng Việt: `longDate` · `dayKey` · `formatDayKey` · `monthKey` · `monthKeyFromDayKey` · `monthsFrom` · `shiftMonth` · `shiftDay` · `monthsThroughYearEnd` · `formatMonthKey` |
-| `format.ts` | `formatMoney(n, hidden)` (VNĐ, ẩn bằng dấu chấm khi bật "ẩn số tiền") · `groupVN(value)` (nhóm số hàng nghìn cho input) |
+| `format.ts` | `formatMoney(n, hidden)` (VNĐ, ẩn bằng dấu chấm khi bật "ẩn số tiền") · `groupVN(value)` (nhóm số hàng nghìn cho input) · `formatMoneyCompact(n, hidden)` (rút gọn, cắt xuống: 8k · 50xu · 500k · 1,5tr · 2 tỷ; ẩn → `•••`) · `pastedMoneyDigits(text)` (lấy chữ số từ số tiền dán vào) |
 | `mock-account.ts` | `MOCK_ACCOUNT` — tài khoản demo hardcode cho `login` |
 | `money-visibility-storage.ts` | Đọc/ghi localStorage cờ "ẩn số tiền": `getHideMoney` · `setHideMoney` |
 | `next-id.ts` | `nextId(existing)` — sinh id số nguyên tiếp theo (`max(id hiện có) + 1`), dùng chung bởi `use-finance.ts` và `use-budget.ts` |

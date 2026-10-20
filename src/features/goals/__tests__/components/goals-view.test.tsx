@@ -53,6 +53,21 @@ describe("GoalsView", () => {
     expect(within(carCard).getByText("15%")).toBeInTheDocument()
   })
 
+  it("shows the fund's compact balance on the car fund picker", async () => {
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      savings: [{ name: "Quỹ mua xe", amount: 30_000_000, target: 200_000_000 }],
+    })
+
+    render(<GoalsView />)
+
+    await waitFor(() => expect(screen.getByText("Mua xe ô tô")).toBeInTheDocument())
+    const carCard = screen.getByText("Mua xe ô tô").closest("section") as HTMLElement
+    const chip = within(carCard).getByRole("button", { name: "Quỹ mua xe" })
+    expect(within(chip).getByText("30tr")).toBeInTheDocument()
+    expect(chip).toHaveAccessibleDescription("Số dư 30.000.000 ₫")
+  })
+
   it("estimates the remaining gold value from a holdings-weighted average price across stores", async () => {
     setStoredFinance({
       ...DEFAULT_FINANCE_STATE,

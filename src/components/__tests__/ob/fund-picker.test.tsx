@@ -1,6 +1,7 @@
-import { describe, it, expect, vi } from "vitest"
-import { render, screen, fireEvent } from "@testing-library/react"
+import { describe, it, expect, vi, beforeEach } from "vitest"
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react"
 
+import { MoneyVisibilityProvider } from "@/components/money-visibility-provider"
 import { FundPicker } from "@/components/ob/fund-picker"
 import type { SavingsFund } from "@/lib/finance/types"
 
@@ -10,6 +11,10 @@ const SAVINGS: SavingsFund[] = [
 ]
 
 describe("FundPicker", () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+
   it("shows a fallback message and no buttons when there are no savings funds", () => {
     render(<FundPicker savings={[]} selected={null} onSelect={vi.fn()} />)
 
@@ -53,5 +58,52 @@ describe("FundPicker", () => {
 
     expect(onSelect).toHaveBeenCalledTimes(1)
     expect(onSelect).toHaveBeenCalledWith(null)
+  })
+
+  it("shows each fund's compact balance on its chip while the chip's name stays the fund name", () => {
+    render(<FundPicker savings={SAVINGS} selected={null} onSelect={vi.fn()} />)
+
+    expect(within(screen.getByRole("button", { name: "Quỹ dự phòng" })).getByText("50tr")).toBeInTheDocument()
+    expect(within(screen.getByRole("button", { name: "Quỹ mua xe" })).getByText("20tr")).toBeInTheDocument()
+  })
+
+  it("reads the full balance to screen readers as the chip's description", () => {
+    render(<FundPicker savings={SAVINGS} selected={null} onSelect={vi.fn()} />)
+
+    expect(screen.getByRole("button", { name: "Quỹ dự phòng" })).toHaveAccessibleDescription("Số dư 50.000.000 ₫")
+    expect(screen.getByRole("button", { name: "Quỹ mua xe" })).toHaveAccessibleDescription("Số dư 20.000.000 ₫")
+  })
+
+  it("masks the balances while money is hidden", async () => {
+    window.localStorage.setItem("hide-money", "1")
+    render(
+      <MoneyVisibilityProvider>
+        <FundPicker savings={SAVINGS} selected={null} onSelect={vi.fn()} />
+      </MoneyVisibilityProvider>
+    )
+
+    const chip = screen.getByRole("button", { name: "Quỹ dự phòng" })
+    await waitFor(() => expect(within(chip).getByText("•••")).toBeInTheDocument())
+    expect(screen.queryByText("50tr")).not.toBeInTheDocument()
+    expect(chip).toHaveAccessibleDescription("Số dư •••••••• ₫")
+  })
+
+  it("gives each chip its own description even when fund names contain spaces or quotes", () => {
+    const savings: SavingsFund[] = [
+      { name: 'Quỹ "A" mới', amount: 50_000, target: 1 },
+      { name: "Quỹ B b", amount: 500_000, target: 1 },
+    ]
+    render(<FundPicker savings={savings} selected={null} onSelect={vi.fn()} />)
+
+    expect(screen.getByRole("button", { name: 'Quỹ "A" mới' })).toHaveAccessibleDescription("Số dư 50.000 ₫")
+    expect(screen.getByRole("button", { name: "Quỹ B b" })).toHaveAccessibleDescription("Số dư 500.000 ₫")
+    expect(within(screen.getByRole("button", { name: 'Quỹ "A" mới' })).getByText("50xu")).toBeInTheDocument()
+  })
+
+  it("switches from no funds to funds without errors", () => {
+    const { rerender } = render(<FundPicker savings={[]} selected={null} onSelect={vi.fn()} />)
+    rerender(<FundPicker savings={SAVINGS} selected={null} onSelect={vi.fn()} />)
+
+    expect(screen.getAllByRole("button")).toHaveLength(2)
   })
 })
