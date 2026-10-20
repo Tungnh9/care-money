@@ -9,8 +9,14 @@ import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import { formatDayKey } from "@/lib/date"
 import { cn } from "@/lib/utils"
-import { groupExpensesByDay, UNTAGGED_EMOJI, UNTAGGED_LABEL } from "@/lib/budget/budget-calculations"
+import {
+  groupExpensesByDay,
+  UNTAGGED_EMOJI,
+  UNTAGGED_LABEL,
+  type SettlementListItem,
+} from "@/lib/budget/budget-calculations"
 import type { Expense } from "@/lib/budget/types"
+import { ClosingBlock } from "./closing-block"
 
 // Mỗi ngày là 1 khối liền (không còn xen kẽ theo từng dòng giao dịch) — 2 tông xen kẽ theo NGÀY
 // để phân biệt ngày này với ngày kế tiếp; trong 1 ngày, các giao dịch chỉ ngăn nhau bằng 1 gạch
@@ -31,11 +37,14 @@ const DAY_TONES = [
 
 interface ExpenseListCardProps {
   expenses: Expense[]
+  // Các lần tất toán bấm trong tháng — chỉ để vẽ khối "Chốt sổ" ở đầu danh sách, KHÔNG phải khoản chi:
+  // không đi qua groupExpensesByDay nên không vào tổng ngày, "· N khoản" hay các biểu đồ.
+  settlements?: SettlementListItem[]
   onRemove: (id: number) => void
   onEdit: (expense: Expense) => void
 }
 
-function ExpenseListCard({ expenses, onRemove, onEdit }: ExpenseListCardProps) {
+function ExpenseListCard({ expenses, settlements = [], onRemove, onEdit }: ExpenseListCardProps) {
   const { hidden } = useMoneyVisibility()
   const days = groupExpensesByDay(expenses)
   // Như mọi nút xoá ở trang Tài chính: thùng rác chỉ mở hộp xác nhận. Tra lại theo id trên danh
@@ -48,6 +57,7 @@ function ExpenseListCard({ expenses, onRemove, onEdit }: ExpenseListCardProps) {
   return (
     <Card label="Khoản chi tháng này" className="min-w-0 w-full">
       <div>
+        <ClosingBlock settlements={settlements} />
         {days.map((day, dayIdx) => {
           const tone = DAY_TONES[dayIdx % DAY_TONES.length]
           const expanded = openDays[day.dayKey] ?? dayIdx === 0
@@ -154,7 +164,9 @@ function ExpenseListCard({ expenses, onRemove, onEdit }: ExpenseListCardProps) {
           )
         })}
         {!expenses.length ? (
-          <p className="text-[13.5px] text-[var(--ob-color-text-subtle)]">Chưa có khoản chi nào trong tháng này.</p>
+          <p className={cn("text-[13.5px] text-[var(--ob-color-text-subtle)]", settlements.length > 0 && "mt-3")}>
+            Chưa có khoản chi nào trong tháng này.
+          </p>
         ) : null}
       </div>
       <AlertDialog

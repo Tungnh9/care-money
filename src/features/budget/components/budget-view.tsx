@@ -25,6 +25,7 @@ import {
   tagChartColors,
   remainingToSettle,
   salaryForMonth,
+  settlementsMadeInMonth,
   totalExpensesForMonth,
   unsettledPastMonths,
 } from "@/lib/budget/budget-calculations"
@@ -68,6 +69,9 @@ function BudgetView() {
   // thẻ "Chi tiêu tháng này" ở Tổng quan.
   const spent = totalExpensesForMonth(expenses, currentMonth)
   const monthExpenses = expenses.filter((e) => monthKeyFromDayKey(e.dayKey) === currentMonth)
+  // Khối "Chốt sổ" chỉ để xem lại: tính riêng, KHÔNG gộp vào monthExpenses (gộp là lọt vào "đã chi", biểu đồ
+  // và gợi ý). Lọc theo ngày BẤM chứ không theo tháng được tất toán — xem settlementsMadeInMonth.
+  const monthSettlements = settlementsMadeInMonth(settlements, currentMonth, savings.map((f) => f.name))
   const remaining = remainingToSettle(salaries, expenses, settlements, currentMonth)
   const tagBreakdown = breakdownByTag(expenses, currentMonth)
   const pastUnsettled = unsettledPastMonths(salaries, expenses, settlements, currentMonth, PAST_MONTHS_TO_SETTLE)
@@ -160,7 +164,12 @@ function BudgetView() {
           </Card>
         </div>
 
-        <ExpenseListCard expenses={monthExpenses} onRemove={removeExpense} onEdit={setEditingExpense} />
+        <ExpenseListCard
+          expenses={monthExpenses}
+          settlements={monthSettlements}
+          onRemove={removeExpense}
+          onEdit={setEditingExpense}
+        />
 
         <Card label="Chi tiêu theo tháng" className="min-w-0 w-full">
           <MonthlyTrendChart data={monthlyExpenses} currentMonth={currentMonth} />

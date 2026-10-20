@@ -352,4 +352,53 @@ describe("BudgetView", () => {
     expect(trendDot("Tiền trọ")).toHaveStyle({ backgroundColor: CHART_PALETTE[0] })
     expect(trendDot("Ăn uống")).toHaveStyle({ backgroundColor: CHART_PALETTE[5] })
   })
+
+  it("shows a settlement in the 'Chốt sổ' block right after confirming it, without counting it as spent", async () => {
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ A", amount: 100_000, target: 500_000 }] })
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [{ month: "2026-09", amount: 1_000_000 }],
+      expenses: [{ id: 1, dayKey: "2026-09-01", amount: 200_000, tag: null }],
+    })
+
+    render(<BudgetView />)
+    await waitFor(() => expect(screen.getByRole("button", { name: "Tất toán tháng" })).not.toBeDisabled())
+    fireEvent.click(screen.getByRole("button", { name: "Tất toán tháng" }))
+    fireEvent.click(screen.getByRole("button", { name: "Quỹ A" }))
+    fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }))
+
+    const block = await screen.findByTestId("closing-block")
+    expect(within(block).getByText("Tất toán tháng 9")).toBeInTheDocument()
+    expect(within(block).getByText("Nạp vào sổ Quỹ A · 15/09")).toBeInTheDocument()
+    expect(screen.getByText(`Lương ${formatMoney(1_000_000)} · đã chi ${formatMoney(200_000)} tháng này`)).toBeInTheDocument()
+  })
+
+  it("lists only the settlements made this month, by the local day they were made", async () => {
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ A", amount: 100_000, target: 500_000 }] })
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      settlements: [
+        settlement({ id: 1, month: "2026-08", at: new Date(2026, 7, 31, 23, 30).toISOString() }),
+        settlement({ id: 2, month: "2026-08", at: new Date(2026, 8, 1, 0, 30).toISOString() }),
+      ],
+    })
+
+    render(<BudgetView />)
+
+    const block = await screen.findByTestId("closing-block")
+    expect(within(block).getAllByTestId("settlement-row")).toHaveLength(1)
+    expect(within(block).getByText("Nạp vào sổ Quỹ A · bấm ngày 01/09")).toBeInTheDocument()
+  })
+
+  it("marks the fund of a settlement as deleted when it is no longer among the savings funds", async () => {
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ A", amount: 100_000, target: 500_000 }] })
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      settlements: [settlement({ fundName: "Quỹ cũ", at: new Date(2026, 8, 10, 9).toISOString() })],
+    })
+
+    render(<BudgetView />)
+
+    expect(await screen.findByText("Nạp vào sổ Quỹ cũ (đã xoá) · 10/09")).toBeInTheDocument()
+  })
 })
