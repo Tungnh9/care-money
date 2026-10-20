@@ -10,6 +10,7 @@ import {
   monthlyExpenseTotals,
   monthlyTagBreakdown,
   unsettledPastMonths,
+  settlementsMadeInMonth,
   tagChartColors,
   CHART_PALETTE,
   UNTAGGED_CHART_COLOR,
@@ -400,5 +401,38 @@ describe("exceedsBudgetAmountLimit", () => {
   it("rejects anything larger, including a 17-digit typo that would vanish after a reload", () => {
     expect(exceedsBudgetAmountLimit("1000000000000")).toBe(true)
     expect(exceedsBudgetAmountLimit("12345678901234567")).toBe(true)
+  })
+})
+
+describe("settlementsMadeInMonth", () => {
+  it("keeps the settlements made in the month by local day, whatever month they settled", () => {
+    const madeSep1 = settlement({ id: 1, month: "2026-08", at: new Date(2026, 8, 1, 0, 30).toISOString() })
+    const madeAug31 = settlement({ id: 2, month: "2026-08", at: new Date(2026, 7, 31, 23, 30).toISOString() })
+    const madeOct1 = settlement({ id: 3, month: "2026-09", at: new Date(2026, 9, 1, 0, 30).toISOString() })
+
+    expect(settlementsMadeInMonth([madeSep1, madeAug31, madeOct1], "2026-09", ["Quỹ A"])).toEqual([
+      { ...madeSep1, dayKey: "2026-09-01", fundDeleted: false },
+    ])
+  })
+
+  it("leaves out a settlement whose time cannot be read", () => {
+    expect(settlementsMadeInMonth([settlement({ at: "garbage" })], "2026-09", ["Quỹ A"])).toEqual([])
+  })
+
+  it("puts the newest first by real instant, then the higher id", () => {
+    const sameInstantOffset = settlement({ id: 1, at: "2026-09-10T09:00:00+07:00" })
+    const sameInstantUtc = settlement({ id: 2, at: "2026-09-10T02:00:00.000Z" })
+    const later = settlement({ id: 3, at: new Date(2026, 8, 12, 8).toISOString() })
+
+    const ids = settlementsMadeInMonth([sameInstantOffset, later, sameInstantUtc], "2026-09", ["Quỹ A"]).map((s) => s.id)
+
+    expect(ids).toEqual([3, 2, 1])
+  })
+
+  it("flags a settlement whose fund is no longer among the savings funds", () => {
+    const made = settlement({ fundName: "Quỹ A", at: new Date(2026, 8, 10, 9).toISOString() })
+
+    expect(settlementsMadeInMonth([made], "2026-09", ["Quỹ B"])[0].fundDeleted).toBe(true)
+    expect(settlementsMadeInMonth([made], "2026-09", ["Quỹ A"])[0].fundDeleted).toBe(false)
   })
 })

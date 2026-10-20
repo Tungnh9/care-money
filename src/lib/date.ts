@@ -8,6 +8,15 @@ function dayKey(d: Date = new Date()): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
 }
 
+// Chuỗi ISO (vd. `at` của lần tất toán, lưu theo UTC) → ngày theo giờ máy. Không cắt lấy 10 ký tự đầu của
+// chuỗi: đó là ngày UTC, lệch 1 ngày với giờ máy (00:30 ngày 1/10 giờ Việt Nam vẫn là 30/09 theo UTC).
+// Chuỗi không đọc được → null.
+function dayKeyFromIso(iso: string): string | null {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return null
+  return dayKey(date)
+}
+
 function formatDayKey(key: string): string {
   const [y, m, d] = key.split("-").map(Number)
   const weekday = WEEKDAYS[new Date(y, m - 1, d).getDay()]
@@ -94,6 +103,7 @@ function daysBetween(from: string, to: string): number {
 export {
   longDate,
   dayKey,
+  dayKeyFromIso,
   daysBetween,
   daysInMonth,
   formatDayKey,

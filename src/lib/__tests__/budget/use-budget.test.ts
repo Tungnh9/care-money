@@ -6,6 +6,7 @@ import { toast } from "sonner"
 import { MoneyVisibilityProvider, useMoneyVisibility } from "@/components/money-visibility-provider"
 import { useBudget } from "@/lib/budget/use-budget"
 import { BUDGET_STORAGE_KEY, DEFAULT_BUDGET_STATE, getStoredBudget, setStoredBudget } from "@/lib/budget/budget-storage"
+import { dayKeyFromIso } from "@/lib/date"
 import {
   DEFAULT_FINANCE_STATE,
   FINANCE_STORAGE_KEY,
@@ -143,6 +144,20 @@ describe("useBudget", () => {
         fundAmountBefore: 100_000,
         fundAmountAfter: 150_000,
       })
+    })
+
+    it("stamps the settlement with the moment of confirmation as an ISO string", async () => {
+      vi.setSystemTime(new Date(2026, 8, 30, 23, 30))
+      const { result } = renderHook(() => useBudget())
+      await waitFor(() => expect(result.current.settlements).toEqual([]))
+
+      act(() => {
+        result.current.confirmSettlement("2026-09", "Quỹ A", "deposit", 50_000)
+      })
+
+      const at = result.current.settlements[0].at
+      expect(at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
+      expect(dayKeyFromIso(at)).toBe("2026-09-30")
     })
 
     it("aborts and writes nothing to budget storage when the fund no longer exists", async () => {

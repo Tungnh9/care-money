@@ -1,4 +1,4 @@
-import { monthKeyFromDayKey, shiftMonth } from "@/lib/date"
+import { dayKeyFromIso, monthKeyFromDayKey, shiftMonth } from "@/lib/date"
 import type { Expense, MonthlySalary, Settlement } from "@/lib/budget/types"
 
 const UNTAGGED_LABEL = "Không gắn thẻ"
@@ -64,6 +64,22 @@ function unsettledPastMonths(
   return Array.from({ length: lookback }, (_, i) => shiftMonth(currentMonth, -(i + 1)))
     .map((month) => ({ month, remaining: remainingToSettle(salaries, expenses, settlements, month) }))
     .filter((entry) => entry.remaining !== 0)
+}
+
+type SettlementListItem = Settlement & { dayKey: string; fundDeleted: boolean }
+
+// Các lần tất toán BẤM trong `month` — theo ngày giờ máy của `at`, không theo `month` của bản ghi (tháng
+// được tất toán): chốt trễ tháng 8 vào ngày 1/9 là bản ghi `month: "2026-08"` nhưng thuộc danh sách
+// tháng 9. Bản ghi có `at` không đọc được thì bỏ. Mới nhất trước theo thời điểm thật (Date.parse hiểu cả
+// múi giờ lệch UTC), bằng nhau thì id cao trước. `fundDeleted`: sổ của lần chốt không còn trong `fundNames`.
+function settlementsMadeInMonth(settlements: Settlement[], month: string, fundNames: string[]): SettlementListItem[] {
+  const items: SettlementListItem[] = []
+  for (const s of settlements) {
+    const day = dayKeyFromIso(s.at)
+    if (day === null || monthKeyFromDayKey(day) !== month) continue
+    items.push({ ...s, dayKey: day, fundDeleted: !fundNames.includes(s.fundName) })
+  }
+  return items.sort((a, b) => Date.parse(b.at) - Date.parse(a.at) || b.id - a.id)
 }
 
 interface TagBreakdownEntry {
@@ -202,6 +218,7 @@ export {
   signedSettledForMonth,
   remainingToSettle,
   unsettledPastMonths,
+  settlementsMadeInMonth,
   breakdownByTag,
   groupExpensesByDay,
   monthlyExpenseTotals,
@@ -216,6 +233,7 @@ export {
   BUDGET_AMOUNT_LIMIT_HINT,
   type TagBreakdownEntry,
   type UnsettledMonth,
+  type SettlementListItem,
   type DayGroup,
   type MonthlyExpensePoint,
   type MonthlyTagSeries,

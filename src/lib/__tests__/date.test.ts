@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest"
 
 import {
   dayKey,
+  dayKeyFromIso,
   daysBetween,
   daysInMonth,
   formatDayKey,
@@ -21,6 +22,18 @@ describe("dayKey", () => {
   it("formats as yyyy-mm-dd with zero-padded month and day", () => {
     expect(dayKey(new Date(2026, 0, 5))).toBe("2026-01-05")
     expect(dayKey(new Date(2026, 10, 20))).toBe("2026-11-20")
+  })
+})
+
+describe("dayKeyFromIso", () => {
+  it("returns the local day of the instant, not its UTC date", () => {
+    expect(dayKeyFromIso(new Date(2026, 9, 1, 0, 30).toISOString())).toBe("2026-10-01")
+    expect(dayKeyFromIso(new Date(2026, 8, 30, 23, 30).toISOString())).toBe("2026-09-30")
+  })
+
+  it("returns null for an empty or unreadable string", () => {
+    expect(dayKeyFromIso("")).toBeNull()
+    expect(dayKeyFromIso("not a date")).toBeNull()
   })
 })
 
