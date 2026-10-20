@@ -20,6 +20,7 @@ import {
 import { useBudget } from "@/lib/budget/use-budget"
 import {
   breakdownByTag,
+  hasSalaryRecord,
   monthlyExpenseTotals,
   monthlyTagBreakdown,
   tagChartColors,
@@ -39,10 +40,6 @@ import { MonthlyTagTrendChart } from "./monthly-tag-trend-chart"
 import { SettleMonthModal } from "./settle-month-modal"
 import type { Expense } from "@/lib/budget/types"
 
-// Nhắc tất toán bao nhiêu tháng đã qua (Quyết định 1 của plan 2026-09-29-fix-2-budget: chỉ tháng
-// liền trước — đủ cho phần lệch phát sinh quanh lúc sang tháng, không lôi các tháng cũ ra làm phiền).
-const PAST_MONTHS_TO_SETTLE = 1
-
 function BudgetView() {
   const { hidden } = useMoneyVisibility()
   const {
@@ -57,7 +54,7 @@ function BudgetView() {
   } = useBudget()
   const { savings } = useFinance()
   const { settings } = useSettings()
-  // null = modal tất toán đang đóng; ngược lại là tháng đang tất toán (tháng này, hoặc tháng trước còn lệch).
+  // null = modal tất toán đang đóng; ngược lại là tháng đang tất toán (tháng này, hoặc 1 tháng đã qua còn lệch).
   const [settleMonth, setSettleMonth] = useState<string | null>(null)
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
 
@@ -74,7 +71,7 @@ function BudgetView() {
   const monthSettlements = settlementsMadeInMonth(settlements, currentMonth, savings.map((f) => f.name))
   const remaining = remainingToSettle(salaries, expenses, settlements, currentMonth)
   const tagBreakdown = breakdownByTag(expenses, currentMonth)
-  const pastUnsettled = unsettledPastMonths(salaries, expenses, settlements, currentMonth, PAST_MONTHS_TO_SETTLE)
+  const pastUnsettled = unsettledPastMonths(salaries, expenses, settlements, currentMonth)
   const settleTarget = settleMonth ?? currentMonth
   const settleRemaining = remainingToSettle(salaries, expenses, settlements, settleTarget)
 
@@ -104,11 +101,11 @@ function BudgetView() {
         Lương {formatMoney(salary, hidden)} · đã chi {formatMoney(spent, hidden)} tháng này
       </p>
       <div className="ob-card-grid flex flex-col gap-5">
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 items-start gap-5 sm:grid-cols-2">
           <SalaryCard
             month={currentMonth}
             salary={salary}
-            recorded={salaries.some((s) => s.month === currentMonth)}
+            recorded={hasSalaryRecord(salaries, currentMonth)}
             onSave={setSalary}
           />
 

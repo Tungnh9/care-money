@@ -7,6 +7,7 @@ import {
   FINANCE_STORAGE_KEY,
   getStoredFinance,
 } from "@/lib/finance/finance-storage"
+import { MoneyVisibilityProvider } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import { setStoredBudget, DEFAULT_BUDGET_STATE, getStoredBudget } from "@/lib/budget/budget-storage"
 import { BudgetView } from "../../components/budget-view"
@@ -316,11 +317,12 @@ describe("BudgetView", () => {
     expect(screen.getByText(formatMoney(200_000))).toHaveStyle({ color: "var(--ob-color-expense)" })
   })
 
-  it("does not bring up months older than last month", async () => {
+  it("lists every past month that has a salary record, newest first", async () => {
     setStoredBudget({
       ...DEFAULT_BUDGET_STATE,
       salaries: [
-        { month: "2026-07", amount: 1_000_000 },
+        { month: "2025-12", amount: 1_000_000 },
+        { month: "2026-06", amount: 1_000_000 },
         { month: "2026-08", amount: 1_000_000 },
       ],
     })
@@ -328,7 +330,88 @@ describe("BudgetView", () => {
     render(<BudgetView />)
     await screen.findByRole("button", { name: "Tất toán tháng 8, 2026" })
 
-    expect(screen.queryByRole("button", { name: "Tất toán tháng 7, 2026" })).not.toBeInTheDocument()
+    expect(screen.getAllByRole("button", { name: /^Tất toán tháng \d/ }).map((b) => b.textContent)).toEqual([
+      "Tất toán tháng 8, 2026",
+      "Tất toán tháng 6, 2026",
+      "Tất toán tháng 12, 2025",
+    ])
+  })
+
+  it("does not offer a past month that has spending but no salary record", async () => {
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [{ month: "2026-09", amount: 1_000_000 }],
+      expenses: [{ id: 1, dayKey: "2026-08-10", amount: 300_000, tag: null }],
+    })
+
+    render(<BudgetView />)
+    await waitFor(() => expect(screen.getByRole("button", { name: "Tất toán tháng" })).not.toBeDisabled())
+
+    expect(screen.queryByRole("button", { name: "Tất toán tháng 8, 2026" })).not.toBeInTheDocument()
+    expect(screen.queryByText(/còn thiếu/)).not.toBeInTheDocument()
+  })
+
+  it("settles a month several months back and removes only its row", async () => {
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ A", amount: 100_000, target: 500_000 }] })
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [
+        { month: "2026-06", amount: 1_000_000 },
+        { month: "2026-08", amount: 1_000_000 },
+      ],
+      expenses: [
+        { id: 1, dayKey: "2026-06-10", amount: 900_000, tag: null },
+        { id: 2, dayKey: "2026-08-20", amount: 850_000, tag: null },
+      ],
+    })
+
+    render(<BudgetView />)
+    fireEvent.click(await screen.findByRole("button", { name: "Tất toán tháng 6, 2026" }))
+    const modal = screen.getByRole("dialog")
+    fireEvent.click(within(modal).getByRole("button", { name: "Quỹ A" }))
+    fireEvent.click(within(modal).getByRole("button", { name: "Xác nhận" }))
+
+    await waitFor(() => expect(getStoredBudget().settlements).toHaveLength(1))
+    expect(getStoredBudget().settlements[0]).toMatchObject({ month: "2026-06", direction: "deposit", amount: 100_000 })
+    expect(getStoredFinance().savings[0].amount).toBe(200_000)
+    await waitFor(() => expect(screen.queryByRole("button", { name: "Tất toán tháng 6, 2026" })).not.toBeInTheDocument())
+    expect(screen.getByRole("button", { name: "Tất toán tháng 8, 2026" })).toBeInTheDocument()
+  })
+
+  it("masks the amounts of past months while money is hidden", async () => {
+    window.localStorage.setItem("hide-money", "1")
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [{ month: "2026-06", amount: 1_000_000 }],
+      expenses: [{ id: 1, dayKey: "2026-06-20", amount: 850_000, tag: null }],
+    })
+
+    render(
+      <MoneyVisibilityProvider>
+        <BudgetView />
+      </MoneyVisibilityProvider>
+    )
+    await screen.findByRole("button", { name: "Tất toán tháng 6, 2026" })
+
+    await waitFor(() => expect(screen.queryByText(formatMoney(150_000))).not.toBeInTheDocument())
+    expect(screen.getAllByText("•••••••• ₫").length).toBeGreaterThan(0)
+  })
+
+  it("shows a past month once, without a duplicate-key warning, when its salary was imported twice", async () => {
+    const consoleError = vi.spyOn(console, "error")
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [
+        { month: "2026-08", amount: 1_000_000 },
+        { month: "2026-08", amount: 2_000_000 },
+      ],
+    })
+
+    render(<BudgetView />)
+    await screen.findByRole("button", { name: "Tất toán tháng 8, 2026" })
+
+    expect(screen.getAllByRole("button", { name: "Tất toán tháng 8, 2026" })).toHaveLength(1)
+    expect(consoleError).not.toHaveBeenCalled()
   })
 
   it("gives the same tag the same colour in the donut and in the 6-month chart, by its place in Settings", async () => {

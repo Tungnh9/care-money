@@ -1,9 +1,12 @@
-import { dayKeyFromIso, monthKeyFromDayKey, shiftMonth } from "@/lib/date"
+import { dayKeyFromIso, monthKeyFromDayKey } from "@/lib/date"
 import type { Expense, MonthlySalary, Settlement } from "@/lib/budget/types"
 
 const UNTAGGED_LABEL = "Không gắn thẻ"
 const UNTAGGED_EMOJI = "🏷️"
 const UNTAGGED_TINT = "#F2E9DC"
+
+// Key tháng hợp lệ: YYYY-MM, tháng 01–12.
+const MONTH_KEY_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/
 
 // Trần số tiền gõ tay ở 3 form Chi tiêu (lương, ghi khoản chi, sửa khoản chi). budget-storage đọc số
 // tiền bằng z.number().int(), mà zod 4 coi số > Number.MAX_SAFE_INTEGER là không hợp lệ — 1 số 16–17
@@ -25,6 +28,11 @@ function totalExpensesForMonth(expenses: Expense[], month: string): number {
 
 function salaryForMonth(salaries: MonthlySalary[], month: string): number {
   return salaries.find((s) => s.month === month)?.amount ?? 0
+}
+
+// salaryForMonth trả 0 cho cả "chưa nhập lương" lẫn "đã nhập 0 đ" — hàm này phân biệt 2 trường hợp đó.
+function hasSalaryRecord(salaries: MonthlySalary[], month: string): boolean {
+  return salaries.some((s) => s.month === month)
 }
 
 function signedSettledForMonth(settlements: Settlement[], month: string): number {
@@ -50,7 +58,11 @@ interface UnsettledMonth {
   remaining: number
 }
 
-// Tháng đã qua còn dư/thiếu ≠ 0 trong `lookback` tháng liền trước `currentMonth`, mới nhất trước.
+// Mọi tháng đã qua CÓ bản ghi lương (kể cả 0 đ) mà còn dư/thiếu ≠ 0, mới nhất trước. Không giới hạn khoảng
+// cách: tháng cũ nằm lại đến khi tất toán xong (thay "Quyết định 1" của plan 2026-09-29-fix-2-budget, vốn
+// chỉ nhắc tháng liền trước). Tháng hiện tại và tương lai không vào danh sách; tháng không có bản ghi lương
+// cũng không, dù có khoản chi — chưa nhập lương thì chưa có gì để chốt. Mỗi tháng chỉ 1 dòng dù lương bị
+// ghi trùng (bản đầu thắng, như salaryForMonth), và key không đúng dạng YYYY-MM (dữ liệu import hỏng) bị bỏ.
 // Khoản chi luôn ghi vào hôm nay nên tháng đã qua chỉ còn đổi được qua tất toán — phần lệch phát sinh
 // sát lúc sang tháng (ghi thêm khoản chi sau khi đã tất toán, hay quên tất toán trước nửa đêm) chỉ
 // còn đường này để nạp/rút. Tính lại từ dữ liệu gốc như remainingToSettle, không lưu trạng thái gì.
@@ -58,10 +70,14 @@ function unsettledPastMonths(
   salaries: MonthlySalary[],
   expenses: Expense[],
   settlements: Settlement[],
-  currentMonth: string,
-  lookback: number
+  currentMonth: string
 ): UnsettledMonth[] {
-  return Array.from({ length: lookback }, (_, i) => shiftMonth(currentMonth, -(i + 1)))
+  // YYYY-MM đệm số 0 nên so chuỗi cũng là so thời gian — nhưng chỉ khi key đúng dạng, vì vậy lọc dạng trước.
+  const months = [...new Set(salaries.map((s) => s.month))].filter(
+    (month) => MONTH_KEY_PATTERN.test(month) && month < currentMonth
+  )
+  return months
+    .sort((a, b) => (a < b ? 1 : -1))
     .map((month) => ({ month, remaining: remainingToSettle(salaries, expenses, settlements, month) }))
     .filter((entry) => entry.remaining !== 0)
 }
@@ -215,6 +231,7 @@ function monthlyTagBreakdown(expenses: Expense[], months: string[]): MonthlyTagS
 export {
   totalExpensesForMonth,
   salaryForMonth,
+  hasSalaryRecord,
   signedSettledForMonth,
   remainingToSettle,
   unsettledPastMonths,

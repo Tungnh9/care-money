@@ -10,6 +10,7 @@ import {
   monthlyExpenseTotals,
   monthlyTagBreakdown,
   unsettledPastMonths,
+  hasSalaryRecord,
   settlementsMadeInMonth,
   tagChartColors,
   CHART_PALETTE,
@@ -312,47 +313,98 @@ describe("monthlyTagBreakdown", () => {
 })
 
 describe("unsettledPastMonths", () => {
-  const salaries: MonthlySalary[] = [
-    { month: "2026-07", amount: 1_000_000 },
-    { month: "2026-08", amount: 1_000_000 },
-  ]
-
-  it("lists last month when it still has a surplus", () => {
-    const expenses = [expense({ dayKey: "2026-08-20", amount: 850_000 })]
-
-    expect(unsettledPastMonths(salaries, expenses, [], "2026-09", 1)).toEqual([{ month: "2026-08", remaining: 150_000 }])
-  })
-
-  it("lists last month with a negative remaining when it is short", () => {
-    const expenses = [expense({ dayKey: "2026-08-20", amount: 1_200_000 })]
-
-    expect(unsettledPastMonths(salaries, expenses, [], "2026-09", 1)).toEqual([{ month: "2026-08", remaining: -200_000 }])
-  })
-
-  it("leaves out a month that is fully settled or has nothing to settle", () => {
-    const expenses = [expense({ dayKey: "2026-08-20", amount: 850_000 })]
-    const settlements = [settlement({ month: "2026-08", amount: 150_000 })]
-
-    expect(unsettledPastMonths(salaries, expenses, settlements, "2026-09", 1)).toEqual([])
-    expect(unsettledPastMonths([], [], [], "2026-09", 1)).toEqual([])
-  })
-
-  it("looks back only as many months as asked, newest first, never including the current month", () => {
-    const expenses = [
-      expense({ id: 1, dayKey: "2026-08-20", amount: 850_000 }),
-      expense({ id: 2, dayKey: "2026-09-02", amount: 50_000 }),
+  it("lists every past month with a salary record that is still off, newest first, however far back", () => {
+    const salaries: MonthlySalary[] = [
+      { month: "2024-03", amount: 500_000 },
+      { month: "2026-07", amount: 1_000_000 },
+      { month: "2026-08", amount: 1_000_000 },
     ]
+    const expenses = [expense({ dayKey: "2026-08-20", amount: 850_000 })]
 
-    expect(unsettledPastMonths(salaries, expenses, [], "2026-09", 3)).toEqual([
+    expect(unsettledPastMonths(salaries, expenses, [], "2026-09")).toEqual([
       { month: "2026-08", remaining: 150_000 },
       { month: "2026-07", remaining: 1_000_000 },
+      { month: "2024-03", remaining: 500_000 },
     ])
   })
 
-  it("reaches back across the new year", () => {
-    expect(unsettledPastMonths([{ month: "2025-12", amount: 500_000 }], [], [], "2026-01", 1)).toEqual([
-      { month: "2025-12", remaining: 500_000 },
+  it("never lists the current or a future month", () => {
+    const salaries: MonthlySalary[] = [
+      { month: "2026-08", amount: 1_000_000 },
+      { month: "2026-09", amount: 1_000_000 },
+      { month: "2026-11", amount: 1_000_000 },
+    ]
+
+    expect(unsettledPastMonths(salaries, [], [], "2026-09")).toEqual([{ month: "2026-08", remaining: 1_000_000 }])
+  })
+
+  it("leaves out a past month without a salary record, even with spending or a settlement", () => {
+    const expenses = [expense({ dayKey: "2026-08-20", amount: 500_000 })]
+    const settlements = [settlement({ month: "2026-08", direction: "withdraw", amount: 200_000 })]
+
+    expect(unsettledPastMonths([], expenses, settlements, "2026-09")).toEqual([])
+  })
+
+  it("counts a salary record of 0 đ", () => {
+    const salaries: MonthlySalary[] = [{ month: "2026-08", amount: 0 }]
+
+    expect(unsettledPastMonths(salaries, [expense({ dayKey: "2026-08-20", amount: 70_000 })], [], "2026-09")).toEqual([
+      { month: "2026-08", remaining: -70_000 },
     ])
+    expect(unsettledPastMonths(salaries, [], [], "2026-09")).toEqual([])
+  })
+
+  it("leaves out a fully settled month but keeps what is left of a partly settled one", () => {
+    const salaries: MonthlySalary[] = [
+      { month: "2026-07", amount: 1_000_000 },
+      { month: "2026-08", amount: 1_000_000 },
+    ]
+    const expenses = [expense({ dayKey: "2026-08-20", amount: 850_000 })]
+    const settlements = [
+      settlement({ id: 1, month: "2026-08", direction: "deposit", amount: 150_000 }),
+      settlement({ id: 2, month: "2026-07", direction: "deposit", amount: 400_000 }),
+    ]
+
+    expect(unsettledPastMonths(salaries, expenses, settlements, "2026-09")).toEqual([{ month: "2026-07", remaining: 600_000 }])
+  })
+
+  it("lists a month only once when its salary was recorded twice", () => {
+    const salaries: MonthlySalary[] = [
+      { month: "2026-08", amount: 1_000_000 },
+      { month: "2026-08", amount: 2_000_000 },
+    ]
+
+    expect(unsettledPastMonths(salaries, [], [], "2026-09")).toEqual([{ month: "2026-08", remaining: 1_000_000 }])
+  })
+
+  it("ignores salary records whose month is not a YYYY-MM key", () => {
+    // Tháng hiện tại 2027-01 để "2026-9", "2026-13", "2026-00" đều nhỏ hơn nó khi so chuỗi:
+    // chỉ phép kiểm định dạng mới loại được chúng.
+    const salaries: MonthlySalary[] = [
+      { month: "", amount: 1 },
+      { month: "2026-9", amount: 1 },
+      { month: "2026-13", amount: 1 },
+      { month: "2026-00", amount: 1 },
+    ]
+
+    expect(unsettledPastMonths(salaries, [], [], "2027-01")).toEqual([])
+  })
+
+  it("orders months across the new year", () => {
+    const salaries: MonthlySalary[] = [
+      { month: "2025-11", amount: 1 },
+      { month: "2026-01", amount: 1 },
+      { month: "2025-12", amount: 1 },
+    ]
+
+    expect(unsettledPastMonths(salaries, [], [], "2026-02").map((m) => m.month)).toEqual(["2026-01", "2025-12", "2025-11"])
+  })
+})
+
+describe("hasSalaryRecord", () => {
+  it("is true for a recorded salary, even 0 đ, and false when the month has none", () => {
+    expect(hasSalaryRecord([{ month: "2026-09", amount: 0 }], "2026-09")).toBe(true)
+    expect(hasSalaryRecord([{ month: "2026-08", amount: 1_000_000 }], "2026-09")).toBe(false)
   })
 })
 
