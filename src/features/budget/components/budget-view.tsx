@@ -64,8 +64,9 @@ function BudgetView() {
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
   const settleCardRef = useRef<HTMLElement>(null)
   const settleButtonRef = useRef<HTMLButtonElement>(null)
-  // Tháng cũ vừa tất toán xong qua hộp thoại, chờ effect bên dưới chuyển focus: ghi ở onConfirm, đọc ở effect.
-  const settledPastMonthRef = useRef<string | null>(null)
+  // Tháng (tháng này hoặc tháng cũ) vừa tất toán xong qua hộp thoại, chờ effect bên dưới xem có phải chuyển
+  // focus không: ghi ở onConfirm, đọc ở effect.
+  const settledMonthRef = useRef<string | null>(null)
 
   const currentMonth = monthKey()
 
@@ -90,16 +91,19 @@ function BudgetView() {
   // Chỉ nhắc khi đã đọc xong storage: trước đó salaries là mặc định rỗng, "chưa có lương" chỉ là chưa đọc xong.
   const showMissingSalaryHint = hydrated && !salaryRecorded
 
-  // Tất toán đủ 1 tháng cũ thì nút vừa bấm bị gỡ khỏi danh sách, mà Modal chỉ biết trả focus về chính nút đó
-  // (focus() lên phần tử đã gỡ không làm gì) nên focus rơi xuống <body>. Effect này chạy sau mỗi lần render:
-  // thấy tháng vừa tất toán đã ra khỏi danh sách thì chuyển focus tới nút của tháng cũ đầu tiên còn lại, hết
-  // tháng cũ thì tới nút "Tất toán tháng" nếu bấm được, không thì tới chính thẻ Tất toán (tabIndex=-1).
-  // Tất toán một phần thì tháng vẫn còn trong danh sách, nút vẫn ở đó và Modal tự trả focus về nó — chỉ xoá ghi nhớ.
+  // Modal chỉ biết trả focus về đúng nút đã mở nó, mà sau khi tất toán đủ thì nút đó không dùng được nữa:
+  // nút của tháng cũ bị gỡ khỏi danh sách, còn nút "Tất toán tháng" của tháng này tự khoá vì không còn gì để
+  // tất toán. focus() lên phần tử đã gỡ hay đã khoá không làm gì, nên focus rơi xuống <body>. Effect này chạy
+  // sau mỗi lần render: thấy nút mở hộp thoại không còn dùng được thì chuyển focus tới nút của tháng cũ đầu
+  // tiên còn lại, hết tháng cũ thì tới nút "Tất toán tháng" nếu bấm được, không thì tới chính thẻ Tất toán
+  // (tabIndex=-1). Tất toán một phần thì nút vẫn ở đó, vẫn bấm được và Modal tự trả focus về nó — chỉ xoá ghi nhớ.
   useEffect(() => {
-    const settledMonth = settledPastMonthRef.current
+    const settledMonth = settledMonthRef.current
     if (settledMonth === null) return
-    settledPastMonthRef.current = null
-    if (pastUnsettled.some((past) => past.month === settledMonth)) return
+    settledMonthRef.current = null
+    const openerStillUsable =
+      settledMonth === currentMonth ? !settleDisabled : pastUnsettled.some((past) => past.month === settledMonth)
+    if (openerStillUsable) return
 
     const target =
       settleCardRef.current?.querySelector<HTMLElement>("[data-settle-month]") ??
@@ -239,8 +243,9 @@ function BudgetView() {
         savings={savings}
         onConfirm={(fundName, direction, amount) => {
           const settled = confirmSettlement(settleTarget, fundName, direction, amount)
-          // Chỉ tháng cũ: nút "Tất toán tháng" của tháng này không bị gỡ nên Modal tự trả focus về nó.
-          if (settled && settleTarget !== currentMonth) settledPastMonthRef.current = settleTarget
+          // Ghi nhớ mọi tháng vừa tất toán, kể cả tháng này: tất toán đủ tháng này thì nút "Tất toán tháng" tự
+          // khoá và Modal không trả focus về nó được. Effect ở trên quyết định có phải chuyển focus hay không.
+          if (settled) settledMonthRef.current = settleTarget
           return settled
         }}
       />

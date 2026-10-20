@@ -667,6 +667,35 @@ describe("BudgetView", () => {
     expect(opener).toHaveFocus()
   })
 
+  it("moves focus to the settle card when this month is settled in full", async () => {
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ A", amount: 100_000, target: 500_000 }] })
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [{ month: "2026-09", amount: 1_000_000 }],
+      expenses: [{ id: 1, dayKey: "2026-09-02", amount: 200_000, tag: null }],
+    })
+
+    render(<BudgetView />)
+    const opener = screen.getByRole("button", { name: "Tất toán tháng" })
+    await waitFor(() => expect(opener).not.toBeDisabled())
+    opener.focus()
+    fireEvent.click(opener)
+    const modal = screen.getByRole("dialog")
+    fireEvent.click(within(modal).getByRole("button", { name: "Quỹ A" }))
+    // Trình duyệt focus nút khi bấm: focus nằm TRONG hộp thoại lúc nó đóng, và rơi theo nút "Xác nhận" bị gỡ.
+    const confirm = within(modal).getByRole("button", { name: "Xác nhận" })
+    confirm.focus()
+    fireEvent.click(confirm)
+
+    // Tất toán đủ 800.000 đang dư: nút "Tất toán tháng" tự khoá nên Modal không trả focus về nó được.
+    expect(getStoredBudget().settlements[0]).toMatchObject({ month: "2026-09", amount: 800_000 })
+    expect(opener).toBeDisabled()
+    await waitFor(() => expect(screen.getByRole("region", { name: "Tất toán tháng" })).toHaveFocus())
+    // Modal trả focus trong setTimeout(0): chờ qua lượt đó rồi kiểm lại, để bắt trường hợp focus bị giật lại.
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(screen.getByRole("region", { name: "Tất toán tháng" })).toHaveFocus()
+  })
+
   it("does not pull focus back to the settle card on later renders", async () => {
     setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ A", amount: 100_000, target: 500_000 }] })
     setStoredBudget({
