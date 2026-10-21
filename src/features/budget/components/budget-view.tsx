@@ -140,7 +140,16 @@ function BudgetView() {
     <div>
       <h1 className="mb-1 [font:var(--ob-text-h2)] tracking-[var(--ob-track-heading)]">Chi tiêu</h1>
       <p className="mb-5 text-sm text-[var(--ob-color-text-subtle)]">
-        Lương {formatMoney(salary, hidden)} · đã chi {formatMoney(spent, hidden)} tháng này
+        Lương {formatMoney(salary, hidden)} · đã chi{" "}
+        {/* Số đã chi tách màu khỏi số lương cùng dòng: còn trong mức lương thì xanh, chi vượt lương thì đỏ
+            (chi đúng bằng lương vẫn là chưa vượt). */}
+        <span
+          className="font-semibold"
+          style={{ color: spent > salary ? "var(--ob-color-expense)" : "var(--ob-color-income)" }}
+        >
+          {formatMoney(spent, hidden)}
+        </span>{" "}
+        tháng này
       </p>
       <div className="ob-card-grid flex flex-col gap-5">
         {/* Chỉ thẻ Lương (con đầu) không giãn theo hàng: thẻ Tất toán dài ra theo số tháng cũ thì thẻ Lương vẫn
