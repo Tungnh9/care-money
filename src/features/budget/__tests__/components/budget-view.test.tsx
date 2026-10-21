@@ -29,6 +29,12 @@ function settlement(overrides: Partial<Settlement>): Settlement {
   }
 }
 
+// Dòng tóm tắt dưới tiêu đề tách số đã chi ra một <span> riêng để tô màu, nên so cả nội dung của đoạn
+// (getByText mặc định chỉ đọc chữ nằm trực tiếp trong phần tử).
+function summaryLine(text: string) {
+  return (_: string, element: Element | null) => element?.tagName === "P" && element.textContent === text
+}
+
 function stubChartMeasurement() {
   vi.stubGlobal(
     "ResizeObserver",
@@ -193,7 +199,7 @@ describe("BudgetView", () => {
     render(<BudgetView />)
 
     expect(
-      await screen.findByText(`Lương ${formatMoney(1_000_000)} · đã chi ${formatMoney(200_000)} tháng này`)
+      await screen.findByText(summaryLine(`Lương ${formatMoney(1_000_000)} · đã chi ${formatMoney(200_000)} tháng này`))
     ).toBeInTheDocument()
   })
 
@@ -210,8 +216,54 @@ describe("BudgetView", () => {
     render(<BudgetView />)
 
     expect(
-      await screen.findByText(`Lương ${formatMoney(500_000)} · đã chi ${formatMoney(800_000)} tháng này`)
+      await screen.findByText(summaryLine(`Lương ${formatMoney(500_000)} · đã chi ${formatMoney(800_000)} tháng này`))
     ).toBeInTheDocument()
+  })
+
+  it("shows the amount spent in green while it is within the salary", async () => {
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [{ month: "2026-09", amount: 1_000_000 }],
+      expenses: [{ id: 1, dayKey: "2026-09-01", amount: 200_000, tag: null }],
+    })
+
+    render(<BudgetView />)
+
+    const summary = await screen.findByText(
+      summaryLine(`Lương ${formatMoney(1_000_000)} · đã chi ${formatMoney(200_000)} tháng này`)
+    )
+    expect(within(summary).getByText(formatMoney(200_000))).toHaveStyle({ color: "var(--ob-color-income)" })
+  })
+
+  it("still shows the amount spent in green when it equals the salary exactly", async () => {
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [{ month: "2026-09", amount: 1_000_000 }],
+      expenses: [{ id: 1, dayKey: "2026-09-01", amount: 1_000_000, tag: null }],
+    })
+
+    render(<BudgetView />)
+
+    const summary = await screen.findByText(
+      summaryLine(`Lương ${formatMoney(1_000_000)} · đã chi ${formatMoney(1_000_000)} tháng này`)
+    )
+    // Số lương là chữ thường trong đoạn, chỉ số đã chi nằm trong phần tử riêng được tô màu.
+    expect(within(summary).getByText(formatMoney(1_000_000))).toHaveStyle({ color: "var(--ob-color-income)" })
+  })
+
+  it("turns the amount spent red once it goes over the salary", async () => {
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [{ month: "2026-09", amount: 500_000 }],
+      expenses: [{ id: 1, dayKey: "2026-09-01", amount: 800_000, tag: null }],
+    })
+
+    render(<BudgetView />)
+
+    const summary = await screen.findByText(
+      summaryLine(`Lương ${formatMoney(500_000)} · đã chi ${formatMoney(800_000)} tháng này`)
+    )
+    expect(within(summary).getByText(formatMoney(800_000))).toHaveStyle({ color: "var(--ob-color-expense)" })
   })
 
   it("previews a second settlement from the balance the first one left, without reloading the page", async () => {
@@ -456,7 +508,7 @@ describe("BudgetView", () => {
     expect(screen.getAllByTestId("expense-day-header")).toHaveLength(1)
     expect(within(block).getByText("Tất toán tháng 9")).toBeInTheDocument()
     expect(within(block).getByText("Nạp vào sổ Quỹ A · 15/09")).toBeInTheDocument()
-    expect(screen.getByText(`Lương ${formatMoney(1_000_000)} · đã chi ${formatMoney(200_000)} tháng này`)).toBeInTheDocument()
+    expect(screen.getByText(summaryLine(`Lương ${formatMoney(1_000_000)} · đã chi ${formatMoney(200_000)} tháng này`))).toBeInTheDocument()
   })
 
   it("lists only the settlements made this month, by the local day they were made", async () => {
@@ -543,7 +595,7 @@ describe("BudgetView", () => {
     })
 
     render(<BudgetView />)
-    await screen.findByText(`Lương ${formatMoney(1_000_000)} · đã chi ${formatMoney(1_000_000)} tháng này`)
+    await screen.findByText(summaryLine(`Lương ${formatMoney(1_000_000)} · đã chi ${formatMoney(1_000_000)} tháng này`))
 
     const button = screen.getByRole("button", { name: "Tất toán tháng" })
     expect(button).toBeDisabled()
@@ -755,7 +807,7 @@ describe("BudgetView", () => {
     })
 
     // Dòng đầu trang đổi theo khoản chi mới: BudgetView đã vẽ lại rồi mới kiểm focus.
-    await screen.findByText(`Lương ${formatMoney(0)} · đã chi ${formatMoney(50_000)} tháng này`)
+    await screen.findByText(summaryLine(`Lương ${formatMoney(0)} · đã chi ${formatMoney(50_000)} tháng này`))
     expect(salaryInput).toHaveFocus()
   })
 })
