@@ -1,6 +1,7 @@
 import { formatMoney } from "@/lib/format"
 import type { FinanceState } from "@/lib/finance/finance-storage"
-import type { CreditCard, GoldPurchase, GoldStore } from "@/lib/finance/types"
+import { parseMetalPrice, summarizeMetalHolding } from "@/lib/finance/metal-calculations"
+import type { CreditCard, GoldStore } from "@/lib/finance/types"
 
 // Khối lượng vàng lưu theo phân (10 phân = 1 chỉ). Form chỉ nhận phân nguyên, nhưng dữ liệu cũ có thể
 // có số lẻ (12.3, hay tổng 0.1 + 0.2 = 0.30000000000000004): làm tròn 1 chữ số lẻ, dấu phẩy kiểu Việt.
@@ -27,131 +28,6 @@ function pct1(n: number): string {
   return `${sign}${value}%`
 }
 
-function parseGoldPrice(str: string): number {
-  const digits = str.replace(/[^\d]/g, "")
-  return digits ? Number(digits) : 0
-}
-
-function goldPurchasePL(purchase: GoldPurchase, price: number): number {
-  return purchase.phan * price - purchase.phan * purchase.buy
-}
-
-type GoldPLTone = "gain" | "loss" | "even"
-
-// Làm tròn về đồng trước khi xét dấu: cộng dồn phan * price của dữ liệu cũ có phân lẻ có thể ra
-// -1e-13 thay vì 0 đúng, khiến hoà vốn bị hiện thành "lỗ 0 ₫". Hoà vốn (gồm cả cửa hàng chưa nhập
-// giá, vốn tạm tính theo giá mua) là trung tính — không phải lãi.
-function goldPLTone(pl: number): GoldPLTone {
-  const rounded = Math.round(pl)
-  if (rounded > 0) return "gain"
-  if (rounded < 0) return "loss"
-  return "even"
-}
-
-function goldStorePrice(stores: GoldStore[], storeName: string): number {
-  const store = stores.find((s) => s.name === storeName)
-  return store ? parseGoldPrice(store.price) : 0
-}
-
-// Giá hôm nay để định giá 1 lần mua: giá của chính cửa hàng đó. Cửa hàng chưa nhập giá (ô trống/0)
-// hoặc tên không còn trong danh sách thì tạm tính theo giá mua của lần mua — "chưa biết giá thì coi
-// như hoà vốn" — thay vì định giá 0 rồi báo lỗ trọn giá vốn và kéo tụt tài sản ròng.
-function goldMarketPrice(stores: GoldStore[], purchase: GoldPurchase): number {
-  const price = goldStorePrice(stores, purchase.store)
-  return price > 0 ? price : purchase.buy
-}
-
-// Tên các cửa hàng (không trùng, theo thứ tự lần mua) có vàng đang được tạm tính theo giá mua vì
-// chưa có giá hôm nay — GoldTab nhắc người dùng nhập giá cho đúng những cửa hàng này.
-function unpricedGoldStores(gold: GoldPurchase[], stores: GoldStore[]): string[] {
-  const names = gold
-    .filter((purchase) => goldStorePrice(stores, purchase.store) <= 0)
-    .map((purchase) => purchase.store)
-  return Array.from(new Set(names))
-}
-
-// Ngày mua vàng là ô chữ: nhận d/m/yyyy hoặc dd/mm/yyyy (ngăn bằng "/", "-" hoặc ".", cùng 1 loại
-// trong 1 ngày) và yyyy-mm-dd; năm đủ 4 chữ số (new Date(26, …) là năm 1926); ngày phải có thật
-// (new Date tự trôi 31/02 sang 03/03). Trả dạng chuẩn dd/mm/yyyy, hoặc null nếu không đọc được.
-function normalizeGoldDate(input: string): string | null {
-  const text = input.trim()
-  const dmy = /^(\d{1,2})([/.-])(\d{1,2})\2(\d{4})$/.exec(text)
-  const ymd = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(text)
-  const parts = dmy ? [dmy[1], dmy[3], dmy[4]] : ymd ? [ymd[3], ymd[2], ymd[1]] : null
-  if (!parts) return null
-  const [day, month, year] = parts.map(Number)
-  const date = new Date(year, month - 1, day)
-  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null
-  return `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}/${year}`
-}
-
-function parseGoldDate(date: string): number {
-  const normalized = normalizeGoldDate(date)
-  if (!normalized) return 0
-  const [day, month, year] = normalized.split("/").map(Number)
-  return new Date(year, month - 1, day).getTime()
-}
-
-// Phần đuôi tên nút Sửa/Xoá của từng lần mua, duy nhất trong danh sách đang hiện: thường chỉ cần
-// ngày; mua nhiều lần trong 1 ngày thì thêm cửa hàng + khối lượng, vẫn trùng hết (mua y hệt nhau) thì
-// thêm "lần N" — để trình đọc màn hình vẫn tách được từng nút thay vì nghe 2 nút cùng tên.
-function goldPurchaseLabels(gold: GoldPurchase[]): Map<number, string> {
-  const dateCount = new Map<string, number>()
-  for (const p of gold) dateCount.set(p.date, (dateCount.get(p.date) ?? 0) + 1)
-
-  const detailSeen = new Map<string, number>()
-  const labels = new Map<number, string>()
-  for (const p of gold) {
-    if ((dateCount.get(p.date) ?? 0) < 2) {
-      labels.set(p.id, p.date)
-      continue
-    }
-    const detail = `${p.date} · ${p.store} · ${phanToChi(p.phan)}`
-    const n = (detailSeen.get(detail) ?? 0) + 1
-    detailSeen.set(detail, n)
-    labels.set(p.id, n > 1 ? `${detail} (lần ${n})` : detail)
-  }
-  return labels
-}
-
-function sortGoldByDate(gold: GoldPurchase[]): GoldPurchase[] {
-  return [...gold].sort((a, b) => parseGoldDate(b.date) - parseGoldDate(a.date))
-}
-
-interface GoldStoreSummary {
-  store: string
-  phan: number
-  avgBuy: number
-  cost: number
-  value: number
-  pl: number
-}
-
-// Gộp các lần mua theo từng cửa hàng — cần khi có nhiều cửa hàng, để thấy tổng khối lượng/lãi lỗ
-// theo từng nơi thay vì phải tự cộng tay từng dòng trong bảng giao dịch.
-function summarizeGoldByStore(gold: GoldPurchase[], stores: GoldStore[]): GoldStoreSummary[] {
-  const byStore = new Map<string, { phan: number; cost: number; value: number }>()
-  for (const purchase of gold) {
-    const price = goldMarketPrice(stores, purchase)
-    const entry = byStore.get(purchase.store) ?? { phan: 0, cost: 0, value: 0 }
-    entry.phan += purchase.phan
-    entry.cost += purchase.phan * purchase.buy
-    entry.value += purchase.phan * price
-    byStore.set(purchase.store, entry)
-  }
-
-  return Array.from(byStore.entries())
-    .map(([store, { phan, cost, value }]) => ({
-      store,
-      phan,
-      avgBuy: phan > 0 ? Math.round(cost / phan) : 0,
-      cost,
-      value,
-      pl: value - cost,
-    }))
-    .sort((a, b) => a.store.localeCompare(b.store, "vi"))
-}
-
 interface FinanceSummary {
   savingsTotal: number
   debtTotal: number
@@ -172,14 +48,12 @@ function summarizeFinance(state: FinanceState): FinanceSummary {
   const savingsTotal = state.savings.reduce((sum, fund) => sum + fund.amount, 0)
   const debtTotal = state.cards.reduce((sum, card) => sum + card.balance, 0)
 
-  const goldPhan = state.gold.reduce((sum, purchase) => sum + purchase.phan, 0)
-  const goldCost = state.gold.reduce((sum, purchase) => sum + purchase.phan * purchase.buy, 0)
-  const goldValue = state.gold.reduce(
-    (sum, purchase) => sum + purchase.phan * goldMarketPrice(state.goldStores, purchase),
-    0
-  )
-  const goldPL = goldValue - goldCost
-  const goldPct = goldCost > 0 ? (goldPL / goldCost) * 100 : 0
+  const gold = summarizeMetalHolding(state.gold, state.goldStores, (purchase) => purchase.phan)
+  const goldPhan = gold.qty
+  const goldCost = gold.cost
+  const goldValue = gold.value
+  const goldPL = gold.pl
+  const goldPct = gold.pct
 
   const investCost = state.invests.reduce((sum, invest) => sum + invest.cost, 0)
   const investValue = state.invests.reduce((sum, invest) => sum + invest.value, 0)
@@ -216,7 +90,7 @@ function goldReferencePricePerPhan(
   stores: GoldStore[]
 ): number {
   if (summary.goldPhan > 0) return summary.goldValue / summary.goldPhan
-  const prices = stores.map((store) => parseGoldPrice(store.price)).filter((price) => price > 0)
+  const prices = stores.map((store) => parseMetalPrice(store.price)).filter((price) => price > 0)
   return prices.length ? prices.reduce((sum, price) => sum + price, 0) / prices.length : 0
 }
 
@@ -264,22 +138,9 @@ export {
   phanToChi,
   signedMoney,
   pct1,
-  parseGoldPrice,
   summarizeFinance,
   goldReferencePricePerPhan,
   parseDueDay,
   nearestDueCard,
-  goldPurchaseLabels,
-  goldPurchasePL,
-  goldPLTone,
-  goldStorePrice,
-  goldMarketPrice,
-  normalizeGoldDate,
-  parseGoldDate,
-  sortGoldByDate,
-  summarizeGoldByStore,
-  unpricedGoldStores,
   type FinanceSummary,
-  type GoldPLTone,
-  type GoldStoreSummary,
 }

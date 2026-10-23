@@ -3,12 +3,12 @@
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import { phanToChi } from "@/lib/finance/finance-calculations"
-import type { GoldStoreSummary } from "@/lib/finance/finance-calculations"
+import type { MetalStoreSummary } from "@/lib/finance/metal-calculations"
 import { GoldPLBadge } from "./gold-pl-indicator"
 
 interface GoldStoreSummaryTableProps {
-  summaries: GoldStoreSummary[]
-  total: GoldStoreSummary
+  summaries: MetalStoreSummary[]
+  total: MetalStoreSummary
 }
 
 const HEADERS = ["Cửa hàng", "Khối lượng", "Giá mua", "Giá vốn", "Giá hiện tại", "Lãi lỗ"]
@@ -41,7 +41,7 @@ function GoldStoreSummaryTable({ summaries, total }: GoldStoreSummaryTableProps)
             <tr key={s.store} className="border-t border-[var(--ob-color-border)]">
               <td className="whitespace-nowrap py-[8px] px-[12px] text-left text-[13px] font-bold">{s.store}</td>
               <td className="whitespace-nowrap py-[8px] px-[12px] text-right text-[13px] [font-family:var(--ob-font-num)] tabular-nums">
-                {phanToChi(s.phan)}
+                {phanToChi(s.qty)}
               </td>
               <td className="whitespace-nowrap py-[8px] px-[12px] text-right text-[13px] [font-family:var(--ob-font-num)] tabular-nums text-[var(--ob-color-text-subtle)]">
                 {formatMoney(s.avgBuy, hidden)}
@@ -70,7 +70,7 @@ function GoldStoreSummaryTable({ summaries, total }: GoldStoreSummaryTableProps)
               className="whitespace-nowrap py-[10px] px-[12px] text-right text-[13.5px] font-bold [font-family:var(--ob-font-num)] tabular-nums"
               style={{ color: "var(--ob-color-action-strong)" }}
             >
-              {phanToChi(total.phan)}
+              {phanToChi(total.qty)}
             </td>
             <td
               className="whitespace-nowrap py-[10px] px-[12px] text-right text-[13.5px] font-bold [font-family:var(--ob-font-num)] tabular-nums"

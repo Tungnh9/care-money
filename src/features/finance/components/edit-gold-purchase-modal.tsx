@@ -5,7 +5,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Field } from "@/components/ui/field"
 import { Modal } from "@/components/ui/modal"
-import { normalizeGoldDate } from "@/lib/finance/finance-calculations"
+import { normalizePurchaseDate, parseWholeQuantity } from "@/lib/finance/metal-calculations"
 import type { GoldPurchase, GoldStore } from "@/lib/finance/types"
 import { GoldStorePicker } from "./gold-store-picker"
 
@@ -37,13 +37,11 @@ function EditGoldPurchaseModal({ purchase, stores, onOpenChange, onSave }: EditG
   if (!purchase) return null
 
   const currentId = purchase.id
-  const normalizedDate = normalizeGoldDate(date)
+  const normalizedDate = normalizePurchaseDate(date)
   // Lần mua cũ đã lưu sai dạng (vd. "10/08/26") hiện đỏ ngay khi mở — phải sửa ngày mới lưu được.
   const dateInvalid = date.trim() !== "" && normalizedDate === null
-  // Chỉ nhận phân nguyên dương: giá cửa hàng tính theo phân, số lẻ thì hiện nhiễu số thực ("1 chỉ
-  // 2.3000000000000007 phân"), còn "1,5" (dấu phẩy) là NaN. Number.isInteger(Infinity) = false nên
-  // "1e400" vẫn bị chặn như trước (JSON.stringify lưu Infinity thành null, lần đọc sau purchase bị bỏ).
-  const phanValid = Number.isInteger(Number(phan)) && Number(phan) > 0
+  const phanValue = parseWholeQuantity(phan)
+  const phanValid = phanValue !== null
   const phanInvalid = phan.trim() !== "" && !phanValid
   // Cửa hàng đang chọn có thể vừa bị đổi tên/xoá ở thẻ "Giá thị trường hôm nay" trong lúc modal còn
   // mở — chỉ coi là đã chọn khi tên đó vẫn còn trong danh sách, giống AddGoldForm, để không ghi đè
@@ -55,7 +53,7 @@ function EditGoldPurchaseModal({ purchase, stores, onOpenChange, onSave }: EditG
     if (!normalizedDate || !selectedStore) return
     onSave(currentId, {
       date: normalizedDate,
-      phan: Number(phan) || 0,
+      phan: phanValue ?? 0,
       buy: Number(buy) || 0,
       store: selectedStore,
     })

@@ -4,7 +4,8 @@ import { Pencil, Trash2 } from "lucide-react"
 
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
-import { goldMarketPrice, goldPurchaseLabels, goldPurchasePL, phanToChi } from "@/lib/finance/finance-calculations"
+import { phanToChi } from "@/lib/finance/finance-calculations"
+import { metalMarketPrice, metalPurchaseLabels, metalPurchasePL } from "@/lib/finance/metal-calculations"
 import type { GoldPurchase, GoldStore } from "@/lib/finance/types"
 import { GoldPLBox } from "./gold-pl-indicator"
 
@@ -31,15 +32,15 @@ function GoldTransactionsCards({
     )
   }
 
-  const labels = goldPurchaseLabels(gold)
+  const labels = metalPurchaseLabels(gold, (p) => phanToChi(p.phan))
 
   return (
     <div className="flex flex-col gap-3">
       {gold.map((purchase) => {
-        const price = goldMarketPrice(stores, purchase)
+        const price = metalMarketPrice(stores, purchase)
         const cost = purchase.phan * purchase.buy
         const value = purchase.phan * price
-        const pl = goldPurchasePL(purchase, price)
+        const pl = metalPurchasePL(purchase.phan, purchase.buy, price)
         return (
           <div
             key={purchase.id}

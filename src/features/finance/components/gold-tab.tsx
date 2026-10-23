@@ -9,20 +9,16 @@ import { Figure } from "@/components/ob/figure"
 import { Progress } from "@/components/ui/progress"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
+import { formatPhan, pct1, phanToChi, signedMoney, type FinanceSummary } from "@/lib/finance/finance-calculations"
 import {
-  formatPhan,
-  goldMarketPrice,
-  goldPLTone,
-  goldPurchasePL,
-  pct1,
-  phanToChi,
-  signedMoney,
-  sortGoldByDate,
-  summarizeGoldByStore,
-  unpricedGoldStores,
-  type FinanceSummary,
-  type GoldStoreSummary,
-} from "@/lib/finance/finance-calculations"
+  metalMarketPrice,
+  metalPLTone,
+  metalPurchasePL,
+  sortByPurchaseDate,
+  summarizeMetalByStore,
+  unpricedMetalStores,
+  type MetalStoreSummary,
+} from "@/lib/finance/metal-calculations"
 import type { GoldPurchase, GoldStore } from "@/lib/finance/types"
 import { AddGoldForm } from "./add-gold-form"
 import { EditGoldPurchaseModal } from "./edit-gold-purchase-modal"
@@ -61,23 +57,23 @@ function GoldTab({
 }: GoldTabProps) {
   const { hidden } = useMoneyVisibility()
   const { goldPhan, goldCost, goldValue, goldPL, goldPct } = summary
-  const plTone = goldPLTone(goldPL)
+  const plTone = metalPLTone(goldPL)
   // Hoà vốn (hay chưa có vàng) thì hiện "0 ₫" trơn — "+ 0 ₫" màu xanh là báo lãi không có thật.
   const goldPLText = plTone === "even" ? formatMoney(0, hidden) : signedMoney(goldPL, hidden)
-  const unpriced = unpricedGoldStores(gold, stores)
+  const unpriced = unpricedMetalStores(gold, stores)
   const maxBar = Math.max(goldCost, goldValue, 1)
   const avgCost = goldPhan > 0 ? goldCost / goldPhan : 0
   const avgValue = goldPhan > 0 ? goldValue / goldPhan : 0
-  const sortedGold = sortGoldByDate(gold)
-  const purchasePLs = gold.map((p) => goldPurchasePL(p, goldMarketPrice(stores, p)))
-  const winCount = purchasePLs.filter((pl) => goldPLTone(pl) === "gain").length
-  const lossCount = purchasePLs.filter((pl) => goldPLTone(pl) === "loss").length
-  const totalWin = purchasePLs.filter((pl) => goldPLTone(pl) === "gain").reduce((sum, pl) => sum + pl, 0)
-  const totalLoss = purchasePLs.filter((pl) => goldPLTone(pl) === "loss").reduce((sum, pl) => sum + pl, 0)
-  const storeSummaries = summarizeGoldByStore(gold, stores)
-  const storeTotal: GoldStoreSummary = {
+  const sortedGold = sortByPurchaseDate(gold)
+  const purchasePLs = gold.map((p) => metalPurchasePL(p.phan, p.buy, metalMarketPrice(stores, p)))
+  const winCount = purchasePLs.filter((pl) => metalPLTone(pl) === "gain").length
+  const lossCount = purchasePLs.filter((pl) => metalPLTone(pl) === "loss").length
+  const totalWin = purchasePLs.filter((pl) => metalPLTone(pl) === "gain").reduce((sum, pl) => sum + pl, 0)
+  const totalLoss = purchasePLs.filter((pl) => metalPLTone(pl) === "loss").reduce((sum, pl) => sum + pl, 0)
+  const storeSummaries = summarizeMetalByStore(gold, stores, (p) => p.phan)
+  const storeTotal: MetalStoreSummary = {
     store: "Tổng cộng",
-    phan: goldPhan,
+    qty: goldPhan,
     avgBuy: Math.round(avgCost),
     cost: goldCost,
     value: goldValue,

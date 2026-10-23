@@ -4,7 +4,7 @@ import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Field } from "@/components/ui/field"
-import { normalizeGoldDate } from "@/lib/finance/finance-calculations"
+import { normalizePurchaseDate, parseWholeQuantity } from "@/lib/finance/metal-calculations"
 import type { GoldPurchase, GoldStore } from "@/lib/finance/types"
 import { GoldStorePicker } from "./gold-store-picker"
 
@@ -38,16 +38,14 @@ function AddGoldForm({ stores, onAdd }: AddGoldFormProps) {
     )
   }
 
-  // Chỉ nhận phân nguyên dương: giá cửa hàng tính theo phân, số lẻ thì hiện nhiễu số thực ("1 chỉ
-  // 2.3000000000000007 phân"), còn "1,5" (dấu phẩy) là NaN. Number.isInteger(Infinity) = false nên
-  // "1e400" vẫn bị chặn như trước (JSON.stringify lưu Infinity thành null, lần đọc sau purchase bị bỏ).
-  const phanValid = Number.isInteger(Number(phan)) && Number(phan) > 0
+  const phanValue = parseWholeQuantity(phan)
+  const phanValid = phanValue !== null
   const phanInvalid = phan.trim() !== "" && !phanValid
   // Cửa hàng đang chọn có thể vừa bị đổi tên/xoá ở thẻ "Giá thị trường hôm nay" ngay phía trên trong
   // lúc form còn mở (hook chỉ đổi tên ở các lần mua ĐÃ lưu) — chỉ coi là đã chọn khi tên đó vẫn còn
   // trong danh sách, để không lưu lần mua trỏ vào cửa hàng không tồn tại.
   const selectedStore = stores.some((s) => s.name === store) ? store : ""
-  const normalizedDate = normalizeGoldDate(date)
+  const normalizedDate = normalizePurchaseDate(date)
   // Ô trống chỉ khoá nút; gõ rồi mà không đọc ra 1 ngày có thật thì báo đỏ.
   const dateInvalid = date.trim() !== "" && normalizedDate === null
 
@@ -100,7 +98,7 @@ function AddGoldForm({ stores, onAdd }: AddGoldFormProps) {
             if (!normalizedDate) return
             onAdd({
               date: normalizedDate,
-              phan: Number(phan) || 0,
+              phan: phanValue ?? 0,
               buy: Number(buy) || 0,
               store: selectedStore,
             })

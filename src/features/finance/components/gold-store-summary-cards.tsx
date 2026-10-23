@@ -3,20 +3,20 @@
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import { phanToChi } from "@/lib/finance/finance-calculations"
-import type { GoldStoreSummary } from "@/lib/finance/finance-calculations"
+import type { MetalStoreSummary } from "@/lib/finance/metal-calculations"
 import { GoldPLBox } from "./gold-pl-indicator"
 
 interface GoldStoreSummaryCardsProps {
-  summaries: GoldStoreSummary[]
-  total: GoldStoreSummary
+  summaries: MetalStoreSummary[]
+  total: MetalStoreSummary
 }
 
-type StatRow = Pick<GoldStoreSummary, "phan" | "avgBuy" | "cost" | "value"> & {
+type StatRow = Pick<MetalStoreSummary, "qty" | "avgBuy" | "cost" | "value"> & {
   hidden: boolean
   tone: "default" | "total"
 }
 
-function StatGrid({ phan, avgBuy, cost, value, hidden, tone }: StatRow) {
+function StatGrid({ qty, avgBuy, cost, value, hidden, tone }: StatRow) {
   const moneyColor = tone === "total" ? "var(--ob-color-action-strong)" : "var(--ob-color-text-subtle)"
   return (
     <div className="grid grid-cols-2 gap-3">
@@ -28,7 +28,7 @@ function StatGrid({ phan, avgBuy, cost, value, hidden, tone }: StatRow) {
           className="text-[13px] font-semibold [font-family:var(--ob-font-num)] tabular-nums"
           style={tone === "total" ? { color: moneyColor } : undefined}
         >
-          {phanToChi(phan)}
+          {phanToChi(qty)}
         </div>
       </div>
       <div>
@@ -78,7 +78,7 @@ function GoldStoreSummaryCards({ summaries, total }: GoldStoreSummaryCardsProps)
       {summaries.map((s) => (
         <div key={s.store} className="rounded-[var(--ob-radius-md)] border border-[var(--ob-color-border)] p-[14px]">
           <div className="mb-3 text-[13px] font-bold">{s.store}</div>
-          <StatGrid phan={s.phan} avgBuy={s.avgBuy} cost={s.cost} value={s.value} hidden={hidden} tone="default" />
+          <StatGrid qty={s.qty} avgBuy={s.avgBuy} cost={s.cost} value={s.value} hidden={hidden} tone="default" />
           <GoldPLBox pl={s.pl} hidden={hidden} />
         </div>
       ))}
@@ -87,7 +87,7 @@ function GoldStoreSummaryCards({ summaries, total }: GoldStoreSummaryCardsProps)
           Tổng cộng
         </div>
         <StatGrid
-          phan={total.phan}
+          qty={total.qty}
           avgBuy={total.avgBuy}
           cost={total.cost}
           value={total.value}

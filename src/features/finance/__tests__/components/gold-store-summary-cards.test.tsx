@@ -5,7 +5,7 @@ import { formatMoney } from "@/lib/format"
 import { phanToChi } from "@/lib/finance/finance-calculations"
 import { GoldStoreSummaryCards } from "../../components/gold-store-summary-cards"
 
-const ZERO_TOTAL = { store: "Tổng cộng", phan: 0, avgBuy: 0, cost: 0, value: 0, pl: 0 }
+const ZERO_TOTAL = { store: "Tổng cộng", qty: 0, avgBuy: 0, cost: 0, value: 0, pl: 0 }
 
 describe("GoldStoreSummaryCards", () => {
   it("renders nothing when there are no store summaries", () => {
@@ -18,10 +18,10 @@ describe("GoldStoreSummaryCards", () => {
     render(
       <GoldStoreSummaryCards
         summaries={[
-          { store: "SJC", phan: 10, avgBuy: 900_000, cost: 9_000_000, value: 10_000_000, pl: 1_000_000 },
-          { store: "PNJ", phan: 8, avgBuy: 900_000, cost: 7_200_000, value: 6_400_000, pl: -800_000 },
+          { store: "SJC", qty: 10, avgBuy: 900_000, cost: 9_000_000, value: 10_000_000, pl: 1_000_000 },
+          { store: "PNJ", qty: 8, avgBuy: 900_000, cost: 7_200_000, value: 6_400_000, pl: -800_000 },
         ]}
-        total={{ store: "Tổng cộng", phan: 18, avgBuy: 900_000, cost: 16_200_000, value: 16_400_000, pl: 200_000 }}
+        total={{ store: "Tổng cộng", qty: 18, avgBuy: 900_000, cost: 16_200_000, value: 16_400_000, pl: 200_000 }}
       />
     )
 
@@ -43,8 +43,8 @@ describe("GoldStoreSummaryCards", () => {
   it("shows a distinct grand-total card across all stores", () => {
     render(
       <GoldStoreSummaryCards
-        summaries={[{ store: "SJC", phan: 10, avgBuy: 900_000, cost: 9_000_000, value: 10_000_000, pl: 1_000_000 }]}
-        total={{ store: "Tổng cộng", phan: 10, avgBuy: 900_000, cost: 9_000_000, value: 10_000_000, pl: 1_000_000 }}
+        summaries={[{ store: "SJC", qty: 10, avgBuy: 900_000, cost: 9_000_000, value: 10_000_000, pl: 1_000_000 }]}
+        total={{ store: "Tổng cộng", qty: 10, avgBuy: 900_000, cost: 9_000_000, value: 10_000_000, pl: 1_000_000 }}
       />
     )
 
