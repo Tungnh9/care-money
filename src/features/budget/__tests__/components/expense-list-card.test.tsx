@@ -426,6 +426,27 @@ describe("ExpenseListCard", () => {
       expect(screen.getByRole("alertdialog")).not.toHaveTextContent("Nợ thẻ")
     })
 
+    it("puts the amount in one wrapping column with the label, so a 320px phone never pushes Sửa/Xoá out of the row", () => {
+      render(<ExpenseListCard expenses={[SWIPE]} onRemove={vi.fn()} onEdit={vi.fn()} />)
+
+      const amount = screen.getByText(`${formatMoney(0)} / ${formatMoney(500_000)}`)
+      // Không còn cột số tiền cứng (flex-none + max-w-[40%]) giành chỗ của nhãn và nút: số tiền co và tự ngắt.
+      expect(amount).toHaveClass("min-w-0", "wrap-anywhere")
+      expect(amount).not.toHaveClass("flex-none")
+      expect(amount.className).not.toMatch(/max-w-/)
+
+      const column = amount.parentElement!
+      expect(column).toHaveClass("flex", "flex-wrap", "min-w-0", "flex-1")
+      const label = screen.getByText("Quẹt thẻ")
+      expect(column).toContainElement(label)
+      expect(label.parentElement).toHaveClass("min-w-0")
+      expect(column).toContainElement(screen.getByText("Thẻ Visa"))
+
+      const row = screen.getByTestId("expense-row")
+      expect(row).toContainElement(column)
+      expect(screen.getByRole("button", { name: "Xoá khoản chi Quẹt thẻ" }).parentElement).toHaveClass("flex-none")
+    })
+
     it("hides both amounts of a swipe while money is hidden", async () => {
       window.localStorage.setItem("hide-money", "1")
       render(
