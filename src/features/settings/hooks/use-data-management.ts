@@ -2,7 +2,12 @@
 
 import { useCallback, useState } from "react"
 
-import { FINANCE_STORAGE_KEY, getStoredFinance, type FinanceState } from "@/lib/finance/finance-storage"
+import {
+  DEFAULT_FINANCE_STATE,
+  FINANCE_STORAGE_KEY,
+  getStoredFinance,
+  type FinanceState,
+} from "@/lib/finance/finance-storage"
 import {
   DEFAULT_JOURNAL_STATE,
   JOURNAL_STORAGE_KEY,
@@ -262,9 +267,10 @@ function useDataManagement({
   const cancelRestore = useCallback(() => setPendingRestore(null), [])
 
   const wipeData = useCallback(() => {
-    const { goldStores } = getStoredFinance()
+    // Danh sách cửa hàng vàng/bạc (kèm giá hôm nay) là cấu hình, không phải dữ liệu đã nhập — giữ lại.
+    const { goldStores, silverStores } = getStoredFinance()
     onReplaceJournal(DEFAULT_JOURNAL_STATE)
-    onReplaceFinance({ savings: [], cards: [], gold: [], invests: [], goldStores })
+    onReplaceFinance({ ...DEFAULT_FINANCE_STATE, goldStores, silverStores })
     onReplaceStudy(DEFAULT_STUDY_STATE)
     onReplaceBudget(DEFAULT_BUDGET_STATE)
     onReplaceNetWorthHistory(DEFAULT_NET_WORTH_HISTORY)

@@ -126,6 +126,24 @@ describe("SettingsView", () => {
     expect(screen.getByText(/bản standup/)).toHaveTextContent("2 việc, 1 bản standup")
   })
 
+  it("counts silver purchases too, since wiping deletes them", async () => {
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      silver: [
+        { id: 1, date: "10/08/2026", luong: 2, buy: 1_800_000, store: "Phú Quý" },
+        { id: 2, date: "11/08/2026", luong: 5, buy: 1_900_000, store: "Phú Quý" },
+      ],
+      silverStores: [{ name: "Phú Quý", price: "2.000.000" }],
+    })
+
+    render(<SettingsView />)
+    await waitFor(() => expect(screen.getByText("Module hiển thị")).toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole("button", { name: "Xoá toàn bộ dữ liệu" }))
+
+    expect(screen.getByText(/lần mua bạc/)).toHaveTextContent("2 lần mua bạc")
+  })
+
   it("restores settings from an imported backup and shows the success banner", async () => {
     render(<SettingsView />)
     await waitFor(() => expect(screen.getByText("Module hiển thị")).toBeInTheDocument())

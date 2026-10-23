@@ -3,25 +3,27 @@ import { render, screen } from "@testing-library/react"
 
 import { formatMoney } from "@/lib/format"
 import { phanToChi } from "@/lib/finance/finance-calculations"
-import { GoldStoreSummaryTable } from "../../components/gold-store-summary-table"
+import { MetalStoreSummaryTable } from "../../components/metal-store-summary-table"
+import { GOLD_METAL } from "../../metal-config"
 
-const ZERO_TOTAL = { store: "Tổng cộng", phan: 0, avgBuy: 0, cost: 0, value: 0, pl: 0 }
+const ZERO_TOTAL = { store: "Tổng cộng", qty: 0, avgBuy: 0, cost: 0, value: 0, pl: 0 }
 
-describe("GoldStoreSummaryTable", () => {
+describe("MetalStoreSummaryTable", () => {
   it("renders nothing when there are no store summaries", () => {
-    const { container } = render(<GoldStoreSummaryTable summaries={[]} total={ZERO_TOTAL} />)
+    const { container } = render(<MetalStoreSummaryTable metal={GOLD_METAL} summaries={[]} total={ZERO_TOTAL} />)
 
     expect(container).toBeEmptyDOMElement()
   })
 
   it("renders one row per store with quantity, average buy price, cost, value and P&L", () => {
     render(
-      <GoldStoreSummaryTable
+      <MetalStoreSummaryTable
+        metal={GOLD_METAL}
         summaries={[
-          { store: "SJC", phan: 10, avgBuy: 900_000, cost: 9_000_000, value: 10_000_000, pl: 1_000_000 },
-          { store: "PNJ", phan: 8, avgBuy: 900_000, cost: 7_200_000, value: 6_400_000, pl: -800_000 },
+          { store: "SJC", qty: 10, avgBuy: 900_000, cost: 9_000_000, value: 10_000_000, pl: 1_000_000 },
+          { store: "PNJ", qty: 8, avgBuy: 900_000, cost: 7_200_000, value: 6_400_000, pl: -800_000 },
         ]}
-        total={{ store: "Tổng cộng", phan: 18, avgBuy: 900_000, cost: 16_200_000, value: 16_400_000, pl: 200_000 }}
+        total={{ store: "Tổng cộng", qty: 18, avgBuy: 900_000, cost: 16_200_000, value: 16_400_000, pl: 200_000 }}
       />
     )
 
@@ -42,9 +44,10 @@ describe("GoldStoreSummaryTable", () => {
 
   it("shows a grand-total footer row across all stores", () => {
     render(
-      <GoldStoreSummaryTable
-        summaries={[{ store: "SJC", phan: 10, avgBuy: 900_000, cost: 9_000_000, value: 10_000_000, pl: 1_000_000 }]}
-        total={{ store: "Tổng cộng", phan: 10, avgBuy: 900_000, cost: 9_000_000, value: 10_000_000, pl: 1_000_000 }}
+      <MetalStoreSummaryTable
+        metal={GOLD_METAL}
+        summaries={[{ store: "SJC", qty: 10, avgBuy: 900_000, cost: 9_000_000, value: 10_000_000, pl: 1_000_000 }]}
+        total={{ store: "Tổng cộng", qty: 10, avgBuy: 900_000, cost: 9_000_000, value: 10_000_000, pl: 1_000_000 }}
       />
     )
 

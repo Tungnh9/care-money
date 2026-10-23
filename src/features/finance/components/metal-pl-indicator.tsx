@@ -2,28 +2,28 @@ import { Minus, TrendingDown, TrendingUp } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { formatMoney } from "@/lib/format"
-import { goldPLTone, type GoldPLTone } from "@/lib/finance/finance-calculations"
+import { metalPLTone, type MetalPLTone } from "@/lib/finance/metal-calculations"
 
-interface GoldPLIndicatorProps {
+interface MetalPLIndicatorProps {
   pl: number
   hidden: boolean
 }
 
-const TONE_COLOR: Record<GoldPLTone, string> = {
+const TONE_COLOR: Record<MetalPLTone, string> = {
   gain: "var(--ob-color-income)",
   loss: "var(--ob-color-expense)",
   even: "var(--ob-color-text-muted)",
 }
 
-function ToneIcon({ tone }: { tone: GoldPLTone }) {
+function ToneIcon({ tone }: { tone: MetalPLTone }) {
   if (tone === "gain") return <TrendingUp size={13} />
   if (tone === "loss") return <TrendingDown size={13} />
   return <Minus size={13} />
 }
 
-// Badge dạng viên thuốc — dùng trong ô bảng (GoldTransactionsTable, GoldStoreSummaryTable).
-function GoldPLBadge({ pl, hidden }: GoldPLIndicatorProps) {
-  const tone = goldPLTone(pl)
+// Badge dạng viên thuốc — dùng trong ô bảng (MetalTransactionsTable, MetalStoreSummaryTable).
+function MetalPLBadge({ pl, hidden }: MetalPLIndicatorProps) {
+  const tone = metalPLTone(pl)
   return (
     <span
       data-tone={tone}
@@ -40,9 +40,9 @@ function GoldPLBadge({ pl, hidden }: GoldPLIndicatorProps) {
   )
 }
 
-// Khối viền màu có nhãn "Lãi lỗ" — dùng trong card (GoldTransactionsCards, GoldStoreSummaryCards).
-function GoldPLBox({ pl, hidden }: GoldPLIndicatorProps) {
-  const tone = goldPLTone(pl)
+// Khối viền màu có nhãn "Lãi lỗ" — dùng trong card (MetalTransactionsCards, MetalStoreSummaryCards).
+function MetalPLBox({ pl, hidden }: MetalPLIndicatorProps) {
+  const tone = metalPLTone(pl)
   return (
     <div
       data-tone={tone}
@@ -71,4 +71,4 @@ function GoldPLBox({ pl, hidden }: GoldPLIndicatorProps) {
   )
 }
 
-export { GoldPLBadge, GoldPLBox }
+export { MetalPLBadge, MetalPLBox }

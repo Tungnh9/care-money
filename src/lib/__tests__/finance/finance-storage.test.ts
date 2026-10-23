@@ -7,7 +7,7 @@ import {
   setStoredFinance,
   applySavingsFundDelta,
 } from "@/lib/finance/finance-storage"
-import type { CreditCard, SavingsFund } from "@/lib/finance/types"
+import type { CreditCard, SavingsFund, SilverPurchase, SilverStore } from "@/lib/finance/types"
 
 describe("getStoredFinance", () => {
   beforeEach(() => {
@@ -266,5 +266,63 @@ describe("parseFinanceState — tên quỹ/thẻ trùng đã lưu", () => {
       ["Quỹ A", 110],
       ["Quỹ A (2)", 5_000],
     ])
+  })
+})
+
+describe("getStoredFinance — tích lũy bạc", () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+
+  it("keeps every field of a silver purchase and a silver store through a stored round trip", () => {
+    const purchase: Required<SilverPurchase> = { id: 1, date: "10/08/2026", luong: 2, buy: 1_800_000, store: "Phú Quý" }
+    const store: Required<SilverStore> = { name: "Phú Quý", price: "2.000.000" }
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, silver: [purchase], silverStores: [store] })
+
+    expect(getStoredFinance().silver).toEqual([purchase])
+    expect(getStoredFinance().silverStores).toEqual([store])
+  })
+
+  it("drops only the malformed silver purchase, keeping its valid siblings", () => {
+    const valid = { id: 2, date: "11/08/2026", luong: 5, buy: 1_900_000, store: "Phú Quý" }
+    window.localStorage.setItem(
+      FINANCE_STORAGE_KEY,
+      JSON.stringify({ ...DEFAULT_FINANCE_STATE, silver: [{ id: 1, date: "10/08/2026", luong: null }, valid] })
+    )
+
+    expect(getStoredFinance().silver).toEqual([valid])
+  })
+
+  it("reads no silver from data saved before silver existed, leaving gold as it was", () => {
+    const gold = [{ id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" }]
+    const goldStores = [{ name: "SJC", price: "950.000" }]
+    window.localStorage.setItem(
+      FINANCE_STORAGE_KEY,
+      JSON.stringify({ savings: [], cards: [], gold, goldStores, invests: [] })
+    )
+
+    const stored = getStoredFinance()
+    expect(stored.silver).toEqual([])
+    expect(stored.silverStores).toEqual([])
+    expect(stored.gold).toEqual(gold)
+    expect(stored.goldStores).toEqual(goldStores)
+  })
+
+  it("leaves silver alone while migrating legacy gold data", () => {
+    const silver = [{ id: 1, date: "10/08/2026", luong: 2, buy: 1_800_000, store: "Phú Quý" }]
+    window.localStorage.setItem(
+      FINANCE_STORAGE_KEY,
+      JSON.stringify({
+        goldPrice: "950.000",
+        gold: [{ id: 1, date: "10/08/2026", phan: 10, buy: 900_000 }],
+        silver,
+        silverStores: [{ name: "Phú Quý", price: "2.000.000" }],
+      })
+    )
+
+    const stored = getStoredFinance()
+    expect(stored.goldStores).toEqual([{ name: "Chưa gắn cửa hàng", price: "950.000" }])
+    expect(stored.silver).toEqual(silver)
+    expect(stored.silverStores).toEqual([{ name: "Phú Quý", price: "2.000.000" }])
   })
 })

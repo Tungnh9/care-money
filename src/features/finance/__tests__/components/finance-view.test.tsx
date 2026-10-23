@@ -108,7 +108,7 @@ describe("FinanceView", () => {
     expect(savingsSection.parentElement).toHaveClass("ob-card-grid")
   })
 
-  it("switches through all four tabs and renders each tab's distinctive content", () => {
+  it("switches through all five tabs and renders each tab's distinctive content", () => {
     render(<FinanceView />)
 
     expect(
@@ -122,6 +122,9 @@ describe("FinanceView", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Tích lũy vàng" }))
     expect(screen.getByText("Giá thị trường hôm nay")).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: "Tích lũy bạc" }))
+    expect(screen.getByRole("button", { name: "Thêm lần mua bạc" })).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole("button", { name: "Đầu tư" }))
     expect(screen.getByRole("button", { name: "Thêm khoản đầu tư" })).toBeInTheDocument()
@@ -158,5 +161,114 @@ describe("FinanceView", () => {
     render(<FinanceView />)
 
     expect(screen.getByText("1 thẻ · không nợ")).toBeInTheDocument()
+  })
+  it("shows 0 phân and a flat % on the gold pillar before any gold is bought", () => {
+    render(<FinanceView />)
+    expect(screen.getByText("0 phân · +0,0%")).toBeInTheDocument()
+  })
+
+  it("shows the phân held and the % gain on the gold pillar once there is gold", () => {
+    // 10 phân mua 800.000/phân, SJC hôm nay 900.000/phân: vốn 8.000.000, giá trị 9.000.000 → +12,5%.
+    window.localStorage.setItem(
+      FINANCE_STORAGE_KEY,
+      JSON.stringify({
+        ...DEFAULT_FINANCE_STATE,
+        gold: [{ id: 1, date: "10/08/2026", phan: 10, buy: 800_000, store: "SJC" }],
+        goldStores: [{ name: "SJC", price: "900000" }],
+      })
+    )
+
+    render(<FinanceView />)
+
+    expect(screen.getByText("10 phân · +12,5%")).toBeInTheDocument()
+  })
+  it("places the Tích lũy bạc tab right after Tích lũy vàng", () => {
+    render(<FinanceView />)
+
+    const gold = screen.getByRole("button", { name: "Tích lũy vàng" })
+    const silver = screen.getByRole("button", { name: "Tích lũy bạc" })
+    expect(gold.nextElementSibling).toBe(silver)
+    expect(silver.nextElementSibling).toBe(screen.getByRole("button", { name: "Đầu tư" }))
+  })
+
+  it("shows 0 lượng and a flat % on the silver pillar before any silver is bought", () => {
+    render(<FinanceView />)
+
+    expect(screen.getByText("0 lượng · +0,0%")).toBeInTheDocument()
+  })
+
+  it("setting up a silver store and buying 2 lượng shows the P&L, the silver pillar and the net worth", () => {
+    render(<FinanceView />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Tích lũy bạc" }))
+
+    fireEvent.click(screen.getByRole("button", { name: "Thêm cửa hàng" }))
+    fireEvent.change(screen.getByLabelText("Tên cửa hàng", { exact: false }), { target: { value: "Phú Quý" } })
+    fireEvent.change(screen.getByLabelText("Giá hôm nay", { exact: false }), { target: { value: "2000000" } })
+    fireEvent.click(screen.getByRole("button", { name: "Thêm" }))
+
+    fireEvent.click(screen.getByRole("button", { name: "Thêm lần mua bạc" }))
+    fireEvent.click(screen.getByRole("button", { name: "Phú Quý" }))
+    fireEvent.change(screen.getByLabelText("Ngày mua", { exact: false }), { target: { value: "10/08/2026" } })
+    fireEvent.change(screen.getByLabelText("Khối lượng (lượng)", { exact: false }), { target: { value: "2" } })
+    fireEvent.change(screen.getByLabelText("Giá mua (mỗi lượng)", { exact: false }), {
+      target: { value: "1800000" },
+    })
+    fireEvent.click(screen.getByRole("button", { name: "Thêm" }))
+
+    act(() => {
+      vi.advanceTimersByTime(1200)
+    })
+
+    // vốn 2 × 1.800.000 = 3.600.000, giá trị 2 × 2.000.000 = 4.000.000 → lãi 400.000 (+11,1%).
+    expect(screen.getByText(`+ ${formatMoney(400_000)}`)).toBeInTheDocument()
+    expect(screen.getByText("2 lượng · +11,1%")).toBeInTheDocument()
+    const netSection = screen.getByText("Tài sản ròng").closest("section") as HTMLElement
+    expect(within(netSection).getByText(formatMoney(4_000_000))).toBeInTheDocument()
+    expect(within(netSection).getByText("Bạc")).toBeInTheDocument()
+    expect(JSON.parse(window.localStorage.getItem(FINANCE_STORAGE_KEY) ?? "{}").silver).toEqual([
+      { id: 1, date: "10/08/2026", luong: 2, buy: 1_800_000, store: "Phú Quý" },
+    ])
+  })
+
+  it("does not carry an open add-purchase form from the gold tab over to the silver tab", () => {
+    window.localStorage.setItem(
+      FINANCE_STORAGE_KEY,
+      JSON.stringify({
+        ...DEFAULT_FINANCE_STATE,
+        goldStores: [{ name: "SJC", price: "900000" }],
+        silverStores: [{ name: "Phú Quý", price: "2000000" }],
+      })
+    )
+    render(<FinanceView />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Tích lũy vàng" }))
+    fireEvent.click(screen.getByRole("button", { name: "Thêm lần mua vàng" }))
+    fireEvent.change(screen.getByLabelText("Khối lượng (phân)", { exact: false }), { target: { value: "10" } })
+
+    fireEvent.click(screen.getByRole("button", { name: "Tích lũy bạc" }))
+
+    expect(screen.queryByText("Lần mua bạc mới")).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Thêm lần mua bạc" })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: "Tích lũy vàng" }))
+
+    expect(screen.queryByText("Lần mua vàng mới")).not.toBeInTheDocument()
+  })
+  it("lays the five pillars out against the pillar row's own width (5 in a row, or at most 3 per row)", () => {
+    render(<FinanceView />)
+
+    // jsdom không tính được container query — chỉ khoá đúng các class mà quy tắc 5 trụ / 3+2 dựa vào.
+    const pillars = ["Tiết kiệm", "Nợ thẻ tín dụng", "Tích lũy vàng", "Tích lũy bạc", "Đầu tư"].map(
+      (label) =>
+        screen
+          .getAllByText(label)
+          .find((el) => el.tagName === "SPAN" && el.className.includes("uppercase"))
+          ?.closest("section") as HTMLElement
+    )
+    for (const pillar of pillars) {
+      expect(pillar).toHaveClass("min-w-[260px]", "flex-[1_1_calc((100%_-_2rem)/3)]", "@min-[1364px]:flex-[1_1_0%]")
+    }
+    expect(pillars[0].parentElement).toHaveClass("@container")
   })
 })

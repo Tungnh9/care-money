@@ -4,16 +4,18 @@ import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Field } from "@/components/ui/field"
-import type { GoldStore } from "@/lib/finance/types"
+import type { MetalStore } from "@/lib/finance/types"
+import type { MetalDisplay } from "../metal-config"
 
-interface AddGoldStoreFormProps {
-  onAdd: (store: GoldStore) => void
-  // Tên các cửa hàng đang có — lần mua vàng tham chiếu cửa hàng bằng tên, nên chặn trùng ngay ở form:
+interface AddMetalStoreFormProps {
+  metal: MetalDisplay
+  onAdd: (store: MetalStore) => void
+  // Tên các cửa hàng đang có — lần mua tham chiếu cửa hàng bằng tên, nên chặn trùng ngay ở form:
   // nếu chỉ để hook từ chối, form vẫn reset() và mất chữ người dùng đã gõ.
   existingNames?: string[]
 }
 
-function AddGoldStoreForm({ onAdd, existingNames = [] }: AddGoldStoreFormProps) {
+function AddMetalStoreForm({ metal, onAdd, existingNames = [] }: AddMetalStoreFormProps) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState("")
   const [price, setPrice] = useState("")
@@ -45,7 +47,7 @@ function AddGoldStoreForm({ onAdd, existingNames = [] }: AddGoldStoreFormProps) 
         <Field
           className="min-w-0 flex-[1_1_220px]"
           label="Tên cửa hàng"
-          placeholder="vd: SJC"
+          placeholder={metal.storePlaceholder}
           value={name}
           onChange={(e) => setName(e.target.value)}
           invalid={duplicate}
@@ -53,7 +55,7 @@ function AddGoldStoreForm({ onAdd, existingNames = [] }: AddGoldStoreFormProps) 
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"
-          label="Giá hôm nay (mỗi phân)"
+          label={`Giá hôm nay (mỗi ${metal.unit})`}
           numeric
           group
           suffix="đ"
@@ -83,4 +85,4 @@ function AddGoldStoreForm({ onAdd, existingNames = [] }: AddGoldStoreFormProps) 
   )
 }
 
-export { AddGoldStoreForm }
+export { AddMetalStoreForm }

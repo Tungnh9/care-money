@@ -14,6 +14,11 @@ const ZERO_SUMMARY: FinanceSummary = {
   goldValue: 0,
   goldPL: 0,
   goldPct: 0,
+  silverLuong: 0,
+  silverCost: 0,
+  silverValue: 0,
+  silverPL: 0,
+  silverPct: 0,
   investCost: 0,
   investValue: 0,
   investPL: 0,
@@ -41,7 +46,8 @@ describe("FinanceSummarySection", () => {
     expect(screen.getByText("Tài sản ròng")).toBeInTheDocument()
     expect(screen.getAllByText(formatMoney(0)).length).toBeGreaterThan(0)
     expect(screen.getByText("chưa có quỹ")).toBeInTheDocument()
-    expect(screen.getByText("chưa có")).toBeInTheDocument()
+    // Ô Vàng và ô Bạc đều nói "chưa có" khi chưa giữ gì.
+    expect(screen.getAllByText("chưa có")).toHaveLength(2)
     expect(screen.getByText("chưa có khoản nào")).toBeInTheDocument()
     expect(screen.getByText("không nợ")).toBeInTheDocument()
   })
@@ -138,5 +144,48 @@ describe("FinanceSummarySection", () => {
 
     expect(screen.getByText("không nợ")).toBeInTheDocument()
     expect(screen.queryByText("hạn 15")).not.toBeInTheDocument()
+  })
+  it("shows the silver holding in lượng next to gold, colour-coding its gain", () => {
+    render(
+      <FinanceSummarySection
+        savings={[]}
+        cards={[]}
+        invests={[]}
+        summary={{ ...ZERO_SUMMARY, silverLuong: 2, silverCost: 3_600_000, silverValue: 4_000_000, silverPL: 400_000 }}
+      />
+    )
+
+    const labels = screen
+      .getAllByText(/^(Tiết kiệm|Vàng|Bạc|Đầu tư|Nợ thẻ)$/)
+      .filter((el) => el.className.includes("uppercase"))
+      .map((el) => el.textContent)
+    expect(labels).toEqual(["Tiết kiệm", "Vàng", "Bạc", "Đầu tư", "Nợ thẻ"])
+    expect(screen.getByText(formatMoney(4_000_000))).toHaveStyle({ color: "var(--ob-color-income)" })
+    expect(screen.getByText("2 lượng", { exact: false })).toBeInTheDocument()
+    const silverPL = screen.getByText("lời " + formatMoney(400_000))
+    expect(silverPL).toHaveClass("font-bold")
+    expect(silverPL).toHaveStyle({ color: "var(--ob-color-income)" })
+  })
+
+  it("calls a break-even silver position hoà vốn and a losing one lỗ", () => {
+    const { rerender } = render(
+      <FinanceSummarySection
+        savings={[]}
+        cards={[]}
+        invests={[]}
+        summary={{ ...ZERO_SUMMARY, silverLuong: 2, silverCost: 3_600_000, silverValue: 3_600_000 }}
+      />
+    )
+    expect(screen.getByText("2 lượng · hoà vốn", { exact: false })).toBeInTheDocument()
+
+    rerender(
+      <FinanceSummarySection
+        savings={[]}
+        cards={[]}
+        invests={[]}
+        summary={{ ...ZERO_SUMMARY, silverLuong: 2, silverCost: 3_600_000, silverValue: 3_000_000, silverPL: -600_000 }}
+      />
+    )
+    expect(screen.getByText("lỗ " + formatMoney(600_000))).toHaveStyle({ color: "var(--ob-color-expense)" })
   })
 })

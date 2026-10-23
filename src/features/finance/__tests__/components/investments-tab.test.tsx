@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react"
 
 import { formatMoney } from "@/lib/format"
 import { pct1, summarizeFinance, type FinanceSummary } from "@/lib/finance/finance-calculations"
+import { DEFAULT_FINANCE_STATE } from "@/lib/finance/finance-storage"
 import { InvestmentsTab } from "../../components/investments-tab"
 import type { Investment } from "@/lib/finance/types"
 
@@ -21,7 +22,7 @@ const LOSING: Investment = {
 }
 
 function summaryFor(invests: Investment[]): FinanceSummary {
-  return summarizeFinance({ savings: [], cards: [], gold: [], goldStores: [], invests })
+  return summarizeFinance({ ...DEFAULT_FINANCE_STATE, invests })
 }
 
 describe("InvestmentsTab", () => {

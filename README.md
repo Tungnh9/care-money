@@ -71,7 +71,7 @@ src/
 └── test/                  # setup file cho Vitest
 
 content/                   # vocabulary.jsonl (380 từ, mỗi từ đã có ảnh minh hoạ), grammar.jsonl — dữ liệu học tập, không phải code
-public/assets/             # logo, app-icon, avatar, icons/ (12 icon module dùng ở goals/overview...), vocab/ (380 ảnh minh hoạ từ vựng)
+public/assets/             # logo, app-icon, avatar, icons/ (13 icon module dùng ở goals/overview...), vocab/ (380 ảnh minh hoạ từ vựng)
 ```
 
 ## Tính năng
@@ -79,7 +79,7 @@ public/assets/             # logo, app-icon, avatar, icons/ (12 icon module dùn
 | Route | Feature | Mô tả |
 | --- | --- | --- |
 | `/overview` | `overview` | Tổng quan — tổng hợp số liệu từ finance/budget/goals/journal/study, không có state riêng, mỗi phần bị ẩn nếu module tương ứng đang tắt ở Cài đặt |
-| `/finance` | `finance` | Tài chính — 4 tab: Tiết kiệm · Nợ thẻ tín dụng (có màu tuỳ chỉnh) · Tích lũy vàng (nhiều cửa hàng, mỗi cửa hàng 1 giá riêng) · Đầu tư |
+| `/finance` | `finance` | Tài chính — 5 tab: Tiết kiệm · Nợ thẻ tín dụng (có màu tuỳ chỉnh) · Tích lũy vàng (nhiều cửa hàng, mỗi cửa hàng 1 giá riêng) · Tích lũy bạc (tính theo lượng nguyên, không quy đổi; danh sách cửa hàng và giá riêng; giá trị bạc cộng vào Tài sản ròng) · Đầu tư. Tab vàng và tab bạc dùng chung bộ component `metal-*` + `MetalTab`, chỉ khác cấu hình trong `metal-config.ts` |
 | `/budget` | `budget` | Chi tiêu — nhập lương hàng tháng, ghi từng khoản chi kèm tag tuỳ biến (cấu hình ở Cài đặt), xem biểu đồ theo tag và theo tháng (ApexCharts), "tất toán" tháng: dư thì cộng vào 1 quỹ tiết kiệm, thiếu thì rút từ 1 quỹ (nút chọn quỹ hiện số dư rút gọn) — số tiền còn phải tất toán luôn tính lại từ dữ liệu gốc; mọi tháng cũ có lương mà còn lệch đều được nhắc cho tới khi tất toán xong; tháng đang chạy phải có lương (kể cả 0 đ) mới tất toán được; các lần tất toán bấm trong tháng hiện ở khối "Chốt sổ" đầu danh sách "Khoản chi tháng này" (không cộng vào số đã chi) |
 | `/journal` | `journal` | Nhật ký — ghi chú rich-text hàng ngày (sanitize qua `dompurify`) kèm mood (danh sách mood tuỳ biến ở Cài đặt), có card "On this day" gợi lại bài viết cùng ngày các năm trước |
 | `/study` | `study` | Học tập — 4 tab: **Hôm nay** (task hàng ngày + Pomodoro + pick ngẫu nhiên-nhưng-cố-định-theo-ngày 5 từ vựng/1 điểm ngữ pháp) · **Từ vựng** · **Ngữ pháp** (2 tab sau đọc từ `content/*.jsonl`) · **Trò chơi** (3 mini-game ôn từ vựng — xem chi tiết bên dưới) |
@@ -153,7 +153,7 @@ Tab "Trò chơi" gồm 3 mini-game ôn từ vựng, dùng chung 1 khung điều 
 
 | File | Vai trò |
 | --- | --- |
-| `finance/` · `budget/` · `goals/` · `journal/` · `study/` · `net-worth/` · `settings/` · `work/` | Data layer của từng domain mà ≥ 2 feature cùng đọc/ghi: `types.ts`, `*-storage.ts` (đọc/ghi localStorage + hàm `parse*`), `*-calculations.ts` (hàm thuần), hook `use-*.ts`. `settings/` gồm `settings-storage.ts` (`AppSettings` + default `DEFAULT_SETTINGS`/`DEFAULT_MODULES`/`DEFAULT_TAGS`, `TINT_PALETTE`/`EMOJI_PICKER`), `use-settings.ts`, `greeting.ts` (`splitGreeting`); `study/` có thêm `content-loader.ts` (đọc `content/*.jsonl`, chỉ dùng phía server) |
+| `finance/` · `budget/` · `goals/` · `journal/` · `study/` · `net-worth/` · `settings/` · `work/` | Data layer của từng domain mà ≥ 2 feature cùng đọc/ghi: `types.ts`, `*-storage.ts` (đọc/ghi localStorage + hàm `parse*`), `*-calculations.ts` (hàm thuần), hook `use-*.ts`. `finance/` có thêm `metal-calculations.ts` (giá, lãi/lỗ, tổng hợp theo cửa hàng dùng chung cho vàng và bạc). `settings/` gồm `settings-storage.ts` (`AppSettings` + default `DEFAULT_SETTINGS`/`DEFAULT_MODULES`/`DEFAULT_TAGS`, `TINT_PALETTE`/`EMOJI_PICKER`), `use-settings.ts`, `greeting.ts` (`splitGreeting`); `study/` có thêm `content-loader.ts` (đọc `content/*.jsonl`, chỉ dùng phía server) |
 | `auth.ts` | Auth mock qua localStorage: `getStoredUser` · `setStoredUser` · `clearStoredUser` |
 | `data-change-bus.ts` | Pub/sub nhỏ (`notifyDataChanged` · `onDataChanged`) báo hiệu dữ liệu vừa đổi giữa các component không liên quan trực tiếp |
 | `data-transfer.ts` | Định dạng bản sao xuất/nhập/đồng bộ: `buildExportPayload` · `parseImportPayload` · `exportFileName` · `uploadedSummary` · `EXPORT_VERSION` — dùng bởi Cài đặt và route `/api/sync` |

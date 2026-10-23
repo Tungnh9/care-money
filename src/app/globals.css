@@ -54,6 +54,8 @@
   --ob-do-500: #e5484d;
   --ob-xanh-500: #4a7cf7;
   --ob-ma-hong: #d6303a;
+  /* Bạc (kim loại) — phần "Bạc" trong thanh Tài sản ròng, nổi trên nền thẻ tối --ob-vo-900. */
+  --ob-bac-300: #c9ced6;
 
   /* ---- Màu minh hoạ (chỉ dùng trong bộ icon vẽ tay) ---- */
   --ob-heo: #f5a0be;

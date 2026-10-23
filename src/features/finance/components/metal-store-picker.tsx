@@ -1,15 +1,15 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import type { GoldStore } from "@/lib/finance/types"
+import type { MetalStore } from "@/lib/finance/types"
 
-interface GoldStorePickerProps {
-  stores: GoldStore[]
+interface MetalStorePickerProps {
+  stores: MetalStore[]
   selected: string
   onSelect: (name: string) => void
 }
 
-function GoldStorePicker({ stores, selected, onSelect }: GoldStorePickerProps) {
+function MetalStorePicker({ stores, selected, onSelect }: MetalStorePickerProps) {
   return (
     <div>
       <span className="mb-[var(--ob-space-2)] block [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
@@ -45,4 +45,4 @@ function GoldStorePicker({ stores, selected, onSelect }: GoldStorePickerProps) {
   )
 }
 
-export { GoldStorePicker }
+export { MetalStorePicker }

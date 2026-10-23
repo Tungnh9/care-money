@@ -1,4 +1,4 @@
-import { formatPhan, nearestDueCard, type FinanceSummary } from "@/lib/finance/finance-calculations"
+import { formatLuong, formatPhan, nearestDueCard, type FinanceSummary } from "@/lib/finance/finance-calculations"
 import type { CreditCard, Investment, SavingsFund } from "@/lib/finance/types"
 import { Card } from "@/components/ui/card"
 import { NetWorthCard } from "@/components/ob/net-worth-card"
@@ -11,6 +11,48 @@ interface FinanceSummarySectionProps {
   cards: CreditCard[]
   invests: Investment[]
   summary: FinanceSummary
+}
+
+interface HoldingMiniStatProps {
+  icon: string
+  label: string
+  value: number
+  quantity: number
+  quantityText: string
+  pl: number
+}
+
+// Ô Vàng / ô Bạc: giá trị đang giữ, gợi ý "khối lượng · lời/lỗ X" (hoà vốn thì trung tính).
+function HoldingMiniStat({ icon, label, value, quantity, quantityText, pl }: HoldingMiniStatProps) {
+  const { hidden } = useMoneyVisibility()
+  return (
+    <MiniStat
+      icon={icon}
+      label={label}
+      value={formatMoney(value, hidden)}
+      hint={
+        quantity && pl === 0 ? (
+          `${quantityText} · hoà vốn`
+        ) : quantity ? (
+          <>
+            {quantityText} ·{" "}
+            <span
+              className="font-bold"
+              style={{
+                color: pl >= 0 ? "var(--ob-color-income)" : "var(--ob-color-expense)",
+              }}
+            >
+              {pl >= 0 ? "lời " : "lỗ "}
+              {formatMoney(Math.abs(pl), hidden)}
+            </span>
+          </>
+        ) : (
+          "chưa có"
+        )
+      }
+      color={quantity && pl !== 0 ? (pl > 0 ? "var(--ob-color-income)" : "var(--ob-color-expense)") : undefined}
+    />
+  )
 }
 
 function FinanceSummarySection({ savings, cards, invests, summary }: FinanceSummarySectionProps) {
@@ -31,37 +73,21 @@ function FinanceSummarySection({ savings, cards, invests, summary }: FinanceSumm
             value={formatMoney(summary.savingsTotal, hidden)}
             hint={savings.length ? `${savings.length} quỹ` : "chưa có quỹ"}
           />
-          <MiniStat
+          <HoldingMiniStat
             icon="gold"
             label="Vàng"
-            value={formatMoney(summary.goldValue, hidden)}
-            hint={
-              summary.goldPhan && summary.goldPL === 0 ? (
-                `${formatPhan(summary.goldPhan)} phân · hoà vốn`
-              ) : summary.goldPhan ? (
-                <>
-                  {formatPhan(summary.goldPhan)} phân ·{" "}
-                  <span
-                    className="font-bold"
-                    style={{
-                      color: summary.goldPL >= 0 ? "var(--ob-color-income)" : "var(--ob-color-expense)",
-                    }}
-                  >
-                    {summary.goldPL >= 0 ? "lời " : "lỗ "}
-                    {formatMoney(Math.abs(summary.goldPL), hidden)}
-                  </span>
-                </>
-              ) : (
-                "chưa có"
-              )
-            }
-            color={
-              summary.goldPhan && summary.goldPL !== 0
-                ? summary.goldPL > 0
-                  ? "var(--ob-color-income)"
-                  : "var(--ob-color-expense)"
-                : undefined
-            }
+            value={summary.goldValue}
+            quantity={summary.goldPhan}
+            quantityText={`${formatPhan(summary.goldPhan)} phân`}
+            pl={summary.goldPL}
+          />
+          <HoldingMiniStat
+            icon="silver"
+            label="Bạc"
+            value={summary.silverValue}
+            quantity={summary.silverLuong}
+            quantityText={`${formatLuong(summary.silverLuong)} lượng`}
+            pl={summary.silverPL}
           />
           <MiniStat
             icon="chart"

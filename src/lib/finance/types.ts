@@ -14,17 +14,34 @@ interface CreditCard {
   color?: string
 }
 
-interface GoldStore {
+// Cửa hàng vàng/bạc: giá hôm nay là chuỗi chữ số (ô nhập có nhóm nghìn), tính theo đơn vị của chính
+// kim loại đó — vàng theo phân, bạc theo lượng.
+interface MetalStore {
   name: string
   price: string
 }
 
-interface GoldPurchase {
+// Phần chung của 1 lần mua vàng/bạc. Khối lượng nằm ở field riêng của từng kim loại (`phan`, `luong`)
+// để file sao lưu tự nói đơn vị và TypeScript không cho lẫn lần mua bạc vào code vàng. `buy` là giá
+// mua mỗi đơn vị; `store` tham chiếu cửa hàng bằng tên.
+interface MetalPurchaseBase {
   id: number
   date: string
-  phan: number
   buy: number
   store: string
+}
+
+type GoldStore = MetalStore
+
+interface GoldPurchase extends MetalPurchaseBase {
+  phan: number
+}
+
+type SilverStore = MetalStore
+
+// Bạc tính thẳng theo lượng, không có đơn vị quy đổi: `luong` là số lượng nguyên, `buy` là giá mỗi lượng.
+interface SilverPurchase extends MetalPurchaseBase {
+  luong: number
 }
 
 interface Investment {
@@ -34,4 +51,14 @@ interface Investment {
   value: number
 }
 
-export type { SavingsFund, CreditCard, GoldStore, GoldPurchase, Investment }
+export type {
+  SavingsFund,
+  CreditCard,
+  MetalStore,
+  MetalPurchaseBase,
+  GoldStore,
+  GoldPurchase,
+  SilverStore,
+  SilverPurchase,
+  Investment,
+}

@@ -518,7 +518,7 @@ describe("parseImportPayload — work", () => {
 })
 
 describe("restoreCounts", () => {
-  it("lists journal entries, expenses, savings funds, gold purchases, learned words and work tasks", () => {
+  it("lists journal entries, expenses, savings funds, gold and silver purchases, learned words and work tasks", () => {
     const result = parseImportPayload(
       JSON.stringify({
         version: EXPORT_VERSION,
@@ -537,8 +537,39 @@ describe("restoreCounts", () => {
     expect(result.ok).toBe(true)
     if (result.ok) {
       expect(restoreCounts(result.data)).toBe(
-        "1 bài nhật ký · 2 khoản chi · 1 quỹ tiết kiệm · 0 lần mua vàng · 3 từ đã học · 0 việc"
+        "1 bài nhật ký · 2 khoản chi · 1 quỹ tiết kiệm · 0 lần mua vàng · 0 lần mua bạc · 3 từ đã học · 0 việc"
       )
+    }
+  })
+})
+
+describe("parseImportPayload — tích lũy bạc", () => {
+  const silver = [{ id: 1, date: "10/08/2026", luong: 2, buy: 1_800_000, store: "Phú Quý" }]
+  const silverStores = [{ name: "Phú Quý", price: "2.000.000" }]
+
+  it("brings silver purchases and stores back from a backup and counts them before restoring", () => {
+    const result = parseImportPayload(
+      JSON.stringify({ version: EXPORT_VERSION, finance: { ...DEFAULT_FINANCE_STATE, silver, silverStores } })
+    )
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.finance.silver).toEqual(silver)
+      expect(result.data.finance.silverStores).toEqual(silverStores)
+      expect(restoreCounts(result.data)).toContain("1 lần mua bạc")
+    }
+  })
+
+  it("reads no silver from a backup made before silver existed", () => {
+    const result = parseImportPayload(
+      JSON.stringify({ version: EXPORT_VERSION, finance: { savings: [], cards: [], gold: [], goldStores: [], invests: [] } })
+    )
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.finance.silver).toEqual([])
+      expect(result.data.finance.silverStores).toEqual([])
+      expect(restoreCounts(result.data)).toContain("0 lần mua bạc")
     }
   })
 })

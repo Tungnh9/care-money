@@ -1,20 +1,20 @@
 import { describe, it, expect, vi } from "vitest"
 import { render, screen, fireEvent } from "@testing-library/react"
 
-import { EditGoldStoreModal } from "../../components/edit-gold-store-modal"
+import { EditMetalStoreModal } from "../../components/edit-metal-store-modal"
 import type { GoldStore } from "@/lib/finance/types"
 
 const STORE: GoldStore = { name: "PNJ", price: "7.550.000" }
 
-describe("EditGoldStoreModal", () => {
+describe("EditMetalStoreModal", () => {
   it("renders nothing when store is null", () => {
-    render(<EditGoldStoreModal store={null} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+    render(<EditMetalStoreModal store={null} onOpenChange={vi.fn()} onSave={vi.fn()} />)
 
     expect(screen.queryByText("Sửa cửa hàng")).not.toBeInTheDocument()
   })
 
   it("prefills the name field from the given store", () => {
-    render(<EditGoldStoreModal store={STORE} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+    render(<EditMetalStoreModal store={STORE} onOpenChange={vi.fn()} onSave={vi.fn()} />)
 
     expect(screen.getByLabelText("Tên cửa hàng")).toHaveValue("PNJ")
   })
@@ -22,7 +22,7 @@ describe("EditGoldStoreModal", () => {
   it("saves the edited store (keeping its price) and closes on Lưu", () => {
     const onSave = vi.fn()
     const onOpenChange = vi.fn()
-    render(<EditGoldStoreModal store={STORE} onOpenChange={onOpenChange} onSave={onSave} />)
+    render(<EditMetalStoreModal store={STORE} onOpenChange={onOpenChange} onSave={onSave} />)
 
     fireEvent.change(screen.getByLabelText("Tên cửa hàng"), { target: { value: "PNJ Quận 1" } })
     fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
@@ -33,7 +33,7 @@ describe("EditGoldStoreModal", () => {
 
   it("closes without saving on Huỷ", () => {
     const onSave = vi.fn()
-    render(<EditGoldStoreModal store={STORE} onOpenChange={vi.fn()} onSave={onSave} />)
+    render(<EditMetalStoreModal store={STORE} onOpenChange={vi.fn()} onSave={onSave} />)
 
     fireEvent.click(screen.getByRole("button", { name: "Huỷ" }))
 
@@ -41,7 +41,7 @@ describe("EditGoldStoreModal", () => {
   })
 
   it("disables Lưu while the name is empty", () => {
-    render(<EditGoldStoreModal store={STORE} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+    render(<EditMetalStoreModal store={STORE} onOpenChange={vi.fn()} onSave={vi.fn()} />)
 
     fireEvent.change(screen.getByLabelText("Tên cửa hàng"), { target: { value: "" } })
 
@@ -50,18 +50,18 @@ describe("EditGoldStoreModal", () => {
 
   it("reseeds the field when switching to a different store while already open", () => {
     const OTHER: GoldStore = { name: "SJC", price: "7.600.000" }
-    const { rerender } = render(<EditGoldStoreModal store={STORE} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+    const { rerender } = render(<EditMetalStoreModal store={STORE} onOpenChange={vi.fn()} onSave={vi.fn()} />)
 
-    rerender(<EditGoldStoreModal store={OTHER} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+    rerender(<EditMetalStoreModal store={OTHER} onOpenChange={vi.fn()} onSave={vi.fn()} />)
 
     expect(screen.getByLabelText("Tên cửa hàng")).toHaveValue("SJC")
   })
 })
 
-describe("EditGoldStoreModal — tên cửa hàng trùng", () => {
+describe("EditMetalStoreModal — tên cửa hàng trùng", () => {
   it("disables Lưu and explains why when renaming to another store's name", () => {
     render(
-      <EditGoldStoreModal store={STORE} existingNames={["PNJ", "SJC"]} onOpenChange={vi.fn()} onSave={vi.fn()} />
+      <EditMetalStoreModal store={STORE} existingNames={["PNJ", "SJC"]} onOpenChange={vi.fn()} onSave={vi.fn()} />
     )
 
     fireEvent.change(screen.getByLabelText("Tên cửa hàng", { exact: false }), { target: { value: "SJC" } })
@@ -72,7 +72,7 @@ describe("EditGoldStoreModal — tên cửa hàng trùng", () => {
 
   it("still allows saving under the store's own current name", () => {
     render(
-      <EditGoldStoreModal store={STORE} existingNames={["PNJ", "SJC"]} onOpenChange={vi.fn()} onSave={vi.fn()} />
+      <EditMetalStoreModal store={STORE} existingNames={["PNJ", "SJC"]} onOpenChange={vi.fn()} onSave={vi.fn()} />
     )
 
     expect(screen.getByRole("button", { name: "Lưu" })).toBeEnabled()

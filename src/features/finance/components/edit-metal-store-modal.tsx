@@ -1,21 +1,22 @@
 "use client"
 
-import { useState } from "react"
+import { useId, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Field } from "@/components/ui/field"
 import { Modal } from "@/components/ui/modal"
-import type { GoldStore } from "@/lib/finance/types"
+import type { MetalStore } from "@/lib/finance/types"
 
-interface EditGoldStoreModalProps {
-  store: GoldStore | null
+interface EditMetalStoreModalProps {
+  store: MetalStore | null
   // Tên mọi cửa hàng đang có (tên hiện tại của chính cửa hàng đang sửa luôn được giữ).
   existingNames?: string[]
   onOpenChange: (open: boolean) => void
-  onSave: (store: GoldStore) => void
+  onSave: (store: MetalStore) => void
 }
 
-function EditGoldStoreModal({ store, existingNames = [], onOpenChange, onSave }: EditGoldStoreModalProps) {
+function EditMetalStoreModal({ store, existingNames = [], onOpenChange, onSave }: EditMetalStoreModalProps) {
+  const titleId = useId()
   const [name, setName] = useState("")
 
   // Modal ở lại mounted với store=null giữa các lần mở — reseed field đúng lúc chuyển sang mở với
@@ -40,8 +41,8 @@ function EditGoldStoreModal({ store, existingNames = [], onOpenChange, onSave }:
   }
 
   return (
-    <Modal open onOpenChange={onOpenChange} ariaLabelledBy="edit-gold-store-title">
-      <div id="edit-gold-store-title" className="mb-4 text-[17px] font-bold">
+    <Modal open onOpenChange={onOpenChange} ariaLabelledBy={titleId}>
+      <div id={titleId} className="mb-4 text-[17px] font-bold">
         Sửa cửa hàng
       </div>
 
@@ -66,4 +67,4 @@ function EditGoldStoreModal({ store, existingNames = [], onOpenChange, onSave }:
   )
 }
 
-export { EditGoldStoreModal }
+export { EditMetalStoreModal }

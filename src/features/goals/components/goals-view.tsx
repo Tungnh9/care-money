@@ -10,9 +10,9 @@ import { OverallProgressCard } from "./overall-progress-card"
 
 function GoalsView() {
   const { hidden } = useMoneyVisibility()
-  const { savings, cards, gold, goldStores, invests } = useFinance()
+  const { savings, cards, gold, goldStores, silver, silverStores, invests } = useFinance()
   const { fundName, selectFund } = useCarGoalFund()
-  const summary = summarizeFinance({ savings, cards, gold, goldStores, invests })
+  const summary = summarizeFinance({ savings, cards, gold, goldStores, silver, silverStores, invests })
   const goldPricePerPhan = goldReferencePricePerPhan(summary, goldStores)
   const { goals, avg } = getGoals(
     {

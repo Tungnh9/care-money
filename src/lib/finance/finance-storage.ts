@@ -2,13 +2,24 @@ import { z } from "zod"
 
 import { notifyDataChanged } from "@/lib/data-change-bus"
 import { safeArray } from "@/lib/safe-array"
-import type { CreditCard, GoldPurchase, GoldStore, Investment, SavingsFund } from "@/lib/finance/types"
+import type {
+  CreditCard,
+  GoldPurchase,
+  GoldStore,
+  Investment,
+  MetalStore,
+  SavingsFund,
+  SilverPurchase,
+  SilverStore,
+} from "@/lib/finance/types"
 
 interface FinanceState {
   savings: SavingsFund[]
   cards: CreditCard[]
   gold: GoldPurchase[]
   goldStores: GoldStore[]
+  silver: SilverPurchase[]
+  silverStores: SilverStore[]
   invests: Investment[]
 }
 
@@ -20,6 +31,8 @@ const DEFAULT_FINANCE_STATE: FinanceState = {
   cards: [],
   gold: [],
   goldStores: [],
+  silver: [],
+  silverStores: [],
   invests: [],
 }
 
@@ -39,7 +52,8 @@ const creditCardSchema: z.ZodType<CreditCard> = z.object({
   color: z.string().optional(),
 })
 
-const goldStoreSchema: z.ZodType<GoldStore> = z.object({
+// Cửa hàng vàng và cửa hàng bạc cùng 1 dạng (tên + giá hôm nay theo đơn vị của kim loại đó).
+const metalStoreSchema: z.ZodType<MetalStore> = z.object({
   name: z.string(),
   price: z.string(),
 })
@@ -48,6 +62,14 @@ const goldPurchaseSchema: z.ZodType<GoldPurchase> = z.object({
   id: z.number(),
   date: z.string(),
   phan: z.number(),
+  buy: z.number(),
+  store: z.string(),
+})
+
+const silverPurchaseSchema: z.ZodType<SilverPurchase> = z.object({
+  id: z.number(),
+  date: z.string(),
+  luong: z.number(),
   buy: z.number(),
   store: z.string(),
 })
@@ -118,7 +140,10 @@ function parseFinanceState(value: unknown): FinanceState {
     savings: dedupeNames(safeArray(savingsFundSchema, parsed.savings)),
     cards: dedupeNames(safeArray(creditCardSchema, parsed.cards)),
     gold: safeArray(goldPurchaseSchema, migrated.gold),
-    goldStores: safeArray(goldStoreSchema, migrated.goldStores),
+    goldStores: safeArray(metalStoreSchema, migrated.goldStores),
+    // Bạc có sau vàng: dữ liệu/bản sao lưu cũ không có 2 key này thì safeArray trả [] — không cần migrate.
+    silver: safeArray(silverPurchaseSchema, parsed.silver),
+    silverStores: safeArray(metalStoreSchema, parsed.silverStores),
     invests: safeArray(investmentSchema, parsed.invests),
   }
 }
@@ -172,8 +197,9 @@ export {
   parseFinanceState,
   savingsFundSchema,
   creditCardSchema,
-  goldStoreSchema,
+  metalStoreSchema,
   goldPurchaseSchema,
+  silverPurchaseSchema,
   investmentSchema,
   type FinanceState,
 }

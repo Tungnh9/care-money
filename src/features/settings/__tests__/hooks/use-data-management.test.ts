@@ -163,8 +163,8 @@ describe("useDataManagement", () => {
       source: "file",
       fileName: "backup.json",
       exportedAt: "2026-09-20T02:00:00.000Z",
-      incomingCounts: "1 bài nhật ký · 0 khoản chi · 1 quỹ tiết kiệm · 0 lần mua vàng · 0 từ đã học · 1 việc",
-      localCounts: "1 bài nhật ký · 0 khoản chi · 0 quỹ tiết kiệm · 0 lần mua vàng · 0 từ đã học · 0 việc",
+      incomingCounts: "1 bài nhật ký · 0 khoản chi · 1 quỹ tiết kiệm · 0 lần mua vàng · 0 lần mua bạc · 0 từ đã học · 1 việc",
+      localCounts: "1 bài nhật ký · 0 khoản chi · 0 quỹ tiết kiệm · 0 lần mua vàng · 0 lần mua bạc · 0 từ đã học · 0 việc",
     })
 
     act(() => {
@@ -255,8 +255,13 @@ describe("useDataManagement", () => {
     expect(result.current.imported).toBeNull()
   })
 
-  it("wipeData replaces journal/finance/study/budget/net-worth-history with empty defaults but keeps the gold stores", () => {
-    setStoredFinance({ ...DEFAULT_FINANCE_STATE, goldStores: [{ name: "SJC", price: "935.000" }] })
+  it("wipeData replaces journal/finance/study/budget/net-worth-history with empty defaults but keeps the gold and silver stores", () => {
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      goldStores: [{ name: "SJC", price: "935.000" }],
+      silver: [{ id: 1, date: "10/08/2026", luong: 2, buy: 1_800_000, store: "Phú Quý" }],
+      silverStores: [{ name: "Phú Quý", price: "2.000.000" }],
+    })
     const { result, onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceBudget, onReplaceNetWorthHistory, onReplaceWork } =
       renderDataManagement()
 
@@ -269,8 +274,10 @@ describe("useDataManagement", () => {
       savings: [],
       cards: [],
       gold: [],
-      invests: [],
       goldStores: [{ name: "SJC", price: "935.000" }],
+      silver: [],
+      silverStores: [{ name: "Phú Quý", price: "2.000.000" }],
+      invests: [],
     })
     expect(onReplaceStudy).toHaveBeenCalledWith(DEFAULT_STUDY_STATE)
     expect(onReplaceBudget).toHaveBeenCalledWith(DEFAULT_BUDGET_STATE)

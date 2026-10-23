@@ -44,7 +44,7 @@ interface OverviewViewProps {
 function OverviewView({ vocab, grammar }: OverviewViewProps) {
   const { hidden } = useMoneyVisibility()
   const { settings, dismissInsight } = useSettings()
-  const { savings, cards, gold, goldStores, invests, hydrated: financeHydrated } = useFinance()
+  const { savings, cards, gold, goldStores, silver, silverStores, invests, hydrated: financeHydrated } = useFinance()
   const { entries } = useJournal()
   const { salaries, expenses, settlements } = useBudget()
   const { tasks, toggleTask, learned, wordReviews } = useStudy()
@@ -55,7 +55,7 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
     return settings.modules.find((m) => m.key === key)?.on ?? true
   }
 
-  const summary = summarizeFinance({ savings, cards, gold, goldStores, invests })
+  const summary = summarizeFinance({ savings, cards, gold, goldStores, silver, silverStores, invests })
 
   const currentMonth = monthKey()
   const monthSalary = salaryForMonth(salaries, currentMonth)

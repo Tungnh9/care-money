@@ -533,11 +533,9 @@ describe("useFinance", () => {
     await waitFor(() => expect(result.current.savings).toEqual([]))
 
     const restored = {
+      ...DEFAULT_FINANCE_STATE,
       savings: [{ name: "Quỹ mới", amount: 1, target: 2 }],
-      cards: [],
-      gold: [],
       goldStores: [{ name: "SJC", price: "935.000" }],
-      invests: [],
     }
     act(() => {
       result.current.replaceFinance(restored)
@@ -1505,5 +1503,218 @@ describe("useFinance — liên kết mục tiêu mua xe khi xoá/tạo quỹ", (
 
     expect(result.current.savings[0].amount).toBe(5)
     expect(getCarGoalFundName()).toBe("Quỹ mua xe")
+  })
+})
+
+describe("useFinance — tích lũy bạc", () => {
+  const PHU_QUY = { name: "Phú Quý", price: "2.000.000" }
+  const PURCHASE = { date: "10/08/2026", luong: 2, buy: 1_800_000, store: "Phú Quý" }
+
+  beforeEach(() => {
+    window.localStorage.clear()
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    vi.mocked(toast.success).mockClear()
+    vi.mocked(toast.error).mockClear()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it("adds a silver store to the silver list only, and sets its price", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.silverStores).toEqual([]))
+
+    act(() => {
+      result.current.addSilverStore(PHU_QUY)
+    })
+    act(() => {
+      result.current.setSilverStorePrice("Phú Quý", "2.100.000")
+    })
+
+    expect(result.current.silverStores).toEqual([{ name: "Phú Quý", price: "2.100.000" }])
+    expect(getStoredFinance().silverStores).toEqual([{ name: "Phú Quý", price: "2.100.000" }])
+    expect(getStoredFinance().goldStores).toEqual([])
+    expect(toast.success).toHaveBeenCalledWith('Đã thêm cửa hàng "Phú Quý"')
+  })
+
+  it("adds, edits and removes a silver purchase with silver wording in each toast", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.silver).toEqual([]))
+
+    act(() => {
+      result.current.addSilverStore(PHU_QUY)
+    })
+    act(() => {
+      result.current.addSilver(PURCHASE)
+    })
+    expect(result.current.silver).toEqual([{ ...PURCHASE, id: 1 }])
+    expect(getStoredFinance().gold).toEqual([])
+    expect(toast.success).toHaveBeenCalledWith("Đã thêm lần mua bạc ngày 10/08/2026")
+
+    act(() => {
+      result.current.updateSilver(1, { ...PURCHASE, luong: 5 })
+    })
+    expect(result.current.silver).toEqual([{ ...PURCHASE, luong: 5, id: 1 }])
+    expect(toast.success).toHaveBeenCalledWith("Đã cập nhật giao dịch bạc ngày 10/08/2026")
+
+    act(() => {
+      result.current.removeSilver(1)
+    })
+    expect(result.current.silver).toEqual([])
+    expect(getStoredFinance().silver).toEqual([])
+    expect(toast.success).toHaveBeenCalledWith("Đã xoá giao dịch bạc ngày 10/08/2026")
+  })
+
+  it("puts the newest silver purchase first", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.silver).toEqual([]))
+
+    act(() => {
+      result.current.addSilver(PURCHASE)
+    })
+    act(() => {
+      result.current.addSilver({ ...PURCHASE, date: "11/08/2026" })
+    })
+
+    expect(result.current.silver.map((p) => p.id)).toEqual([2, 1])
+  })
+
+  it("says the silver purchase was not saved when the storage write fails", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.silver).toEqual([]))
+
+    const spy = vi.spyOn(Storage.prototype, "setItem").mockImplementationOnce(() => {
+      throw new Error("QuotaExceededError")
+    })
+    act(() => {
+      result.current.addSilver(PURCHASE)
+    })
+    spy.mockRestore()
+
+    expect(toast.error).toHaveBeenCalledWith("Không thể thêm lần mua bạc. Vui lòng thử lại.")
+    expect(result.current.silver).toEqual([])
+  })
+
+  it("allows a silver store with the same name as a gold store", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.silverStores).toEqual([]))
+
+    act(() => {
+      result.current.addGoldStore({ name: "DOJI", price: "950.000" })
+    })
+    act(() => {
+      result.current.addSilverStore({ name: "DOJI", price: "2.000.000" })
+    })
+
+    expect(result.current.goldStores).toEqual([{ name: "DOJI", price: "950.000" }])
+    expect(result.current.silverStores).toEqual([{ name: "DOJI", price: "2.000.000" }])
+    expect(toast.error).not.toHaveBeenCalled()
+  })
+
+  it("refuses a second silver store with a name the silver list already has", async () => {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.silverStores).toEqual([]))
+
+    act(() => {
+      result.current.addSilverStore(PHU_QUY)
+    })
+    act(() => {
+      result.current.addSilverStore({ name: "Phú Quý", price: "1.000.000" })
+    })
+
+    expect(result.current.silverStores).toEqual([PHU_QUY])
+    expect(toast.error).toHaveBeenCalledWith('Đã có cửa hàng tên "Phú Quý". Vui lòng chọn tên khác.')
+  })
+
+  it("renames a silver store into its silver purchases only, never into gold purchases at a same-named store", async () => {
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      gold: [{ id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "DOJI" }],
+      goldStores: [{ name: "DOJI", price: "950.000" }],
+      silver: [{ id: 1, date: "10/08/2026", luong: 2, buy: 1_800_000, store: "DOJI" }],
+      silverStores: [{ name: "DOJI", price: "2.000.000" }],
+    })
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.silver).toHaveLength(1))
+
+    act(() => {
+      result.current.updateSilverStore("DOJI", { name: "DOJI Bạc", price: "2.000.000" })
+    })
+
+    expect(result.current.silverStores).toEqual([{ name: "DOJI Bạc", price: "2.000.000" }])
+    expect(result.current.silver[0].store).toBe("DOJI Bạc")
+    expect(result.current.goldStores).toEqual([{ name: "DOJI", price: "950.000" }])
+    expect(result.current.gold[0].store).toBe("DOJI")
+  })
+
+  it("blocks deleting a silver store only while silver purchases use it, not gold ones", async () => {
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      gold: [{ id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "DOJI" }],
+      goldStores: [{ name: "DOJI", price: "950.000" }],
+      silver: [{ id: 1, date: "10/08/2026", luong: 2, buy: 1_800_000, store: "Phú Quý" }],
+      silverStores: [PHU_QUY, { name: "DOJI", price: "2.000.000" }],
+    })
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.silverStores).toHaveLength(2))
+
+    act(() => {
+      result.current.removeSilverStore("Phú Quý")
+    })
+    expect(toast.error).toHaveBeenCalledWith(
+      'Không thể xoá "Phú Quý" vì vẫn còn giao dịch mua bạc gắn với cửa hàng này.'
+    )
+    expect(result.current.silverStores).toHaveLength(2)
+
+    act(() => {
+      result.current.removeSilverStore("DOJI")
+    })
+    expect(result.current.silverStores).toEqual([PHU_QUY])
+    expect(result.current.goldStores).toEqual([{ name: "DOJI", price: "950.000" }])
+  })
+  it("refuses to rename a silver store to a name another silver store already has", async () => {
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, silverStores: [PHU_QUY, { name: "Ancarat", price: "2.050.000" }] })
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.silverStores).toHaveLength(2))
+
+    act(() => {
+      result.current.updateSilverStore("Ancarat", { name: "Phú Quý", price: "2.050.000" })
+    })
+
+    expect(result.current.silverStores.map((s) => s.name)).toEqual(["Phú Quý", "Ancarat"])
+    expect(toast.error).toHaveBeenCalledWith('Đã có cửa hàng tên "Phú Quý". Vui lòng chọn tên khác.')
+  })
+
+  it("keeps silver untouched when a gold store is renamed or removed, even with a same-named silver store", async () => {
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      goldStores: [
+        { name: "DOJI", price: "950.000" },
+        { name: "PNJ", price: "940.000" },
+      ],
+      silver: [
+        { id: 1, date: "10/08/2026", luong: 2, buy: 1_800_000, store: "DOJI" },
+        { id: 2, date: "11/08/2026", luong: 1, buy: 1_900_000, store: "PNJ" },
+      ],
+      silverStores: [
+        { name: "DOJI", price: "2.000.000" },
+        { name: "PNJ", price: "2.000.000" },
+      ],
+    })
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.silver).toHaveLength(2))
+
+    act(() => {
+      result.current.updateGoldStore("DOJI", { name: "DOJI Vàng", price: "950.000" })
+    })
+    // Không lần mua vàng nào ở PNJ — lần mua bạc ở PNJ không được chặn việc xoá cửa hàng vàng PNJ.
+    act(() => {
+      result.current.removeGoldStore("PNJ")
+    })
+
+    expect(result.current.goldStores).toEqual([{ name: "DOJI Vàng", price: "950.000" }])
+    expect(result.current.silver.map((p) => p.store)).toEqual(["DOJI", "PNJ"])
+    expect(result.current.silverStores.map((s) => s.name)).toEqual(["DOJI", "PNJ"])
   })
 })

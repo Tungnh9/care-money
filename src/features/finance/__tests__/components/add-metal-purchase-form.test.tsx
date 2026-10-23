@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from "vitest"
 import { render, screen, fireEvent } from "@testing-library/react"
 
-import { AddGoldForm } from "../../components/add-gold-form"
+import { AddMetalPurchaseForm } from "../../components/add-metal-purchase-form"
+import { GOLD_METAL } from "../../metal-config"
 import type { GoldStore } from "@/lib/finance/types"
 
 const SJX: GoldStore = { name: "SJX", price: "880.000" }
@@ -17,17 +18,17 @@ function fillValidPurchase() {
   fireEvent.change(screen.getByLabelText("Giá mua (mỗi phân)", { exact: false }), { target: { value: "900000" } })
 }
 
-describe("AddGoldForm — cửa hàng đang chọn bị đổi tên/xoá", () => {
+describe("AddMetalPurchaseForm — cửa hàng đang chọn bị đổi tên/xoá", () => {
   it("drops the picked store when it is renamed while the form is open, so no orphan purchase is saved", () => {
     const onAdd = vi.fn()
-    const { rerender } = render(<AddGoldForm stores={[SJX]} onAdd={onAdd} />)
+    const { rerender } = render(<AddMetalPurchaseForm metal={GOLD_METAL} stores={[SJX]} onAdd={onAdd} />)
     openForm()
     fireEvent.click(screen.getByRole("button", { name: "SJX" }))
     fillValidPurchase()
     expect(screen.getByRole("button", { name: "Thêm" })).toBeEnabled()
 
     // Sửa tên SJX → SJC bằng bút chì ở thẻ cửa hàng phía trên, trong lúc form vẫn mở.
-    rerender(<AddGoldForm stores={[{ ...SJX, name: "SJC" }]} onAdd={onAdd} />)
+    rerender(<AddMetalPurchaseForm metal={GOLD_METAL} stores={[{ ...SJX, name: "SJC" }]} onAdd={onAdd} />)
 
     expect(screen.getByRole("button", { name: "SJC" })).not.toHaveClass("border-[var(--ob-color-action)]")
     expect(screen.getByRole("button", { name: "Thêm" })).toBeDisabled()
@@ -41,13 +42,13 @@ describe("AddGoldForm — cửa hàng đang chọn bị đổi tên/xoá", () =>
 
   it("drops the picked store when it is deleted while the form is open", () => {
     const onAdd = vi.fn()
-    const { rerender } = render(<AddGoldForm stores={[SJX, PNJ]} onAdd={onAdd} />)
+    const { rerender } = render(<AddMetalPurchaseForm metal={GOLD_METAL} stores={[SJX, PNJ]} onAdd={onAdd} />)
     openForm()
     fireEvent.click(screen.getByRole("button", { name: "SJX" }))
     fillValidPurchase()
 
     // Cửa hàng chưa có lần mua nào nên xoá được ngay cả khi đang được chọn trong form.
-    rerender(<AddGoldForm stores={[PNJ]} onAdd={onAdd} />)
+    rerender(<AddMetalPurchaseForm metal={GOLD_METAL} stores={[PNJ]} onAdd={onAdd} />)
 
     expect(screen.getByRole("button", { name: "Thêm" })).toBeDisabled()
     fireEvent.click(screen.getByRole("button", { name: "Thêm" }))
@@ -55,10 +56,10 @@ describe("AddGoldForm — cửa hàng đang chọn bị đổi tên/xoá", () =>
   })
 })
 
-describe("AddGoldForm — ngày mua", () => {
+describe("AddMetalPurchaseForm — ngày mua", () => {
   it("accepts another way of writing a real date and saves it as dd/mm/yyyy", () => {
     const onAdd = vi.fn()
-    render(<AddGoldForm stores={[SJX]} onAdd={onAdd} />)
+    render(<AddMetalPurchaseForm metal={GOLD_METAL} stores={[SJX]} onAdd={onAdd} />)
     openForm()
     fireEvent.click(screen.getByRole("button", { name: "SJX" }))
     fillValidPurchase()
@@ -70,7 +71,7 @@ describe("AddGoldForm — ngày mua", () => {
   })
 
   it("explains the expected format and blocks Thêm for a 2-digit year or a day that does not exist", () => {
-    render(<AddGoldForm stores={[SJX]} onAdd={vi.fn()} />)
+    render(<AddMetalPurchaseForm metal={GOLD_METAL} stores={[SJX]} onAdd={vi.fn()} />)
     openForm()
     fireEvent.click(screen.getByRole("button", { name: "SJX" }))
     fillValidPurchase()
@@ -84,9 +85,9 @@ describe("AddGoldForm — ngày mua", () => {
   })
 })
 
-describe("AddGoldForm — khối lượng", () => {
+describe("AddMetalPurchaseForm — khối lượng", () => {
   it("explains and blocks a fractional or comma-decimal khối lượng instead of silently disabling Thêm", () => {
-    render(<AddGoldForm stores={[SJX]} onAdd={vi.fn()} />)
+    render(<AddMetalPurchaseForm metal={GOLD_METAL} stores={[SJX]} onAdd={vi.fn()} />)
     openForm()
     fireEvent.click(screen.getByRole("button", { name: "SJX" }))
     fillValidPurchase()
