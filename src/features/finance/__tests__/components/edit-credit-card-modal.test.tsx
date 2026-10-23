@@ -38,13 +38,16 @@ describe("EditCreditCardModal", () => {
     fireEvent.change(screen.getByLabelText("Hạn mức", { exact: false }), { target: { value: "25000000" } })
     fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
 
-    expect(onSave).toHaveBeenCalledWith({
-      name: CARD.name,
-      balance: CARD.balance,
-      min: CARD.min,
-      limit: 25_000_000,
-      due: CARD.due,
-    })
+    expect(onSave).toHaveBeenCalledWith(
+      {
+        name: CARD.name,
+        balance: CARD.balance,
+        min: CARD.min,
+        limit: 25_000_000,
+        due: CARD.due,
+      },
+      false
+    )
     expect(onOpenChange).toHaveBeenCalledWith(false)
   })
 
@@ -73,7 +76,7 @@ describe("EditCreditCardModal", () => {
     fireEvent.change(screen.getByLabelText("Số tiền tối thiểu", { exact: false }), { target: { value: "" } })
     fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
 
-    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ name: CARD.name, min: 0, limit: CARD.limit }))
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ name: CARD.name, min: 0, limit: CARD.limit }), false)
   })
 
   it("prefills and preserves the card's color", () => {
@@ -85,7 +88,7 @@ describe("EditCreditCardModal", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
 
-    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ color: "#7c3aed" }))
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ color: "#7c3aed" }), false)
   })
 
   it("reseeds fields when switching to a different card while already open", () => {
@@ -95,6 +98,40 @@ describe("EditCreditCardModal", () => {
     rerender(<EditCreditCardModal card={OTHER} onOpenChange={vi.fn()} onSave={vi.fn()} />)
 
     expect(screen.getByLabelText("Tên thẻ", { exact: false })).toHaveValue("Vietcombank Visa")
+  })
+})
+
+describe("EditCreditCardModal — ô Dư nợ có được sửa không", () => {
+  it("reports the debt as untouched when only the due day changes", () => {
+    const onSave = vi.fn()
+    render(<EditCreditCardModal card={CARD} onOpenChange={vi.fn()} onSave={onSave} />)
+
+    fireEvent.change(screen.getByLabelText("Ngày đến hạn", { exact: false }), { target: { value: "20 hàng tháng" } })
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
+
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ due: "20 hàng tháng" }), false)
+  })
+
+  it("reports the debt as edited when the Dư nợ field changes", () => {
+    const onSave = vi.fn()
+    render(<EditCreditCardModal card={CARD} onOpenChange={vi.fn()} onSave={onSave} />)
+
+    fireEvent.change(screen.getByLabelText("Dư nợ hiện tại", { exact: false }), { target: { value: "6000000" } })
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
+
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ balance: 6_000_000 }), true)
+  })
+
+  it("still reports the debt as untouched when the card's debt changes while the dialog is open", () => {
+    // Trang đọc lại finance-data (tab khác vừa ghi 1 khoản quẹt) trong lúc hộp đang mở: ô Dư nợ giữ số
+    // đã chép lúc mở, người dùng không sửa ô đó nên phải báo "chưa sửa" để updateCard giữ nợ mới.
+    const onSave = vi.fn()
+    const { rerender } = render(<EditCreditCardModal card={CARD} onOpenChange={vi.fn()} onSave={onSave} />)
+
+    rerender(<EditCreditCardModal card={{ ...CARD, balance: 5_500_000 }} onOpenChange={vi.fn()} onSave={onSave} />)
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
+
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ balance: CARD.balance }), false)
   })
 })
 

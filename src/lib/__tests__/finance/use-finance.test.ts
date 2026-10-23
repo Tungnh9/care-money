@@ -5,12 +5,22 @@ import { useFinance } from "@/lib/finance/use-finance"
 import {
   DEFAULT_FINANCE_STATE,
   FINANCE_STORAGE_KEY,
+  applyCardBalanceDelta,
   applySavingsFundDelta,
   getStoredFinance,
   setStoredFinance,
 } from "@/lib/finance/finance-storage"
+import type { CreditCard } from "@/lib/finance/types"
 import { getCarGoalFundName, setCarGoalFundName } from "@/lib/goals/car-goal-storage"
-import { DEFAULT_BUDGET_STATE, getStoredBudget, setStoredBudget } from "@/lib/budget/budget-storage"
+import {
+  BUDGET_STORAGE_KEY,
+  DEFAULT_BUDGET_STATE,
+  getStoredBudget,
+  setStoredBudget,
+} from "@/lib/budget/budget-storage"
+import { totalExpensesForMonth } from "@/lib/budget/budget-calculations"
+import type { Expense } from "@/lib/budget/types"
+import { useBudget } from "@/lib/budget/use-budget"
 import { toast } from "sonner"
 
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
@@ -1716,5 +1726,231 @@ describe("useFinance — tích lũy bạc", () => {
     expect(result.current.goldStores).toEqual([{ name: "DOJI Vàng", price: "950.000" }])
     expect(result.current.silver.map((p) => p.store)).toEqual(["DOJI", "PNJ"])
     expect(result.current.silverStores.map((s) => s.name)).toEqual(["DOJI", "PNJ"])
+  })
+})
+
+describe("useFinance — thẻ gắn với khoản chi", () => {
+  const TAG_SWIPE = { label: "Quẹt thẻ", emoji: "🧾", tint: "#F0ECFE" }
+  const TAG_PAYMENT = { label: "Trả nợ thẻ", emoji: "🏦", tint: "#FFE0C7" }
+  const TAG_FOOD = { label: "Ăn uống", emoji: "🍜", tint: "#FFF4D6" }
+  const VISA: CreditCard = { name: "Visa", balance: 1_000_000, min: 0, limit: 50_000_000, due: "15" }
+  const MASTER: CreditCard = { name: "Master", balance: 300_000, min: 0, limit: 10_000_000, due: "5" }
+  const AMEX: CreditCard = { name: "Amex", balance: 0, min: 0, limit: 20_000_000, due: "25" }
+  const EXPENSES: Expense[] = [
+    { id: 4, dayKey: "2026-11-04", amount: 500_000, tag: TAG_SWIPE, card: { kind: "swipe", cardName: "Visa" } },
+    { id: 3, dayKey: "2026-11-03", amount: 200_000, tag: TAG_PAYMENT, card: { kind: "payment", cardName: "Visa" } },
+    { id: 2, dayKey: "2026-11-02", amount: 300_000, tag: TAG_SWIPE, card: { kind: "swipe", cardName: "Master" } },
+    { id: 1, dayKey: "2026-11-01", amount: 100_000, tag: TAG_FOOD },
+  ]
+
+  const debt = (name: string) => getStoredFinance().cards.find((c) => c.name === name)?.balance
+  const storedLinks = () => getStoredBudget().expenses.map((e) => e.card)
+  const visaSwipe = (amount: number) => ({
+    dayKey: "2026-11-05",
+    amount,
+    tag: TAG_SWIPE,
+    card: { kind: "swipe" as const, cardName: "Visa" },
+  })
+
+  let spy: { mockRestore: () => void } | undefined
+
+  // Ghi budget-data luôn lỗi; ghi finance-data chỉ qua được `financeWrites` lần đầu (Infinity = luôn qua).
+  function breakBudgetWrites(financeWrites = Infinity) {
+    spy?.mockRestore()
+    let financeWritesLeft = financeWrites
+    const realSetItem = Storage.prototype.setItem
+    spy = vi.spyOn(Storage.prototype, "setItem").mockImplementation((key: string, value: string) => {
+      if (key === BUDGET_STORAGE_KEY) throw new Error("QuotaExceededError")
+      if (key === FINANCE_STORAGE_KEY && financeWritesLeft-- <= 0) throw new Error("QuotaExceededError")
+      realSetItem.call(window.localStorage, key, value)
+    })
+  }
+
+  // act() không trả giá trị của callback — lấy giá trị trả về của addExpense/removeExpense.
+  function run<T>(fn: () => T): T {
+    let out: T | undefined
+    act(() => {
+      out = fn()
+    })
+    return out as T
+  }
+
+  async function renderFinance() {
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.hydrated).toBe(true))
+    return result
+  }
+
+  async function renderBudget() {
+    const { result } = renderHook(() => useBudget())
+    await waitFor(() => expect(result.current.hydrated).toBe(true))
+    return result
+  }
+
+  beforeEach(() => {
+    window.localStorage.clear()
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    vi.clearAllMocks()
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, cards: [VISA, MASTER, AMEX] })
+    setStoredBudget({ ...DEFAULT_BUDGET_STATE, expenses: EXPENSES })
+  })
+
+  afterEach(() => {
+    spy?.mockRestore()
+    spy = undefined
+    vi.useRealTimers()
+  })
+
+  it("renaming a card renames it on every linked expense", async () => {
+    const finance = await renderFinance()
+
+    act(() => finance.current.updateCard("Visa", { ...VISA, name: "Visa Gold" }))
+
+    expect(getStoredFinance().cards.map((c) => c.name)).toEqual(["Visa Gold", "Master", "Amex"])
+    expect(storedLinks()).toEqual([
+      { kind: "swipe", cardName: "Visa Gold" },
+      { kind: "payment", cardName: "Visa Gold" },
+      { kind: "swipe", cardName: "Master" },
+      undefined,
+    ])
+    expect(toast.success).toHaveBeenCalledWith('Đã cập nhật thẻ tín dụng "Visa Gold"')
+  })
+
+  it("deleting a card detaches its expenses but keeps them counted as swipes", async () => {
+    const finance = await renderFinance()
+
+    act(() => finance.current.removeCard("Visa"))
+
+    expect(getStoredFinance().cards).toEqual([MASTER, AMEX])
+    expect(storedLinks()).toEqual([
+      { kind: "swipe", cardName: null },
+      { kind: "payment", cardName: null },
+      { kind: "swipe", cardName: "Master" },
+      undefined,
+    ])
+    // Khoản quẹt vẫn đứng ngoài chi tiêu tháng; khoản trả nợ thẻ và khoản thường vẫn tính đủ.
+    expect(totalExpensesForMonth(getStoredBudget().expenses, "2026-11")).toBe(300_000)
+    expect(toast.success).toHaveBeenCalledWith('Đã xoá thẻ tín dụng "Visa"')
+  })
+
+  it("puts the card back when its expenses cannot be renamed", async () => {
+    const finance = await renderFinance()
+
+    breakBudgetWrites()
+    act(() => finance.current.updateCard("Visa", { ...VISA, name: "Visa Gold", due: "20" }))
+
+    expect(getStoredFinance().cards).toEqual([VISA, MASTER, AMEX])
+    expect(finance.current.cards).toEqual([VISA, MASTER, AMEX])
+    expect(storedLinks()).toEqual(EXPENSES.map((e) => e.card))
+    expect(toast.error).toHaveBeenCalledWith('Không thể cập nhật thẻ tín dụng "Visa Gold". Vui lòng thử lại.')
+    expect(toast.success).not.toHaveBeenCalled()
+  })
+
+  it("puts the card back in the same place when its expenses cannot be detached", async () => {
+    const finance = await renderFinance()
+
+    breakBudgetWrites()
+    act(() => finance.current.removeCard("Master"))
+
+    expect(getStoredFinance().cards).toEqual([VISA, MASTER, AMEX])
+    expect(finance.current.cards).toEqual([VISA, MASTER, AMEX])
+    expect(storedLinks()).toEqual(EXPENSES.map((e) => e.card))
+    expect(toast.error).toHaveBeenCalledWith('Không thể xoá thẻ tín dụng "Master". Vui lòng thử lại.')
+    expect(toast.success).not.toHaveBeenCalled()
+  })
+
+  it("still reports the failure, without throwing, when the card cannot be put back either", async () => {
+    const finance = await renderFinance()
+
+    // Chỉ lần ghi finance-data đầu (đổi tên/xoá thẻ) qua được — lần đặt lại thẻ cũng lỗi.
+    breakBudgetWrites(1)
+    act(() => finance.current.updateCard("Visa", { ...VISA, name: "Visa Gold" }))
+    breakBudgetWrites(1)
+    act(() => finance.current.removeCard("Master"))
+
+    // Màn hình vẫn khớp finance-data đang lưu, không hiện 1 thẻ không có thật.
+    expect(finance.current.cards).toEqual(getStoredFinance().cards)
+    expect(toast.error).toHaveBeenCalledWith('Không thể cập nhật thẻ tín dụng "Visa Gold". Vui lòng thử lại.')
+    expect(toast.error).toHaveBeenCalledWith('Không thể xoá thẻ tín dụng "Master". Vui lòng thử lại.')
+    expect(toast.success).not.toHaveBeenCalled()
+  })
+
+  it("leaves expenses alone when the card being edited no longer exists", async () => {
+    const finance = await renderFinance()
+
+    // Thẻ Visa biến mất khỏi finance-data (vd. nhập file) trong lúc hộp "Sửa thẻ" đang mở.
+    act(() => setStoredFinance({ ...DEFAULT_FINANCE_STATE, cards: [MASTER, AMEX] }))
+    act(() => finance.current.updateCard("Visa", { ...VISA, name: "Visa Gold" }))
+
+    expect(getStoredFinance().cards).toEqual([MASTER, AMEX])
+    expect(storedLinks()).toEqual(EXPENSES.map((e) => e.card))
+    expect(toast.error).toHaveBeenCalledWith('Không thể cập nhật thẻ tín dụng "Visa Gold". Vui lòng thử lại.')
+    expect(toast.success).not.toHaveBeenCalled()
+  })
+
+  it("saving Sửa thẻ without touching the debt keeps a swipe recorded meanwhile", async () => {
+    const finance = await renderFinance()
+
+    // Tab khác ghi 1 khoản quẹt trong lúc hộp "Sửa thẻ" đang mở với dư nợ 1.000.000.
+    act(() => {
+      applyCardBalanceDelta("Visa", 500_000)
+    })
+    act(() =>
+      finance.current.updateCard(
+        "Visa",
+        { name: "Visa", balance: 1_000_000, min: 0, limit: 50_000_000, due: "20" },
+        false
+      )
+    )
+
+    expect(debt("Visa")).toBe(1_500_000)
+    expect(getStoredFinance().cards[0].due).toBe("20")
+    expect(finance.current.cards[0]).toEqual({ ...VISA, balance: 1_500_000, due: "20" })
+  })
+
+  it("saving Sửa thẻ with an edited debt takes the new figure", async () => {
+    const finance = await renderFinance()
+
+    act(() => {
+      applyCardBalanceDelta("Visa", 500_000)
+    })
+    act(() =>
+      finance.current.updateCard(
+        "Visa",
+        { name: "Visa", balance: 900_000, min: 0, limit: 50_000_000, due: "20" },
+        true
+      )
+    )
+
+    expect(debt("Visa")).toBe(900_000)
+    expect(getStoredFinance().cards[0].due).toBe("20")
+  })
+
+  it("a swipe made before a card rename comes off the renamed card when deleted", async () => {
+    const finance = await renderFinance()
+    const budget = await renderBudget()
+
+    expect(run(() => budget.current.addExpense(visaSwipe(500_000)))).toBe(true)
+    expect(debt("Visa")).toBe(1_500_000)
+    const swipeId = getStoredBudget().expenses[0].id
+
+    act(() => finance.current.updateCard("Visa", { ...VISA, name: "Visa Gold", balance: 1_500_000 }, false))
+    expect(run(() => budget.current.removeExpense(swipeId))).toBe(true)
+
+    expect(debt("Visa Gold")).toBe(1_000_000)
+  })
+
+  it("deleting an old swipe never touches a new card with the deleted card's name", async () => {
+    const finance = await renderFinance()
+    const budget = await renderBudget()
+
+    expect(run(() => budget.current.addExpense(visaSwipe(500_000)))).toBe(true)
+    const swipeId = getStoredBudget().expenses[0].id
+
+    act(() => finance.current.removeCard("Visa"))
+    act(() => finance.current.addCard({ name: "Visa", balance: 0, min: 0, limit: 50_000_000, due: "15" }))
+
+    expect(run(() => budget.current.removeExpense(swipeId))).toBe(true)
+    expect(debt("Visa")).toBe(0)
   })
 })

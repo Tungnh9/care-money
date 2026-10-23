@@ -185,13 +185,17 @@ describe("CreditCardsTab", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
 
-    expect(onUpdateCard).toHaveBeenCalledWith(CARD.name, {
-      name: CARD.name,
-      balance: CARD.balance,
-      min: CARD.min,
-      limit: 25_000_000,
-      due: CARD.due,
-    })
+    expect(onUpdateCard).toHaveBeenCalledWith(
+      CARD.name,
+      {
+        name: CARD.name,
+        balance: CARD.balance,
+        min: CARD.min,
+        limit: 25_000_000,
+        due: CARD.due,
+      },
+      false
+    )
   })
 
   it("closes the edit form without saving when Huỷ is clicked", () => {
@@ -345,14 +349,18 @@ describe("CreditCardsTab", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
 
-    expect(onUpdateCard).toHaveBeenCalledWith(CARD.name, {
-      name: CARD.name,
-      balance: CARD.balance,
-      min: CARD.min,
-      limit: CARD.limit,
-      due: CARD.due,
-      color: "#7c3aed",
-    })
+    expect(onUpdateCard).toHaveBeenCalledWith(
+      CARD.name,
+      {
+        name: CARD.name,
+        balance: CARD.balance,
+        min: CARD.min,
+        limit: CARD.limit,
+        due: CARD.due,
+        color: "#7c3aed",
+      },
+      false
+    )
   })
 
 })

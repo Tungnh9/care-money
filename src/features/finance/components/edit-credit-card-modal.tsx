@@ -12,7 +12,9 @@ interface EditCreditCardModalProps {
   // Tên mọi thẻ đang có (tên hiện tại của chính thẻ đang sửa luôn được giữ).
   existingNames?: string[]
   onOpenChange: (open: boolean) => void
-  onSave: (card: CreditCard) => void
+  // `balanceEdited`: ô Dư nợ khác số đã chép lúc mở hộp. false thì updateCard giữ dư nợ đang lưu, vì
+  // trong lúc hộp mở có thể đã có khoản quẹt/trả ghi vào thẻ (tab khác) — số chép lúc mở đã cũ.
+  onSave: (card: CreditCard, balanceEdited: boolean) => void
 }
 
 function EditCreditCardModal({ card, existingNames = [], onOpenChange, onSave }: EditCreditCardModalProps) {
@@ -22,6 +24,9 @@ function EditCreditCardModal({ card, existingNames = [], onOpenChange, onSave }:
   const [limit, setLimit] = useState("")
   const [due, setDue] = useState("")
   const [color, setColor] = useState("")
+  // Số ở ô Dư nợ lúc mở hộp — so với số này, không với prop `card` đang sống (trang đọc lại
+  // finance-data thì `card.balance` đổi nhưng ô vẫn giữ số cũ, người dùng chưa hề sửa).
+  const [openedBalance, setOpenedBalance] = useState("")
 
   // Modal ở lại mounted với card=null giữa các lần mở — reseed field đúng lúc chuyển sang mở với
   // 1 card (mới hoặc khác card trước), giống pattern EditExpenseModal.
@@ -29,6 +34,7 @@ function EditCreditCardModal({ card, existingNames = [], onOpenChange, onSave }:
   if (card && card.name !== prevCardName) {
     setName(card.name)
     setBalance(String(card.balance))
+    setOpenedBalance(String(card.balance))
     setMin(String(card.min))
     setLimit(String(card.limit))
     setDue(card.due)
@@ -44,14 +50,17 @@ function EditCreditCardModal({ card, existingNames = [], onOpenChange, onSave }:
   const disabled = duplicate || !trimmedName || !balance.trim() || !limit.trim() || !due.trim()
 
   function handleSave() {
-    onSave({
-      name: name.trim(),
-      balance: Number(balance) || 0,
-      min: Number(min) || 0,
-      limit: Number(limit) || 0,
-      due: due.trim(),
-      color: color || undefined,
-    })
+    onSave(
+      {
+        name: name.trim(),
+        balance: Number(balance) || 0,
+        min: Number(min) || 0,
+        limit: Number(limit) || 0,
+        due: due.trim(),
+        color: color || undefined,
+      },
+      balance !== openedBalance
+    )
     onOpenChange(false)
   }
 
