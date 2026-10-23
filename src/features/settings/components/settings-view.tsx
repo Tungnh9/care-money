@@ -28,7 +28,7 @@ function SettingsView() {
     replaceSettings,
   } = useSettings()
   const { entries, replaceJournal } = useJournal()
-  const { savings, cards, gold, invests, replaceFinance } = useFinance()
+  const { savings, cards, gold, silver, invests, replaceFinance } = useFinance()
   const { tasks, learned, gameHighScores, gameStreak, wordReviews, replaceStudy } = useStudy()
   const { salaries, expenses, settlements, replaceBudget } = useBudget()
   const { history: netWorthHistory, replaceHistory: replaceNetWorthHistory } = useNetWorthHistory()
@@ -64,6 +64,7 @@ function SettingsView() {
   const counts = [
     entries.length ? `${entries.length} bài nhật ký` : null,
     gold.length ? `${gold.length} lần mua vàng` : null,
+    silver.length ? `${silver.length} lần mua bạc` : null,
     invests.length ? `${invests.length} khoản đầu tư` : null,
     savings.length ? `${savings.length} quỹ tiết kiệm` : null,
     cards.length ? `${cards.length} thẻ tín dụng` : null,

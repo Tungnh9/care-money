@@ -116,13 +116,15 @@ function uploadedSummary(snapshot: ImportedSnapshot): string {
 }
 
 // Dùng trong hộp xác nhận trước khi thay dữ liệu: đặt số liệu của bản sắp nạp cạnh số liệu trên
-// máy, gồm cả khoản chi và quỹ tiết kiệm (2 thứ hay đổi nhất) mà snapshotCounts không đếm.
+// máy, gồm cả khoản chi và quỹ tiết kiệm (2 thứ hay đổi nhất) mà snapshotCounts không đếm, và lần mua
+// bạc — bản sao lưu từ trước khi có bạc sẽ hiện "0 lần mua bạc", để không lỡ tay xoá bạc đang có.
 function restoreCounts(snapshot: ImportedSnapshot): string {
   return [
     `${snapshot.journal.entries.length} bài nhật ký`,
     `${snapshot.budget.expenses.length} khoản chi`,
     `${snapshot.finance.savings.length} quỹ tiết kiệm`,
     `${snapshot.finance.gold.length} lần mua vàng`,
+    `${snapshot.finance.silver.length} lần mua bạc`,
     `${snapshot.study.learned.length} từ đã học`,
     `${snapshot.work.tasks.length} việc`,
   ].join(" · ")
