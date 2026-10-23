@@ -1,6 +1,6 @@
 "use client"
 
-import { Pencil, Trash2 } from "lucide-react"
+import { Gift, Pencil, Trash2 } from "lucide-react"
 
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
@@ -15,7 +15,15 @@ interface MetalTransactionsCardsProps<P extends MetalPurchaseBase> {
   stores: MetalStore[]
   onRemove: (id: number) => void
   onEdit: (purchase: P) => void
+  // Tổng đã tặng theo id lần mua: hiện số còn lại (định giá theo số đó) kèm "đã tặng …".
+  gifted?: Map<number, number>
+  // Có thì mỗi lần mua có nút Tặng.
+  onGift?: (purchase: P) => void
 }
+
+const NO_GIFTS = new Map<number, number>()
+// Lần tặng trỏ tới lần mua theo id — xoá lần mua đã có lần tặng thì lịch sử tặng mồ côi (hook cũng chặn).
+const REMOVE_BLOCKED_TITLE = "Không thể xoá — lần mua này đã có lần tặng. Huỷ các lần tặng trước."
 
 function MetalTransactionsCards<P extends MetalPurchaseBase>({
   metal,
@@ -23,6 +31,8 @@ function MetalTransactionsCards<P extends MetalPurchaseBase>({
   stores,
   onRemove,
   onEdit,
+  gifted = NO_GIFTS,
+  onGift,
 }: MetalTransactionsCardsProps<P>) {
   const { hidden } = useMoneyVisibility()
 
@@ -40,7 +50,8 @@ function MetalTransactionsCards<P extends MetalPurchaseBase>({
     <div className="flex flex-col gap-3">
       {purchases.map((purchase) => {
         const price = metalMarketPrice(stores, purchase)
-        const qty = metal.quantityOf(purchase)
+        const giftedQty = gifted.get(purchase.id) ?? 0
+        const qty = metal.quantityOf(purchase) - giftedQty
         const cost = qty * purchase.buy
         const value = qty * price
         const pl = metalPurchasePL(qty, purchase.buy, price)
@@ -57,6 +68,18 @@ function MetalTransactionsCards<P extends MetalPurchaseBase>({
                 </span>
               </span>
               <div className="flex items-center gap-1">
+                {onGift ? (
+                  <button
+                    type="button"
+                    aria-label={`Tặng từ lần mua ${metal.noun} ${labels.get(purchase.id)}`}
+                    disabled={qty < 1}
+                    title={qty < 1 ? `Còn dưới 1 ${metal.unit} — không tặng được.` : undefined}
+                    onClick={() => onGift(purchase)}
+                    className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-reward-text)] disabled:cursor-not-allowed disabled:opacity-45"
+                  >
+                    <Gift size={17} />
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   aria-label={`Sửa giao dịch ${metal.noun} ${labels.get(purchase.id)}`}
@@ -68,8 +91,10 @@ function MetalTransactionsCards<P extends MetalPurchaseBase>({
                 <button
                   type="button"
                   aria-label={`Xoá giao dịch ${metal.noun} ${labels.get(purchase.id)}`}
+                  disabled={giftedQty > 0}
+                  title={giftedQty > 0 ? REMOVE_BLOCKED_TITLE : undefined}
                   onClick={() => onRemove(purchase.id)}
-                  className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
+                  className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)] disabled:cursor-not-allowed disabled:opacity-45"
                 >
                   <Trash2 size={17} />
                 </button>
@@ -82,6 +107,11 @@ function MetalTransactionsCards<P extends MetalPurchaseBase>({
                 </div>
                 <div className="text-[13px] [font-family:var(--ob-font-num)] tabular-nums">
                   {metal.formatQuantity(qty)}
+                  {giftedQty > 0 ? (
+                    <div className="text-[11.5px] [font-family:var(--ob-font-text)] text-[var(--ob-color-text-subtle)]">
+                      {`đã tặng ${metal.formatQuantity(giftedQty)}`}
+                    </div>
+                  ) : null}
                 </div>
               </div>
               <div>

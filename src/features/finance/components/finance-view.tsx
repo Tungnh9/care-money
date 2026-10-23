@@ -50,6 +50,9 @@ function FinanceView() {
     addGold,
     updateGold,
     removeGold,
+    addGoldGift,
+    updateGoldGift,
+    removeGoldGift,
     addSilverStore,
     updateSilverStore,
     removeSilverStore,
@@ -57,6 +60,9 @@ function FinanceView() {
     addSilver,
     updateSilver,
     removeSilver,
+    addSilverGift,
+    updateSilverGift,
+    removeSilverGift,
     addInvest,
     updateInvest,
     removeInvest,
@@ -167,6 +173,10 @@ function FinanceView() {
             onAddGold={addGold}
             onUpdateGold={updateGold}
             onRemoveGold={removeGold}
+            goldGifts={goldGifts}
+            onAddGoldGift={addGoldGift}
+            onUpdateGoldGift={updateGoldGift}
+            onRemoveGoldGift={removeGoldGift}
           />
         ) : tab === "Tích lũy bạc" ? (
           <SilverTab
@@ -180,6 +190,10 @@ function FinanceView() {
             onAddSilver={addSilver}
             onUpdateSilver={updateSilver}
             onRemoveSilver={removeSilver}
+            silverGifts={silverGifts}
+            onAddSilverGift={addSilverGift}
+            onUpdateSilverGift={updateSilverGift}
+            onRemoveSilverGift={removeSilverGift}
           />
         ) : (
           <InvestmentsTab
