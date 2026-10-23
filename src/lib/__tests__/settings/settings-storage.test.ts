@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach } from "vitest"
 import {
   DEFAULT_MODULES,
   DEFAULT_TAGS,
+  CARD_SWIPE_DEFAULT_TAG,
   SETTINGS_STORAGE_KEY,
   getStoredSettings,
   setStoredSettings,
@@ -94,8 +95,8 @@ describe("getStoredSettings", () => {
     expect(chitieu?.on).toBe(true)
   })
 
-  it("seeds the 11 default expense tags", () => {
-    expect(DEFAULT_TAGS).toHaveLength(11)
+  it("seeds the 12 default expense tags", () => {
+    expect(DEFAULT_TAGS).toHaveLength(12)
     expect(DEFAULT_TAGS.map((t) => t.label)).toEqual([
       "Tiền trọ",
       "Trả nợ thẻ",
@@ -108,7 +109,15 @@ describe("getStoredSettings", () => {
       "Sức khoẻ",
       "Giải trí",
       "Cà phê",
+      "Quẹt thẻ",
     ])
+    expect(DEFAULT_TAGS[11]).toEqual({
+      label: "Quẹt thẻ",
+      emoji: "🧾",
+      desc: "Chi bằng thẻ tín dụng — cộng vào nợ thẻ, không tính vào chi tiêu tháng",
+      tint: "#F0ECFE",
+      on: true,
+    })
     expect(DEFAULT_TAGS.every((t) => t.on)).toBe(true)
   })
 
@@ -118,11 +127,29 @@ describe("getStoredSettings", () => {
     expect(getStoredSettings().tags).toEqual(DEFAULT_TAGS)
   })
 
-  it("keeps the user's own tags list untouched when it is a valid array", () => {
+  it("keeps the user's own tags and appends Quẹt thẻ at the end when it is missing", () => {
     const customTags = [{ label: "Riêng", emoji: "✨", desc: "", tint: "#FFF0B8", on: true }]
     window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ ...DEFAULT_SETTINGS, tags: customTags }))
 
-    expect(getStoredSettings().tags).toEqual(customTags)
+    expect(getStoredSettings().tags).toEqual([...customTags, CARD_SWIPE_DEFAULT_TAG])
+  })
+
+  it("does not append Quẹt thẻ again or turn it back on when it is already stored, even turned off", () => {
+    const stored = [...DEFAULT_TAGS.slice(0, 11), { ...CARD_SWIPE_DEFAULT_TAG, on: false }]
+    window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ ...DEFAULT_SETTINGS, tags: stored }))
+
+    const tags = getStoredSettings().tags
+    expect(tags).toHaveLength(12)
+    expect(tags[11].on).toBe(false)
+  })
+
+  it("appends Quẹt thẻ after the 11 tags a machine saved before this feature", () => {
+    window.localStorage.setItem(
+      SETTINGS_STORAGE_KEY,
+      JSON.stringify({ ...DEFAULT_SETTINGS, tags: DEFAULT_TAGS.slice(0, 11) })
+    )
+
+    expect(getStoredSettings().tags).toEqual(DEFAULT_TAGS)
   })
 
   it("backfills a score of 3 for a mood saved before this feature existed", () => {
@@ -182,7 +209,7 @@ describe("getStoredSettings", () => {
       JSON.stringify({ ...DEFAULT_SETTINGS, tags: [null, { emoji: "❓" }, custom] })
     )
 
-    expect(getStoredSettings().tags).toEqual([custom])
+    expect(getStoredSettings().tags).toEqual([custom, CARD_SWIPE_DEFAULT_TAG])
   })
 
   it("keeps the profile and falls back to the default modules when modules is not an array", () => {

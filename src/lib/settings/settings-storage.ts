@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+import { CARD_SWIPE_TAG_EMOJI, CARD_SWIPE_TAG_LABEL } from "@/lib/budget/card-link"
 import { notifyDataChanged } from "@/lib/data-change-bus"
 import { safeArray } from "@/lib/safe-array"
 
@@ -68,6 +69,15 @@ const DEFAULT_MODULES: ModuleToggle[] = [
   { key: "tamtrang", label: "Tâm trạng", hint: "Chip tâm trạng trong màn Nhật ký", on: true },
 ]
 
+// Nhãn dựng sẵn cho khoản quẹt thẻ tín dụng; luôn là phần tử cuối của DEFAULT_TAGS.
+const CARD_SWIPE_DEFAULT_TAG: BudgetTag = {
+  label: CARD_SWIPE_TAG_LABEL,
+  emoji: CARD_SWIPE_TAG_EMOJI,
+  desc: "Chi bằng thẻ tín dụng — cộng vào nợ thẻ, không tính vào chi tiêu tháng",
+  tint: "#F0ECFE",
+  on: true,
+}
+
 const DEFAULT_TAGS: BudgetTag[] = [
   { label: "Tiền trọ", emoji: "🏠", desc: "Tiền nhà, tiền phòng hàng tháng", tint: "#FFF0B8", on: true },
   { label: "Trả nợ thẻ", emoji: "🏦", desc: "Thanh toán dư nợ thẻ tín dụng", tint: "#FFE0C7", on: true },
@@ -80,6 +90,7 @@ const DEFAULT_TAGS: BudgetTag[] = [
   { label: "Sức khoẻ", emoji: "💊", desc: "Thuốc men, khám bệnh", tint: "#FFE0C7", on: true },
   { label: "Giải trí", emoji: "🎬", desc: "Xem phim, chơi game", tint: "#E7F6EF", on: true },
   { label: "Cà phê", emoji: "☕", desc: "Cà phê, trà sữa, đồ uống", tint: "#EAF1FE", on: true },
+  CARD_SWIPE_DEFAULT_TAG,
 ]
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -155,6 +166,13 @@ function dedupeMoodLabels(moods: Mood[]): Mood[] {
   })
 }
 
+// Máy đã lưu danh sách nhãn trước tính năng quẹt thẻ thiếu nhãn "Quẹt thẻ" — nối vào CUỐI (không chèn
+// đầu/giữa) vì màu biểu đồ theo vị trí nhãn: chèn giữa làm các nhãn sau đổi màu. Đã có (kể cả đang
+// tắt) thì giữ nguyên, không nối lại hay bật lại.
+function withCardSwipeTag(tags: BudgetTag[]): BudgetTag[] {
+  return tags.some((tag) => tag.label === CARD_SWIPE_TAG_LABEL) ? tags : [...tags, CARD_SWIPE_DEFAULT_TAG]
+}
+
 // Dùng chung cho đọc localStorage và cho data-transfer.ts (nhập file / tải xuống từ cloud), để 2
 // đường vào luôn cùng 1 quy tắc — bản nhập vào không reload trang nên phải sạch ngay trong bộ nhớ.
 // Chỉ đọc đúng các field của AppSettings hiện tại — field cũ đã xoá khỏi type (vd. "budget") tự
@@ -170,7 +188,7 @@ function parseAppSettings(value: unknown): AppSettings {
     profile,
     moods: Array.isArray(parsed.moods) ? dedupeMoodLabels(safeArray(moodSchema, parsed.moods)) : DEFAULT_MOODS,
     modules: mergeModules(safeArray(storedModuleSchema, parsed.modules)),
-    tags: Array.isArray(parsed.tags) ? safeArray(tagSchema, parsed.tags) : DEFAULT_TAGS,
+    tags: Array.isArray(parsed.tags) ? withCardSwipeTag(safeArray(tagSchema, parsed.tags)) : DEFAULT_TAGS,
     dismissedInsights: Array.isArray(parsed.dismissedInsights)
       ? parsed.dismissedInsights.filter((id): id is string => typeof id === "string")
       : [],
@@ -197,6 +215,7 @@ export {
   DEFAULT_SETTINGS,
   DEFAULT_MODULES,
   DEFAULT_TAGS,
+  CARD_SWIPE_DEFAULT_TAG,
   TINT_PALETTE,
   EMOJI_PICKER,
   getStoredSettings,

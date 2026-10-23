@@ -436,7 +436,7 @@ describe("tagChartColors", () => {
     expect(colors.get("Mua sắm")).toBe(CHART_PALETTE[1])
   })
 
-  it("never repeats a colour among the 11 default tags", () => {
+  it("never repeats a colour among the 12 default tags", () => {
     const colors = tagChartColors(
       DEFAULT_TAGS.map((t) => t.label),
       DEFAULT_TAGS

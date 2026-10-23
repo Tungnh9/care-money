@@ -5,7 +5,7 @@ import { DEFAULT_JOURNAL_STATE } from "@/lib/journal/journal-storage"
 import { DEFAULT_STUDY_STATE } from "@/lib/study/study-storage"
 import { DEFAULT_BUDGET_STATE } from "@/lib/budget/budget-storage"
 import { DEFAULT_NET_WORTH_HISTORY } from "@/lib/net-worth/net-worth-history-storage"
-import { DEFAULT_SETTINGS } from "@/lib/settings/settings-storage"
+import { CARD_SWIPE_DEFAULT_TAG, DEFAULT_SETTINGS } from "@/lib/settings/settings-storage"
 import { DEFAULT_COLUMNS } from "@/lib/work/board"
 import { DEFAULT_WORK_STATE } from "@/lib/work/work-storage"
 import {
@@ -283,7 +283,7 @@ describe("parseImportPayload", () => {
 
     expect(result.ok).toBe(true)
     if (result.ok) {
-      expect(result.data.settings.tags).toEqual(customTags)
+      expect(result.data.settings.tags).toEqual([...customTags, CARD_SWIPE_DEFAULT_TAG])
     }
   })
 
@@ -408,7 +408,7 @@ describe("parseImportPayload", () => {
     expect(result.ok).toBe(true)
     if (result.ok) {
       expect(result.data.settings.moods).toEqual([vui])
-      expect(result.data.settings.tags).toEqual([])
+      expect(result.data.settings.tags).toEqual([CARD_SWIPE_DEFAULT_TAG])
     }
   })
 

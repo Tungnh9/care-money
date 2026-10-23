@@ -172,7 +172,7 @@ function monthlyExpenseTotals(expenses: Expense[], months: string[]): MonthlyExp
 
 // tag.tint là màu pastel rất nhạt (dùng cho badge tròn nhỏ trong Cài đặt/danh sách chi tiêu),
 // không đủ rực để phân biệt trên chart — dùng chung 1 bảng màu rực cố định cho mọi chart liên quan
-// tới nhãn (donut "Chi theo nhãn" + cột "Xu hướng theo nhãn"). 11 màu = 11 nhãn mặc định trong Cài
+// tới nhãn (donut "Chi theo nhãn" + cột "Xu hướng theo nhãn"). 12 màu = 12 nhãn mặc định trong Cài
 // đặt, không màu nào lặp lại giữa chúng; xám để riêng cho "Không gắn thẻ".
 const CHART_PALETTE = [
   "#FF6B9D",
@@ -186,6 +186,7 @@ const CHART_PALETTE = [
   "#22B8CF",
   "#94D82D",
   "#E599F7",
+  "#1C7ED6",
 ]
 const UNTAGGED_CHART_COLOR = "#A0AEC0"
 
