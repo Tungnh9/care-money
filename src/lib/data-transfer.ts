@@ -103,8 +103,15 @@ function parseImportPayload(raw: string): ImportResult {
 
 const UNCOUNTED_SECTIONS = "tiết kiệm, nợ thẻ, mục tiêu"
 
+// Dòng tóm tắt sau khi tải lên / tải xuống / nhập file. Lần mua bạc đứng ngay sau vàng — tích lũy bạc thêm
+// sau, trước đó dòng này không nhắc tới bạc nên người dùng không biết bạc đã được đồng bộ hay chưa.
 function snapshotCounts(snapshot: ImportedSnapshot): string {
-  return `${snapshot.journal.entries.length} bài nhật ký · ${snapshot.finance.gold.length} lần mua vàng · ${snapshot.study.learned.length} từ đã học`
+  return [
+    `${snapshot.journal.entries.length} bài nhật ký`,
+    `${snapshot.finance.gold.length} lần mua vàng`,
+    `${snapshot.finance.silver.length} lần mua bạc`,
+    `${snapshot.study.learned.length} từ đã học`,
+  ].join(" · ")
 }
 
 function restoredSummary(snapshot: ImportedSnapshot): string {
