@@ -318,20 +318,28 @@ describe("summarizeMetalHolding", () => {
     expect(holding).toEqual({ qty: 2, cost: 3_600_000, value: 4_000_000, pl: 400_000, pct: (400_000 / 3_600_000) * 100 })
   })
 
-  it("matches summarizeFinance's gold figures bit for bit, fractional phân from old data included", () => {
+  it("gives bit-for-bit the gold figures of the three separate reduces it replaced, fractional phân included", () => {
     const fractional: GoldPurchase[] = [
       { id: 1, date: "01/01/2026", phan: 0.1, buy: 912_345, store: "SJC" },
       { id: 2, date: "02/01/2026", phan: 0.2, buy: 933_333, store: "SJC" },
       { id: 3, date: "03/01/2026", phan: 12.3, buy: 901_111, store: "PNJ" },
     ]
-    const summary = summarizeFinance({ ...DEFAULT_FINANCE_STATE, gold: fractional, goldStores: stores })
-    const holding = summarizeMetalHolding(fractional, stores, (p) => p.phan)
+    // Đúng công thức summarizeFinance dùng trước khi gom về summarizeMetalHolding.
+    const phan = fractional.reduce((sum, p) => sum + p.phan, 0)
+    const cost = fractional.reduce((sum, p) => sum + p.phan * p.buy, 0)
+    const value = fractional.reduce((sum, p) => sum + p.phan * metalMarketPrice(stores, p), 0)
+    const pl = value - cost
+    const pct = (pl / cost) * 100
 
-    expect(holding.qty).toBe(summary.goldPhan)
-    expect(holding.cost).toBe(summary.goldCost)
-    expect(holding.value).toBe(summary.goldValue)
-    expect(holding.pl).toBe(summary.goldPL)
-    expect(holding.pct).toBe(summary.goldPct)
+    expect(summarizeMetalHolding(fractional, stores, (p) => p.phan)).toEqual({ qty: phan, cost, value, pl, pct })
+    const summary = summarizeFinance({ ...DEFAULT_FINANCE_STATE, gold: fractional, goldStores: stores })
+    expect([summary.goldPhan, summary.goldCost, summary.goldValue, summary.goldPL, summary.goldPct]).toEqual([
+      phan,
+      cost,
+      value,
+      pl,
+      pct,
+    ])
   })
 })
 

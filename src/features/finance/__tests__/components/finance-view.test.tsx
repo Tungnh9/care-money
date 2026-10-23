@@ -255,4 +255,20 @@ describe("FinanceView", () => {
 
     expect(screen.queryByText("Lần mua vàng mới")).not.toBeInTheDocument()
   })
+  it("lays the five pillars out against the pillar row's own width (5 in a row, or at most 3 per row)", () => {
+    render(<FinanceView />)
+
+    // jsdom không tính được container query — chỉ khoá đúng các class mà quy tắc 5 trụ / 3+2 dựa vào.
+    const pillars = ["Tiết kiệm", "Nợ thẻ tín dụng", "Tích lũy vàng", "Tích lũy bạc", "Đầu tư"].map(
+      (label) =>
+        screen
+          .getAllByText(label)
+          .find((el) => el.tagName === "SPAN" && el.className.includes("uppercase"))
+          ?.closest("section") as HTMLElement
+    )
+    for (const pillar of pillars) {
+      expect(pillar).toHaveClass("min-w-[260px]", "flex-[1_1_calc((100%_-_2rem)/3)]", "@min-[1364px]:flex-[1_1_0%]")
+    }
+    expect(pillars[0].parentElement).toHaveClass("@container")
+  })
 })

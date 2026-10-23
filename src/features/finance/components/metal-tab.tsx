@@ -77,10 +77,12 @@ function MetalTab<P extends MetalPurchaseBase>({
   const purchasePLs = purchases.map((p) =>
     metalPurchasePL(metal.quantityOf(p), p.buy, metalMarketPrice(stores, p))
   )
-  const winCount = purchasePLs.filter((pl) => metalPLTone(pl) === "gain").length
-  const lossCount = purchasePLs.filter((pl) => metalPLTone(pl) === "loss").length
-  const totalWin = purchasePLs.filter((pl) => metalPLTone(pl) === "gain").reduce((sum, pl) => sum + pl, 0)
-  const totalLoss = purchasePLs.filter((pl) => metalPLTone(pl) === "loss").reduce((sum, pl) => sum + pl, 0)
+  const gains = purchasePLs.filter((purchasePL) => metalPLTone(purchasePL) === "gain")
+  const losses = purchasePLs.filter((purchasePL) => metalPLTone(purchasePL) === "loss")
+  const winCount = gains.length
+  const lossCount = losses.length
+  const totalWin = gains.reduce((sum, purchasePL) => sum + purchasePL, 0)
+  const totalLoss = losses.reduce((sum, purchasePL) => sum + purchasePL, 0)
   const storeSummaries = summarizeMetalByStore(purchases, stores, metal.quantityOf)
   const storeTotal: MetalStoreSummary = {
     store: "Tổng cộng",
@@ -177,13 +179,13 @@ function MetalTab<P extends MetalPurchaseBase>({
             stats.length > 3 ? "sm:grid-cols-4" : "sm:grid-cols-3"
           )}
         >
-          {stats.map(([label, value]) => (
+          {stats.map(([label, text]) => (
             <div key={label}>
               <div className="mb-1 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
                 {label}
               </div>
               <div className="text-[13.5px] [font-family:var(--ob-font-num)] tabular-nums whitespace-nowrap">
-                {value}
+                {text}
               </div>
             </div>
           ))}

@@ -225,4 +225,19 @@ describe("OverviewView", () => {
     }
     setItemSpy.mockRestore()
   })
+  it("counts held silver into today's net-worth snapshot", async () => {
+    const { getStoredNetWorthHistory } = await import("@/lib/net-worth/net-worth-history-storage")
+    // 1.000.000 tiết kiệm + 2 lượng bạc × 2.000.000 giá hôm nay = 5.000.000.
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      savings: [{ name: "Quỹ ABC", amount: 1_000_000, target: 10_000_000 }],
+      silver: [{ id: 1, date: "10/08/2026", luong: 2, buy: 1_800_000, store: "Phú Quý" }],
+      silverStores: [{ name: "Phú Quý", price: "2.000.000" }],
+    })
+
+    render(<OverviewView vocab={VOCAB} grammar={GRAMMAR} />)
+
+    await waitFor(() => expect(getStoredNetWorthHistory()[0]?.net).toBe(5_000_000))
+    expect(getStoredNetWorthHistory()[0].savingsTotal).toBe(1_000_000)
+  })
 })

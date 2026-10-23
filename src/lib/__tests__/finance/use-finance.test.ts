@@ -1673,4 +1673,48 @@ describe("useFinance — tích lũy bạc", () => {
     expect(result.current.silverStores).toEqual([PHU_QUY])
     expect(result.current.goldStores).toEqual([{ name: "DOJI", price: "950.000" }])
   })
+  it("refuses to rename a silver store to a name another silver store already has", async () => {
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, silverStores: [PHU_QUY, { name: "Ancarat", price: "2.050.000" }] })
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.silverStores).toHaveLength(2))
+
+    act(() => {
+      result.current.updateSilverStore("Ancarat", { name: "Phú Quý", price: "2.050.000" })
+    })
+
+    expect(result.current.silverStores.map((s) => s.name)).toEqual(["Phú Quý", "Ancarat"])
+    expect(toast.error).toHaveBeenCalledWith('Đã có cửa hàng tên "Phú Quý". Vui lòng chọn tên khác.')
+  })
+
+  it("keeps silver untouched when a gold store is renamed or removed, even with a same-named silver store", async () => {
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      goldStores: [
+        { name: "DOJI", price: "950.000" },
+        { name: "PNJ", price: "940.000" },
+      ],
+      silver: [
+        { id: 1, date: "10/08/2026", luong: 2, buy: 1_800_000, store: "DOJI" },
+        { id: 2, date: "11/08/2026", luong: 1, buy: 1_900_000, store: "PNJ" },
+      ],
+      silverStores: [
+        { name: "DOJI", price: "2.000.000" },
+        { name: "PNJ", price: "2.000.000" },
+      ],
+    })
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.silver).toHaveLength(2))
+
+    act(() => {
+      result.current.updateGoldStore("DOJI", { name: "DOJI Vàng", price: "950.000" })
+    })
+    // Không lần mua vàng nào ở PNJ — lần mua bạc ở PNJ không được chặn việc xoá cửa hàng vàng PNJ.
+    act(() => {
+      result.current.removeGoldStore("PNJ")
+    })
+
+    expect(result.current.goldStores).toEqual([{ name: "DOJI Vàng", price: "950.000" }])
+    expect(result.current.silver.map((p) => p.store)).toEqual(["DOJI", "PNJ"])
+    expect(result.current.silverStores.map((s) => s.name)).toEqual(["DOJI", "PNJ"])
+  })
 })
