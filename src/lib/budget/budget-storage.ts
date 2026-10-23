@@ -20,12 +20,19 @@ const tagSnapshotSchema = z.object({
   tint: z.string(),
 })
 
+const cardLinkSchema = z.object({
+  kind: z.enum(["swipe", "payment"]),
+  cardName: z.string().nullable(),
+})
+
 const expenseSchema: z.ZodType<Expense> = z.object({
   id: z.number(),
   dayKey: z.string(),
   amount: z.number().int().nonnegative(),
   note: z.string().optional(),
   tag: tagSnapshotSchema.nullable(),
+  // Liên kết thẻ hỏng thì chỉ mất liên kết, không mất khoản chi (khoản chi là lịch sử tiền thật).
+  card: cardLinkSchema.optional().catch(undefined),
 })
 
 const monthlySalarySchema: z.ZodType<MonthlySalary> = z.object({

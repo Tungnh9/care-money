@@ -4,12 +4,21 @@ interface TagSnapshot {
   tint: string
 }
 
+type CardLinkKind = "swipe" | "payment"
+
+// `cardName` null: thẻ đã bị xoá khỏi trang Tài chính — khoản chi vẫn giữ loại liên kết để tính đúng.
+interface CardLink {
+  kind: CardLinkKind
+  cardName: string | null
+}
+
 interface Expense {
   id: number
   dayKey: string
   amount: number
   note?: string
   tag: TagSnapshot | null
+  card?: CardLink
 }
 
 interface MonthlySalary {
@@ -30,4 +39,4 @@ interface Settlement {
   fundAmountAfter: number
 }
 
-export type { TagSnapshot, Expense, MonthlySalary, Settlement, SettlementDirection }
+export type { CardLinkKind, CardLink, TagSnapshot, Expense, MonthlySalary, Settlement, SettlementDirection }

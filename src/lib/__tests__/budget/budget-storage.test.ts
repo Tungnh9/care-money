@@ -108,6 +108,7 @@ describe("getStoredBudget", () => {
       amount: 85_000,
       note: "Ăn trưa với đồng nghiệp",
       tag: { label: "Ăn uống", emoji: "🍜", tint: "#FFE0C7" },
+      card: { kind: "swipe", cardName: "Visa" },
     }
     const state = { ...DEFAULT_BUDGET_STATE, expenses: [expense] }
 
@@ -239,5 +240,39 @@ describe("renameFundInSettlements", () => {
     renameFundInSettlements("Quỹ A", "Quỹ B")
 
     expect(getStoredBudget().settlements[0].fundName).toBe("Quỹ khác")
+  })
+})
+
+describe("expense card link", () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+
+  const base: Expense = { id: 1, dayKey: "2026-09-01", amount: 500_000, tag: null }
+
+  it("keeps an expense's card link through a stored round trip", () => {
+    for (const cardName of ["Visa", null]) {
+      const expenses: Expense[] = [{ ...base, card: { kind: "swipe", cardName } }]
+      setStoredBudget({ ...DEFAULT_BUDGET_STATE, expenses })
+      expect(getStoredBudget().expenses).toEqual(expenses)
+    }
+  })
+
+  it("keeps an expense whose card link is malformed, dropping only the link", () => {
+    window.localStorage.setItem(
+      BUDGET_STORAGE_KEY,
+      JSON.stringify({ ...DEFAULT_BUDGET_STATE, expenses: [{ ...base, card: { kind: "nope" } }] })
+    )
+    const { expenses } = getStoredBudget()
+    expect(expenses).toHaveLength(1)
+    expect(expenses[0].card).toBeUndefined()
+    expect(expenses[0]).toMatchObject(base)
+  })
+
+  it("reads old expenses without a card link unchanged", () => {
+    setStoredBudget({ ...DEFAULT_BUDGET_STATE, expenses: [base] })
+    const [read] = getStoredBudget().expenses
+    expect(read).toEqual(base)
+    expect(read).not.toHaveProperty("card")
   })
 })

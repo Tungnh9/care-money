@@ -321,6 +321,28 @@ describe("detectMoodSpendingCorrelation", () => {
       text: "Trong 60 ngày qua, những ngày tâm trạng thấp bạn chi tiêu nhiều hơn khoảng 200% so với những ngày tâm trạng cao.",
     })
   })
+
+  it("leaves card swipes out of the mood–spending comparison", () => {
+    const today = new Date(2026, 8, 21)
+    const entries: JournalEntry[] = []
+    const expenses: Expense[] = []
+    for (let i = 0; i < 5; i++) {
+      entries.push(moodEntry(new Date(today.getTime() - i * DAY_MS).getTime(), 1))
+      expenses.push(expense(100 + i, `2026-09-${String(21 - i).padStart(2, "0")}`, 300_000))
+    }
+    for (let i = 5; i < 10; i++) {
+      entries.push(moodEntry(new Date(today.getTime() - i * DAY_MS).getTime(), 5))
+      expenses.push(expense(200 + i, `2026-09-${String(21 - i).padStart(2, "0")}`, 100_000))
+    }
+    const withSwipe: Expense[] = [
+      ...expenses,
+      { id: 999, dayKey: "2026-09-21", amount: 50_000_000, tag: null, card: { kind: "swipe", cardName: "Visa" } },
+    ]
+
+    expect(detectMoodSpendingCorrelation(withSwipe, entries, "2026-09-21")).toEqual(
+      detectMoodSpendingCorrelation(expenses, entries, "2026-09-21")
+    )
+  })
 })
 
 import { forecastSavingsGoal } from "../insights-calculations"
