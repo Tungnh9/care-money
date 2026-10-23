@@ -810,4 +810,51 @@ describe("BudgetView", () => {
     await screen.findByText(summaryLine(`Lương ${formatMoney(0)} · đã chi ${formatMoney(50_000)} tháng này`))
     expect(salaryInput).toHaveFocus()
   })
+
+  it("keeps a swipe out of đã chi and the settle card, and raises the card debt", async () => {
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      cards: [{ name: "Visa", balance: 0, min: 0, limit: 10_000_000, due: "" }],
+    })
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [{ month: "2026-09", amount: 10_000_000 }],
+      expenses: [{ id: 1, dayKey: "2026-09-01", amount: 1_000_000, tag: null }],
+    })
+
+    render(<BudgetView />)
+    await screen.findByText("Khoản chi tháng này")
+
+    const form = screen.getByRole("button", { name: "Ghi khoản chi" }).closest("section") as HTMLElement
+    fireEvent.change(within(form).getByLabelText("Số tiền", { exact: false }), { target: { value: "500000" } })
+    fireEvent.click(within(form).getByRole("button", { name: /Quẹt thẻ/ }))
+    fireEvent.click(within(form).getByRole("button", { name: "Ghi khoản chi" }))
+
+    await waitFor(() => expect(getStoredFinance().cards[0].balance).toBe(500_000))
+    expect(screen.getByText(summaryLine(`Lương ${formatMoney(10_000_000)} · đã chi ${formatMoney(1_000_000)} tháng này`))).toBeInTheDocument()
+    expect(screen.getByText(summaryLine(`Bạn đang dư ${formatMoney(9_000_000)} tháng này.`))).toBeInTheDocument()
+    expect(screen.getAllByText(`${formatMoney(0)} / ${formatMoney(500_000)}`).length).toBeGreaterThan(0)
+  })
+
+  it("lowers the card debt when a Trả nợ thẻ is recorded and counts it as spending", async () => {
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      cards: [{ name: "Visa", balance: 800_000, min: 0, limit: 10_000_000, due: "" }],
+    })
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [{ month: "2026-09", amount: 10_000_000 }],
+    })
+
+    render(<BudgetView />)
+    await screen.findByText("Khoản chi tháng này")
+
+    const form = screen.getByRole("button", { name: "Ghi khoản chi" }).closest("section") as HTMLElement
+    fireEvent.change(within(form).getByLabelText("Số tiền", { exact: false }), { target: { value: "300000" } })
+    fireEvent.click(within(form).getByRole("button", { name: /Trả nợ thẻ/ }))
+    fireEvent.click(within(form).getByRole("button", { name: "Ghi khoản chi" }))
+
+    await waitFor(() => expect(getStoredFinance().cards[0].balance).toBe(500_000))
+    expect(screen.getByText(summaryLine(`Lương ${formatMoney(10_000_000)} · đã chi ${formatMoney(300_000)} tháng này`))).toBeInTheDocument()
+  })
 })

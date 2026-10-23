@@ -366,4 +366,80 @@ describe("ExpenseListCard", () => {
     expect(line).toHaveClass("wrap-anywhere")
     expect(line.parentElement).toHaveClass("min-w-0")
   })
+
+  describe("card-linked expenses", () => {
+    const SWIPE_TAG = { label: "Quẹt thẻ", emoji: "🧾", tint: "#F0ECFE" }
+    const PAY_TAG = { label: "Trả nợ thẻ", emoji: "🏦", tint: "#FFE0C7" }
+    const SWIPE: Expense = {
+      id: 3,
+      dayKey: "2026-09-03",
+      amount: 500_000,
+      tag: SWIPE_TAG,
+      card: { kind: "swipe", cardName: "Visa" },
+    }
+
+    it("shows a swipe as 0 out of its amount", () => {
+      render(<ExpenseListCard expenses={[SWIPE]} onRemove={vi.fn()} onEdit={vi.fn()} />)
+
+      expect(screen.getByText(`${formatMoney(0)} / ${formatMoney(500_000)}`)).toBeInTheDocument()
+    })
+
+    it("leaves swipes out of the day total but counts them in the number of expenses", () => {
+      const normal: Expense = { id: 4, dayKey: "2026-09-03", amount: 100_000, tag: null }
+      render(<ExpenseListCard expenses={[SWIPE, normal]} onRemove={vi.fn()} onEdit={vi.fn()} />)
+
+      const header = screen.getByTestId("expense-day-header")
+      expect(header).toHaveTextContent(formatMoney(100_000))
+      expect(header).not.toHaveTextContent(formatMoney(600_000))
+      expect(screen.getAllByTestId("expense-row")).toHaveLength(2)
+      expect(header).toHaveTextContent("2 khoản")
+    })
+
+    it("shows which card a linked expense went on, or that the card was deleted", () => {
+      const orphan: Expense = { ...SWIPE, id: 5, card: { kind: "swipe", cardName: null } }
+      render(<ExpenseListCard expenses={[SWIPE, orphan]} onRemove={vi.fn()} onEdit={vi.fn()} />)
+
+      expect(screen.getByText("Thẻ Visa")).toBeInTheDocument()
+      expect(screen.getByText("Thẻ đã xoá")).toBeInTheDocument()
+    })
+
+    it("tells how the card debt will change before deleting a linked expense", () => {
+      const payment: Expense = {
+        id: 6,
+        dayKey: "2026-09-03",
+        amount: 200_000,
+        tag: PAY_TAG,
+        card: { kind: "payment", cardName: "Master" },
+      }
+      const orphan: Expense = { ...SWIPE, id: 7, card: { kind: "swipe", cardName: null } }
+      render(<ExpenseListCard expenses={[SWIPE, payment, orphan]} onRemove={vi.fn()} onEdit={vi.fn()} />)
+
+      fireEvent.click(screen.getAllByRole("button", { name: "Xoá khoản chi Quẹt thẻ" })[0])
+      expect(screen.getByRole("alertdialog")).toHaveTextContent(`Nợ thẻ "Visa" sẽ giảm ${formatMoney(500_000)}.`)
+      fireEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Huỷ" }))
+
+      fireEvent.click(screen.getByRole("button", { name: "Xoá khoản chi Trả nợ thẻ" }))
+      expect(screen.getByRole("alertdialog")).toHaveTextContent(`Nợ thẻ "Master" sẽ tăng ${formatMoney(200_000)}.`)
+      fireEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Huỷ" }))
+
+      fireEvent.click(screen.getAllByRole("button", { name: "Xoá khoản chi Quẹt thẻ" })[1])
+      expect(screen.getByRole("alertdialog")).not.toHaveTextContent("Nợ thẻ")
+    })
+
+    it("hides both amounts of a swipe while money is hidden", async () => {
+      window.localStorage.setItem("hide-money", "1")
+      render(
+        <MoneyVisibilityProvider>
+          <ExpenseListCard expenses={[SWIPE]} onRemove={vi.fn()} onEdit={vi.fn()} />
+        </MoneyVisibilityProvider>
+      )
+
+      await waitFor(() => expect(screen.queryByText(/500\.000/)).not.toBeInTheDocument())
+      expect(screen.getByText(`${formatMoney(0, true)} / ${formatMoney(500_000, true)}`)).toBeInTheDocument()
+      expect(document.body).not.toHaveTextContent("500.000")
+
+      fireEvent.click(screen.getByRole("button", { name: "Xoá khoản chi Quẹt thẻ" }))
+      expect(screen.getByRole("alertdialog")).not.toHaveTextContent("500.000")
+    })
+  })
 })

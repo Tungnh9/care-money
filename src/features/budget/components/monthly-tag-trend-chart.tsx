@@ -14,9 +14,12 @@ interface MonthlyTagTrendChartProps {
   // Màu theo nhãn (tagChartColors) — cùng bảng với donut "Chi theo nhãn"; không truyền (hoặc thiếu
   // nhãn) thì tô theo thứ tự như trước.
   colors?: Map<string, string>
+  // Tổng đã quẹt thẻ trong các tháng — không phải chi tiêu nên không có cột/series và không cộng vào
+  // "Tổng cộng"; chỉ hiện thành 1 dòng riêng "0 ₫ / tổng quẹt".
+  swiped?: { label: string; emoji: string; total: number }
 }
 
-function MonthlyTagTrendChart({ months, series, colors }: MonthlyTagTrendChartProps) {
+function MonthlyTagTrendChart({ months, series, colors, swiped }: MonthlyTagTrendChartProps) {
   const { hidden } = useMoneyVisibility()
 
   // Giữ đúng thứ tự/màu như chart cột chồng ở trên (không sort theo tổng) để dòng tổng kết khớp
@@ -26,6 +29,7 @@ function MonthlyTagTrendChart({ months, series, colors }: MonthlyTagTrendChartPr
     color: colors?.get(s.label) ?? CHART_PALETTE[i % CHART_PALETTE.length],
     total: s.data.reduce((sum, value) => sum + value, 0),
   }))
+  const showSwiped = swiped !== undefined && swiped.total > 0
   const grandTotal = totals.reduce((sum, t) => sum + t.total, 0)
 
   return (
@@ -47,7 +51,7 @@ function MonthlyTagTrendChart({ months, series, colors }: MonthlyTagTrendChartPr
         }}
       />
 
-      {totals.length > 0 && (
+      {(totals.length > 0 || showSwiped) && (
         <div className="mt-4 flex flex-col gap-2 border-t border-[var(--ob-color-border)] pt-4">
           {totals.map((t) => (
             <div key={t.label} className="flex items-center justify-between gap-3 text-[13.5px]">
@@ -68,6 +72,29 @@ function MonthlyTagTrendChart({ months, series, colors }: MonthlyTagTrendChartPr
               </span>
             </div>
           ))}
+
+          {showSwiped ? (
+            <div data-testid="tag-trend-swiped" className="flex items-center justify-between gap-3 text-[13.5px]">
+              <span className="flex items-center gap-2 text-[var(--ob-color-text-muted)]">
+                <span
+                  data-testid="tag-trend-dot"
+                  className="h-2.5 w-2.5 shrink-0 rounded-full"
+                  style={{
+                    backgroundColor:
+                      colors?.get(swiped.label) ?? CHART_PALETTE[series.length % CHART_PALETTE.length],
+                  }}
+                />
+                <span>{swiped.emoji}</span>
+                <span>{swiped.label}</span>
+              </span>
+              <span
+                className="min-w-0 text-right [font-family:var(--ob-font-num)]"
+                style={{ color: "var(--ob-color-text-muted)" }}
+              >
+                {`${formatMoney(0, hidden)} / ${formatMoney(swiped.total, hidden)}`}
+              </span>
+            </div>
+          ) : null}
 
           <div className="mt-1 flex items-center justify-between gap-3 border-t border-[var(--ob-color-border)] pt-3 text-[13.5px] font-bold">
             <span>Tổng cộng</span>

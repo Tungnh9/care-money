@@ -133,9 +133,16 @@ function ExpenseListCard({ expenses, settlements = [], onRemove, onEdit }: Expen
                           {e.note ? (
                             <div className="mt-0.5 text-[12.5px] text-[var(--ob-color-text-subtle)]">{e.note}</div>
                           ) : null}
+                          {e.card ? (
+                            <div className="mt-0.5 text-[12.5px] text-[var(--ob-color-text-subtle)]">
+                              {e.card.cardName === null ? "Thẻ đã xoá" : `Thẻ ${e.card.cardName}`}
+                            </div>
+                          ) : null}
                         </div>
-                        <div className="[font-family:var(--ob-font-num)] text-sm text-[var(--ob-color-text-muted)]">
-                          {formatMoney(e.amount, hidden)}
+                        <div className="min-w-0 max-w-[40%] flex-none text-right [font-family:var(--ob-font-num)] text-sm text-[var(--ob-color-text-muted)]">
+                          {e.card?.kind === "swipe"
+                            ? `${formatMoney(0, hidden)} / ${formatMoney(e.amount, hidden)}`
+                            : formatMoney(e.amount, hidden)}
                         </div>
                         <div className="flex flex-none items-center">
                           <button
@@ -178,6 +185,9 @@ function ExpenseListCard({ expenses, settlements = [], onRemove, onEdit }: Expen
             <>
               Xoá khoản chi &quot;<strong>{deleting.tag?.label ?? UNTAGGED_LABEL}</strong>&quot;{" "}
               {formatMoney(deleting.amount, hidden)} ({formatDayKey(deleting.dayKey)}) sẽ không thể hoàn tác.
+              {deleting.card && deleting.card.cardName !== null
+                ? ` Nợ thẻ "${deleting.card.cardName}" sẽ ${deleting.card.kind === "swipe" ? "giảm" : "tăng"} ${formatMoney(deleting.amount, hidden)}.`
+                : null}
             </>
           ) : null
         }
