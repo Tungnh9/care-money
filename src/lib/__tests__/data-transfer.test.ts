@@ -177,6 +177,64 @@ describe("parseImportPayload", () => {
     }
   })
 
+  it("keeps each expense's card link when restoring a budget section", () => {
+    const swipeTag = { label: "Quẹt thẻ", emoji: "🧾", tint: "#F0ECFE" }
+    const payTag = { label: "Trả nợ thẻ", emoji: "🏦", tint: "#FFE0C7" }
+    const raw = JSON.stringify({
+      version: EXPORT_VERSION,
+      budget: {
+        salaries: [],
+        expenses: [
+          { id: 1, dayKey: "2026-10-01", amount: 500_000, tag: swipeTag, card: { kind: "swipe", cardName: "Visa" } },
+          { id: 2, dayKey: "2026-10-02", amount: 200_000, tag: payTag, card: { kind: "payment", cardName: null } },
+          { id: 3, dayKey: "2026-10-03", amount: 5_317_725, tag: payTag },
+        ],
+        settlements: [],
+      },
+    })
+
+    const result = parseImportPayload(raw)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.budget.expenses.map((e) => e.card)).toEqual([
+        { kind: "swipe", cardName: "Visa" },
+        { kind: "payment", cardName: null },
+        undefined,
+      ])
+    }
+  })
+
+  it("drops only a malformed card link from an imported expense, keeping the expense itself", () => {
+    const swipeTag = { label: "Quẹt thẻ", emoji: "🧾", tint: "#F0ECFE" }
+    const raw = JSON.stringify({
+      version: EXPORT_VERSION,
+      budget: {
+        salaries: [],
+        expenses: [
+          { id: 1, dayKey: "2026-10-01", amount: 500_000, tag: swipeTag, card: { kind: "refund", cardName: "Visa" } },
+          { id: 2, dayKey: "2026-10-02", amount: 300_000, tag: swipeTag, card: "Visa" },
+          { id: 3, dayKey: "2026-10-03", amount: 100_000, tag: swipeTag, card: { kind: "swipe", cardName: "Visa" } },
+        ],
+        settlements: [],
+      },
+    })
+
+    const result = parseImportPayload(raw)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      const expenses = result.data.budget.expenses
+      expect(expenses).toEqual([
+        { id: 1, dayKey: "2026-10-01", amount: 500_000, tag: swipeTag },
+        { id: 2, dayKey: "2026-10-02", amount: 300_000, tag: swipeTag },
+        { id: 3, dayKey: "2026-10-03", amount: 100_000, tag: swipeTag, card: { kind: "swipe", cardName: "Visa" } },
+      ])
+      expect(expenses[0].card).toBeUndefined()
+      expect(expenses[1].card).toBeUndefined()
+    }
+  })
+
   it("falls back to defaults instead of crashing when the budget section is wrong-typed", () => {
     const raw = JSON.stringify({ version: EXPORT_VERSION, budget: { expenses: "not-an-array" } })
 

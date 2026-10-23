@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from "vitest"
-import { render, screen, fireEvent } from "@testing-library/react"
+import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 
+import { MoneyVisibilityProvider } from "@/components/money-visibility-provider"
+import { formatMoney } from "@/lib/format"
 import { EditExpenseModal } from "../../components/edit-expense-modal"
 import type { BudgetTag } from "@/lib/settings/settings-storage"
 import type { Expense } from "@/lib/budget/types"
@@ -203,6 +205,27 @@ describe("EditExpenseModal with cards", () => {
 
     expect(screen.getByText(/Thẻ "Visa" chỉ còn nợ/)).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
+  })
+
+  it("masks the card's debt in the over-debt hint while money is hidden", async () => {
+    window.localStorage.setItem("hide-money", "1")
+    try {
+      render(
+        <MoneyVisibilityProvider>
+          <EditExpenseModal expense={PAYMENT} tags={TAGS_WITH_CARD} cards={CARDS} onOpenChange={vi.fn()} onSave={vi.fn()} />
+        </MoneyVisibilityProvider>
+      )
+
+      fireEvent.change(screen.getByLabelText("Số tiền", { exact: false }), { target: { value: "1500000" } })
+
+      await waitFor(() =>
+        expect(screen.getByText(`Thẻ "Visa" chỉ còn nợ ${formatMoney(1_000_000, true)}`)).toBeInTheDocument()
+      )
+      expect(document.body).not.toHaveTextContent(formatMoney(1_000_000))
+      expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
+    } finally {
+      window.localStorage.removeItem("hide-money")
+    }
   })
 
   it("does not offer Quẹt thẻ or Trả nợ thẻ when editing an ordinary expense", () => {

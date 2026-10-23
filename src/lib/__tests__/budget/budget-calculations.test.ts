@@ -515,11 +515,44 @@ describe("card swipes", () => {
   })
 
   it("drops swipes from the tag breakdown", () => {
-    expect(breakdownByTag(mixed, "2026-09").some((e) => e.label === "Quẹt thẻ")).toBe(false)
+    expect(breakdownByTag(mixed, "2026-09")).toEqual([
+      { label: "Không gắn thẻ", emoji: "🏷️", tint: "#F2E9DC", total: 100_000 },
+    ])
   })
 
   it("drops swipes from the monthly tag series", () => {
-    expect(monthlyTagBreakdown(mixed, ["2026-09"]).some((s) => s.label === "Quẹt thẻ")).toBe(false)
+    expect(monthlyTagBreakdown(mixed, ["2026-09"])).toEqual([
+      { label: "Không gắn thẻ", emoji: "🏷️", tint: "#F2E9DC", data: [100_000] },
+    ])
+  })
+
+  it("leaves a swipe out of an older month's amount to settle", () => {
+    const salaries: MonthlySalary[] = [
+      { month: "2026-07", amount: 1_000_000 },
+      { month: "2026-08", amount: 1_000_000 },
+    ]
+    const list = [
+      // Tháng 8: còn 900.000 phải tất toán — khoản quẹt 500.000 không làm số này nhỏ đi.
+      expense({ id: 1, dayKey: "2026-08-10", amount: 100_000 }),
+      expense({ id: 2, dayKey: "2026-08-11", amount: 500_000, tag: TAG_SWIPE, card: SWIPE }),
+      // Tháng 7: chi đúng bằng lương nên đã khớp; khoản quẹt không được làm nó hiện ra là còn lệch.
+      expense({ id: 3, dayKey: "2026-07-10", amount: 1_000_000 }),
+      expense({ id: 4, dayKey: "2026-07-11", amount: 700_000, tag: TAG_SWIPE, card: SWIPE }),
+    ]
+
+    expect(unsettledPastMonths(salaries, list, [], "2026-09")).toEqual([{ month: "2026-08", remaining: 900_000 }])
+  })
+
+  it("leaves a swipe out of the monthly spending chart", () => {
+    const list = [
+      ...mixed,
+      expense({ id: 3, dayKey: "2026-08-15", amount: 2_000_000, tag: TAG_SWIPE, card: SWIPE }),
+    ]
+
+    expect(monthlyExpenseTotals(list, ["2026-08", "2026-09"])).toEqual([
+      { month: "2026-08", total: 0 },
+      { month: "2026-09", total: 100_000 },
+    ])
   })
 
   it("totals swipes separately per month", () => {

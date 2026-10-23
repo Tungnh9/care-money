@@ -64,6 +64,32 @@ describe("OverviewView", () => {
     expect(within(card).getByText(formatMoney(15_000_000), { exact: false })).toBeInTheDocument()
   })
 
+  it("leaves card swipes out of the Chi tiêu tháng này card", async () => {
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [{ month: "2026-08", amount: 20_000_000 }],
+      expenses: [
+        { id: 1, dayKey: "2026-08-05", amount: 5_000_000, tag: null },
+        {
+          id: 2,
+          dayKey: "2026-08-06",
+          amount: 3_000_000,
+          tag: { label: "Quẹt thẻ", emoji: "🧾", tint: "#F0ECFE" },
+          card: { kind: "swipe", cardName: "Visa" },
+        },
+      ],
+    })
+
+    render(<OverviewView vocab={VOCAB} grammar={GRAMMAR} />)
+
+    await waitFor(() => expect(screen.getByText("Chi tiêu tháng này")).toBeInTheDocument())
+    const card = screen.getByText("Chi tiêu tháng này").closest("section") as HTMLElement
+    await waitFor(() => expect(within(card).getByText(formatMoney(5_000_000))).toBeInTheDocument())
+    expect(within(card).getByText(formatMoney(15_000_000), { exact: false })).toBeInTheDocument()
+    expect(card).not.toHaveTextContent(formatMoney(8_000_000))
+    expect(card).not.toHaveTextContent(formatMoney(12_000_000))
+  })
+
   it("hides the budget section when the chitieu module is turned off", async () => {
     setStoredSettings({
       ...DEFAULT_SETTINGS,

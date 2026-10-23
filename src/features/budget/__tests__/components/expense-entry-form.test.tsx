@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest"
-import { render, screen, fireEvent } from "@testing-library/react"
+import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 
+import { MoneyVisibilityProvider } from "@/components/money-visibility-provider"
 import { ExpenseEntryForm } from "../../components/expense-entry-form"
 import type { BudgetTag } from "@/lib/settings/settings-storage"
 import type { CreditCard } from "@/lib/finance/types"
@@ -175,6 +176,29 @@ describe("ExpenseEntryForm", () => {
 
     expect(screen.getByText(`Thẻ "Master" chỉ còn nợ ${formatMoney(0)}`)).toBeInTheDocument()
     expect(submit()).toBeDisabled()
+  })
+
+  it("masks the card's debt in the over-debt hint while money is hidden", async () => {
+    window.localStorage.setItem("hide-money", "1")
+    try {
+      render(
+        <MoneyVisibilityProvider>
+          <ExpenseEntryForm tags={TAGS} cards={[VISA, MASTER]} onAdd={vi.fn()} />
+        </MoneyVisibilityProvider>
+      )
+
+      fireEvent.click(screen.getByRole("button", { name: /Trả nợ thẻ/ }))
+      fireEvent.click(screen.getByRole("button", { name: "Visa" }))
+      fireEvent.change(amountField(), { target: { value: "2500000" } })
+
+      await waitFor(() =>
+        expect(screen.getByText(`Thẻ "Visa" chỉ còn nợ ${formatMoney(2_000_000, true)}`)).toBeInTheDocument()
+      )
+      expect(document.body).not.toHaveTextContent(formatMoney(2_000_000))
+      expect(submit()).toBeDisabled()
+    } finally {
+      window.localStorage.removeItem("hide-money")
+    }
   })
 
   it("drops the picked card when switching to an ordinary tag", () => {

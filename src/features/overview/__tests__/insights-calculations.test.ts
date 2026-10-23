@@ -13,6 +13,17 @@ function expense(id: number, dayKey: string, amount: number): Expense {
   return { id, dayKey, amount, tag: null }
 }
 
+// Khoản quẹt thẻ: tính 0 vào chi tiêu, nên không được đổi kết quả của bất kỳ gợi ý chi tiêu nào.
+function swipe(id: number, dayKey: string, amount: number): Expense {
+  return {
+    id,
+    dayKey,
+    amount,
+    tag: { label: "Quẹt thẻ", emoji: "🧾", tint: "#F0ECFE" },
+    card: { kind: "swipe", cardName: "Visa" },
+  }
+}
+
 describe("detectSpendingAnomaly", () => {
   it("returns null when there is less than 3 months of prior history", () => {
     const expenses = [expense(1, "2026-03-01", 1_000_000), expense(2, "2026-04-01", 1_000_000)]
@@ -135,6 +146,32 @@ describe("detectSpendingAnomaly", () => {
     const expenses = [expense(1, "2026-03-15", 3_000_000), expense(2, "2026-04-15", 3_600_000)]
 
     expect(detectSpendingAnomaly(expenses, "2026-04", "2026-04-20")).toBeNull()
+  })
+
+  it("gives the same result with and without a big card swipe", () => {
+    // Tháng 4 chi bình thường: 1 khoản quẹt 50tr tháng này mà bị tính thì sẽ thành "cao hơn".
+    const normal = [
+      expense(1, "2026-01-15", 1_000_000),
+      expense(2, "2026-02-15", 1_100_000),
+      expense(3, "2026-03-15", 900_000),
+      expense(4, "2026-04-15", 1_050_000),
+    ]
+    const normalWithSwipe = [...normal, swipe(99, "2026-04-16", 50_000_000)]
+    expect(detectSpendingAnomaly(normal, "2026-04", "2026-04-20")).toBeNull()
+    expect(detectSpendingAnomaly(normalWithSwipe, "2026-04", "2026-04-20")).toBeNull()
+
+    // Tháng 4 chi cao thật: khoản quẹt ở 1 tháng nền không được kéo trung bình lên mà che mất tín hiệu.
+    const high = [
+      expense(1, "2026-01-15", 1_000_000),
+      expense(2, "2026-02-15", 1_100_000),
+      expense(3, "2026-03-15", 900_000),
+      expense(4, "2026-04-15", 3_000_000),
+    ]
+    const highWithSwipe = [...high, swipe(98, "2026-02-20", 50_000_000)]
+    expect(detectSpendingAnomaly(high, "2026-04", "2026-04-20")).not.toBeNull()
+    expect(detectSpendingAnomaly(highWithSwipe, "2026-04", "2026-04-20")).toEqual(
+      detectSpendingAnomaly(high, "2026-04", "2026-04-20")
+    )
   })
 })
 
@@ -266,6 +303,35 @@ describe("detectTagAnomaly", () => {
       id: "tag-anomaly-2026-04",
       text: 'Chi tiêu cho "🛍️ Ăn uống" tháng này tăng 60% so với trung bình 3 tháng trước.',
     })
+  })
+
+  it("gives the same result with and without a big card swipe", () => {
+    // Quẹt thẻ đều mỗi tháng rồi vọt lên tháng 4: tính vào thì "🧾 Quẹt thẻ" sẽ thắng "Mua sắm".
+    const swipes = [
+      swipe(91, "2026-01-05", 200_000),
+      swipe(92, "2026-02-05", 200_000),
+      swipe(93, "2026-03-05", 200_000),
+      swipe(94, "2026-04-05", 50_000_000),
+    ]
+    const shopping = [
+      taggedExpense(5, "2026-01-12", 200_000, "Mua sắm"),
+      taggedExpense(6, "2026-02-12", 200_000, "Mua sắm"),
+      taggedExpense(7, "2026-03-12", 200_000, "Mua sắm"),
+      taggedExpense(8, "2026-04-12", 500_000, "Mua sắm"),
+    ]
+    expect(detectTagAnomaly(shopping, "2026-04", "2026-04-20")).not.toBeNull()
+    expect(detectTagAnomaly([...shopping, ...swipes], "2026-04", "2026-04-20")).toEqual(
+      detectTagAnomaly(shopping, "2026-04", "2026-04-20")
+    )
+
+    // Không nhãn nào lệch: chỉ có khoản quẹt vọt lên thì vẫn không có gợi ý nào.
+    const steady = [
+      taggedExpense(1, "2026-01-10", 500_000, "Ăn uống"),
+      taggedExpense(2, "2026-02-10", 520_000, "Ăn uống"),
+      taggedExpense(3, "2026-03-10", 480_000, "Ăn uống"),
+      taggedExpense(4, "2026-04-10", 510_000, "Ăn uống"),
+    ]
+    expect(detectTagAnomaly([...steady, ...swipes], "2026-04", "2026-04-20")).toBeNull()
   })
 })
 
