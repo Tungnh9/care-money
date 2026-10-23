@@ -14,18 +14,20 @@ interface Segment {
 }
 
 function NetWorthCard({ summary }: NetWorthCardProps) {
-  const { savingsTotal, goldValue, investValue, debtTotal, net, netPct } = summary
+  const { savingsTotal, goldValue, silverValue, investValue, debtTotal, net, netPct } = summary
 
   const segments: Segment[] = [
     { key: "savings", label: "Tiết kiệm", value: savingsTotal, color: "var(--ob-la-300)" },
     { key: "gold", label: "Vàng", value: goldValue, color: "var(--ob-color-reward)" },
+    // Bạc, như Đầu tư, chỉ có mặt khi đang giữ — người không tích lũy bạc không thấy 1 mục "Bạc" trống.
+    ...(silverValue > 0 ? [{ key: "silver", label: "Bạc", value: silverValue, color: "var(--ob-bac-300)" }] : []),
     ...(investValue > 0
       ? [{ key: "invest", label: "Đầu tư", value: investValue, color: "var(--ob-xanh-500)" }]
       : []),
     { key: "debt", label: "Nợ thẻ", value: debtTotal, color: "var(--ob-do-300)" },
   ]
 
-  const total = savingsTotal + goldValue + investValue + debtTotal
+  const total = savingsTotal + goldValue + silverValue + investValue + debtTotal
 
   return (
     <Card tone="invert" label="Tài sản ròng" className="min-w-0 w-full">

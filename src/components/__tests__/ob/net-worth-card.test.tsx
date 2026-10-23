@@ -117,4 +117,30 @@ describe("NetWorthCard", () => {
 
     expect(screen.getByText("20.308.643 ₫")).toBeInTheDocument()
   })
+  it("omits the silver segment and legend entry when there is no silver", () => {
+    render(<NetWorthCard summary={buildSummary({ silverValue: 0 })} />)
+
+    expect(screen.queryByTestId("segment-silver")).not.toBeInTheDocument()
+    expect(screen.queryByText("Bạc")).not.toBeInTheDocument()
+  })
+
+  it("adds a silver-coloured Bạc segment right after gold once silver is held", () => {
+    render(<NetWorthCard summary={buildSummary({ silverValue: 4_000_000 })} />)
+
+    const segment = screen.getByTestId("segment-silver")
+    expect(segment).toHaveStyle({ background: "var(--ob-bac-300)" })
+    expect(screen.getByTestId("segment-gold").nextElementSibling).toBe(segment)
+    const legend = screen.getByText("Bạc")
+    expect(screen.getByText("Vàng").nextElementSibling).toBe(legend)
+  })
+
+  it("draws the bar from silver alone when silver is the only holding", () => {
+    render(
+      <NetWorthCard
+        summary={buildSummary({ savingsTotal: 0, goldValue: 0, investValue: 0, debtTotal: 0, silverValue: 4_000_000 })}
+      />
+    )
+
+    expect(screen.getByTestId("segment-silver")).toBeInTheDocument()
+  })
 })

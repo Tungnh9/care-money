@@ -225,6 +225,7 @@ describe("FinanceView", () => {
     expect(screen.getByText("2 lượng · +11,1%")).toBeInTheDocument()
     const netSection = screen.getByText("Tài sản ròng").closest("section") as HTMLElement
     expect(within(netSection).getByText(formatMoney(4_000_000))).toBeInTheDocument()
+    expect(within(netSection).getByText("Bạc")).toBeInTheDocument()
     expect(JSON.parse(window.localStorage.getItem(FINANCE_STORAGE_KEY) ?? "{}").silver).toEqual([
       { id: 1, date: "10/08/2026", luong: 2, buy: 1_800_000, store: "Phú Quý" },
     ])
