@@ -3,7 +3,8 @@ import { render, screen, fireEvent } from "@testing-library/react"
 
 import { formatMoney } from "@/lib/format"
 import { phanToChi } from "@/lib/finance/finance-calculations"
-import { GoldTransactionsTable } from "../../components/gold-transactions-table"
+import { MetalTransactionsTable } from "../../components/metal-transactions-table"
+import { GOLD_METAL } from "../../metal-config"
 import type { GoldPurchase, GoldStore } from "@/lib/finance/types"
 
 const STORES: GoldStore[] = [{ name: "SJC", price: "850.000" }]
@@ -13,11 +14,12 @@ const PURCHASES: GoldPurchase[] = [
   { id: 2, date: "05/08/2026", phan: 5, buy: 900_000, store: "SJC" },
 ]
 
-describe("GoldTransactionsTable", () => {
+describe("MetalTransactionsTable", () => {
   it("renders the empty-state message when there are no purchases", () => {
     render(
-      <GoldTransactionsTable
-        gold={[]}
+      <MetalTransactionsTable
+        metal={GOLD_METAL}
+        purchases={[]}
         stores={STORES}
         onRemove={vi.fn()}
         onEdit={vi.fn()}
@@ -30,8 +32,9 @@ describe("GoldTransactionsTable", () => {
 
   it("renders each purchase's date, store, quantity and money figures, including a losing purchase's Lãi lỗ figure", () => {
     render(
-      <GoldTransactionsTable
-        gold={PURCHASES}
+      <MetalTransactionsTable
+        metal={GOLD_METAL}
+        purchases={PURCHASES}
         stores={STORES}
         onRemove={vi.fn()}
         onEdit={vi.fn()}
@@ -59,8 +62,9 @@ describe("GoldTransactionsTable", () => {
   it("calls onRemove with the matching purchase id when its delete button is clicked", () => {
     const onRemove = vi.fn()
     render(
-      <GoldTransactionsTable
-        gold={PURCHASES}
+      <MetalTransactionsTable
+        metal={GOLD_METAL}
+        purchases={PURCHASES}
         stores={STORES}
         onRemove={onRemove}
         onEdit={vi.fn()}
@@ -78,8 +82,9 @@ describe("GoldTransactionsTable", () => {
   it("calls onEdit with the matching purchase object when its edit button is clicked", () => {
     const onEdit = vi.fn()
     render(
-      <GoldTransactionsTable
-        gold={PURCHASES}
+      <MetalTransactionsTable
+        metal={GOLD_METAL}
+        purchases={PURCHASES}
         stores={STORES}
         onRemove={vi.fn()}
         onEdit={onEdit}
@@ -95,8 +100,9 @@ describe("GoldTransactionsTable", () => {
 
   it("tints the Lãi lỗ badge and the row's left-border accent by gain/loss, and zebra-stripes alternating rows", () => {
     render(
-      <GoldTransactionsTable
-        gold={PURCHASES}
+      <MetalTransactionsTable
+        metal={GOLD_METAL}
+        purchases={PURCHASES}
         stores={STORES}
         onRemove={vi.fn()}
         onEdit={vi.fn()}
@@ -121,7 +127,7 @@ describe("GoldTransactionsTable", () => {
 
   it("shows a break-even purchase (store has no price yet) in a neutral tone, not as a gain", () => {
     const unpriced: GoldStore[] = [{ name: "SJC", price: "" }]
-    render(<GoldTransactionsTable gold={[PURCHASES[0]]} stores={unpriced} onRemove={vi.fn()} onEdit={vi.fn()} />)
+    render(<MetalTransactionsTable metal={GOLD_METAL} purchases={[PURCHASES[0]]} stores={unpriced} onRemove={vi.fn()} onEdit={vi.fn()} />)
 
     const badge = screen.getByText(formatMoney(0)).closest("[data-tone]") as HTMLElement
     expect(badge).toHaveAttribute("data-tone", "even")
@@ -136,7 +142,7 @@ describe("GoldTransactionsTable", () => {
       { id: 2, date: "01/08/2026", phan: 5, buy: 900_000, store: "SJC" },
     ]
     const onRemove = vi.fn()
-    render(<GoldTransactionsTable gold={sameDay} stores={STORES} onRemove={onRemove} onEdit={vi.fn()} />)
+    render(<MetalTransactionsTable metal={GOLD_METAL} purchases={sameDay} stores={STORES} onRemove={onRemove} onEdit={vi.fn()} />)
 
     fireEvent.click(screen.getByRole("button", { name: `Xoá giao dịch vàng 01/08/2026 · SJC · ${phanToChi(5)}` }))
 
@@ -145,8 +151,9 @@ describe("GoldTransactionsTable", () => {
 
   it("pushes each row's edit and delete buttons together to the end of the row", () => {
     render(
-      <GoldTransactionsTable
-        gold={PURCHASES}
+      <MetalTransactionsTable
+        metal={GOLD_METAL}
+        purchases={PURCHASES}
         stores={STORES}
         onRemove={vi.fn()}
         onEdit={vi.fn()}
@@ -171,7 +178,7 @@ describe("GoldTransactionsTable", () => {
       { name: "PNJ", price: "800.000" },
     ]
 
-    render(<GoldTransactionsTable gold={purchases} stores={stores} onRemove={vi.fn()} onEdit={vi.fn()} />)
+    render(<MetalTransactionsTable metal={GOLD_METAL} purchases={purchases} stores={stores} onRemove={vi.fn()} onEdit={vi.fn()} />)
 
     expect(screen.getByText("SJC")).toBeInTheDocument()
     expect(screen.getByText("PNJ")).toBeInTheDocument()

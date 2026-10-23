@@ -1,24 +1,33 @@
 "use client"
 
-import { useState } from "react"
+import { useId, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Field } from "@/components/ui/field"
 import { Modal } from "@/components/ui/modal"
 import { normalizePurchaseDate, parseWholeQuantity } from "@/lib/finance/metal-calculations"
-import type { GoldPurchase, GoldStore } from "@/lib/finance/types"
-import { GoldStorePicker } from "./gold-store-picker"
+import type { MetalPurchaseBase, MetalStore } from "@/lib/finance/types"
+import type { MetalConfig } from "../metal-config"
+import { MetalStorePicker } from "./metal-store-picker"
 
-interface EditGoldPurchaseModalProps {
-  purchase: GoldPurchase | null
-  stores: GoldStore[]
+interface EditMetalPurchaseModalProps<P extends MetalPurchaseBase> {
+  metal: MetalConfig<P>
+  purchase: P | null
+  stores: MetalStore[]
   onOpenChange: (open: boolean) => void
-  onSave: (id: number, purchase: Omit<GoldPurchase, "id">) => void
+  onSave: (id: number, purchase: Omit<P, "id">) => void
 }
 
-function EditGoldPurchaseModal({ purchase, stores, onOpenChange, onSave }: EditGoldPurchaseModalProps) {
+function EditMetalPurchaseModal<P extends MetalPurchaseBase>({
+  metal,
+  purchase,
+  stores,
+  onOpenChange,
+  onSave,
+}: EditMetalPurchaseModalProps<P>) {
+  const titleId = useId()
   const [date, setDate] = useState("")
-  const [phan, setPhan] = useState("")
+  const [quantity, setQuantity] = useState("")
   const [buy, setBuy] = useState("")
   const [store, setStore] = useState("")
 
@@ -27,7 +36,7 @@ function EditGoldPurchaseModal({ purchase, stores, onOpenChange, onSave }: EditG
   const [prevId, setPrevId] = useState<number | null>(null)
   if (purchase && purchase.id !== prevId) {
     setDate(purchase.date)
-    setPhan(String(purchase.phan))
+    setQuantity(String(metal.quantityOf(purchase)))
     setBuy(String(purchase.buy))
     setStore(purchase.store)
     setPrevId(purchase.id)
@@ -40,30 +49,33 @@ function EditGoldPurchaseModal({ purchase, stores, onOpenChange, onSave }: EditG
   const normalizedDate = normalizePurchaseDate(date)
   // Lần mua cũ đã lưu sai dạng (vd. "10/08/26") hiện đỏ ngay khi mở — phải sửa ngày mới lưu được.
   const dateInvalid = date.trim() !== "" && normalizedDate === null
-  const phanValue = parseWholeQuantity(phan)
-  const phanValid = phanValue !== null
-  const phanInvalid = phan.trim() !== "" && !phanValid
+  const quantityValue = parseWholeQuantity(quantity)
+  const quantityValid = quantityValue !== null
+  const quantityInvalid = quantity.trim() !== "" && !quantityValid
   // Cửa hàng đang chọn có thể vừa bị đổi tên/xoá ở thẻ "Giá thị trường hôm nay" trong lúc modal còn
-  // mở — chỉ coi là đã chọn khi tên đó vẫn còn trong danh sách, giống AddGoldForm, để không ghi đè
+  // mở — chỉ coi là đã chọn khi tên đó vẫn còn trong danh sách, giống AddMetalPurchaseForm, để không ghi đè
   // lại tên cũ lên lần mua (huỷ mất phần đổi tên đã cascade) và trỏ vào cửa hàng không tồn tại.
   const selectedStore = stores.some((s) => s.name === store) ? store : ""
-  const disabled = !normalizedDate || !phanValid || !buy.trim() || !selectedStore
+  const disabled = !normalizedDate || !quantityValid || !buy.trim() || !selectedStore
 
   function handleSave() {
     if (!normalizedDate || !selectedStore) return
-    onSave(currentId, {
-      date: normalizedDate,
-      phan: phanValue ?? 0,
-      buy: Number(buy) || 0,
-      store: selectedStore,
-    })
+    onSave(
+      currentId,
+      metal.toPurchase({
+        date: normalizedDate,
+        qty: quantityValue ?? 0,
+        buy: Number(buy) || 0,
+        store: selectedStore,
+      })
+    )
     onOpenChange(false)
   }
 
   return (
-    <Modal open onOpenChange={onOpenChange} ariaLabelledBy="edit-gold-purchase-title">
-      <div id="edit-gold-purchase-title" className="mb-4 text-[17px] font-bold">
-        Sửa lần mua vàng
+    <Modal open onOpenChange={onOpenChange} ariaLabelledBy={titleId}>
+      <div id={titleId} className="mb-4 text-[17px] font-bold">
+        {`Sửa lần mua ${metal.noun}`}
       </div>
 
       <div className="flex flex-wrap gap-3">
@@ -78,17 +90,17 @@ function EditGoldPurchaseModal({ purchase, stores, onOpenChange, onSave }: EditG
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"
-          label="Khối lượng (phân)"
+          label={`Khối lượng (${metal.unit})`}
           numeric
           placeholder="0"
-          value={phan}
-          onChange={(e) => setPhan(e.target.value)}
-          invalid={phanInvalid}
-          hint={phanInvalid ? "Nhập số phân nguyên lớn hơn 0 (10 phân = 1 chỉ)" : "10 phân = 1 chỉ"}
+          value={quantity}
+          onChange={(e) => setQuantity(e.target.value)}
+          invalid={quantityInvalid}
+          hint={quantityInvalid ? metal.quantityError : metal.quantityHint}
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"
-          label="Giá mua (mỗi phân)"
+          label={`Giá mua (mỗi ${metal.unit})`}
           numeric
           group
           suffix="đ"
@@ -98,7 +110,7 @@ function EditGoldPurchaseModal({ purchase, stores, onOpenChange, onSave }: EditG
         />
       </div>
       <div className="mt-3">
-        <GoldStorePicker stores={stores} selected={selectedStore} onSelect={setStore} />
+        <MetalStorePicker stores={stores} selected={selectedStore} onSelect={setStore} />
       </div>
 
       <div className="mt-5 flex justify-end gap-[10px]">
@@ -113,4 +125,4 @@ function EditGoldPurchaseModal({ purchase, stores, onOpenChange, onSave }: EditG
   )
 }
 
-export { EditGoldPurchaseModal }
+export { EditMetalPurchaseModal }

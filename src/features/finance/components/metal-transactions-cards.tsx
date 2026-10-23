@@ -4,43 +4,46 @@ import { Pencil, Trash2 } from "lucide-react"
 
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
-import { phanToChi } from "@/lib/finance/finance-calculations"
 import { metalMarketPrice, metalPurchaseLabels, metalPurchasePL } from "@/lib/finance/metal-calculations"
-import type { GoldPurchase, GoldStore } from "@/lib/finance/types"
-import { GoldPLBox } from "./gold-pl-indicator"
+import type { MetalPurchaseBase, MetalStore } from "@/lib/finance/types"
+import type { MetalConfig } from "../metal-config"
+import { MetalPLBox } from "./metal-pl-indicator"
 
-interface GoldTransactionsCardsProps {
-  gold: GoldPurchase[]
-  stores: GoldStore[]
+interface MetalTransactionsCardsProps<P extends MetalPurchaseBase> {
+  metal: MetalConfig<P>
+  purchases: P[]
+  stores: MetalStore[]
   onRemove: (id: number) => void
-  onEdit: (purchase: GoldPurchase) => void
+  onEdit: (purchase: P) => void
 }
 
-function GoldTransactionsCards({
-  gold,
+function MetalTransactionsCards<P extends MetalPurchaseBase>({
+  metal,
+  purchases,
   stores,
   onRemove,
   onEdit,
-}: GoldTransactionsCardsProps) {
+}: MetalTransactionsCardsProps<P>) {
   const { hidden } = useMoneyVisibility()
 
-  if (!gold.length) {
+  if (!purchases.length) {
     return (
       <p className="text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)]">
-        Chưa có giao dịch vàng nào. Thêm lần mua đầu tiên để bắt đầu theo dõi lãi/lỗ.
+        {`Chưa có giao dịch ${metal.noun} nào. Thêm lần mua đầu tiên để bắt đầu theo dõi lãi/lỗ.`}
       </p>
     )
   }
 
-  const labels = metalPurchaseLabels(gold, (p) => phanToChi(p.phan))
+  const labels = metalPurchaseLabels(purchases, (p) => metal.formatQuantity(metal.quantityOf(p)))
 
   return (
     <div className="flex flex-col gap-3">
-      {gold.map((purchase) => {
+      {purchases.map((purchase) => {
         const price = metalMarketPrice(stores, purchase)
-        const cost = purchase.phan * purchase.buy
-        const value = purchase.phan * price
-        const pl = metalPurchasePL(purchase.phan, purchase.buy, price)
+        const qty = metal.quantityOf(purchase)
+        const cost = qty * purchase.buy
+        const value = qty * price
+        const pl = metalPurchasePL(qty, purchase.buy, price)
         return (
           <div
             key={purchase.id}
@@ -56,7 +59,7 @@ function GoldTransactionsCards({
               <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  aria-label={`Sửa giao dịch vàng ${labels.get(purchase.id)}`}
+                  aria-label={`Sửa giao dịch ${metal.noun} ${labels.get(purchase.id)}`}
                   onClick={() => onEdit(purchase)}
                   className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-info)]"
                 >
@@ -64,7 +67,7 @@ function GoldTransactionsCards({
                 </button>
                 <button
                   type="button"
-                  aria-label={`Xoá giao dịch vàng ${labels.get(purchase.id)}`}
+                  aria-label={`Xoá giao dịch ${metal.noun} ${labels.get(purchase.id)}`}
                   onClick={() => onRemove(purchase.id)}
                   className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
                 >
@@ -78,7 +81,7 @@ function GoldTransactionsCards({
                   Khối lượng
                 </div>
                 <div className="text-[13px] [font-family:var(--ob-font-num)] tabular-nums">
-                  {phanToChi(purchase.phan)}
+                  {metal.formatQuantity(qty)}
                 </div>
               </div>
               <div>
@@ -106,7 +109,7 @@ function GoldTransactionsCards({
                 </div>
               </div>
             </div>
-            <GoldPLBox pl={pl} hidden={hidden} />
+            <MetalPLBox pl={pl} hidden={hidden} />
           </div>
         )
       })}
@@ -114,4 +117,4 @@ function GoldTransactionsCards({
   )
 }
 
-export { GoldTransactionsCards }
+export { MetalTransactionsCards }

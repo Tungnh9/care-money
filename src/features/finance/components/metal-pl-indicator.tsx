@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils"
 import { formatMoney } from "@/lib/format"
 import { metalPLTone, type MetalPLTone } from "@/lib/finance/metal-calculations"
 
-interface GoldPLIndicatorProps {
+interface MetalPLIndicatorProps {
   pl: number
   hidden: boolean
 }
@@ -21,8 +21,8 @@ function ToneIcon({ tone }: { tone: MetalPLTone }) {
   return <Minus size={13} />
 }
 
-// Badge dạng viên thuốc — dùng trong ô bảng (GoldTransactionsTable, GoldStoreSummaryTable).
-function GoldPLBadge({ pl, hidden }: GoldPLIndicatorProps) {
+// Badge dạng viên thuốc — dùng trong ô bảng (MetalTransactionsTable, MetalStoreSummaryTable).
+function MetalPLBadge({ pl, hidden }: MetalPLIndicatorProps) {
   const tone = metalPLTone(pl)
   return (
     <span
@@ -40,8 +40,8 @@ function GoldPLBadge({ pl, hidden }: GoldPLIndicatorProps) {
   )
 }
 
-// Khối viền màu có nhãn "Lãi lỗ" — dùng trong card (GoldTransactionsCards, GoldStoreSummaryCards).
-function GoldPLBox({ pl, hidden }: GoldPLIndicatorProps) {
+// Khối viền màu có nhãn "Lãi lỗ" — dùng trong card (MetalTransactionsCards, MetalStoreSummaryCards).
+function MetalPLBox({ pl, hidden }: MetalPLIndicatorProps) {
   const tone = metalPLTone(pl)
   return (
     <div
@@ -71,4 +71,4 @@ function GoldPLBox({ pl, hidden }: GoldPLIndicatorProps) {
   )
 }
 
-export { GoldPLBadge, GoldPLBox }
+export { MetalPLBadge, MetalPLBox }

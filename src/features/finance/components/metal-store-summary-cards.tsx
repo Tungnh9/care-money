@@ -2,21 +2,23 @@
 
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
-import { phanToChi } from "@/lib/finance/finance-calculations"
 import type { MetalStoreSummary } from "@/lib/finance/metal-calculations"
-import { GoldPLBox } from "./gold-pl-indicator"
+import type { MetalDisplay } from "../metal-config"
+import { MetalPLBox } from "./metal-pl-indicator"
 
-interface GoldStoreSummaryCardsProps {
+interface MetalStoreSummaryCardsProps {
+  metal: MetalDisplay
   summaries: MetalStoreSummary[]
   total: MetalStoreSummary
 }
 
 type StatRow = Pick<MetalStoreSummary, "qty" | "avgBuy" | "cost" | "value"> & {
+  formatQuantity: MetalDisplay["formatQuantity"]
   hidden: boolean
   tone: "default" | "total"
 }
 
-function StatGrid({ qty, avgBuy, cost, value, hidden, tone }: StatRow) {
+function StatGrid({ qty, avgBuy, cost, value, formatQuantity, hidden, tone }: StatRow) {
   const moneyColor = tone === "total" ? "var(--ob-color-action-strong)" : "var(--ob-color-text-subtle)"
   return (
     <div className="grid grid-cols-2 gap-3">
@@ -28,7 +30,7 @@ function StatGrid({ qty, avgBuy, cost, value, hidden, tone }: StatRow) {
           className="text-[13px] font-semibold [font-family:var(--ob-font-num)] tabular-nums"
           style={tone === "total" ? { color: moneyColor } : undefined}
         >
-          {phanToChi(qty)}
+          {formatQuantity(qty)}
         </div>
       </div>
       <div>
@@ -68,7 +70,7 @@ function StatGrid({ qty, avgBuy, cost, value, hidden, tone }: StatRow) {
   )
 }
 
-function GoldStoreSummaryCards({ summaries, total }: GoldStoreSummaryCardsProps) {
+function MetalStoreSummaryCards({ metal, summaries, total }: MetalStoreSummaryCardsProps) {
   const { hidden } = useMoneyVisibility()
 
   if (!summaries.length) return null
@@ -78,8 +80,16 @@ function GoldStoreSummaryCards({ summaries, total }: GoldStoreSummaryCardsProps)
       {summaries.map((s) => (
         <div key={s.store} className="rounded-[var(--ob-radius-md)] border border-[var(--ob-color-border)] p-[14px]">
           <div className="mb-3 text-[13px] font-bold">{s.store}</div>
-          <StatGrid qty={s.qty} avgBuy={s.avgBuy} cost={s.cost} value={s.value} hidden={hidden} tone="default" />
-          <GoldPLBox pl={s.pl} hidden={hidden} />
+          <StatGrid
+            qty={s.qty}
+            avgBuy={s.avgBuy}
+            cost={s.cost}
+            value={s.value}
+            formatQuantity={metal.formatQuantity}
+            hidden={hidden}
+            tone="default"
+          />
+          <MetalPLBox pl={s.pl} hidden={hidden} />
         </div>
       ))}
       <div className="rounded-[var(--ob-radius-md)] border-2 border-[var(--ob-color-border)] bg-[var(--ob-color-surface-sunken)] p-[14px]">
@@ -91,13 +101,14 @@ function GoldStoreSummaryCards({ summaries, total }: GoldStoreSummaryCardsProps)
           avgBuy={total.avgBuy}
           cost={total.cost}
           value={total.value}
+          formatQuantity={metal.formatQuantity}
           hidden={hidden}
           tone="total"
         />
-        <GoldPLBox pl={total.pl} hidden={hidden} />
+        <MetalPLBox pl={total.pl} hidden={hidden} />
       </div>
     </div>
   )
 }
 
-export { GoldStoreSummaryCards }
+export { MetalStoreSummaryCards }

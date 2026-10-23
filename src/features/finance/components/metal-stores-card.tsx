@@ -6,26 +6,28 @@ import { Pencil, Trash2 } from "lucide-react"
 import { AlertDialog } from "@/components/ui/alert-dialog"
 import { Card } from "@/components/ui/card"
 import { Field } from "@/components/ui/field"
-import { AddGoldStoreForm } from "./add-gold-store-form"
-import { EditGoldStoreModal } from "./edit-gold-store-modal"
-import type { GoldPurchase, GoldStore } from "@/lib/finance/types"
+import { AddMetalStoreForm } from "./add-metal-store-form"
+import { EditMetalStoreModal } from "./edit-metal-store-modal"
+import type { MetalPurchaseBase, MetalStore } from "@/lib/finance/types"
+import type { MetalDisplay } from "../metal-config"
 
-interface GoldStoresCardProps {
-  stores: GoldStore[]
-  gold: GoldPurchase[]
-  onAdd: (store: GoldStore) => void
-  onUpdate: (originalName: string, store: GoldStore) => void
+interface MetalStoresCardProps {
+  metal: MetalDisplay
+  stores: MetalStore[]
+  purchases: Pick<MetalPurchaseBase, "store">[]
+  onAdd: (store: MetalStore) => void
+  onUpdate: (originalName: string, store: MetalStore) => void
   onRemove: (name: string) => void
   onSetPrice: (name: string, price: string) => void
 }
 
-function GoldStoresCard({ stores, gold, onAdd, onUpdate, onRemove, onSetPrice }: GoldStoresCardProps) {
+function MetalStoresCard({ metal, stores, purchases, onAdd, onUpdate, onRemove, onSetPrice }: MetalStoresCardProps) {
   const [editingName, setEditingName] = useState<string | null>(null)
   const [deletingName, setDeletingName] = useState<string | null>(null)
   const storeNames = stores.map((store) => store.name)
 
   function isInUse(name: string) {
-    return gold.some((p) => p.store === name)
+    return purchases.some((p) => p.store === name)
   }
 
   return (
@@ -36,7 +38,7 @@ function GoldStoresCard({ stores, gold, onAdd, onUpdate, onRemove, onSetPrice }:
               thẳng hàng với ô tương ứng nữa. */}
           <div className="mb-1 hidden items-center gap-3 text-[11px] font-semibold tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)] uppercase sm:flex">
             <div className="min-w-0 flex-1">Cửa hàng</div>
-            <div className="w-[200px] flex-none">Giá hôm nay (mỗi phân)</div>
+            <div className="w-[200px] flex-none">{`Giá hôm nay (mỗi ${metal.unit})`}</div>
             <div className="w-[84px] flex-none" />
           </div>
           {stores.map((store) => {
@@ -56,7 +58,7 @@ function GoldStoresCard({ stores, gold, onAdd, onUpdate, onRemove, onSetPrice }:
                   onChange={(e) => onSetPrice(store.name, e.target.value)}
                   // Field bọc ô trong <label> chỉ chứa hậu tố "đ" và nhãn cột ẩn dưới sm → đặt tên riêng.
                   // Không bắt đầu bằng "Giá hôm nay" để không lẫn với ô cùng tên của form thêm cửa hàng.
-                  aria-label={`Giá ${store.name} hôm nay (mỗi phân)`}
+                  aria-label={`Giá ${store.name} hôm nay (mỗi ${metal.unit})`}
                 />
                 <div className="flex flex-none items-center gap-1">
                   <button
@@ -73,7 +75,7 @@ function GoldStoresCard({ stores, gold, onAdd, onUpdate, onRemove, onSetPrice }:
                     disabled={inUse}
                     title={
                       inUse
-                        ? "Không thể xoá — vẫn còn giao dịch mua vàng gắn với cửa hàng này."
+                        ? `Không thể xoá — vẫn còn giao dịch mua ${metal.noun} gắn với cửa hàng này.`
                         : undefined
                     }
                     onClick={() => setDeletingName(store.name)}
@@ -91,8 +93,8 @@ function GoldStoresCard({ stores, gold, onAdd, onUpdate, onRemove, onSetPrice }:
           Chưa có cửa hàng nào. Thêm cửa hàng đầu tiên để bắt đầu theo dõi giá.
         </p>
       )}
-      <AddGoldStoreForm onAdd={onAdd} existingNames={storeNames} />
-      <EditGoldStoreModal
+      <AddMetalStoreForm metal={metal} onAdd={onAdd} existingNames={storeNames} />
+      <EditMetalStoreModal
         store={stores.find((s) => s.name === editingName) ?? null}
         existingNames={storeNames}
         onOpenChange={(open) => !open && setEditingName(null)}
@@ -120,4 +122,4 @@ function GoldStoresCard({ stores, gold, onAdd, onUpdate, onRemove, onSetPrice }:
   )
 }
 
-export { GoldStoresCard }
+export { MetalStoresCard }

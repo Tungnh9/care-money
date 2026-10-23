@@ -5,24 +5,26 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Field } from "@/components/ui/field"
 import { normalizePurchaseDate, parseWholeQuantity } from "@/lib/finance/metal-calculations"
-import type { GoldPurchase, GoldStore } from "@/lib/finance/types"
-import { GoldStorePicker } from "./gold-store-picker"
+import type { MetalPurchaseBase, MetalStore } from "@/lib/finance/types"
+import type { MetalConfig } from "../metal-config"
+import { MetalStorePicker } from "./metal-store-picker"
 
-interface AddGoldFormProps {
-  stores: GoldStore[]
-  onAdd: (purchase: Omit<GoldPurchase, "id">) => void
+interface AddMetalPurchaseFormProps<P extends MetalPurchaseBase> {
+  metal: MetalConfig<P>
+  stores: MetalStore[]
+  onAdd: (purchase: Omit<P, "id">) => void
 }
 
-function AddGoldForm({ stores, onAdd }: AddGoldFormProps) {
+function AddMetalPurchaseForm<P extends MetalPurchaseBase>({ metal, stores, onAdd }: AddMetalPurchaseFormProps<P>) {
   const [open, setOpen] = useState(false)
   const [date, setDate] = useState("")
-  const [phan, setPhan] = useState("")
+  const [quantity, setQuantity] = useState("")
   const [buy, setBuy] = useState("")
   const [store, setStore] = useState("")
 
   function reset() {
     setDate("")
-    setPhan("")
+    setQuantity("")
     setBuy("")
     setStore("")
     setOpen(false)
@@ -32,15 +34,15 @@ function AddGoldForm({ stores, onAdd }: AddGoldFormProps) {
     return (
       <div className="mt-[18px]">
         <Button variant="secondary" size="sm" type="button" onClick={() => setOpen(true)}>
-          Thêm lần mua vàng
+          {`Thêm lần mua ${metal.noun}`}
         </Button>
       </div>
     )
   }
 
-  const phanValue = parseWholeQuantity(phan)
-  const phanValid = phanValue !== null
-  const phanInvalid = phan.trim() !== "" && !phanValid
+  const quantityValue = parseWholeQuantity(quantity)
+  const quantityValid = quantityValue !== null
+  const quantityInvalid = quantity.trim() !== "" && !quantityValid
   // Cửa hàng đang chọn có thể vừa bị đổi tên/xoá ở thẻ "Giá thị trường hôm nay" ngay phía trên trong
   // lúc form còn mở (hook chỉ đổi tên ở các lần mua ĐÃ lưu) — chỉ coi là đã chọn khi tên đó vẫn còn
   // trong danh sách, để không lưu lần mua trỏ vào cửa hàng không tồn tại.
@@ -52,7 +54,7 @@ function AddGoldForm({ stores, onAdd }: AddGoldFormProps) {
   return (
     <div className="mt-[18px] border-t border-[var(--ob-color-border)] pt-[18px]">
       <div className="mb-3 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
-        Lần mua vàng mới
+        {`Lần mua ${metal.noun} mới`}
       </div>
       <div className="flex flex-wrap gap-3">
         <Field
@@ -66,17 +68,17 @@ function AddGoldForm({ stores, onAdd }: AddGoldFormProps) {
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"
-          label="Khối lượng (phân)"
+          label={`Khối lượng (${metal.unit})`}
           numeric
           placeholder="0"
-          value={phan}
-          onChange={(e) => setPhan(e.target.value)}
-          invalid={phanInvalid}
-          hint={phanInvalid ? "Nhập số phân nguyên lớn hơn 0 (10 phân = 1 chỉ)" : "10 phân = 1 chỉ"}
+          value={quantity}
+          onChange={(e) => setQuantity(e.target.value)}
+          invalid={quantityInvalid}
+          hint={quantityInvalid ? metal.quantityError : metal.quantityHint}
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"
-          label="Giá mua (mỗi phân)"
+          label={`Giá mua (mỗi ${metal.unit})`}
           numeric
           group
           suffix="đ"
@@ -86,22 +88,24 @@ function AddGoldForm({ stores, onAdd }: AddGoldFormProps) {
         />
       </div>
       <div className="mt-3">
-        <GoldStorePicker stores={stores} selected={selectedStore} onSelect={setStore} />
+        <MetalStorePicker stores={stores} selected={selectedStore} onSelect={setStore} />
       </div>
       <div className="mt-4 flex gap-[10px]">
         <Button
           variant="primary"
           size="sm"
           type="button"
-          disabled={!normalizedDate || !phanValid || !buy.trim() || !selectedStore}
+          disabled={!normalizedDate || !quantityValid || !buy.trim() || !selectedStore}
           onClick={() => {
             if (!normalizedDate) return
-            onAdd({
-              date: normalizedDate,
-              phan: phanValue ?? 0,
-              buy: Number(buy) || 0,
-              store: selectedStore,
-            })
+            onAdd(
+              metal.toPurchase({
+                date: normalizedDate,
+                qty: quantityValue ?? 0,
+                buy: Number(buy) || 0,
+                store: selectedStore,
+              })
+            )
             reset()
           }}
         >
@@ -115,4 +119,4 @@ function AddGoldForm({ stores, onAdd }: AddGoldFormProps) {
   )
 }
 
-export { AddGoldForm }
+export { AddMetalPurchaseForm }

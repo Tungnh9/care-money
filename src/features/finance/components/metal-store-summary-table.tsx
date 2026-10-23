@@ -2,18 +2,19 @@
 
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
-import { phanToChi } from "@/lib/finance/finance-calculations"
 import type { MetalStoreSummary } from "@/lib/finance/metal-calculations"
-import { GoldPLBadge } from "./gold-pl-indicator"
+import type { MetalDisplay } from "../metal-config"
+import { MetalPLBadge } from "./metal-pl-indicator"
 
-interface GoldStoreSummaryTableProps {
+interface MetalStoreSummaryTableProps {
+  metal: MetalDisplay
   summaries: MetalStoreSummary[]
   total: MetalStoreSummary
 }
 
 const HEADERS = ["Cửa hàng", "Khối lượng", "Giá mua", "Giá vốn", "Giá hiện tại", "Lãi lỗ"]
 
-function GoldStoreSummaryTable({ summaries, total }: GoldStoreSummaryTableProps) {
+function MetalStoreSummaryTable({ metal, summaries, total }: MetalStoreSummaryTableProps) {
   const { hidden } = useMoneyVisibility()
 
   if (!summaries.length) return null
@@ -41,7 +42,7 @@ function GoldStoreSummaryTable({ summaries, total }: GoldStoreSummaryTableProps)
             <tr key={s.store} className="border-t border-[var(--ob-color-border)]">
               <td className="whitespace-nowrap py-[8px] px-[12px] text-left text-[13px] font-bold">{s.store}</td>
               <td className="whitespace-nowrap py-[8px] px-[12px] text-right text-[13px] [font-family:var(--ob-font-num)] tabular-nums">
-                {phanToChi(s.qty)}
+                {metal.formatQuantity(s.qty)}
               </td>
               <td className="whitespace-nowrap py-[8px] px-[12px] text-right text-[13px] [font-family:var(--ob-font-num)] tabular-nums text-[var(--ob-color-text-subtle)]">
                 {formatMoney(s.avgBuy, hidden)}
@@ -53,7 +54,7 @@ function GoldStoreSummaryTable({ summaries, total }: GoldStoreSummaryTableProps)
                 {formatMoney(s.value, hidden)}
               </td>
               <td className="whitespace-nowrap py-[8px] px-[12px] text-right text-[13px]">
-                <GoldPLBadge pl={s.pl} hidden={hidden} />
+                <MetalPLBadge pl={s.pl} hidden={hidden} />
               </td>
             </tr>
           ))}
@@ -70,7 +71,7 @@ function GoldStoreSummaryTable({ summaries, total }: GoldStoreSummaryTableProps)
               className="whitespace-nowrap py-[10px] px-[12px] text-right text-[13.5px] font-bold [font-family:var(--ob-font-num)] tabular-nums"
               style={{ color: "var(--ob-color-action-strong)" }}
             >
-              {phanToChi(total.qty)}
+              {metal.formatQuantity(total.qty)}
             </td>
             <td
               className="whitespace-nowrap py-[10px] px-[12px] text-right text-[13.5px] font-bold [font-family:var(--ob-font-num)] tabular-nums"
@@ -91,7 +92,7 @@ function GoldStoreSummaryTable({ summaries, total }: GoldStoreSummaryTableProps)
               {formatMoney(total.value, hidden)}
             </td>
             <td className="whitespace-nowrap py-[10px] px-[12px] text-right text-[13.5px]">
-              <GoldPLBadge pl={total.pl} hidden={hidden} />
+              <MetalPLBadge pl={total.pl} hidden={hidden} />
             </td>
           </tr>
         </tfoot>
@@ -100,4 +101,4 @@ function GoldStoreSummaryTable({ summaries, total }: GoldStoreSummaryTableProps)
   )
 }
 
-export { GoldStoreSummaryTable }
+export { MetalStoreSummaryTable }
