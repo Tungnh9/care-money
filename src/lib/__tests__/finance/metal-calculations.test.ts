@@ -2,6 +2,9 @@ import { describe, it, expect } from "vitest"
 
 import { phanToChi, summarizeFinance } from "@/lib/finance/finance-calculations"
 import {
+  giftedByPurchase,
+  giftsInMonth,
+  heldQuantityOf,
   metalMarketPrice,
   metalPLTone,
   metalPurchaseLabels,
@@ -11,12 +14,14 @@ import {
   parseMetalPrice,
   parsePurchaseDate,
   parseWholeQuantity,
+  purchaseDateToDayKey,
   sortByPurchaseDate,
   summarizeMetalByStore,
   summarizeMetalHolding,
+  toPurchaseDate,
   unpricedMetalStores,
 } from "@/lib/finance/metal-calculations"
-import type { GoldPurchase } from "@/lib/finance/types"
+import type { GoldPurchase, MetalGift } from "@/lib/finance/types"
 import { DEFAULT_FINANCE_STATE, type FinanceState } from "@/lib/finance/finance-storage"
 
 describe("parseMetalPrice", () => {
@@ -357,5 +362,61 @@ describe("parseWholeQuantity", () => {
 
   it("rejects a number too large to store, which JSON would save as null", () => {
     expect(parseWholeQuantity("1e400")).toBeNull()
+  })
+})
+
+describe("giftedByPurchase", () => {
+  it("adds up the quantity given away from each purchase", () => {
+    const gifted = giftedByPurchase([
+      { purchaseId: 1, qty: 1 },
+      { purchaseId: 2, qty: 3 },
+      { purchaseId: 1, qty: 2 },
+    ])
+
+    expect(gifted.get(1)).toBe(3)
+    expect(gifted.get(2)).toBe(3)
+    expect(gifted.has(3)).toBe(false)
+  })
+})
+
+describe("heldQuantityOf", () => {
+  it("subtracts what was given away from each purchase, and leaves the others as bought", () => {
+    const held = heldQuantityOf((p: GoldPurchase) => p.phan, [{ purchaseId: 1, qty: 1 }])
+
+    expect(held({ id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" })).toBe(9)
+    expect(held({ id: 2, date: "11/08/2026", phan: 5, buy: 900_000, store: "SJC" })).toBe(5)
+  })
+})
+
+describe("purchaseDateToDayKey", () => {
+  it("turns a typed purchase date into a day key", () => {
+    expect(purchaseDateToDayKey("10/08/2026")).toBe("2026-08-10")
+    expect(purchaseDateToDayKey("1/8/2026")).toBe("2026-08-01")
+  })
+
+  it("returns null for a date that does not exist or cannot be read", () => {
+    expect(purchaseDateToDayKey("31/02/2026")).toBeNull()
+    expect(purchaseDateToDayKey("abc")).toBeNull()
+  })
+})
+
+describe("toPurchaseDate", () => {
+  it("writes a local date the way purchase dates are typed", () => {
+    expect(toPurchaseDate(new Date(2026, 7, 1))).toBe("01/08/2026")
+    expect(toPurchaseDate(new Date(2026, 11, 25, 23, 59))).toBe("25/12/2026")
+  })
+})
+
+describe("giftsInMonth", () => {
+  const gift = (id: number, date: string): MetalGift => ({ id, purchaseId: 1, date, qty: 1, store: "SJC", buy: 900_000 })
+
+  it("keeps the gifts dated in the month, newest first, and skips dates it cannot read", () => {
+    const gifts = [gift(1, "02/09/2026"), gift(2, "15/09/2026"), gift(3, "31/08/2026"), gift(4, "abc"), gift(5, "02/09/2026")]
+
+    expect(giftsInMonth(gifts, "2026-09")).toEqual([
+      { ...gift(2, "15/09/2026"), dayKey: "2026-09-15" },
+      { ...gift(5, "02/09/2026"), dayKey: "2026-09-02" },
+      { ...gift(1, "02/09/2026"), dayKey: "2026-09-02" },
+    ])
   })
 })

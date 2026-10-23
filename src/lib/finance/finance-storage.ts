@@ -7,6 +7,7 @@ import type {
   GoldPurchase,
   GoldStore,
   Investment,
+  MetalGift,
   MetalStore,
   SavingsFund,
   SilverPurchase,
@@ -18,8 +19,10 @@ interface FinanceState {
   cards: CreditCard[]
   gold: GoldPurchase[]
   goldStores: GoldStore[]
+  goldGifts: MetalGift[]
   silver: SilverPurchase[]
   silverStores: SilverStore[]
+  silverGifts: MetalGift[]
   invests: Investment[]
 }
 
@@ -31,8 +34,10 @@ const DEFAULT_FINANCE_STATE: FinanceState = {
   cards: [],
   gold: [],
   goldStores: [],
+  goldGifts: [],
   silver: [],
   silverStores: [],
+  silverGifts: [],
   invests: [],
 }
 
@@ -72,6 +77,16 @@ const silverPurchaseSchema: z.ZodType<SilverPurchase> = z.object({
   luong: z.number(),
   buy: z.number(),
   store: z.string(),
+})
+
+const metalGiftSchema: z.ZodType<MetalGift> = z.object({
+  id: z.number(),
+  purchaseId: z.number(),
+  date: z.string(),
+  qty: z.number(),
+  store: z.string(),
+  buy: z.number(),
+  note: z.string().optional(),
 })
 
 const investmentSchema: z.ZodType<Investment> = z.object({
@@ -141,9 +156,12 @@ function parseFinanceState(value: unknown): FinanceState {
     cards: dedupeNames(safeArray(creditCardSchema, parsed.cards)),
     gold: safeArray(goldPurchaseSchema, migrated.gold),
     goldStores: safeArray(metalStoreSchema, migrated.goldStores),
-    // Bạc có sau vàng: dữ liệu/bản sao lưu cũ không có 2 key này thì safeArray trả [] — không cần migrate.
+    // Bạc và các lần tặng có sau: dữ liệu/bản sao lưu cũ không có các key này thì safeArray trả [] — không
+    // cần migrate.
+    goldGifts: safeArray(metalGiftSchema, parsed.goldGifts),
     silver: safeArray(silverPurchaseSchema, parsed.silver),
     silverStores: safeArray(metalStoreSchema, parsed.silverStores),
+    silverGifts: safeArray(metalGiftSchema, parsed.silverGifts),
     invests: safeArray(investmentSchema, parsed.invests),
   }
 }
@@ -228,6 +246,7 @@ export {
   metalStoreSchema,
   goldPurchaseSchema,
   silverPurchaseSchema,
+  metalGiftSchema,
   investmentSchema,
   type FinanceState,
   type ApplyCardBalanceDeltaResult,

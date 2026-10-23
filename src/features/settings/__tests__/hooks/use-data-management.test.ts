@@ -275,8 +275,10 @@ describe("useDataManagement", () => {
       cards: [],
       gold: [],
       goldStores: [{ name: "SJC", price: "935.000" }],
+      goldGifts: [],
       silver: [],
       silverStores: [{ name: "Phú Quý", price: "2.000.000" }],
+      silverGifts: [],
       invests: [],
     })
     expect(onReplaceStudy).toHaveBeenCalledWith(DEFAULT_STUDY_STATE)

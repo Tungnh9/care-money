@@ -31,8 +31,10 @@ function FinanceView() {
     cards,
     gold,
     goldStores,
+    goldGifts,
     silver,
     silverStores,
+    silverGifts,
     invests,
     addSavingsFund,
     updateSavingsFund,
@@ -60,7 +62,17 @@ function FinanceView() {
     removeInvest,
   } = useFinance()
 
-  const summary = summarizeFinance({ savings, cards, gold, goldStores, silver, silverStores, invests })
+  const summary = summarizeFinance({
+    savings,
+    cards,
+    gold,
+    goldStores,
+    goldGifts,
+    silver,
+    silverStores,
+    silverGifts,
+    invests,
+  })
   // "Hạn gần nhất" = thẻ còn nợ đến hạn sớm nhất tính từ hôm nay, không phải thẻ thêm đầu tiên.
   const nearestCard = nearestDueCard(cards, new Date())
 

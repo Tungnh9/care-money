@@ -317,3 +317,24 @@ describe("formatLuong", () => {
     expect(formatLuong(0.1 + 0.2)).toBe("0,3")
   })
 })
+
+describe("summarizeFinance — đã tặng", () => {
+  it("holds only what is left of each purchase after its gifts, at today's price", () => {
+    const summary = summarizeFinance({
+      ...DEFAULT_FINANCE_STATE,
+      gold: [{ id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" }],
+      goldStores: [{ name: "SJC", price: "1.000.000" }],
+      goldGifts: [{ id: 1, purchaseId: 1, date: "12/10/2026", qty: 1, store: "SJC", buy: 900_000 }],
+      silver: [{ id: 1, date: "10/08/2026", luong: 3, buy: 1_800_000, store: "Phú Quý" }],
+      silverStores: [{ name: "Phú Quý", price: "2.000.000" }],
+      silverGifts: [{ id: 1, purchaseId: 1, date: "12/10/2026", qty: 1, store: "Phú Quý", buy: 1_800_000 }],
+    })
+
+    expect(summary.goldPhan).toBe(9)
+    expect(summary.goldCost).toBe(8_100_000)
+    expect(summary.goldValue).toBe(9_000_000)
+    expect(summary.silverLuong).toBe(2)
+    expect(summary.silverValue).toBe(4_000_000)
+    expect(summary.net).toBe(13_000_000)
+  })
+})
