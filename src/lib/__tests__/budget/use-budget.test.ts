@@ -862,6 +862,30 @@ describe("useBudget — nợ thẻ", () => {
     expect(getStoredBudget().expenses).toEqual([expect.objectContaining({ id, amount: 500_000 })])
   })
 
+  it("refuses a linked expense whose amount is not a number instead of writing NaN into the debt", async () => {
+    const result = await renderBudget()
+
+    const ok = run(() => result.current.addExpense(swipe(NaN)))
+
+    expect(ok).toBe(false)
+    expect(toast.error).toHaveBeenCalledWith('Không thể cập nhật nợ thẻ "Visa". Vui lòng thử lại.')
+    expect(getStoredFinance().cards).toEqual(CARDS)
+    expect(getStoredBudget().expenses).toEqual([])
+  })
+
+  it("deletes a payment on a card whose imported debt is negative, putting the payment back on the debt", async () => {
+    seedExpenses([{ id: 1, dayKey: "2026-11-01", amount: 300_000, tag: TAG_PAYMENT, card: paymentLink() }])
+    setVisaDebt(-500_000)
+    const result = await renderBudget()
+
+    expect(run(() => result.current.removeExpense(1))).toBe(true)
+
+    expect(debt("Visa")).toBe(-200_000)
+    expect(getStoredBudget().expenses).toEqual([])
+    expect(toast.success).toHaveBeenCalledWith("Đã xoá khoản chi")
+    expect(toast.error).not.toHaveBeenCalled()
+  })
+
   it("hides amounts in the debt toasts while money is hidden", async () => {
     window.localStorage.setItem("hide-money", "1")
     const wrapper = ({ children }: { children: ReactNode }) => createElement(MoneyVisibilityProvider, null, children)

@@ -78,7 +78,8 @@ function syncCardDebt(link: CardLink | undefined, amountChange: number): CardDeb
 
   const { cardName } = link
   const result = applyCardDeltaSafely(cardName, delta)
-  if (!result) return { status: "write-failed", cardName }
+  // Số tiền không phải số hữu hạn (invalid-delta) thì không ghi gì vào nợ thẻ — báo như ghi lỗi.
+  if (!result || (!result.ok && result.reason === "invalid-delta")) return { status: "write-failed", cardName }
   if (result.ok) return { status: "applied", cardName, delta }
   if (result.reason === "card-not-found") return { status: "card-missing", cardName }
   return { status: "insufficient-debt", cardName, balance: result.balance }

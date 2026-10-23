@@ -262,6 +262,29 @@ describe("applyCardBalanceDelta", () => {
 
     expect(getStoredFinance().cards).toEqual([{ ...visa, balance: 1_001_000 }, master])
   })
+
+  it("refuses a delta that is not a finite number and leaves storage untouched", () => {
+    // NaN ghi vào JSON thành null — lần đọc sau creditCardSchema bỏ luôn cả thẻ.
+    for (const delta of [NaN, Infinity, -Infinity]) {
+      expect(applyCardBalanceDelta("Visa", delta)).toEqual({ ok: false, reason: "invalid-delta" })
+    }
+
+    expect(getStoredFinance().cards).toEqual([visa, master])
+  })
+
+  it("lets a debt increase through on a card whose imported balance is already negative", () => {
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, cards: [{ ...visa, balance: -500_000 }, master] })
+
+    expect(applyCardBalanceDelta("Visa", 300_000)).toEqual({ ok: true, before: -500_000, after: -200_000 })
+    expect(getStoredFinance().cards[0].balance).toBe(-200_000)
+  })
+
+  it("still refuses to lower a debt that is already negative", () => {
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, cards: [{ ...visa, balance: -500_000 }, master] })
+
+    expect(applyCardBalanceDelta("Visa", -1)).toEqual({ ok: false, reason: "insufficient-debt", balance: -500_000 })
+    expect(getStoredFinance().cards[0].balance).toBe(-500_000)
+  })
 })
 
 describe("parseFinanceState — tên quỹ/thẻ trùng đã lưu", () => {

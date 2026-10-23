@@ -191,15 +191,20 @@ type ApplyCardBalanceDeltaResult =
   | { ok: true; before: number; after: number }
   | { ok: false; reason: "card-not-found" }
   | { ok: false; reason: "insufficient-debt"; balance: number }
+  | { ok: false; reason: "invalid-delta" }
 
 // Cộng/trừ dư nợ thẻ — useBudget gọi khi ghi/sửa/xoá khoản quẹt thẻ hoặc trả nợ thẻ. Đọc tươi tại
 // thời điểm gọi (như applySavingsFundDelta) vì tab Tài chính có thể vừa sửa nợ; từ chối thay vì
 // kẹp về 0 để nợ thẻ không bao giờ âm hay lệch so với khoản chi đã ghi.
 function applyCardBalanceDelta(name: string, delta: number): ApplyCardBalanceDeltaResult {
+  // NaN/Infinity ghi vào JSON thành null — lần đọc sau creditCardSchema bỏ luôn cả thẻ.
+  if (!Number.isFinite(delta)) return { ok: false, reason: "invalid-delta" }
   const current = getStoredFinance()
   const card = current.cards.find((c) => c.name === name)
   if (!card) return { ok: false, reason: "card-not-found" }
-  if (card.balance + delta < 0) return { ok: false, reason: "insufficient-debt", balance: card.balance }
+  // Chỉ chặn lần GIẢM nợ: dư nợ nhập từ file có thể đã âm sẵn, khi đó tăng nợ (quẹt, hay xoá 1 lần
+  // trả) vẫn phải đi qua được thay vì bị báo là "chỉ còn nợ".
+  if (delta < 0 && card.balance + delta < 0) return { ok: false, reason: "insufficient-debt", balance: card.balance }
 
   const after = card.balance + delta
   setStoredFinance({
