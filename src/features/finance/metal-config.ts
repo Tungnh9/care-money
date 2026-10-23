@@ -1,5 +1,5 @@
-import { formatPhan, phanToChi } from "@/lib/finance/finance-calculations"
-import type { GoldPurchase, MetalPurchaseBase } from "@/lib/finance/types"
+import { formatLuong, formatPhan, phanToChi } from "@/lib/finance/finance-calculations"
+import type { GoldPurchase, MetalPurchaseBase, SilverPurchase } from "@/lib/finance/types"
 
 // Chữ và cách hiện khối lượng của 1 kim loại. Component dùng chung của tab vàng/bạc chỉ khác nhau ở
 // đây — không rẽ nhánh theo kim loại. Danh từ ("vàng"/"bạc") và đơn vị ("phân"/"lượng") tiếng Việt
@@ -46,4 +46,18 @@ const GOLD_METAL: MetalConfig<GoldPurchase> = {
   toPurchase: ({ date, qty, buy, store }) => ({ date, phan: qty, buy, store }),
 }
 
-export { GOLD_METAL, type MetalConfig, type MetalDisplay, type PurchaseFields }
+// Bạc tính thẳng theo lượng — không có đơn vị quy đổi, nên không có ô "Quy đổi" hay gợi ý dưới ô khối lượng.
+const luongText = (luong: number) => `${formatLuong(luong)} lượng`
+
+const SILVER_METAL: MetalConfig<SilverPurchase> = {
+  noun: "bạc",
+  unit: "lượng",
+  storePlaceholder: "vd: Phú Quý",
+  quantityError: "Nhập số lượng nguyên lớn hơn 0",
+  formatQuantity: luongText,
+  formatHeld: luongText,
+  quantityOf: (purchase) => purchase.luong,
+  toPurchase: ({ date, qty, buy, store }) => ({ date, luong: qty, buy, store }),
+}
+
+export { GOLD_METAL, SILVER_METAL, type MetalConfig, type MetalDisplay, type PurchaseFields }
