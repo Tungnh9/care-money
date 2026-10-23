@@ -21,7 +21,7 @@ import {
   type BudgetState,
 } from "@/lib/budget/budget-storage"
 import { cardDebtDelta } from "@/lib/budget/card-link"
-import type { CardLink, Expense, Settlement, SettlementDirection } from "@/lib/budget/types"
+import type { ActiveCardLink, CardLink, Expense, Settlement, SettlementDirection } from "@/lib/budget/types"
 
 interface AddExpenseInput {
   dayKey: string
@@ -29,7 +29,7 @@ interface AddExpenseInput {
   note?: string
   tag: Expense["tag"]
   // Có thì `cardName` là tên 1 thẻ đang có ở trang Tài chính — nợ thẻ đó đổi theo khoản chi.
-  card?: CardLink
+  card?: ActiveCardLink
 }
 
 interface UpdateExpenseInput {

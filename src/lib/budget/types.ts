@@ -12,6 +12,12 @@ interface CardLink {
   cardName: string | null
 }
 
+// Liên kết của 1 khoản chi đang được THÊM: luôn trỏ 1 thẻ đang có. `cardName: null` chỉ xuất hiện trên
+// khoản đã lưu, sau khi thẻ bị xoá — thêm mới với null sẽ tính 0 vào chi tiêu mà không cộng nợ thẻ nào.
+interface ActiveCardLink extends CardLink {
+  cardName: string
+}
+
 interface Expense {
   id: number
   dayKey: string
@@ -39,4 +45,4 @@ interface Settlement {
   fundAmountAfter: number
 }
 
-export type { CardLinkKind, CardLink, TagSnapshot, Expense, MonthlySalary, Settlement, SettlementDirection }
+export type { CardLinkKind, CardLink, ActiveCardLink, TagSnapshot, Expense, MonthlySalary, Settlement, SettlementDirection }

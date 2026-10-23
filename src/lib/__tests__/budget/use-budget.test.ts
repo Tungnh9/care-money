@@ -7,7 +7,7 @@ import { MoneyVisibilityProvider, useMoneyVisibility } from "@/components/money-
 import { useBudget } from "@/lib/budget/use-budget"
 import { BUDGET_STORAGE_KEY, DEFAULT_BUDGET_STATE, getStoredBudget, setStoredBudget } from "@/lib/budget/budget-storage"
 import { totalExpensesForMonth } from "@/lib/budget/budget-calculations"
-import type { CardLink, Expense } from "@/lib/budget/types"
+import type { ActiveCardLink, CardLink, Expense } from "@/lib/budget/types"
 import { dayKeyFromIso } from "@/lib/date"
 import { formatMoney } from "@/lib/format"
 import {
@@ -474,13 +474,19 @@ describe("useBudget — nợ thẻ", () => {
   const debt = (name: string) => getStoredFinance().cards.find((c) => c.name === name)?.balance
   const swipeLink = (cardName: string | null = "Visa"): CardLink => ({ kind: "swipe", cardName })
   const paymentLink = (cardName: string | null = "Visa"): CardLink => ({ kind: "payment", cardName })
+  // Đầu vào của addExpense: thẻ luôn có tên (ActiveCardLink), khác khoản đã lưu có thể mang cardName null.
   const swipe = (amount: number, cardName = "Visa") => ({
     dayKey: "2026-11-03",
     amount,
     tag: TAG_SWIPE,
-    card: swipeLink(cardName),
+    card: { kind: "swipe", cardName } satisfies ActiveCardLink,
   })
-  const payment = (amount: number) => ({ dayKey: "2026-11-01", amount, tag: TAG_PAYMENT, card: paymentLink() })
+  const payment = (amount: number) => ({
+    dayKey: "2026-11-01",
+    amount,
+    tag: TAG_PAYMENT,
+    card: { kind: "payment", cardName: "Visa" } satisfies ActiveCardLink,
+  })
   const storedExpense = (id: number) => getStoredBudget().expenses.find((e) => e.id === id)
   const setVisaDebt = (balance: number) => {
     const finance = getStoredFinance()
@@ -860,6 +866,16 @@ describe("useBudget — nợ thẻ", () => {
     expect(toast.success).not.toHaveBeenCalled()
     expect(debt("Visa")).toBe(2_500_000)
     expect(getStoredBudget().expenses).toEqual([expect.objectContaining({ id, amount: 500_000 })])
+  })
+
+  it("only takes a card link that names a card when adding (checked by tsc --noEmit)", () => {
+    type AddInput = Parameters<ReturnType<typeof useBudget>["addExpense"]>[0]
+    const named: AddInput = { dayKey: "2026-11-03", amount: 1, tag: TAG_SWIPE, card: { kind: "swipe", cardName: "Visa" } }
+    // Khoản mới gắn thẻ "đã xoá" sẽ tính 0 vào chi tiêu mà không cộng vào nợ thẻ nào.
+    // @ts-expect-error cardName null chỉ có ở khoản đã lưu, sau khi thẻ bị xoá
+    const orphan: AddInput = { dayKey: "2026-11-03", amount: 1, tag: TAG_SWIPE, card: { kind: "swipe", cardName: null } }
+
+    expect([named, orphan]).toHaveLength(2)
   })
 
   it("refuses a linked expense whose amount is not a number instead of writing NaN into the debt", async () => {

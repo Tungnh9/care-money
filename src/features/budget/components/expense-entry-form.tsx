@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Field } from "@/components/ui/field"
 import type { BudgetTag } from "@/lib/settings/settings-storage"
-import type { CardLink, TagSnapshot } from "@/lib/budget/types"
+import type { ActiveCardLink, TagSnapshot } from "@/lib/budget/types"
 import type { CreditCard } from "@/lib/finance/types"
 import { CARD_SWIPE_TAG_LABEL, cardLinkKindForTag } from "@/lib/budget/card-link"
 import { formatMoney } from "@/lib/format"
@@ -19,7 +19,7 @@ interface ExpenseEntryFormProps {
   tags: BudgetTag[]
   cards?: CreditCard[]
   // Trả true khi khoản chi đã được ghi; chỉ khi đó form mới xoá ô nhập.
-  onAdd: (input: { amount: number; tag: TagSnapshot | null; note?: string; card?: CardLink }) => boolean
+  onAdd: (input: { amount: number; tag: TagSnapshot | null; note?: string; card?: ActiveCardLink }) => boolean
 }
 
 const NO_CARDS: CreditCard[] = []
