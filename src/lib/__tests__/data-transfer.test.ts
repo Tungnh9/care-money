@@ -262,7 +262,30 @@ describe("parseImportPayload", () => {
       expect(result.data.finance.goldStores).toEqual(DEFAULT_FINANCE_STATE.goldStores)
       expect(result.data.study).toEqual(DEFAULT_STUDY_STATE)
       expect(result.summary).toBe(
-        "1 bài nhật ký · 0 lần mua vàng · 0 từ đã học · đã khôi phục tiết kiệm, nợ thẻ, mục tiêu"
+        "1 bài nhật ký · 0 lần mua vàng · 0 lần mua bạc · 0 từ đã học · đã khôi phục tiết kiệm, nợ thẻ, mục tiêu"
+      )
+    }
+  })
+
+  it("counts the silver purchases right after the gold ones in the summary", () => {
+    const raw = JSON.stringify({
+      version: EXPORT_VERSION,
+      finance: {
+        ...DEFAULT_FINANCE_STATE,
+        gold: [{ id: 1, date: "01/09/2026", phan: 10, buy: 9_000_000, store: "PNJ" }],
+        silver: [
+          { id: 1, date: "02/09/2026", luong: 1, buy: 1_500_000, store: "Phú Quý" },
+          { id: 2, date: "03/09/2026", luong: 2, buy: 1_520_000, store: "Phú Quý" },
+        ],
+      },
+    })
+
+    const result = parseImportPayload(raw)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.summary).toBe(
+        "0 bài nhật ký · 1 lần mua vàng · 2 lần mua bạc · 0 từ đã học · đã khôi phục tiết kiệm, nợ thẻ, mục tiêu"
       )
     }
   })
@@ -278,7 +301,7 @@ describe("parseImportPayload", () => {
     expect(result.ok).toBe(true)
     if (result.ok) {
       expect(result.summary).toBe(
-        "0 bài nhật ký · 0 lần mua vàng · 3 từ đã học · đã khôi phục tiết kiệm, nợ thẻ, mục tiêu"
+        "0 bài nhật ký · 0 lần mua vàng · 0 lần mua bạc · 3 từ đã học · đã khôi phục tiết kiệm, nợ thẻ, mục tiêu"
       )
     }
   })
@@ -297,7 +320,7 @@ describe("parseImportPayload", () => {
       expect(result.data.journal.entries).toEqual(DEFAULT_JOURNAL_STATE.entries)
       expect(result.data.finance.gold).toEqual(DEFAULT_FINANCE_STATE.gold)
       expect(result.summary).toBe(
-        "0 bài nhật ký · 0 lần mua vàng · 0 từ đã học · đã khôi phục tiết kiệm, nợ thẻ, mục tiêu"
+        "0 bài nhật ký · 0 lần mua vàng · 0 lần mua bạc · 0 từ đã học · đã khôi phục tiết kiệm, nợ thẻ, mục tiêu"
       )
     }
   })
@@ -449,7 +472,7 @@ describe("parseImportPayload", () => {
     if (result.ok) {
       expect(result.data.journal.entries).toEqual([entry])
       expect(result.summary).toBe(
-        "1 bài nhật ký · 0 lần mua vàng · 0 từ đã học · đã khôi phục tiết kiệm, nợ thẻ, mục tiêu"
+        "1 bài nhật ký · 0 lần mua vàng · 0 lần mua bạc · 0 từ đã học · đã khôi phục tiết kiệm, nợ thẻ, mục tiêu"
       )
     }
   })
@@ -503,7 +526,7 @@ describe("parseImportPayload", () => {
     if (result.ok) {
       expect(result.data.study.learned).toEqual(["v-0001", "v-0002"])
       expect(result.summary).toBe(
-        "0 bài nhật ký · 0 lần mua vàng · 2 từ đã học · đã khôi phục tiết kiệm, nợ thẻ, mục tiêu"
+        "0 bài nhật ký · 0 lần mua vàng · 0 lần mua bạc · 2 từ đã học · đã khôi phục tiết kiệm, nợ thẻ, mục tiêu"
       )
     }
   })
