@@ -3,12 +3,22 @@ import { render, screen, fireEvent } from "@testing-library/react"
 
 import { ExpenseEntryForm } from "../../components/expense-entry-form"
 import type { BudgetTag } from "@/lib/settings/settings-storage"
+import type { CreditCard } from "@/lib/finance/types"
+import { formatMoney } from "@/lib/format"
 
 const TAGS: BudgetTag[] = [
   { label: "Tiền trọ", emoji: "🏠", desc: "", tint: "#FFF0B8", on: true },
   { label: "Mua sắm", emoji: "🛍️", desc: "", tint: "#E7F6EF", on: true },
   { label: "Đã tắt", emoji: "❌", desc: "", tint: "#EEE", on: false },
+  { label: "Quẹt thẻ", emoji: "🧾", desc: "", tint: "#F0ECFE", on: true },
+  { label: "Trả nợ thẻ", emoji: "🏦", desc: "", tint: "#FFE0C7", on: true },
 ]
+const VISA: CreditCard = { name: "Visa", balance: 2_000_000, min: 0, limit: 50_000_000, due: "15" }
+const MASTER: CreditCard = { name: "Master", balance: 0, min: 0, limit: 20_000_000, due: "20" }
+const SWIPE_TAG = { label: "Quẹt thẻ", emoji: "🧾", tint: "#F0ECFE" }
+const PAY_TAG = { label: "Trả nợ thẻ", emoji: "🏦", tint: "#FFE0C7" }
+const amountField = () => screen.getByLabelText("Số tiền", { exact: false })
+const submit = () => screen.getByRole("button", { name: "Ghi khoản chi" })
 
 describe("ExpenseEntryForm", () => {
   it("shows a note placeholder describing what to write for the expense", () => {
@@ -35,7 +45,7 @@ describe("ExpenseEntryForm", () => {
   })
 
   it("submits the amount, selected tag snapshot and note, then resets the form", () => {
-    const onAdd = vi.fn()
+    const onAdd = vi.fn(() => true)
     render(<ExpenseEntryForm tags={TAGS} onAdd={onAdd} />)
 
     fireEvent.change(screen.getByLabelText("Số tiền", { exact: false }), { target: { value: "50000" } })
@@ -85,5 +95,113 @@ describe("ExpenseEntryForm", () => {
 
     expect(screen.queryByText("Tối đa 999.999.999.999 đ")).not.toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Ghi khoản chi" })).not.toBeDisabled()
+  })
+
+  it("locks Quẹt thẻ and says to add a card when there is no card", () => {
+    render(<ExpenseEntryForm tags={TAGS} onAdd={vi.fn()} />)
+
+    expect(screen.getByRole("button", { name: /Quẹt thẻ/ })).toBeDisabled()
+    expect(
+      screen.getByText("Chưa có thẻ tín dụng. Thêm thẻ ở trang Tài chính để ghi khoản quẹt thẻ.")
+    ).toBeInTheDocument()
+  })
+
+  it("records a swipe on the only card without asking", () => {
+    const onAdd = vi.fn(() => true)
+    render(<ExpenseEntryForm tags={TAGS} cards={[VISA]} onAdd={onAdd} />)
+
+    fireEvent.click(screen.getByRole("button", { name: /Quẹt thẻ/ }))
+    expect(screen.getByText("Thẻ: Visa")).toBeInTheDocument()
+    fireEvent.change(amountField(), { target: { value: "100000" } })
+    fireEvent.click(submit())
+
+    expect(onAdd).toHaveBeenCalledWith({
+      amount: 100_000,
+      tag: SWIPE_TAG,
+      note: undefined,
+      card: { kind: "swipe", cardName: "Visa" },
+    })
+  })
+
+  it("asks which card when there are two and blocks until one is picked", () => {
+    const onAdd = vi.fn(() => true)
+    render(<ExpenseEntryForm tags={TAGS} cards={[VISA, MASTER]} onAdd={onAdd} />)
+
+    fireEvent.click(screen.getByRole("button", { name: /Quẹt thẻ/ }))
+    fireEvent.change(amountField(), { target: { value: "100000" } })
+    expect(submit()).toBeDisabled()
+
+    fireEvent.click(screen.getByRole("button", { name: "Master" }))
+    expect(submit()).not.toBeDisabled()
+    fireEvent.click(submit())
+
+    expect(onAdd).toHaveBeenCalledWith(expect.objectContaining({ card: { kind: "swipe", cardName: "Master" } }))
+  })
+
+  it("records a payment with its card", () => {
+    const onAdd = vi.fn(() => true)
+    render(<ExpenseEntryForm tags={TAGS} cards={[VISA]} onAdd={onAdd} />)
+
+    fireEvent.click(screen.getByRole("button", { name: /Trả nợ thẻ/ }))
+    fireEvent.change(amountField(), { target: { value: "500000" } })
+    fireEvent.click(submit())
+
+    expect(onAdd).toHaveBeenCalledWith({
+      amount: 500_000,
+      tag: PAY_TAG,
+      note: undefined,
+      card: { kind: "payment", cardName: "Visa" },
+    })
+  })
+
+  it("lets Trả nợ thẻ through without a card when there is none, saying the debt will not change", () => {
+    const onAdd = vi.fn(() => true)
+    render(<ExpenseEntryForm tags={TAGS} onAdd={onAdd} />)
+
+    fireEvent.click(screen.getByRole("button", { name: /Trả nợ thẻ/ }))
+    expect(screen.getByText("Chưa có thẻ tín dụng nên khoản này không trừ nợ thẻ.")).toBeInTheDocument()
+    fireEvent.change(amountField(), { target: { value: "500000" } })
+    fireEvent.click(submit())
+
+    expect(onAdd).toHaveBeenCalledWith({ amount: 500_000, tag: PAY_TAG, note: undefined })
+  })
+
+  it("blocks a payment above the picked card's debt", () => {
+    render(<ExpenseEntryForm tags={TAGS} cards={[VISA, MASTER]} onAdd={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole("button", { name: /Trả nợ thẻ/ }))
+    fireEvent.click(screen.getByRole("button", { name: "Master" }))
+    fireEvent.change(amountField(), { target: { value: "500" } })
+
+    expect(screen.getByText(`Thẻ "Master" chỉ còn nợ ${formatMoney(0)}`)).toBeInTheDocument()
+    expect(submit()).toBeDisabled()
+  })
+
+  it("drops the picked card when switching to an ordinary tag", () => {
+    const onAdd = vi.fn(() => true)
+    render(<ExpenseEntryForm tags={TAGS} cards={[VISA]} onAdd={onAdd} />)
+
+    fireEvent.click(screen.getByRole("button", { name: /Quẹt thẻ/ }))
+    fireEvent.click(screen.getByRole("button", { name: /Mua sắm/ }))
+    expect(screen.queryByText("Thẻ: Visa")).not.toBeInTheDocument()
+    fireEvent.change(amountField(), { target: { value: "10000" } })
+    fireEvent.click(submit())
+
+    expect(onAdd).toHaveBeenCalledWith({
+      amount: 10_000,
+      tag: { label: "Mua sắm", emoji: "🛍️", tint: "#E7F6EF" },
+      note: undefined,
+    })
+  })
+
+  it("keeps what was typed when the expense could not be saved", () => {
+    const onAdd = vi.fn(() => false)
+    render(<ExpenseEntryForm tags={TAGS} onAdd={onAdd} />)
+
+    fireEvent.change(amountField(), { target: { value: "50000" } })
+    fireEvent.click(submit())
+
+    expect(onAdd).toHaveBeenCalled()
+    expect(amountField()).toHaveValue("50.000")
   })
 })
