@@ -9,6 +9,7 @@ import {
   formatDayKeyWithYear,
   formatMonthKey,
   formatShortDate,
+  formatShortDayKey,
   isMonthKey,
   monthKey,
   monthKeyFromDayKey,
@@ -218,5 +219,12 @@ describe("parseDayInput", () => {
 
   it("accepts 29/02 in a leap year", () => {
     expect(parseDayInput("29/02/2028")).toBe("2028-02-29")
+  })
+})
+
+describe("formatShortDayKey", () => {
+  it("writes a day key as dd/mm", () => {
+    expect(formatShortDayKey("2026-09-30")).toBe("30/09")
+    expect(formatShortDayKey("2026-01-05")).toBe("05/01")
   })
 })

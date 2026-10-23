@@ -28,6 +28,7 @@ import {
   remainingToSettle,
   salaryForMonth,
   settlementsMadeInMonth,
+  giftsMadeInMonth,
   swipedTotal,
   totalExpensesForMonth,
   unsettledPastMonths,
@@ -59,7 +60,7 @@ function BudgetView() {
     removeExpense,
     confirmSettlement,
   } = useBudget()
-  const { savings, cards, hydrated: cardsReady } = useFinance()
+  const { savings, cards, goldGifts, silverGifts, hydrated: cardsReady } = useFinance()
   const { settings } = useSettings()
   // null = modal tất toán đang đóng; ngược lại là tháng đang tất toán (tháng này, hoặc 1 tháng đã qua còn lệch).
   const [settleMonth, setSettleMonth] = useState<string | null>(null)
@@ -86,6 +87,9 @@ function BudgetView() {
   // ("đã chi" và các biểu đồ đọc thẳng `expenses` nên không đổi). Lọc theo ngày BẤM chứ không theo tháng được
   // tất toán — xem settlementsMadeInMonth.
   const monthSettlements = settlementsMadeInMonth(settlements, currentMonth, savings.map((f) => f.name))
+  // Lần tặng vàng/bạc trong tháng: chỉ để xem (khối "Quà tặng từ tích lũy"), không phải khoản chi — tiền mua đã
+  // tính lúc mua, nên không vào monthExpenses, "đã chi" hay số còn phải tất toán.
+  const monthGifts = giftsMadeInMonth(goldGifts, silverGifts, currentMonth)
   const remaining = remainingToSettle(salaries, expenses, settlements, currentMonth)
   const tagBreakdown = breakdownByTag(expenses, currentMonth)
   const pastUnsettled = unsettledPastMonths(salaries, expenses, settlements, currentMonth)
@@ -247,6 +251,7 @@ function BudgetView() {
         <ExpenseListCard
           expenses={monthExpenses}
           settlements={monthSettlements}
+          gifts={monthGifts}
           onRemove={removeExpense}
           onEdit={setEditingExpense}
         />

@@ -1,5 +1,8 @@
 import { dayKeyFromIso, isMonthKey, monthKeyFromDayKey } from "@/lib/date"
 import type { Expense, MonthlySalary, Settlement } from "@/lib/budget/types"
+import { giftsInMonth } from "@/lib/finance/metal-calculations"
+import { GOLD_NAMING, SILVER_NAMING, type MetalNaming } from "@/lib/finance/metal-naming"
+import type { MetalGift } from "@/lib/finance/types"
 
 const UNTAGGED_LABEL = "Không gắn thẻ"
 const UNTAGGED_EMOJI = "🏷️"
@@ -111,6 +114,18 @@ function settlementsMadeInMonth(settlements: Settlement[], month: string, fundNa
     items.push({ ...s, dayKey: day, fundDeleted: !fundNames.includes(s.fundName) })
   }
   return items.sort((a, b) => Date.parse(b.at) - Date.parse(a.at) || b.id - a.id)
+}
+
+type GiftListItem = MetalGift & { dayKey: string; naming: MetalNaming }
+
+// Các lần tặng vàng/bạc có ngày tặng thuộc `month` — chỉ để vẽ khối "Quà tặng từ tích lũy" trong danh sách
+// khoản chi, KHÔNG phải khoản chi: tiền mua đã tính lúc mua, nên lần tặng không cộng vào "đã chi" hay chốt
+// sổ. Gộp vàng + bạc, mới nhất trước; cùng ngày thì vàng trước bạc, rồi id cao (ghi sau) trước.
+function giftsMadeInMonth(goldGifts: MetalGift[], silverGifts: MetalGift[], month: string): GiftListItem[] {
+  return [
+    ...giftsInMonth(goldGifts, month).map((gift) => ({ ...gift, naming: GOLD_NAMING })),
+    ...giftsInMonth(silverGifts, month).map((gift) => ({ ...gift, naming: SILVER_NAMING })),
+  ].sort((a, b) => b.dayKey.localeCompare(a.dayKey))
 }
 
 interface TagBreakdownEntry {
@@ -257,6 +272,7 @@ export {
   remainingToSettle,
   unsettledPastMonths,
   settlementsMadeInMonth,
+  giftsMadeInMonth,
   breakdownByTag,
   groupExpensesByDay,
   monthlyExpenseTotals,
@@ -272,6 +288,7 @@ export {
   type TagBreakdownEntry,
   type UnsettledMonth,
   type SettlementListItem,
+  type GiftListItem,
   type DayGroup,
   type MonthlyExpensePoint,
   type MonthlyTagSeries,

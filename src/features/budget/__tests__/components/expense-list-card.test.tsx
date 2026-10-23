@@ -5,7 +5,8 @@ import { wholeText } from "@/test/whole-text"
 import { MoneyVisibilityProvider } from "@/components/money-visibility-provider"
 import { ExpenseListCard } from "../../components/expense-list-card"
 import { formatMoney } from "@/lib/format"
-import { UNTAGGED_EMOJI, UNTAGGED_LABEL, type SettlementListItem } from "@/lib/budget/budget-calculations"
+import { UNTAGGED_EMOJI, UNTAGGED_LABEL, type GiftListItem, type SettlementListItem } from "@/lib/budget/budget-calculations"
+import { GOLD_NAMING, SILVER_NAMING } from "@/lib/finance/metal-naming"
 import type { Expense } from "@/lib/budget/types"
 
 const EXPENSES: Expense[] = [
@@ -474,6 +475,76 @@ describe("ExpenseListCard", () => {
 
       fireEvent.click(screen.getByRole("button", { name: "Xoá khoản chi Quẹt thẻ" }))
       expect(screen.getByRole("alertdialog")).not.toHaveTextContent("500.000")
+    })
+  })
+  describe("Quà tặng từ tích lũy", () => {
+    function giftItem(overrides: Partial<GiftListItem> = {}): GiftListItem {
+      return {
+        id: 1,
+        purchaseId: 1,
+        date: "15/09/2026",
+        dayKey: "2026-09-15",
+        qty: 1,
+        store: "SJC",
+        buy: 900_000,
+        note: "tặng mẹ",
+        naming: GOLD_NAMING,
+        ...overrides,
+      }
+    }
+
+    it("lists this month's gifts in their own block, valued at the purchase price", () => {
+      render(<ExpenseListCard expenses={EXPENSES} gifts={[giftItem()]} onRemove={vi.fn()} onEdit={vi.fn()} />)
+
+      const block = screen.getByTestId("gift-block")
+      expect(within(block).getByText("Quà tặng từ tích lũy")).toBeInTheDocument()
+      const row = within(block).getByTestId("gift-row")
+      expect(within(row).getByText("Tặng 1 phân vàng")).toBeInTheDocument()
+      expect(within(row).getByText("15/09 · SJC · tặng mẹ")).toBeInTheDocument()
+      expect(within(row).getByText(formatMoney(900_000))).toBeInTheDocument()
+      // Không phải khoản chi: không vào nhóm ngày nào.
+      expect(screen.getAllByTestId("expense-day-header")).toHaveLength(2)
+    })
+
+    it("names silver gifts in lượng and leaves out an empty note", () => {
+      render(
+        <ExpenseListCard
+          expenses={[]}
+          gifts={[giftItem({ naming: SILVER_NAMING, qty: 2, store: "Phú Quý", buy: 1_800_000, note: undefined })]}
+          onRemove={vi.fn()}
+          onEdit={vi.fn()}
+        />
+      )
+
+      const row = screen.getByTestId("gift-row")
+      expect(within(row).getByText("Tặng 2 lượng bạc")).toBeInTheDocument()
+      expect(within(row).getByText("15/09 · Phú Quý")).toBeInTheDocument()
+      expect(within(row).getByText(formatMoney(3_600_000))).toBeInTheDocument()
+    })
+
+    it("has no gift block when nothing was given away this month", () => {
+      render(<ExpenseListCard expenses={EXPENSES} onRemove={vi.fn()} onEdit={vi.fn()} />)
+
+      expect(screen.queryByTestId("gift-block")).not.toBeInTheDocument()
+    })
+
+    it("still shows the empty-state sentence under the gift block, spaced from it", () => {
+      render(<ExpenseListCard expenses={[]} gifts={[giftItem()]} onRemove={vi.fn()} onEdit={vi.fn()} />)
+
+      expect(screen.getByText("Chưa có khoản chi nào trong tháng này.")).toHaveClass("mt-3")
+    })
+
+    it("masks the value of every gift while money is hidden", async () => {
+      window.localStorage.setItem("hide-money", "1")
+      render(
+        <MoneyVisibilityProvider>
+          <ExpenseListCard expenses={[]} gifts={[giftItem()]} onRemove={vi.fn()} onEdit={vi.fn()} />
+        </MoneyVisibilityProvider>
+      )
+
+      const row = screen.getByTestId("gift-row")
+      await waitFor(() => expect(within(row).getByText("•••••••• ₫")).toBeInTheDocument())
+      expect(row.textContent).not.toMatch(/\d{1,3}(\.\d{3})+/)
     })
   })
 })

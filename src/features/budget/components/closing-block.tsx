@@ -4,7 +4,7 @@ import { ArrowDownToLine, ArrowUpFromLine, type LucideIcon } from "lucide-react"
 
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
-import { isMonthKey, monthKeyFromDayKey } from "@/lib/date"
+import { formatShortDayKey, isMonthKey, monthKeyFromDayKey } from "@/lib/date"
 import { signedMoney } from "@/lib/finance/finance-calculations"
 import { cn } from "@/lib/utils"
 import type { SettlementListItem } from "@/lib/budget/budget-calculations"
@@ -32,12 +32,6 @@ const DIRECTIONS: Record<SettlementDirection, DirectionStyle> = {
     color: "var(--ob-color-expense)",
     soft: "var(--ob-color-expense-soft)",
   },
-}
-
-// "2026-09-30" → "30/09"
-function shortDay(dayKey: string): string {
-  const [, month, day] = dayKey.split("-")
-  return `${day}/${month}`
 }
 
 // Tiêu đề nói về THÁNG ĐƯỢC TẤT TOÁN (`month`), không phải tháng bấm. Thêm năm khi khác năm của ngày bấm:
@@ -74,7 +68,7 @@ function ClosingBlock({ settlements }: ClosingBlockProps) {
         const { verb, icon: Icon, color, soft } = DIRECTIONS[s.direction]
         const before = formatMoney(s.fundAmountBefore, hidden)
         const after = formatMoney(s.fundAmountAfter, hidden)
-        const day = shortDay(s.dayKey)
+        const day = formatShortDayKey(s.dayKey)
         // Chốt trễ: tháng được tất toán khác tháng bấm → ghi rõ đó là ngày bấm, không để tưởng ngày của tháng.
         const when = s.month === monthKeyFromDayKey(s.dayKey) ? day : `bấm ngày ${day}`
         const fundLine = `${verb} ${s.fundName}${s.fundDeleted ? " (đã xoá)" : ""} · ${when}`

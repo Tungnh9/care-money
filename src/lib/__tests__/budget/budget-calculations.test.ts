@@ -15,6 +15,7 @@ import {
   unsettledPastMonths,
   hasSalaryRecord,
   settlementsMadeInMonth,
+  giftsMadeInMonth,
   tagChartColors,
   CHART_PALETTE,
   UNTAGGED_CHART_COLOR,
@@ -22,6 +23,8 @@ import {
   MAX_BUDGET_AMOUNT,
 } from "@/lib/budget/budget-calculations"
 import type { Expense, MonthlySalary, Settlement } from "@/lib/budget/types"
+import { GOLD_NAMING, SILVER_NAMING } from "@/lib/finance/metal-naming"
+import type { MetalGift } from "@/lib/finance/types"
 import { DEFAULT_TAGS } from "@/lib/settings/settings-storage"
 
 const TAG_RENT = { label: "Tiền trọ", emoji: "🏠", tint: "#FFF0B8" }
@@ -572,5 +575,25 @@ describe("card swipes", () => {
     const e = expense({ amount: 250_000, card: { kind: "swipe", cardName: null } })
     expect(countedAmount(e)).toBe(0)
     expect(swipedAmount(e)).toBe(250_000)
+  })
+})
+
+describe("giftsMadeInMonth", () => {
+  const gift = (id: number, date: string, store = "SJC"): MetalGift => ({ id, purchaseId: 1, date, qty: 1, store, buy: 900_000 })
+
+  it("merges this month's gold and silver gifts, newest first, each with its own naming", () => {
+    const gold = [gift(1, "02/09/2026"), gift(2, "20/08/2026")]
+    const silver = [gift(1, "15/09/2026", "Phú Quý")]
+
+    const items = giftsMadeInMonth(gold, silver, "2026-09")
+
+    expect(items.map((item) => [item.naming, item.dayKey])).toEqual([
+      [SILVER_NAMING, "2026-09-15"],
+      [GOLD_NAMING, "2026-09-02"],
+    ])
+  })
+
+  it("returns nothing when no gift falls in the month", () => {
+    expect(giftsMadeInMonth([gift(1, "20/08/2026")], [], "2026-09")).toEqual([])
   })
 })
