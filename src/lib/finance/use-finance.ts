@@ -16,6 +16,7 @@ import type {
   MetalPurchaseBase,
   MetalStore,
   SavingsFund,
+  SilverPurchase,
 } from "@/lib/finance/types"
 import { toast } from "sonner"
 import { getCarGoalFundName, setCarGoalFundName } from "@/lib/goals/car-goal-storage"
@@ -40,6 +41,15 @@ const GOLD_LENS: MetalLens<GoldPurchase> = {
   stores: (state) => state.goldStores,
   withPurchases: (state, gold) => ({ ...state, gold }),
   withStores: (state, goldStores) => ({ ...state, goldStores }),
+  withId: (purchase, id) => ({ ...purchase, id }),
+}
+
+const SILVER_LENS: MetalLens<SilverPurchase> = {
+  noun: "bạc",
+  purchases: (state) => state.silver,
+  stores: (state) => state.silverStores,
+  withPurchases: (state, silver) => ({ ...state, silver }),
+  withStores: (state, silverStores) => ({ ...state, silverStores }),
   withId: (purchase, id) => ({ ...purchase, id }),
 }
 
@@ -349,6 +359,7 @@ function useFinance() {
   )
 
   const goldActions = useMetalActions(GOLD_LENS, persist)
+  const silverActions = useMetalActions(SILVER_LENS, persist)
 
   const addInvest = useCallback(
     (invest: Omit<Investment, "id">) => {
@@ -416,6 +427,13 @@ function useFinance() {
     addGold: goldActions.addPurchase,
     updateGold: goldActions.updatePurchase,
     removeGold: goldActions.removePurchase,
+    addSilverStore: silverActions.addStore,
+    updateSilverStore: silverActions.updateStore,
+    removeSilverStore: silverActions.removeStore,
+    setSilverStorePrice: silverActions.setStorePrice,
+    addSilver: silverActions.addPurchase,
+    updateSilver: silverActions.updatePurchase,
+    removeSilver: silverActions.removePurchase,
     addInvest,
     updateInvest,
     removeInvest,
