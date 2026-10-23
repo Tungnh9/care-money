@@ -2124,7 +2124,7 @@ describe("useFinance — tặng vàng/bạc", () => {
 
   it("blocks editing a purchase's quantity below what was already given away", async () => {
     const { result } = await renderWithGold([GIFT])
-    const { id: _id, ...fields } = PURCHASE
+    const fields = { date: PURCHASE.date, phan: PURCHASE.phan, buy: PURCHASE.buy, store: PURCHASE.store }
 
     act(() => {
       result.current.updateGold(1, { ...fields, phan: 0 })
