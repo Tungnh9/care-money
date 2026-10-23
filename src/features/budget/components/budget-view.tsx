@@ -59,7 +59,7 @@ function BudgetView() {
     removeExpense,
     confirmSettlement,
   } = useBudget()
-  const { savings, cards } = useFinance()
+  const { savings, cards, hydrated: cardsReady } = useFinance()
   const { settings } = useSettings()
   // null = modal tất toán đang đóng; ngược lại là tháng đang tất toán (tháng này, hoặc 1 tháng đã qua còn lệch).
   const [settleMonth, setSettleMonth] = useState<string | null>(null)
@@ -235,6 +235,7 @@ function BudgetView() {
           <ExpenseEntryForm
             tags={settings.tags}
             cards={cards}
+            cardsReady={cardsReady}
             onAdd={(input) => addExpense({ ...input, dayKey: dayKey() })}
           />
 

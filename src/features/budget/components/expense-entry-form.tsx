@@ -18,13 +18,16 @@ import { TagPicker } from "./tag-picker"
 interface ExpenseEntryFormProps {
   tags: BudgetTag[]
   cards?: CreditCard[]
+  // false khi danh sách thẻ chưa đọc xong (useFinance chưa hydrated): `cards` rỗng lúc đó chưa có nghĩa
+  // là không có thẻ — chưa khoá "Quẹt thẻ", chưa hiện lời nhắc 0 thẻ, và chưa cho ghi khoản gắn thẻ.
+  cardsReady?: boolean
   // Trả true khi khoản chi đã được ghi; chỉ khi đó form mới xoá ô nhập.
   onAdd: (input: { amount: number; tag: TagSnapshot | null; note?: string; card?: ActiveCardLink }) => boolean
 }
 
 const NO_CARDS: CreditCard[] = []
 
-function ExpenseEntryForm({ tags, cards = NO_CARDS, onAdd }: ExpenseEntryFormProps) {
+function ExpenseEntryForm({ tags, cards = NO_CARDS, cardsReady = true, onAdd }: ExpenseEntryFormProps) {
   const { hidden } = useMoneyVisibility()
   const activeTags = tags.filter((t) => t.on)
   const [amount, setAmount] = useState("")
@@ -34,13 +37,15 @@ function ExpenseEntryForm({ tags, cards = NO_CARDS, onAdd }: ExpenseEntryFormPro
   const tooLarge = exceedsBudgetAmountLimit(amount)
 
   // Chưa có thẻ nào thì "Quẹt thẻ" bị khoá; nhãn đã chọn từ trước đó (thẻ bị xoá ở tab khác) coi như chưa chọn.
-  const swipeLocked = cards.length === 0
+  const swipeLocked = cardsReady && cards.length === 0
   const effectiveLabel = swipeLocked && selectedLabel === CARD_SWIPE_TAG_LABEL ? null : selectedLabel
   const tag = activeTags.find((t) => t.label === effectiveLabel)
   const linkKind = tag ? cardLinkKindForTag(tag.label) : null
   // 1 thẻ thì tự chọn; ≥ 2 thẻ thì phải bấm chọn, và thẻ đã chọn mà nay không còn thì coi như chưa chọn.
   const card = linkKind ? (cards.length === 1 ? cards[0] : cards.find((c) => c.name === pickedCardName)) : undefined
   const needsPick = linkKind !== null && cards.length > 1 && !card
+  // Chưa đọc xong thẻ: ghi lúc này thì khoản quẹt/trả nợ sẽ thành khoản thường, không đụng nợ thẻ.
+  const cardsPending = linkKind !== null && !cardsReady
   const amountNumber = Number(amount) || 0
   const overDebt = linkKind === "payment" && card !== undefined && amountNumber > card.balance
   const amountHint = tooLarge
@@ -117,7 +122,7 @@ function ExpenseEntryForm({ tags, cards = NO_CARDS, onAdd }: ExpenseEntryFormPro
         onChange={(e) => setNote(e.target.value)}
       />
       <div className="mt-4">
-        <Button variant="primary" size="sm" type="button" disabled={!amountNumber || tooLarge || overDebt || needsPick} onClick={handleSubmit}>
+        <Button variant="primary" size="sm" type="button" disabled={!amountNumber || tooLarge || overDebt || needsPick || cardsPending} onClick={handleSubmit}>
           Ghi khoản chi
         </Button>
       </div>

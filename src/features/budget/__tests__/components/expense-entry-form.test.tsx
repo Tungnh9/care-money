@@ -107,6 +107,40 @@ describe("ExpenseEntryForm", () => {
     ).toBeInTheDocument()
   })
 
+  it("waits for the cards to be read before locking Quẹt thẻ or saying there is no card", () => {
+    const onAdd = vi.fn(() => true)
+    const { rerender } = render(<ExpenseEntryForm tags={TAGS} cards={[]} cardsReady={false} onAdd={onAdd} />)
+
+    expect(screen.getByRole("button", { name: /Quẹt thẻ/ })).not.toBeDisabled()
+    expect(screen.queryByText(/Chưa có thẻ tín dụng/)).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole("button", { name: /Trả nợ thẻ/ }))
+    expect(screen.queryByText(/Chưa có thẻ tín dụng/)).not.toBeInTheDocument()
+    // Chưa biết có thẻ nào thì chưa ghi được khoản gắn thẻ — ghi bây giờ sẽ thành khoản không trừ nợ.
+    fireEvent.change(amountField(), { target: { value: "500000" } })
+    expect(submit()).toBeDisabled()
+
+    rerender(<ExpenseEntryForm tags={TAGS} cards={[]} cardsReady onAdd={onAdd} />)
+
+    expect(screen.getByText("Chưa có thẻ tín dụng nên khoản này không trừ nợ thẻ.")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /Quẹt thẻ/ })).toBeDisabled()
+    expect(submit()).not.toBeDisabled()
+  })
+
+  it("still records an ordinary expense before the cards have been read", () => {
+    const onAdd = vi.fn(() => true)
+    render(<ExpenseEntryForm tags={TAGS} cards={[]} cardsReady={false} onAdd={onAdd} />)
+
+    fireEvent.click(screen.getByRole("button", { name: /Mua sắm/ }))
+    fireEvent.change(amountField(), { target: { value: "10000" } })
+    fireEvent.click(submit())
+
+    expect(onAdd).toHaveBeenCalledWith({
+      amount: 10_000,
+      tag: { label: "Mua sắm", emoji: "🛍️", tint: "#E7F6EF" },
+      note: undefined,
+    })
+  })
+
   it("records a swipe on the only card without asking", () => {
     const onAdd = vi.fn(() => true)
     render(<ExpenseEntryForm tags={TAGS} cards={[VISA]} onAdd={onAdd} />)

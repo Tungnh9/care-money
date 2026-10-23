@@ -684,6 +684,21 @@ describe("BudgetView", () => {
     expect(renderToString(<BudgetView />)).not.toContain("Chưa nhập lương tháng này")
   })
 
+  it("does not flash the no-card hint or lock Quẹt thẻ before the stored cards have been read", () => {
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      cards: [{ name: "Visa", balance: 0, min: 0, limit: 10_000_000, due: "15" }],
+    })
+
+    // Như lời nhắc lương: lần vẽ đầu (phía server, trước khi đọc localStorage) chưa biết có thẻ nào.
+    const html = renderToString(<BudgetView />)
+    expect(html).not.toContain("Chưa có thẻ tín dụng")
+    const container = document.createElement("div")
+    container.innerHTML = html
+    const swipeChip = within(container).getByRole("button", { name: /Quẹt thẻ/ })
+    expect(swipeChip).not.toBeDisabled()
+  })
+
   it("leaves focus on a past month's button when that month is only partly settled", async () => {
     setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [{ name: "Quỹ A", amount: 100_000, target: 500_000 }] })
     setStoredBudget({
