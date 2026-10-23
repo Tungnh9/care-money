@@ -7,17 +7,26 @@ import { Field } from "@/components/ui/field"
 import { Modal } from "@/components/ui/modal"
 import type { BudgetTag } from "@/lib/settings/settings-storage"
 import type { Expense, TagSnapshot } from "@/lib/budget/types"
+import type { CreditCard } from "@/lib/finance/types"
 import { BUDGET_AMOUNT_LIMIT_HINT, exceedsBudgetAmountLimit } from "@/lib/budget/budget-calculations"
+import { CARD_PAYMENT_TAG_LABEL, CARD_SWIPE_TAG_LABEL, cardDebtDelta } from "@/lib/budget/card-link"
+import { formatMoney } from "@/lib/format"
+import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { TagPicker } from "./tag-picker"
 
 interface EditExpenseModalProps {
   expense: Expense | null
   tags: BudgetTag[]
+  cards?: CreditCard[]
   onOpenChange: (open: boolean) => void
-  onSave: (id: number, input: { amount: number; tag: TagSnapshot | null; note?: string }) => void
+  onSave: (id: number, input: { amount: number; tag: TagSnapshot | null; note?: string }) => boolean
 }
 
-function EditExpenseModal({ expense, tags, onOpenChange, onSave }: EditExpenseModalProps) {
+const NO_CARDS: CreditCard[] = []
+const CARD_TAG_LABELS = [CARD_SWIPE_TAG_LABEL, CARD_PAYMENT_TAG_LABEL]
+
+function EditExpenseModal({ expense, tags, cards = NO_CARDS, onOpenChange, onSave }: EditExpenseModalProps) {
+  const { hidden } = useMoneyVisibility()
   const [amount, setAmount] = useState("")
   const [selectedLabel, setSelectedLabel] = useState<string | null>(null)
   const [note, setNote] = useState("")
@@ -50,15 +59,29 @@ function EditExpenseModal({ expense, tags, onOpenChange, onSave }: EditExpenseMo
         ? { label: picked.label, emoji: picked.emoji, tint: picked.tint }
         : null
   const tooLarge = exceedsBudgetAmountLimit(amount)
-  const disabled = !Number(amount) || tooLarge
+
+  // Khoản đã gắn thẻ: nhãn và thẻ cố định, chỉ sửa số tiền/ghi chú. Sửa số tiền không được làm nợ thẻ âm.
+  const link = currentExpense.card
+  const linkedCard = link ? cards.find((c) => c.name === link.cardName) : undefined
+  const amountNumber = Number(amount) || 0
+  const overDebt =
+    link !== undefined &&
+    linkedCard !== undefined &&
+    linkedCard.balance + cardDebtDelta(link.kind, amountNumber - currentExpense.amount) < 0
+  const amountHint = tooLarge
+    ? BUDGET_AMOUNT_LIMIT_HINT
+    : overDebt
+      ? `Thẻ "${linkedCard.name}" chỉ còn nợ ${formatMoney(linkedCard.balance, hidden)}`
+      : undefined
+  const disabled = !Number(amount) || tooLarge || overDebt
 
   function handleSave() {
-    onSave(currentExpense.id, {
-      amount: Number(amount) || 0,
-      tag,
+    const saved = onSave(currentExpense.id, {
+      amount: amountNumber,
+      tag: link ? currentExpense.tag : tag,
       note: note.trim() || undefined,
     })
-    onOpenChange(false)
+    if (saved) onOpenChange(false)
   }
 
   return (
@@ -72,20 +95,33 @@ function EditExpenseModal({ expense, tags, onOpenChange, onSave }: EditExpenseMo
         numeric
         group
         suffix="đ"
-        invalid={tooLarge}
-        hint={tooLarge ? BUDGET_AMOUNT_LIMIT_HINT : undefined}
+        invalid={tooLarge || overDebt}
+        hint={amountHint}
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
       />
 
-      <div className="mt-3">
-        <TagPicker
-          tags={tags}
-          selectedLabel={selectedLabel}
-          onSelect={setSelectedLabel}
-          extraTag={currentExpense.tag}
-        />
-      </div>
+      {link ? (
+        <div className="mt-3 text-[13px]">
+          {currentExpense.tag && <div className="font-semibold">{`${currentExpense.tag.emoji} ${currentExpense.tag.label}`}</div>}
+          <div className="mt-1 text-[var(--ob-color-text-subtle)]">
+            {link.cardName ? `Thẻ ${link.cardName}` : "Thẻ đã xoá"}
+          </div>
+          <p className="mt-1 text-[12.5px] text-[var(--ob-color-text-subtle)]">
+            Muốn đổi nhãn hay thẻ thì xoá khoản này rồi ghi lại.
+          </p>
+        </div>
+      ) : (
+        <div className="mt-3">
+          <TagPicker
+            tags={tags}
+            selectedLabel={selectedLabel}
+            onSelect={setSelectedLabel}
+            extraTag={currentExpense.tag}
+            hiddenLabels={CARD_TAG_LABELS}
+          />
+        </div>
+      )}
 
       <Field
         className="mt-3"
