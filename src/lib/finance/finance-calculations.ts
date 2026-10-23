@@ -18,6 +18,12 @@ function phanToChi(phan: number): string {
   return `${chi} chỉ${rest ? ` ${formatPhan(rest)} phân` : ""}`
 }
 
+// Khối lượng bạc tính theo lượng. Form chỉ nhận lượng nguyên nên thường hiện "3", nhưng số nhập tay vào
+// file sao lưu có thể lẻ: làm tròn 2 chữ số, dấu phẩy kiểu Việt, không nhiễu số thực.
+function formatLuong(luong: number): string {
+  return (Math.round(luong * 100) / 100).toLocaleString("vi-VN", { maximumFractionDigits: 2 })
+}
+
 function signedMoney(n: number, hidden = false): string {
   return (n >= 0 ? "+ " : "− ") + formatMoney(Math.abs(n), hidden)
 }
@@ -36,6 +42,11 @@ interface FinanceSummary {
   goldValue: number
   goldPL: number
   goldPct: number
+  silverLuong: number
+  silverCost: number
+  silverValue: number
+  silverPL: number
+  silverPct: number
   investCost: number
   investValue: number
   investPL: number
@@ -55,14 +66,16 @@ function summarizeFinance(state: FinanceState): FinanceSummary {
   const goldPL = gold.pl
   const goldPct = gold.pct
 
+  const silver = summarizeMetalHolding(state.silver, state.silverStores, (purchase) => purchase.luong)
+
   const investCost = state.invests.reduce((sum, invest) => sum + invest.cost, 0)
   const investValue = state.invests.reduce((sum, invest) => sum + invest.value, 0)
   const investPL = investValue - investCost
   const investPct = investCost > 0 ? (investPL / investCost) * 100 : 0
 
-  const net = savingsTotal + goldValue + investValue - debtTotal
-  const totalCost = goldCost + investCost
-  const netPct = totalCost > 0 ? ((goldPL + investPL) / totalCost) * 100 : 0
+  const net = savingsTotal + goldValue + silver.value + investValue - debtTotal
+  const totalCost = goldCost + silver.cost + investCost
+  const netPct = totalCost > 0 ? ((goldPL + silver.pl + investPL) / totalCost) * 100 : 0
 
   return {
     savingsTotal,
@@ -72,6 +85,11 @@ function summarizeFinance(state: FinanceState): FinanceSummary {
     goldValue,
     goldPL,
     goldPct,
+    silverLuong: silver.qty,
+    silverCost: silver.cost,
+    silverValue: silver.value,
+    silverPL: silver.pl,
+    silverPct: silver.pct,
     investCost,
     investValue,
     investPL,
@@ -136,6 +154,7 @@ function nearestDueCard(cards: CreditCard[], today: Date): CreditCard | null {
 export {
   formatPhan,
   phanToChi,
+  formatLuong,
   signedMoney,
   pct1,
   summarizeFinance,

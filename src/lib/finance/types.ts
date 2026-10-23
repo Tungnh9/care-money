@@ -37,6 +37,13 @@ interface GoldPurchase extends MetalPurchaseBase {
   phan: number
 }
 
+type SilverStore = MetalStore
+
+// Bạc tính thẳng theo lượng, không có đơn vị quy đổi: `luong` là số lượng nguyên, `buy` là giá mỗi lượng.
+interface SilverPurchase extends MetalPurchaseBase {
+  luong: number
+}
+
 interface Investment {
   id: number
   name: string
@@ -44,4 +51,14 @@ interface Investment {
   value: number
 }
 
-export type { SavingsFund, CreditCard, MetalStore, MetalPurchaseBase, GoldStore, GoldPurchase, Investment }
+export type {
+  SavingsFund,
+  CreditCard,
+  MetalStore,
+  MetalPurchaseBase,
+  GoldStore,
+  GoldPurchase,
+  SilverStore,
+  SilverPurchase,
+  Investment,
+}

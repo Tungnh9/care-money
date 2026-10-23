@@ -533,11 +533,9 @@ describe("useFinance", () => {
     await waitFor(() => expect(result.current.savings).toEqual([]))
 
     const restored = {
+      ...DEFAULT_FINANCE_STATE,
       savings: [{ name: "Quỹ mới", amount: 1, target: 2 }],
-      cards: [],
-      gold: [],
       goldStores: [{ name: "SJC", price: "935.000" }],
-      invests: [],
     }
     act(() => {
       result.current.replaceFinance(restored)

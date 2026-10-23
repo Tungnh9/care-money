@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest"
 import {
   phanToChi,
   formatPhan,
+  formatLuong,
   pct1,
   summarizeFinance,
   parseDueDay,
@@ -60,6 +61,11 @@ describe("summarizeFinance", () => {
       goldValue: 0,
       goldPL: 0,
       goldPct: 0,
+      silverLuong: 0,
+      silverCost: 0,
+      silverValue: 0,
+      silverPL: 0,
+      silverPct: 0,
       investCost: 0,
       investValue: 0,
       investPL: 0,
@@ -245,5 +251,69 @@ describe("nearestDueCard", () => {
     const cards = [card("Hạn 5", "5", 1_000_000), card("Hạn 31", "31", 1_000_000)]
 
     expect(nearestDueCard(cards, new Date(2026, 1, 27))?.name).toBe("Hạn 31")
+  })
+})
+
+describe("summarizeFinance — tích lũy bạc", () => {
+  const silver = [
+    { id: 1, date: "10/08/2026", luong: 2, buy: 1_800_000, store: "Phú Quý" },
+    { id: 2, date: "11/08/2026", luong: 3, buy: 2_100_000, store: "Ancarat" },
+  ]
+  // Ancarat chưa nhập giá hôm nay → lần mua ở đó tạm tính theo giá mua của chính nó.
+  const silverStores = [
+    { name: "Phú Quý", price: "2.000.000" },
+    { name: "Ancarat", price: "" },
+  ]
+
+  it("values each silver purchase at its own store's price per lượng", () => {
+    const summary = summarizeFinance({ ...DEFAULT_FINANCE_STATE, silver, silverStores })
+
+    expect(summary.silverLuong).toBe(5)
+    expect(summary.silverCost).toBe(2 * 1_800_000 + 3 * 2_100_000)
+    expect(summary.silverValue).toBe(2 * 2_000_000 + 3 * 2_100_000)
+    expect(summary.silverPL).toBe(400_000)
+    expect(summary.silverPct).toBe((400_000 / 9_900_000) * 100)
+  })
+
+  it("counts silver into net worth and into the overall % next to gold and investments", () => {
+    const summary = summarizeFinance({
+      ...DEFAULT_FINANCE_STATE,
+      savings: [{ name: "Quỹ", amount: 1_000_000, target: 0 }],
+      gold: [{ id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" }],
+      goldStores: [{ name: "SJC", price: "1.000.000" }],
+      silver,
+      silverStores,
+      invests: [{ id: 1, name: "Quỹ mở", cost: 1_000_000, value: 1_100_000 }],
+    })
+
+    // 1.000.000 tiết kiệm + 10.000.000 vàng + 10.300.000 bạc + 1.100.000 đầu tư.
+    expect(summary.net).toBe(22_400_000)
+    // Lãi (1.000.000 vàng + 400.000 bạc + 100.000 đầu tư) / vốn (9.000.000 + 9.900.000 + 1.000.000).
+    expect(summary.netPct).toBe((1_500_000 / 19_900_000) * 100)
+  })
+
+  it("leaves every gold-only figure unchanged when there is no silver", () => {
+    const goldOnly = {
+      ...DEFAULT_FINANCE_STATE,
+      gold: [{ id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" }],
+      goldStores: [{ name: "SJC", price: "1.000.000" }],
+    }
+    const summary = summarizeFinance(goldOnly)
+
+    expect(summary.net).toBe(10_000_000)
+    expect(summary.netPct).toBe((1_000_000 / 9_000_000) * 100)
+    expect(summary.silverValue).toBe(0)
+  })
+})
+
+describe("formatLuong", () => {
+  it("prints whole lượng with Vietnamese thousands grouping", () => {
+    expect(formatLuong(3)).toBe("3")
+    expect(formatLuong(1_200)).toBe("1.200")
+  })
+
+  it("shows a fractional lượng typed into a backup file with up to 2 decimals and a comma", () => {
+    expect(formatLuong(26.666666)).toBe("26,67")
+    expect(formatLuong(0.1 + 0.2)).toBe("0,3")
   })
 })

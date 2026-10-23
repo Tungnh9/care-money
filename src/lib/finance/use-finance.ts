@@ -398,6 +398,8 @@ function useFinance() {
     cards: state.cards,
     gold: state.gold,
     goldStores: state.goldStores,
+    silver: state.silver,
+    silverStores: state.silverStores,
     invests: state.invests,
     hydrated,
     addSavingsFund,
