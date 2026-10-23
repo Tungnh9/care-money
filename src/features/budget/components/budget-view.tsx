@@ -134,7 +134,7 @@ function BudgetView() {
   // 1 bảng màu cho cả donut lẫn chart 6 tháng, theo vị trí nhãn trong Cài đặt — cùng 1 nhãn luôn
   // cùng 1 màu dù 2 chart xếp nhãn theo 2 thứ tự khác nhau.
   const tagColors = tagChartColors(
-    [CARD_SWIPE_TAG_LABEL, ...tagTrend.map((s) => s.label), ...tagBreakdown.map((e) => e.label)],
+    [...tagTrend.map((s) => s.label), ...tagBreakdown.map((e) => e.label)],
     settings.tags
   )
 

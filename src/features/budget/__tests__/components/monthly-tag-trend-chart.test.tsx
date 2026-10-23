@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { render, screen, waitFor, within } from "@testing-library/react"
 
+import { wholeText } from "@/test/whole-text"
 import { MoneyVisibilityProvider } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import { MonthlyTagTrendChart } from "../../components/monthly-tag-trend-chart"
@@ -170,8 +171,46 @@ describe("MonthlyTagTrendChart", () => {
     const row = screen.getByTestId("tag-trend-swiped")
     expect(row).toHaveTextContent("Quẹt thẻ")
     expect(row).toHaveTextContent("🧾")
-    expect(within(row).getByText(`${formatMoney(0)} / ${formatMoney(1_200_000)}`)).toBeInTheDocument()
+    expect(within(row).getByText(wholeText(`${formatMoney(0)} / ${formatMoney(1_200_000)}`))).toBeInTheDocument()
     expect(screen.getByText("Tổng cộng").parentElement).toHaveTextContent(formatMoney(6_000_000))
+  })
+
+  it("keeps the Quẹt thẻ row's 0 ₫ muted like the tag totals and paints the swiped total red", () => {
+    render(
+      <MonthlyTagTrendChart
+        months={["2026-09"]}
+        series={[{ label: "Tiền trọ", emoji: "🏠", tint: "#FFF0B8", data: [3_000_000] }]}
+        swiped={{ label: "Quẹt thẻ", emoji: "🧾", total: 1_200_000 }}
+      />
+    )
+
+    const swipeAmount = screen.getByText(wholeText(`${formatMoney(0)} / ${formatMoney(1_200_000)}`))
+    expect(swipeAmount).toHaveStyle({ color: "var(--ob-color-text-muted)" })
+    expect(within(swipeAmount).getByText(formatMoney(1_200_000))).toHaveStyle({ color: "var(--ob-color-expense)" })
+    expect(screen.getAllByText(formatMoney(3_000_000))[0]).toHaveStyle({ color: "var(--ob-color-text-muted)" })
+  })
+
+  it("paints the Quẹt thẻ dot the same red as its swiped total, not the colour map's colour for that label", () => {
+    render(
+      <MonthlyTagTrendChart
+        months={["2026-09"]}
+        series={[{ label: "Tiền trọ", emoji: "🏠", tint: "#FFF0B8", data: [3_000_000] }]}
+        colors={
+          new Map([
+            ["Tiền trọ", "#22B8CF"],
+            ["Quẹt thẻ", "#1C7ED6"],
+          ])
+        }
+        swiped={{ label: "Quẹt thẻ", emoji: "🧾", total: 1_200_000 }}
+      />
+    )
+
+    const row = screen.getByTestId("tag-trend-swiped")
+    // Chấm và số đã quẹt cùng 1 token đỏ; màu xanh của "Quẹt thẻ" trong bảng màu nhãn bị bỏ qua.
+    expect(within(row).getByText(formatMoney(1_200_000))).toHaveStyle({ color: "var(--ob-color-expense)" })
+    expect(within(row).getByTestId("tag-trend-dot")).toHaveStyle({ backgroundColor: "var(--ob-color-expense)" })
+    const tagDot = screen.getAllByTestId("tag-trend-dot").find((dot) => !row.contains(dot))
+    expect(tagDot).toHaveStyle({ backgroundColor: "#22B8CF" })
   })
 
   it("shows no Quẹt thẻ row when nothing was swiped", () => {
@@ -201,7 +240,7 @@ describe("MonthlyTagTrendChart", () => {
 
       const row = screen.getByTestId("tag-trend-swiped")
       await waitFor(() =>
-        expect(within(row).getByText(`${formatMoney(0, true)} / ${formatMoney(1_200_000, true)}`)).toBeInTheDocument()
+        expect(within(row).getByText(wholeText(`${formatMoney(0, true)} / ${formatMoney(1_200_000, true)}`))).toBeInTheDocument()
       )
       expect(row.textContent).not.toMatch(/\d/)
     } finally {

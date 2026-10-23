@@ -144,9 +144,16 @@ function ExpenseListCard({ expenses, settlements = [], onRemove, onEdit }: Expen
                             ) : null}
                           </div>
                           <div className="ml-auto min-w-0 text-right wrap-anywhere [font-family:var(--ob-font-num)] text-sm text-[var(--ob-color-text-muted)]">
-                            {e.card?.kind === "swipe"
-                              ? `${formatMoney(0, hidden)} / ${formatMoney(e.amount, hidden)}`
-                              : formatMoney(e.amount, hidden)}
+                            {e.card?.kind === "swipe" ? (
+                              <>
+                                {/* "0 ₫ /" cùng màu các số tiền khác (không tính vào chi tiêu tháng); phần đã quẹt sau
+                                    dấu "/" tô đỏ màu chi tiêu — chủ repo chọn để nhìn là biết mình đang chi bằng thẻ. */}
+                                {`${formatMoney(0, hidden)} / `}
+                                <span className="text-[var(--ob-color-expense)]">{formatMoney(e.amount, hidden)}</span>
+                              </>
+                            ) : (
+                              formatMoney(e.amount, hidden)
+                            )}
                           </div>
                         </div>
                         <div className="flex flex-none items-center">
