@@ -13,10 +13,12 @@ import {
   groupExpensesByDay,
   UNTAGGED_EMOJI,
   UNTAGGED_LABEL,
+  type GiftListItem,
   type SettlementListItem,
 } from "@/lib/budget/budget-calculations"
 import type { Expense } from "@/lib/budget/types"
 import { ClosingBlock } from "./closing-block"
+import { GiftBlock } from "./gift-block"
 
 // Mỗi ngày là 1 khối liền (không còn xen kẽ theo từng dòng giao dịch) — 2 tông xen kẽ theo NGÀY
 // để phân biệt ngày này với ngày kế tiếp; trong 1 ngày, các giao dịch chỉ ngăn nhau bằng 1 gạch
@@ -40,11 +42,14 @@ interface ExpenseListCardProps {
   // Các lần tất toán bấm trong tháng — chỉ để vẽ khối "Chốt sổ" ở đầu danh sách, KHÔNG phải khoản chi:
   // không đi qua groupExpensesByDay nên không vào tổng ngày, "· N khoản" hay các biểu đồ.
   settlements?: SettlementListItem[]
+  // Các lần tặng vàng/bạc trong tháng — khối "Quà tặng từ tích lũy" ngay dưới khối "Chốt sổ", cũng KHÔNG
+  // phải khoản chi.
+  gifts?: GiftListItem[]
   onRemove: (id: number) => void
   onEdit: (expense: Expense) => void
 }
 
-function ExpenseListCard({ expenses, settlements = [], onRemove, onEdit }: ExpenseListCardProps) {
+function ExpenseListCard({ expenses, settlements = [], gifts = [], onRemove, onEdit }: ExpenseListCardProps) {
   const { hidden } = useMoneyVisibility()
   const days = groupExpensesByDay(expenses)
   // Như mọi nút xoá ở trang Tài chính: thùng rác chỉ mở hộp xác nhận. Tra lại theo id trên danh
@@ -58,6 +63,7 @@ function ExpenseListCard({ expenses, settlements = [], onRemove, onEdit }: Expen
     <Card label="Khoản chi tháng này" className="min-w-0 w-full">
       <div>
         <ClosingBlock settlements={settlements} />
+        <GiftBlock gifts={gifts} />
         {days.map((day, dayIdx) => {
           const tone = DAY_TONES[dayIdx % DAY_TONES.length]
           const expanded = openDays[day.dayKey] ?? dayIdx === 0
@@ -183,7 +189,12 @@ function ExpenseListCard({ expenses, settlements = [], onRemove, onEdit }: Expen
           )
         })}
         {!expenses.length ? (
-          <p className={cn("text-[13.5px] text-[var(--ob-color-text-subtle)]", settlements.length > 0 && "mt-3")}>
+          <p
+            className={cn(
+              "text-[13.5px] text-[var(--ob-color-text-subtle)]",
+              (settlements.length > 0 || gifts.length > 0) && "mt-3"
+            )}
+          >
             Chưa có khoản chi nào trong tháng này.
           </p>
         ) : null}

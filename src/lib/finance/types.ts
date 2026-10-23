@@ -44,6 +44,21 @@ interface SilverPurchase extends MetalPurchaseBase {
   luong: number
 }
 
+// 1 lần lấy vàng/bạc ra từ 1 lần mua để tặng. `qty` theo đơn vị của kim loại đó (phân/lượng); `date` là
+// ngày tặng dạng dd/mm/yyyy như ngày mua. `store` và `buy` chụp lại từ lần mua lúc tặng — sau đó sửa lần
+// mua hay đổi tên cửa hàng thì lịch sử vẫn ghi đúng "rút ra sao", và trị giá lần tặng = qty × buy.
+interface MetalGift {
+  id: number
+  purchaseId: number
+  date: string
+  qty: number
+  store: string
+  buy: number
+  note?: string
+}
+
+type MetalGiftInput = Pick<MetalGift, "date" | "qty" | "note">
+
 interface Investment {
   id: number
   name: string
@@ -60,5 +75,7 @@ export type {
   GoldPurchase,
   SilverStore,
   SilverPurchase,
+  MetalGift,
+  MetalGiftInput,
   Investment,
 }

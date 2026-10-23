@@ -16,6 +16,8 @@ interface EditMetalPurchaseModalProps<P extends MetalPurchaseBase> {
   stores: MetalStore[]
   onOpenChange: (open: boolean) => void
   onSave: (id: number, purchase: Omit<P, "id">) => void
+  // Tổng đã tặng từ lần mua này: số lượng không được sửa xuống thấp hơn (số còn lại sẽ âm).
+  minQuantity?: number
 }
 
 function EditMetalPurchaseModal<P extends MetalPurchaseBase>({
@@ -24,6 +26,7 @@ function EditMetalPurchaseModal<P extends MetalPurchaseBase>({
   stores,
   onOpenChange,
   onSave,
+  minQuantity = 0,
 }: EditMetalPurchaseModalProps<P>) {
   const titleId = useId()
   const [date, setDate] = useState("")
@@ -50,7 +53,8 @@ function EditMetalPurchaseModal<P extends MetalPurchaseBase>({
   // Lần mua cũ đã lưu sai dạng (vd. "10/08/26") hiện đỏ ngay khi mở — phải sửa ngày mới lưu được.
   const dateInvalid = date.trim() !== "" && normalizedDate === null
   const quantityValue = parseWholeQuantity(quantity)
-  const quantityValid = quantityValue !== null
+  const belowGifted = quantityValue !== null && quantityValue < minQuantity
+  const quantityValid = quantityValue !== null && !belowGifted
   const quantityInvalid = quantity.trim() !== "" && !quantityValid
   // Cửa hàng đang chọn có thể vừa bị đổi tên/xoá ở thẻ "Giá thị trường hôm nay" trong lúc modal còn
   // mở — chỉ coi là đã chọn khi tên đó vẫn còn trong danh sách, giống AddMetalPurchaseForm, để không ghi đè
@@ -96,7 +100,13 @@ function EditMetalPurchaseModal<P extends MetalPurchaseBase>({
           value={quantity}
           onChange={(e) => setQuantity(e.target.value)}
           invalid={quantityInvalid}
-          hint={quantityInvalid ? metal.quantityError : metal.quantityHint}
+          hint={
+            belowGifted
+              ? `Đã tặng ${metal.formatQuantity(minQuantity)} từ lần mua này — số lượng không được nhỏ hơn.`
+              : quantityInvalid
+                ? metal.quantityError
+                : metal.quantityHint
+          }
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"

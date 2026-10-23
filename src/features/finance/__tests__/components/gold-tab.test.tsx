@@ -1,11 +1,11 @@
-import { describe, it, expect, vi } from "vitest"
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { render, screen, fireEvent, within } from "@testing-library/react"
 
 import { formatMoney } from "@/lib/format"
 import { phanToChi, pct1, summarizeFinance, type FinanceSummary } from "@/lib/finance/finance-calculations"
 import { DEFAULT_FINANCE_STATE } from "@/lib/finance/finance-storage"
 import { GoldTab } from "../../components/gold-tab"
-import type { GoldStore } from "@/lib/finance/types"
+import type { GoldStore, MetalGift } from "@/lib/finance/types"
 
 const ZERO_SUMMARY: FinanceSummary = {
   savingsTotal: 0,
@@ -47,6 +47,10 @@ const noopHandlers = {
   onAddGold: vi.fn(),
   onRemoveGold: vi.fn(),
   onUpdateGold: vi.fn(),
+  goldGifts: [] as MetalGift[],
+  onAddGoldGift: vi.fn(() => true),
+  onUpdateGoldGift: vi.fn(() => true),
+  onRemoveGoldGift: vi.fn(),
 }
 
 describe("GoldTab", () => {
@@ -713,5 +717,131 @@ describe("GoldTab — chữ và luồng cửa hàng", () => {
     // Bảng (desktop) + card (mobile) + dòng SJC ở bảng và card "Tổng hợp theo cửa hàng". Dòng "Tổng cộng"
     // lấy khối lượng từ summary (ở đây là 0), không cộng lại từ danh sách.
     expect(screen.getAllByText("1 chỉ 2 phân")).toHaveLength(4)
+  })
+})
+
+describe("GoldTab — tặng", () => {
+  const PURCHASE = { id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" }
+  const GIFT: MetalGift = { id: 1, purchaseId: 1, date: "12/10/2026", qty: 1, store: "SJC", buy: 900_000 }
+  const STORES: GoldStore[] = [{ name: "SJC", price: "900.000" }]
+
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    vi.setSystemTime(new Date(2026, 9, 20, 9, 0))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  function renderGold(goldGifts: MetalGift[], gold = [PURCHASE], overrides: Partial<typeof noopHandlers> = {}) {
+    const summary = summarizeFinance({ ...DEFAULT_FINANCE_STATE, gold, goldStores: STORES, goldGifts })
+    return render(
+      <GoldTab summary={summary} stores={STORES} gold={gold} {...noopHandlers} goldGifts={goldGifts} {...overrides} />
+    )
+  }
+
+  it("shows what is left of a purchase, what was given away, and values the row on what is left", () => {
+    renderGold([GIFT])
+
+    const table = document.querySelector("table") as HTMLTableElement
+    const cells = table.querySelectorAll("tbody tr")[0].querySelectorAll("td")
+    expect(cells[2]).toHaveTextContent("9 phân")
+    expect(cells[2]).toHaveTextContent("đã tặng 1 phân")
+    expect(cells[4]).toHaveTextContent(formatMoney(9 * 900_000))
+    const heldBox = screen.getByText("Đang giữ").parentElement as HTMLElement
+    expect(within(heldBox).getByText("9 phân")).toBeInTheDocument()
+  })
+
+  it("blocks deleting a purchase that has gifts taken out of it", () => {
+    renderGold([GIFT])
+
+    for (const button of screen.getAllByRole("button", { name: "Xoá giao dịch vàng 10/08/2026" })) {
+      expect(button).toBeDisabled()
+      expect(button).toHaveAttribute("title", "Không thể xoá — lần mua này đã có lần tặng. Huỷ các lần tặng trước.")
+    }
+  })
+
+  it("drops a purchase given away in full from the list, counting only what is still held", () => {
+    const second = { ...PURCHASE, id: 2, date: "11/08/2026", phan: 5 }
+    renderGold([{ ...GIFT, qty: 10 }], [PURCHASE, second])
+
+    expect(screen.getByText("Các lần mua vàng · 1 lần")).toBeInTheDocument()
+    expect(document.querySelectorAll("table")[0].querySelectorAll("tbody tr")).toHaveLength(1)
+    expect(screen.queryByRole("button", { name: "Sửa giao dịch vàng 10/08/2026" })).not.toBeInTheDocument()
+    expect(screen.getByText("Lịch sử tặng · 1 lần")).toBeInTheDocument()
+  })
+
+  it("says everything was given away instead of 'no purchases yet' once no purchase is left", () => {
+    renderGold([{ ...GIFT, qty: 10 }])
+
+    expect(screen.getByText("Đã tặng hết các lần mua vàng — xem lại ở mục Lịch sử tặng.")).toBeInTheDocument()
+    expect(screen.queryByText(/Chưa có giao dịch vàng nào/)).not.toBeInTheDocument()
+  })
+
+  it("opens the gift form from a purchase and reports the gift with today's date", () => {
+    const onAddGoldGift = vi.fn(() => true)
+    renderGold([GIFT], [PURCHASE], { onAddGoldGift })
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Tặng từ lần mua vàng 10/08/2026" })[0])
+    const dialog = screen.getByRole("dialog", { name: "Tặng vàng" })
+    expect(within(dialog).getByText("Lần mua ngày 10/08/2026 ở SJC · tặng được tối đa 9 phân")).toBeInTheDocument()
+    fireEvent.change(within(dialog).getByLabelText("Số lượng tặng (phân)", { exact: false }), {
+      target: { value: "2" },
+    })
+    fireEvent.click(within(dialog).getByRole("button", { name: "Lưu" }))
+
+    expect(onAddGoldGift).toHaveBeenCalledWith(1, { date: "20/10/2026", qty: 2 })
+    expect(screen.queryByRole("dialog", { name: "Tặng vàng" })).not.toBeInTheDocument()
+  })
+
+  it("locks the gift button when less than one phân is left of a purchase", () => {
+    renderGold([{ ...GIFT, qty: 10 }], [{ ...PURCHASE, phan: 10.3 }])
+
+    for (const button of screen.getAllByRole("button", { name: "Tặng từ lần mua vàng 10/08/2026" })) {
+      expect(button).toBeDisabled()
+      expect(button).toHaveAttribute("title", "Còn dưới 1 phân — không tặng được.")
+    }
+  })
+
+  it("refuses to edit a purchase's weight below what was already given away", () => {
+    renderGold([{ ...GIFT, qty: 3 }])
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Sửa giao dịch vàng 10/08/2026" })[0])
+    const dialog = screen.getByRole("dialog", { name: "Sửa lần mua vàng" })
+    fireEvent.change(within(dialog).getByLabelText("Khối lượng (phân)", { exact: false }), { target: { value: "2" } })
+
+    expect(within(dialog).getByText("Đã tặng 3 phân từ lần mua này — số lượng không được nhỏ hơn.")).toBeInTheDocument()
+    expect(within(dialog).getByRole("button", { name: "Lưu" })).toBeDisabled()
+  })
+
+  it("edits a gift from the history up to what is left plus its own quantity", () => {
+    const onUpdateGoldGift = vi.fn(() => true)
+    renderGold([GIFT], [PURCHASE], { onUpdateGoldGift })
+
+    fireEvent.click(screen.getByRole("button", { name: "Sửa lần tặng 12/10/2026" }))
+    const dialog = screen.getByRole("dialog", { name: "Sửa lần tặng vàng" })
+    expect(within(dialog).getByText("Lần mua ngày 10/08/2026 ở SJC · tặng được tối đa 1 chỉ")).toBeInTheDocument()
+    fireEvent.change(within(dialog).getByLabelText("Số lượng tặng (phân)", { exact: false }), {
+      target: { value: "2" },
+    })
+    fireEvent.click(within(dialog).getByRole("button", { name: "Lưu" }))
+
+    expect(onUpdateGoldGift).toHaveBeenCalledWith(1, { date: "12/10/2026", qty: 2 })
+  })
+
+  it("asks before undoing a gift and says where the quantity goes back to", () => {
+    const onRemoveGoldGift = vi.fn()
+    renderGold([GIFT], [PURCHASE], { onRemoveGoldGift })
+
+    fireEvent.click(screen.getByRole("button", { name: "Huỷ lần tặng 12/10/2026" }))
+    const dialog = screen.getByRole("alertdialog")
+    expect(within(dialog).getByText("Huỷ lần tặng này?")).toBeInTheDocument()
+    expect(dialog).toHaveTextContent("1 phân sẽ trả về lần mua ngày 10/08/2026 ở SJC.")
+    expect(onRemoveGoldGift).not.toHaveBeenCalled()
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Huỷ lần tặng" }))
+
+    expect(onRemoveGoldGift).toHaveBeenCalledWith(1)
   })
 })

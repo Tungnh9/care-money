@@ -23,6 +23,12 @@ function formatDayKey(key: string): string {
   return `${weekday}, ${String(d).padStart(2, "0")}/${String(m).padStart(2, "0")}`
 }
 
+// "2026-09-30" → "30/09": ngày gọn trong 1 tháng đã biết (khối Chốt sổ, khối Quà tặng ở Chi tiêu).
+function formatShortDayKey(key: string): string {
+  const [, month, day] = key.split("-")
+  return `${day}/${month}`
+}
+
 function monthKey(d: Date = new Date()): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
 }
@@ -113,6 +119,7 @@ export {
   daysBetween,
   daysInMonth,
   formatDayKey,
+  formatShortDayKey,
   formatDayKeyWithYear,
   formatMonthKey,
   formatShortDate,

@@ -8,7 +8,7 @@ import {
   applySavingsFundDelta,
   applyCardBalanceDelta,
 } from "@/lib/finance/finance-storage"
-import type { CreditCard, SavingsFund, SilverPurchase, SilverStore } from "@/lib/finance/types"
+import type { CreditCard, MetalGift, SavingsFund, SilverPurchase, SilverStore } from "@/lib/finance/types"
 
 describe("getStoredFinance", () => {
   beforeEach(() => {
@@ -401,5 +401,62 @@ describe("getStoredFinance — tích lũy bạc", () => {
     expect(stored.goldStores).toEqual([{ name: "Chưa gắn cửa hàng", price: "950.000" }])
     expect(stored.silver).toEqual(silver)
     expect(stored.silverStores).toEqual([{ name: "Phú Quý", price: "2.000.000" }])
+  })
+})
+
+describe("getStoredFinance — lần tặng vàng/bạc", () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+
+  it("keeps every field of a gold and a silver gift through a stored round trip", () => {
+    const goldGift: Required<MetalGift> = {
+      id: 1,
+      purchaseId: 3,
+      date: "12/10/2026",
+      qty: 1,
+      store: "SJC",
+      buy: 900_000,
+      note: "tặng mẹ",
+    }
+    const silverGift: Required<MetalGift> = {
+      id: 1,
+      purchaseId: 1,
+      date: "13/10/2026",
+      qty: 2,
+      store: "Phú Quý",
+      buy: 1_800_000,
+      note: "tặng bạn",
+    }
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, goldGifts: [goldGift], silverGifts: [silverGift] })
+
+    expect(getStoredFinance().goldGifts).toEqual([goldGift])
+    expect(getStoredFinance().silverGifts).toEqual([silverGift])
+  })
+
+  it("drops only the malformed gift, keeping its valid siblings", () => {
+    const valid = { id: 2, purchaseId: 1, date: "12/10/2026", qty: 1, store: "SJC", buy: 900_000 }
+    window.localStorage.setItem(
+      FINANCE_STORAGE_KEY,
+      JSON.stringify({
+        ...DEFAULT_FINANCE_STATE,
+        goldGifts: [{ id: 1, purchaseId: 1, date: "11/10/2026", qty: null, store: "SJC", buy: 900_000 }, valid],
+      })
+    )
+
+    expect(getStoredFinance().goldGifts).toEqual([valid])
+  })
+
+  it("reads no gifts from data saved before gifts existed", () => {
+    const gold = [{ id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" }]
+    window.localStorage.setItem(
+      FINANCE_STORAGE_KEY,
+      JSON.stringify({ savings: [], cards: [], gold, goldStores: [], silver: [], silverStores: [], invests: [] })
+    )
+
+    const stored = getStoredFinance()
+    expect(stored.goldGifts).toEqual([])
+    expect(stored.silverGifts).toEqual([])
+    expect(stored.gold).toEqual(gold)
   })
 })

@@ -271,4 +271,45 @@ describe("FinanceView", () => {
     }
     expect(pillars[0].parentElement).toHaveClass("@container")
   })
+  it("gives away 1 phân from a purchase, then undoes it, with the pillar, net worth and history following", () => {
+    // 10 phân mua 800.000/phân, SJC hôm nay 900.000/phân.
+    window.localStorage.setItem(
+      FINANCE_STORAGE_KEY,
+      JSON.stringify({
+        ...DEFAULT_FINANCE_STATE,
+        gold: [{ id: 1, date: "10/08/2026", phan: 10, buy: 800_000, store: "SJC" }],
+        goldStores: [{ name: "SJC", price: "900000" }],
+      })
+    )
+    render(<FinanceView />)
+    const netSection = screen.getByText("Tài sản ròng").closest("section") as HTMLElement
+
+    fireEvent.click(screen.getByRole("button", { name: "Tích lũy vàng" }))
+    fireEvent.click(screen.getAllByRole("button", { name: "Tặng từ lần mua vàng 10/08/2026" })[0])
+    const dialog = screen.getByRole("dialog", { name: "Tặng vàng" })
+    fireEvent.change(within(dialog).getByLabelText("Ngày tặng", { exact: false }), { target: { value: "12/10/2026" } })
+    fireEvent.change(within(dialog).getByLabelText("Số lượng tặng (phân)", { exact: false }), { target: { value: "1" } })
+    fireEvent.click(within(dialog).getByRole("button", { name: "Lưu" }))
+    act(() => {
+      vi.advanceTimersByTime(1200)
+    })
+
+    // Còn 9 phân: vốn 7.200.000, giá trị 8.100.000 → +12,5%; Tài sản ròng = 8.100.000.
+    expect(screen.getByText("9 phân · +12,5%")).toBeInTheDocument()
+    expect(within(netSection).getByText(formatMoney(8_100_000))).toBeInTheDocument()
+    expect(screen.getByText("Lịch sử tặng · 1 lần")).toBeInTheDocument()
+    expect(JSON.parse(window.localStorage.getItem(FINANCE_STORAGE_KEY) ?? "{}").goldGifts).toEqual([
+      { id: 1, purchaseId: 1, date: "12/10/2026", qty: 1, store: "SJC", buy: 800_000 },
+    ])
+
+    fireEvent.click(screen.getByRole("button", { name: "Huỷ lần tặng 12/10/2026" }))
+    fireEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Huỷ lần tặng" }))
+    act(() => {
+      vi.advanceTimersByTime(1200)
+    })
+
+    expect(screen.getByText("10 phân · +12,5%")).toBeInTheDocument()
+    expect(within(netSection).getByText(formatMoney(9_000_000))).toBeInTheDocument()
+    expect(screen.queryByText(/Lịch sử tặng/)).not.toBeInTheDocument()
+  })
 })

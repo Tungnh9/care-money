@@ -31,8 +31,10 @@ function FinanceView() {
     cards,
     gold,
     goldStores,
+    goldGifts,
     silver,
     silverStores,
+    silverGifts,
     invests,
     addSavingsFund,
     updateSavingsFund,
@@ -48,6 +50,9 @@ function FinanceView() {
     addGold,
     updateGold,
     removeGold,
+    addGoldGift,
+    updateGoldGift,
+    removeGoldGift,
     addSilverStore,
     updateSilverStore,
     removeSilverStore,
@@ -55,12 +60,25 @@ function FinanceView() {
     addSilver,
     updateSilver,
     removeSilver,
+    addSilverGift,
+    updateSilverGift,
+    removeSilverGift,
     addInvest,
     updateInvest,
     removeInvest,
   } = useFinance()
 
-  const summary = summarizeFinance({ savings, cards, gold, goldStores, silver, silverStores, invests })
+  const summary = summarizeFinance({
+    savings,
+    cards,
+    gold,
+    goldStores,
+    goldGifts,
+    silver,
+    silverStores,
+    silverGifts,
+    invests,
+  })
   // "Hạn gần nhất" = thẻ còn nợ đến hạn sớm nhất tính từ hôm nay, không phải thẻ thêm đầu tiên.
   const nearestCard = nearestDueCard(cards, new Date())
 
@@ -155,6 +173,10 @@ function FinanceView() {
             onAddGold={addGold}
             onUpdateGold={updateGold}
             onRemoveGold={removeGold}
+            goldGifts={goldGifts}
+            onAddGoldGift={addGoldGift}
+            onUpdateGoldGift={updateGoldGift}
+            onRemoveGoldGift={removeGoldGift}
           />
         ) : tab === "Tích lũy bạc" ? (
           <SilverTab
@@ -168,6 +190,10 @@ function FinanceView() {
             onAddSilver={addSilver}
             onUpdateSilver={updateSilver}
             onRemoveSilver={removeSilver}
+            silverGifts={silverGifts}
+            onAddSilverGift={addSilverGift}
+            onUpdateSilverGift={updateSilverGift}
+            onRemoveSilverGift={removeSilverGift}
           />
         ) : (
           <InvestmentsTab

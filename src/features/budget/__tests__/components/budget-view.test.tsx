@@ -875,4 +875,35 @@ describe("BudgetView", () => {
     await waitFor(() => expect(getStoredFinance().cards[0].balance).toBe(500_000))
     expect(screen.getByText(summaryLine(`Lương ${formatMoney(10_000_000)} · đã chi ${formatMoney(300_000)} tháng này`))).toBeInTheDocument()
   })
+  it("lists this month's gold and silver gifts without counting them as spending", async () => {
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      gold: [{ id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" }],
+      goldGifts: [
+        { id: 1, purchaseId: 1, date: "15/09/2026", qty: 1, store: "SJC", buy: 900_000, note: "tặng mẹ" },
+        { id: 2, purchaseId: 1, date: "20/08/2026", qty: 1, store: "SJC", buy: 900_000 },
+      ],
+      silver: [{ id: 1, date: "10/08/2026", luong: 3, buy: 1_800_000, store: "Phú Quý" }],
+      silverGifts: [{ id: 1, purchaseId: 1, date: "02/09/2026", qty: 2, store: "Phú Quý", buy: 1_800_000 }],
+    })
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [{ month: "2026-09", amount: 1_000_000 }],
+      expenses: [{ id: 1, dayKey: "2026-09-01", amount: 200_000, tag: null }],
+    })
+
+    render(<BudgetView />)
+
+    const block = await screen.findByTestId("gift-block")
+    const rows = within(block).getAllByTestId("gift-row")
+    // Lần tặng 20/08 thuộc tháng trước — không có trong khối của tháng 9.
+    expect(rows).toHaveLength(2)
+    expect(within(rows[0]).getByText("Tặng 1 phân vàng")).toBeInTheDocument()
+    expect(within(rows[0]).getByText("15/09 · SJC · tặng mẹ")).toBeInTheDocument()
+    expect(within(rows[1]).getByText("Tặng 2 lượng bạc")).toBeInTheDocument()
+    expect(screen.getAllByTestId("expense-day-header")).toHaveLength(1)
+    expect(
+      screen.getByText(summaryLine(`Lương ${formatMoney(1_000_000)} · đã chi ${formatMoney(200_000)} tháng này`))
+    ).toBeInTheDocument()
+  })
 })

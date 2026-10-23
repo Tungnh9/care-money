@@ -1954,3 +1954,207 @@ describe("useFinance — thẻ gắn với khoản chi", () => {
     expect(debt("Visa")).toBe(0)
   })
 })
+
+describe("useFinance — tặng vàng/bạc", () => {
+  const PURCHASE = { id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" }
+  const SJC = { name: "SJC", price: "1.000.000" }
+  const GIFT = { id: 1, purchaseId: 1, date: "12/10/2026", qty: 1, store: "SJC", buy: 900_000 }
+
+  beforeEach(() => {
+    window.localStorage.clear()
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    vi.mocked(toast.success).mockClear()
+    vi.mocked(toast.error).mockClear()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  async function renderWithGold(goldGifts: (typeof GIFT & { note?: string })[] = []) {
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, gold: [PURCHASE], goldStores: [SJC], goldGifts })
+    const hook = renderHook(() => useFinance())
+    await waitFor(() => expect(hook.result.current.gold).toHaveLength(1))
+    return hook
+  }
+
+  it("records a gift from a purchase with a snapshot of its store and buy price", async () => {
+    const { result } = await renderWithGold()
+
+    let saved = false
+    act(() => {
+      saved = result.current.addGoldGift(1, { date: "12/10/2026", qty: 1, note: "tặng mẹ" })
+    })
+
+    expect(saved).toBe(true)
+    expect(result.current.goldGifts).toEqual([{ ...GIFT, note: "tặng mẹ" }])
+    expect(getStoredFinance().goldGifts).toEqual([{ ...GIFT, note: "tặng mẹ" }])
+    expect(getStoredFinance().gold).toEqual([PURCHASE])
+    expect(toast.success).toHaveBeenCalledWith("Đã ghi lần tặng 1 phân vàng ngày 12/10/2026")
+  })
+
+  it("puts the newest gift first with the next id", async () => {
+    const { result } = await renderWithGold([GIFT])
+
+    act(() => {
+      result.current.addGoldGift(1, { date: "13/10/2026", qty: 2 })
+    })
+
+    expect(result.current.goldGifts.map((gift) => gift.id)).toEqual([2, 1])
+  })
+
+  it("refuses a gift bigger than what is left of the purchase", async () => {
+    const { result } = await renderWithGold()
+
+    let saved = true
+    act(() => {
+      saved = result.current.addGoldGift(1, { date: "12/10/2026", qty: 11 })
+    })
+
+    expect(saved).toBe(false)
+    expect(result.current.goldGifts).toEqual([])
+    expect(toast.error).toHaveBeenCalledWith("Lần mua này chỉ còn 1 chỉ — không đủ để tặng 1 chỉ 1 phân.")
+  })
+
+  it("refuses a gift that is not a whole number above zero", async () => {
+    const { result } = await renderWithGold()
+
+    for (const qty of [0, -1, 1.5]) {
+      act(() => {
+        expect(result.current.addGoldGift(1, { date: "12/10/2026", qty })).toBe(false)
+      })
+    }
+
+    expect(result.current.goldGifts).toEqual([])
+    expect(toast.error).toHaveBeenCalledWith("Số lượng tặng phải là số nguyên lớn hơn 0.")
+  })
+
+  it("checks what is left against the latest stored gifts, even ones another tab just wrote", async () => {
+    const { result } = await renderWithGold()
+    // Tab khác vừa tặng 9 phân từ cùng lần mua, ghi thẳng vào storage.
+    window.localStorage.setItem(
+      FINANCE_STORAGE_KEY,
+      JSON.stringify({ ...getStoredFinance(), goldGifts: [{ ...GIFT, qty: 9 }] })
+    )
+
+    let saved = true
+    act(() => {
+      saved = result.current.addGoldGift(1, { date: "12/10/2026", qty: 2 })
+    })
+
+    expect(saved).toBe(false)
+    expect(getStoredFinance().goldGifts).toEqual([{ ...GIFT, qty: 9 }])
+    expect(toast.error).toHaveBeenCalledWith("Lần mua này chỉ còn 1 phân — không đủ để tặng 2 phân.")
+  })
+
+  it("refuses a gift from a purchase that no longer exists", async () => {
+    const { result } = await renderWithGold()
+
+    let saved = true
+    act(() => {
+      saved = result.current.addGoldGift(99, { date: "12/10/2026", qty: 1 })
+    })
+
+    expect(saved).toBe(false)
+    expect(toast.error).toHaveBeenCalledWith("Không tìm thấy lần mua này nữa.")
+  })
+
+  it("says the gift was not saved when the storage write fails", async () => {
+    const { result } = await renderWithGold()
+
+    const spy = vi.spyOn(Storage.prototype, "setItem").mockImplementationOnce(() => {
+      throw new Error("QuotaExceededError")
+    })
+    let saved = true
+    act(() => {
+      saved = result.current.addGoldGift(1, { date: "12/10/2026", qty: 1 })
+    })
+    spy.mockRestore()
+
+    expect(saved).toBe(false)
+    expect(result.current.goldGifts).toEqual([])
+    expect(toast.error).toHaveBeenCalledWith("Không thể ghi lần tặng vàng. Vui lòng thử lại.")
+  })
+
+  it("edits a gift up to what is left plus its own quantity, keeping its snapshot and purchase", async () => {
+    // Bản chụp khác lần mua hiện tại (lần mua đã được sửa giá sau khi tặng) — sửa lần tặng không chụp lại.
+    const { result } = await renderWithGold([{ ...GIFT, qty: 3, store: "SJC cũ", buy: 850_000, note: "tặng mẹ" }])
+
+    let saved = true
+    act(() => {
+      saved = result.current.updateGoldGift(1, { date: "13/10/2026", qty: 11 })
+    })
+    expect(saved).toBe(false)
+
+    act(() => {
+      saved = result.current.updateGoldGift(1, { date: "13/10/2026", qty: 10 })
+    })
+
+    expect(saved).toBe(true)
+    expect(result.current.goldGifts).toEqual([
+      { id: 1, purchaseId: 1, date: "13/10/2026", qty: 10, store: "SJC cũ", buy: 850_000 },
+    ])
+    expect(toast.success).toHaveBeenCalledWith("Đã cập nhật lần tặng vàng ngày 13/10/2026")
+  })
+
+  it("undoes a gift so its quantity goes back to the purchase", async () => {
+    const { result } = await renderWithGold([GIFT])
+
+    act(() => {
+      result.current.removeGoldGift(1)
+    })
+
+    expect(result.current.goldGifts).toEqual([])
+    expect(getStoredFinance().goldGifts).toEqual([])
+    expect(toast.success).toHaveBeenCalledWith("Đã huỷ lần tặng vàng ngày 12/10/2026")
+  })
+
+  it("blocks deleting a purchase that still has gifts taken out of it", async () => {
+    const { result } = await renderWithGold([GIFT])
+
+    act(() => {
+      result.current.removeGold(1)
+    })
+
+    expect(result.current.gold).toEqual([PURCHASE])
+    expect(toast.error).toHaveBeenCalledWith(
+      "Không thể xoá lần mua này vì đã có lần tặng lấy từ đây. Huỷ các lần tặng trước."
+    )
+  })
+
+  it("blocks editing a purchase's quantity below what was already given away", async () => {
+    const { result } = await renderWithGold([GIFT])
+    const fields = { date: PURCHASE.date, phan: PURCHASE.phan, buy: PURCHASE.buy, store: PURCHASE.store }
+
+    act(() => {
+      result.current.updateGold(1, { ...fields, phan: 0 })
+    })
+    expect(result.current.gold).toEqual([PURCHASE])
+    expect(toast.error).toHaveBeenCalledWith("Lần mua này đã tặng 1 phân — không sửa số lượng xuống thấp hơn.")
+
+    act(() => {
+      result.current.updateGold(1, { ...fields, phan: 5 })
+    })
+    expect(result.current.gold).toEqual([{ ...PURCHASE, phan: 5 }])
+  })
+
+  it("records a silver gift in the silver list only, with silver wording", async () => {
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      silver: [{ id: 1, date: "10/08/2026", luong: 3, buy: 1_800_000, store: "Phú Quý" }],
+      silverStores: [{ name: "Phú Quý", price: "2.000.000" }],
+    })
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.silver).toHaveLength(1))
+
+    act(() => {
+      result.current.addSilverGift(1, { date: "12/10/2026", qty: 1 })
+    })
+
+    expect(result.current.silverGifts).toEqual([
+      { id: 1, purchaseId: 1, date: "12/10/2026", qty: 1, store: "Phú Quý", buy: 1_800_000 },
+    ])
+    expect(result.current.goldGifts).toEqual([])
+    expect(toast.success).toHaveBeenCalledWith("Đã ghi lần tặng 1 lượng bạc ngày 12/10/2026")
+  })
+})

@@ -1,4 +1,5 @@
-import type { MetalPurchaseBase, MetalStore } from "@/lib/finance/types"
+import { monthKeyFromDayKey } from "@/lib/date"
+import type { MetalGift, MetalPurchaseBase, MetalStore } from "@/lib/finance/types"
 
 // Phép tính dùng chung cho tích lũy vàng và bạc. Hàm nào cần khối lượng thì nhận `quantityOf` để đọc
 // đúng field của từng kim loại (vàng: `phan`, bạc: `luong`); giá mua/giá hôm nay luôn tính theo đúng
@@ -71,6 +72,48 @@ function parsePurchaseDate(date: string): number {
 
 function sortByPurchaseDate<P extends Pick<MetalPurchaseBase, "date">>(purchases: P[]): P[] {
   return [...purchases].sort((a, b) => parsePurchaseDate(b.date) - parsePurchaseDate(a.date))
+}
+
+// Ngày mua/ngày tặng (dd/mm/yyyy) → dayKey (yyyy-mm-dd) để xếp vào tháng như khoản chi; không đọc được → null.
+function purchaseDateToDayKey(date: string): string | null {
+  const normalized = normalizePurchaseDate(date)
+  if (!normalized) return null
+  const [day, month, year] = normalized.split("/")
+  return `${year}-${month}-${day}`
+}
+
+// Ngày máy → dd/mm/yyyy, dạng gõ ở ô ngày mua/ngày tặng.
+function toPurchaseDate(d: Date): string {
+  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`
+}
+
+// Tổng đã tặng của từng lần mua (theo id lần mua).
+function giftedByPurchase(gifts: Pick<MetalGift, "purchaseId" | "qty">[]): Map<number, number> {
+  const gifted = new Map<number, number>()
+  for (const gift of gifts) gifted.set(gift.purchaseId, (gifted.get(gift.purchaseId) ?? 0) + gift.qty)
+  return gifted
+}
+
+// Số còn giữ của 1 lần mua = số đã mua − tổng đã tặng từ lần mua đó. Lần mua không lưu số còn lại — tính
+// ra từ đây, nên mọi chỗ định giá (tổng đang giữ, Tài sản ròng, bảng, tổng hợp) giảm theo cùng 1 cách.
+// Không có lần tặng nào thì trả đúng quantityOf(p) (x − 0 = x), số vàng giữ nguyên từng bit.
+function heldQuantityOf<P extends MetalPurchaseBase>(
+  quantityOf: (purchase: P) => number,
+  gifts: Pick<MetalGift, "purchaseId" | "qty">[]
+): (purchase: P) => number {
+  const gifted = giftedByPurchase(gifts)
+  return (purchase) => quantityOf(purchase) - (gifted.get(purchase.id) ?? 0)
+}
+
+// Các lần tặng có ngày tặng thuộc `month` (YYYY-MM), mới nhất trước; cùng ngày thì id cao (ghi sau) trước.
+// Ngày không đọc được (chỉ có từ file sửa tay) thì bỏ — không đoán nó thuộc tháng nào.
+function giftsInMonth(gifts: MetalGift[], month: string): (MetalGift & { dayKey: string })[] {
+  const items: (MetalGift & { dayKey: string })[] = []
+  for (const gift of gifts) {
+    const dayKey = purchaseDateToDayKey(gift.date)
+    if (dayKey !== null && monthKeyFromDayKey(dayKey) === month) items.push({ ...gift, dayKey })
+  }
+  return items.sort((a, b) => b.dayKey.localeCompare(a.dayKey) || b.id - a.id)
 }
 
 // Ô khối lượng chỉ nhận số nguyên dương (phân với vàng, lượng với bạc): số lẻ thì hiện nhiễu số thực
@@ -184,6 +227,11 @@ export {
   normalizePurchaseDate,
   parsePurchaseDate,
   sortByPurchaseDate,
+  purchaseDateToDayKey,
+  toPurchaseDate,
+  giftedByPurchase,
+  heldQuantityOf,
+  giftsInMonth,
   parseWholeQuantity,
   metalPurchaseLabels,
   summarizeMetalHolding,

@@ -4,7 +4,7 @@ import { render, screen, fireEvent, within } from "@testing-library/react"
 import { formatMoney } from "@/lib/format"
 import { pct1, summarizeFinance, type FinanceSummary } from "@/lib/finance/finance-calculations"
 import { DEFAULT_FINANCE_STATE } from "@/lib/finance/finance-storage"
-import type { SilverPurchase, SilverStore } from "@/lib/finance/types"
+import type { MetalGift, SilverPurchase, SilverStore } from "@/lib/finance/types"
 import { SilverTab } from "../../components/silver-tab"
 
 const ZERO_SUMMARY: FinanceSummary = summarizeFinance(DEFAULT_FINANCE_STATE)
@@ -20,6 +20,10 @@ const noopHandlers = {
   onAddSilver: vi.fn(),
   onUpdateSilver: vi.fn(),
   onRemoveSilver: vi.fn(),
+  silverGifts: [] as MetalGift[],
+  onAddSilverGift: vi.fn(() => true),
+  onUpdateSilverGift: vi.fn(() => true),
+  onRemoveSilverGift: vi.fn(),
 }
 
 function summaryOf(silver: SilverPurchase[], silverStores: SilverStore[]): FinanceSummary {
@@ -237,5 +241,27 @@ describe("SilverTab", () => {
     render(<SilverTab summary={summaryOf(silver, [PHU_QUY])} stores={[PHU_QUY]} silver={silver} {...noopHandlers} />)
 
     expect(screen.getAllByRole("button", { name: "Sửa giao dịch bạc 10/08/2026 · Phú Quý · 5 lượng" })).toHaveLength(2)
+  })
+  it("offers to gift from a silver purchase, in lượng", () => {
+    const onAddSilverGift = vi.fn(() => true)
+    render(
+      <SilverTab
+        summary={summaryOf([PURCHASE], [PHU_QUY])}
+        stores={[PHU_QUY]}
+        silver={[PURCHASE]}
+        {...noopHandlers}
+        onAddSilverGift={onAddSilverGift}
+      />
+    )
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Tặng từ lần mua bạc 10/08/2026" })[0])
+    const dialog = screen.getByRole("dialog", { name: "Tặng bạc" })
+    fireEvent.change(within(dialog).getByLabelText("Số lượng tặng (lượng)", { exact: false }), {
+      target: { value: "1" },
+    })
+    fireEvent.change(within(dialog).getByLabelText("Ngày tặng", { exact: false }), { target: { value: "12/10/2026" } })
+    fireEvent.click(within(dialog).getByRole("button", { name: "Lưu" }))
+
+    expect(onAddSilverGift).toHaveBeenCalledWith(1, { date: "12/10/2026", qty: 1 })
   })
 })

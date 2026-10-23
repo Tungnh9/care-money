@@ -1,6 +1,6 @@
 import { formatMoney } from "@/lib/format"
 import type { FinanceState } from "@/lib/finance/finance-storage"
-import { parseMetalPrice, summarizeMetalHolding } from "@/lib/finance/metal-calculations"
+import { heldQuantityOf, parseMetalPrice, summarizeMetalHolding } from "@/lib/finance/metal-calculations"
 import type { CreditCard, GoldStore } from "@/lib/finance/types"
 
 // Khối lượng vàng lưu theo phân (10 phân = 1 chỉ). Form chỉ nhận phân nguyên, nhưng dữ liệu cũ có thể
@@ -59,14 +59,23 @@ function summarizeFinance(state: FinanceState): FinanceSummary {
   const savingsTotal = state.savings.reduce((sum, fund) => sum + fund.amount, 0)
   const debtTotal = state.cards.reduce((sum, card) => sum + card.balance, 0)
 
-  const gold = summarizeMetalHolding(state.gold, state.goldStores, (purchase) => purchase.phan)
+  // Chỉ tính phần còn giữ: số đã tặng của từng lần mua được trừ ra trước khi định giá.
+  const gold = summarizeMetalHolding(
+    state.gold,
+    state.goldStores,
+    heldQuantityOf((purchase) => purchase.phan, state.goldGifts)
+  )
   const goldPhan = gold.qty
   const goldCost = gold.cost
   const goldValue = gold.value
   const goldPL = gold.pl
   const goldPct = gold.pct
 
-  const silver = summarizeMetalHolding(state.silver, state.silverStores, (purchase) => purchase.luong)
+  const silver = summarizeMetalHolding(
+    state.silver,
+    state.silverStores,
+    heldQuantityOf((purchase) => purchase.luong, state.silverGifts)
+  )
 
   const investCost = state.invests.reduce((sum, invest) => sum + invest.cost, 0)
   const investValue = state.invests.reduce((sum, invest) => sum + invest.value, 0)
