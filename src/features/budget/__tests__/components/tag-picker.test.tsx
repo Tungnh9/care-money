@@ -77,4 +77,29 @@ describe("TagPicker", () => {
 
     expect(screen.getAllByRole("button", { name: /Tiền trọ/ })).toHaveLength(1)
   })
+
+  it("disables a chip listed in disabledLabels", () => {
+    render(<TagPicker tags={TAGS} selectedLabel={null} onSelect={vi.fn()} disabledLabels={["Mua sắm"]} />)
+
+    expect(screen.getByRole("button", { name: /Mua sắm/ })).toBeDisabled()
+    expect(screen.getByRole("button", { name: /Tiền trọ/ })).not.toBeDisabled()
+  })
+
+  it("hides a chip listed in hiddenLabels but still shows it as the extra tag of the expense being edited", () => {
+    const { rerender } = render(
+      <TagPicker tags={TAGS} selectedLabel={null} onSelect={vi.fn()} hiddenLabels={["Mua sắm"]} />
+    )
+    expect(screen.queryByRole("button", { name: /Mua sắm/ })).not.toBeInTheDocument()
+
+    rerender(
+      <TagPicker
+        tags={TAGS}
+        selectedLabel="Mua sắm"
+        onSelect={vi.fn()}
+        hiddenLabels={["Mua sắm"]}
+        extraTag={{ label: "Mua sắm", emoji: "🛍️", tint: "#E7F6EF" }}
+      />
+    )
+    expect(screen.getAllByRole("button", { name: /Mua sắm/ })).toHaveLength(1)
+  })
 })

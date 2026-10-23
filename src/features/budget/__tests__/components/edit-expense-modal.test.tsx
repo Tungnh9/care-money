@@ -1,9 +1,12 @@
 import { describe, it, expect, vi } from "vitest"
-import { render, screen, fireEvent } from "@testing-library/react"
+import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 
+import { MoneyVisibilityProvider } from "@/components/money-visibility-provider"
+import { formatMoney } from "@/lib/format"
 import { EditExpenseModal } from "../../components/edit-expense-modal"
 import type { BudgetTag } from "@/lib/settings/settings-storage"
 import type { Expense } from "@/lib/budget/types"
+import type { CreditCard } from "@/lib/finance/types"
 
 const TAGS: BudgetTag[] = [
   { label: "Tiền trọ", emoji: "🏠", desc: "", tint: "#FFF0B8", on: true },
@@ -46,7 +49,7 @@ describe("EditExpenseModal", () => {
   })
 
   it("saves the edited amount, tag and note, then closes", () => {
-    const onSave = vi.fn()
+    const onSave = vi.fn(() => true)
     const onOpenChange = vi.fn()
     render(<EditExpenseModal expense={EXPENSE} tags={TAGS} onOpenChange={onOpenChange} onSave={onSave} />)
 
@@ -145,5 +148,108 @@ describe("EditExpenseModal", () => {
 
     expect(screen.getByText("Tối đa 999.999.999.999 đ")).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
+  })
+})
+
+const CARDS: CreditCard[] = [{ name: "Visa", balance: 1_000_000, min: 0, limit: 10_000_000, due: "" }]
+const SWIPE_TAG = { label: "Quẹt thẻ", emoji: "🧾", tint: "#F0ECFE" }
+const PAY_TAG = { label: "Trả nợ thẻ", emoji: "💳", tint: "#EAF1FE" }
+const SWIPE: Expense = {
+  id: 10, dayKey: "2026-09-05", amount: 500_000, tag: SWIPE_TAG, card: { kind: "swipe", cardName: "Visa" },
+}
+const PAYMENT: Expense = {
+  id: 11, dayKey: "2026-09-05", amount: 400_000, tag: PAY_TAG, card: { kind: "payment", cardName: "Visa" },
+}
+const TAGS_WITH_CARD: BudgetTag[] = [
+  ...TAGS,
+  { label: "Quẹt thẻ", emoji: "🧾", desc: "", tint: "#F0ECFE", on: true },
+  { label: "Trả nợ thẻ", emoji: "💳", desc: "", tint: "#EAF1FE", on: true },
+]
+
+describe("EditExpenseModal with cards", () => {
+  it("shows a linked expense's tag and card as text, with no tag chips", () => {
+    const onSave = vi.fn(() => true)
+    render(<EditExpenseModal expense={SWIPE} tags={TAGS_WITH_CARD} cards={CARDS} onOpenChange={vi.fn()} onSave={onSave} />)
+
+    expect(screen.getByText("🧾 Quẹt thẻ")).toBeInTheDocument()
+    expect(screen.getByText("Thẻ Visa")).toBeInTheDocument()
+    expect(screen.getByText("Muốn đổi nhãn hay thẻ thì xoá khoản này rồi ghi lại.")).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /Tiền trọ/ })).not.toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText("Số tiền", { exact: false }), { target: { value: "600000" } })
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
+    expect(onSave).toHaveBeenCalledWith(10, { amount: 600_000, tag: SWIPE_TAG, note: undefined })
+  })
+
+  it("shows Thẻ đã xoá for a linked expense whose card was deleted", () => {
+    const orphan: Expense = { ...SWIPE, card: { kind: "swipe", cardName: null } }
+    render(<EditExpenseModal expense={orphan} tags={TAGS_WITH_CARD} cards={[]} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+
+    expect(screen.getByText("Thẻ đã xoá")).toBeInTheDocument()
+  })
+
+  it("blocks raising a payment above the card's debt", () => {
+    render(<EditExpenseModal expense={PAYMENT} tags={TAGS_WITH_CARD} cards={CARDS} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+
+    fireEvent.change(screen.getByLabelText("Số tiền", { exact: false }), { target: { value: "1500000" } })
+
+    expect(screen.getByText(/Thẻ "Visa" chỉ còn nợ/)).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
+  })
+
+  it("blocks lowering a swipe by more than the card still owes", () => {
+    const paidDown = [{ ...CARDS[0], balance: 200_000 }]
+    render(<EditExpenseModal expense={SWIPE} tags={TAGS_WITH_CARD} cards={paidDown} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+
+    fireEvent.change(screen.getByLabelText("Số tiền", { exact: false }), { target: { value: "100000" } })
+
+    expect(screen.getByText(/Thẻ "Visa" chỉ còn nợ/)).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
+  })
+
+  it("masks the card's debt in the over-debt hint while money is hidden", async () => {
+    window.localStorage.setItem("hide-money", "1")
+    try {
+      render(
+        <MoneyVisibilityProvider>
+          <EditExpenseModal expense={PAYMENT} tags={TAGS_WITH_CARD} cards={CARDS} onOpenChange={vi.fn()} onSave={vi.fn()} />
+        </MoneyVisibilityProvider>
+      )
+
+      fireEvent.change(screen.getByLabelText("Số tiền", { exact: false }), { target: { value: "1500000" } })
+
+      await waitFor(() =>
+        expect(screen.getByText(`Thẻ "Visa" chỉ còn nợ ${formatMoney(1_000_000, true)}`)).toBeInTheDocument()
+      )
+      expect(document.body).not.toHaveTextContent(formatMoney(1_000_000))
+      expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
+    } finally {
+      window.localStorage.removeItem("hide-money")
+    }
+  })
+
+  it("does not offer Quẹt thẻ or Trả nợ thẻ when editing an ordinary expense", () => {
+    render(<EditExpenseModal expense={EXPENSE} tags={TAGS_WITH_CARD} cards={CARDS} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+
+    expect(screen.queryByRole("button", { name: /Quẹt thẻ/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /Trả nợ thẻ/ })).not.toBeInTheDocument()
+  })
+
+  it("keeps an old Trả nợ thẻ expense's own tag selectable", () => {
+    const old: Expense = { id: 12, dayKey: "2026-09-05", amount: 300_000, tag: PAY_TAG }
+    render(<EditExpenseModal expense={old} tags={TAGS_WITH_CARD} cards={CARDS} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+
+    expect(screen.getByRole("button", { name: /Trả nợ thẻ/ })).toHaveClass("border-[var(--ob-color-action)]")
+  })
+
+  it("stays open when the save is refused", () => {
+    const onOpenChange = vi.fn()
+    const onSave = vi.fn(() => false)
+    render(<EditExpenseModal expense={EXPENSE} tags={TAGS} onOpenChange={onOpenChange} onSave={onSave} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
+
+    expect(onSave).toHaveBeenCalled()
+    expect(onOpenChange).not.toHaveBeenCalled()
   })
 })

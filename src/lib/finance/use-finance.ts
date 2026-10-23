@@ -20,7 +20,11 @@ import type {
 } from "@/lib/finance/types"
 import { toast } from "sonner"
 import { getCarGoalFundName, setCarGoalFundName } from "@/lib/goals/car-goal-storage"
-import { renameFundInSettlements } from "@/lib/budget/budget-storage"
+import {
+  detachCardFromExpenses,
+  renameCardInExpenses,
+  renameFundInSettlements,
+} from "@/lib/budget/budget-storage"
 import { nextId } from "@/lib/next-id"
 import { useStorageSync } from "@/lib/use-storage-sync"
 
@@ -325,37 +329,90 @@ function useFinance() {
     [persist]
   )
 
-  const updateCard = useCallback(
-    (originalName: string, card: CreditCard) => {
-      const current = getStoredFinance()
-      if (card.name !== originalName && current.cards.some((c) => c.name === card.name)) {
-        toast.error(`Đã có thẻ tín dụng tên "${card.name}". Vui lòng chọn tên khác.`)
-        return
-      }
+  // Khoản chi gắn thẻ lưu TÊN thẻ trong budget-data, nên đổi tên/xoá thẻ ghi 2 key: finance-data trước,
+  // rồi budget-data. Bước budget-data lỗi thì đặt lại đúng thẻ gốc vào finance-data đọc tươi — không
+  // để thẻ đã đổi tên/đã xoá mà khoản chi vẫn trỏ tên cũ. Đặt lại cũng lỗi thì persist chưa kịp
+  // setState, nên màn hình vẫn khớp finance-data; toast lỗi phía sau vẫn báo.
+  const restoreCards = useCallback(
+    (restore: (cards: CreditCard[]) => CreditCard[]) => {
       try {
-        persist({
-          ...current,
-          cards: current.cards.map((c) => (c.name === originalName ? card : c)),
-        })
-        toast.success(`Đã cập nhật thẻ tín dụng "${card.name}"`)
+        const fresh = getStoredFinance()
+        persist({ ...fresh, cards: restore(fresh.cards) })
       } catch {
-        toast.error(`Không thể cập nhật thẻ tín dụng "${card.name}". Vui lòng thử lại.`)
+        // không còn gì để đảo thêm
       }
     },
     [persist]
   )
 
+  // `balanceEdited` false: người dùng không sửa ô Dư nợ của "Sửa thẻ" — giữ dư nợ đọc tươi, vì trong
+  // lúc hộp mở có thể đã có khoản quẹt/trả ghi vào thẻ (tab khác), số chép lúc mở hộp đã cũ.
+  const updateCard = useCallback(
+    (originalName: string, card: CreditCard, balanceEdited = true) => {
+      const current = getStoredFinance()
+      if (card.name !== originalName && current.cards.some((c) => c.name === card.name)) {
+        toast.error(`Đã có thẻ tín dụng tên "${card.name}". Vui lòng chọn tên khác.`)
+        return
+      }
+      const original = current.cards.find((c) => c.name === originalName)
+      if (!original) {
+        // Thẻ vừa bị xoá ở nơi khác: không ghi gì, kể cả đổi tên các khoản chi còn mang tên cũ.
+        toast.error(`Không thể cập nhật thẻ tín dụng "${card.name}". Vui lòng thử lại.`)
+        return
+      }
+      const saved: CreditCard = { ...card, balance: balanceEdited ? card.balance : original.balance }
+      try {
+        persist({
+          ...current,
+          cards: current.cards.map((c) => (c.name === originalName ? saved : c)),
+        })
+      } catch {
+        toast.error(`Không thể cập nhật thẻ tín dụng "${card.name}". Vui lòng thử lại.`)
+        return
+      }
+      if (card.name !== originalName) {
+        try {
+          renameCardInExpenses(originalName, card.name)
+        } catch {
+          restoreCards((cards) => cards.map((c) => (c.name === card.name ? original : c)))
+          toast.error(`Không thể cập nhật thẻ tín dụng "${card.name}". Vui lòng thử lại.`)
+          return
+        }
+      }
+      toast.success(`Đã cập nhật thẻ tín dụng "${card.name}"`)
+    },
+    [persist, restoreCards]
+  )
+
   const removeCard = useCallback(
     (name: string) => {
       const current = getStoredFinance()
+      const index = current.cards.findIndex((c) => c.name === name)
+      const original = current.cards[index]
       try {
         persist({ ...current, cards: current.cards.filter((c) => c.name !== name) })
-        toast.success(`Đã xoá thẻ tín dụng "${name}"`)
       } catch {
         toast.error(`Không thể xoá thẻ tín dụng "${name}". Vui lòng thử lại.`)
+        return
       }
+      try {
+        // Gỡ liên kết (giữ kind) để 1 thẻ mới cùng tên tạo sau không bị các khoản cũ đụng vào nợ.
+        detachCardFromExpenses(name)
+      } catch {
+        if (original) {
+          // Chèn lại đúng vị trí cũ (thứ tự thẻ là thứ tự hiển thị).
+          restoreCards((cards) =>
+            cards.some((c) => c.name === name)
+              ? cards
+              : [...cards.slice(0, index), original, ...cards.slice(index)]
+          )
+        }
+        toast.error(`Không thể xoá thẻ tín dụng "${name}". Vui lòng thử lại.`)
+        return
+      }
+      toast.success(`Đã xoá thẻ tín dụng "${name}"`)
     },
-    [persist]
+    [persist, restoreCards]
   )
 
   const goldActions = useMetalActions(GOLD_LENS, persist)

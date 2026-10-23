@@ -9,6 +9,9 @@ import {
   groupExpensesByDay,
   monthlyExpenseTotals,
   monthlyTagBreakdown,
+  countedAmount,
+  swipedAmount,
+  swipedTotal,
   unsettledPastMonths,
   hasSalaryRecord,
   settlementsMadeInMonth,
@@ -433,7 +436,7 @@ describe("tagChartColors", () => {
     expect(colors.get("Mua sắm")).toBe(CHART_PALETTE[1])
   })
 
-  it("never repeats a colour among the 11 default tags", () => {
+  it("never repeats a colour among the 12 default tags", () => {
     const colors = tagChartColors(
       DEFAULT_TAGS.map((t) => t.label),
       DEFAULT_TAGS
@@ -487,5 +490,87 @@ describe("settlementsMadeInMonth", () => {
 
     expect(settlementsMadeInMonth([made], "2026-09", ["Quỹ B"])[0].fundDeleted).toBe(true)
     expect(settlementsMadeInMonth([made], "2026-09", ["Quỹ A"])[0].fundDeleted).toBe(false)
+  })
+})
+
+describe("card swipes", () => {
+  const SWIPE = { kind: "swipe", cardName: "Visa" } as const
+  const PAY = { kind: "payment", cardName: "Visa" } as const
+  const TAG_SWIPE = { label: "Quẹt thẻ", emoji: "🧾", tint: "#F0ECFE" }
+  const TAG_PAY = { label: "Trả nợ thẻ", emoji: "🏦", tint: "#FFE0C7" }
+  const mixed = [expense({ amount: 100_000 }), expense({ id: 2, amount: 500_000, tag: TAG_SWIPE, card: SWIPE })]
+
+  it("leaves a swipe out of the month total", () => {
+    expect(totalExpensesForMonth(mixed, "2026-09")).toBe(100_000)
+  })
+
+  it("leaves a swipe out of what remains to settle", () => {
+    expect(remainingToSettle([{ month: "2026-09", amount: 1_000_000 }], mixed, [], "2026-09")).toBe(900_000)
+  })
+
+  it("lists a swipe in its day but does not add it to the day total", () => {
+    const group = groupExpensesByDay(mixed)[0]
+    expect(group.total).toBe(100_000)
+    expect(group.expenses).toHaveLength(2)
+  })
+
+  it("drops swipes from the tag breakdown", () => {
+    expect(breakdownByTag(mixed, "2026-09")).toEqual([
+      { label: "Không gắn thẻ", emoji: "🏷️", tint: "#F2E9DC", total: 100_000 },
+    ])
+  })
+
+  it("drops swipes from the monthly tag series", () => {
+    expect(monthlyTagBreakdown(mixed, ["2026-09"])).toEqual([
+      { label: "Không gắn thẻ", emoji: "🏷️", tint: "#F2E9DC", data: [100_000] },
+    ])
+  })
+
+  it("leaves a swipe out of an older month's amount to settle", () => {
+    const salaries: MonthlySalary[] = [
+      { month: "2026-07", amount: 1_000_000 },
+      { month: "2026-08", amount: 1_000_000 },
+    ]
+    const list = [
+      // Tháng 8: còn 900.000 phải tất toán — khoản quẹt 500.000 không làm số này nhỏ đi.
+      expense({ id: 1, dayKey: "2026-08-10", amount: 100_000 }),
+      expense({ id: 2, dayKey: "2026-08-11", amount: 500_000, tag: TAG_SWIPE, card: SWIPE }),
+      // Tháng 7: chi đúng bằng lương nên đã khớp; khoản quẹt không được làm nó hiện ra là còn lệch.
+      expense({ id: 3, dayKey: "2026-07-10", amount: 1_000_000 }),
+      expense({ id: 4, dayKey: "2026-07-11", amount: 700_000, tag: TAG_SWIPE, card: SWIPE }),
+    ]
+
+    expect(unsettledPastMonths(salaries, list, [], "2026-09")).toEqual([{ month: "2026-08", remaining: 900_000 }])
+  })
+
+  it("leaves a swipe out of the monthly spending chart", () => {
+    const list = [
+      ...mixed,
+      expense({ id: 3, dayKey: "2026-08-15", amount: 2_000_000, tag: TAG_SWIPE, card: SWIPE }),
+    ]
+
+    expect(monthlyExpenseTotals(list, ["2026-08", "2026-09"])).toEqual([
+      { month: "2026-08", total: 0 },
+      { month: "2026-09", total: 100_000 },
+    ])
+  })
+
+  it("totals swipes separately per month", () => {
+    expect(swipedTotal(mixed, ["2026-09"])).toBe(500_000)
+    expect(swipedTotal(mixed, ["2026-08"])).toBe(0)
+  })
+
+  it("still counts a card payment and an old Trả nợ thẻ expense without a card link", () => {
+    const list = [
+      expense({ amount: 300_000, tag: TAG_PAY, card: PAY }),
+      expense({ id: 2, amount: 5_317_725, tag: TAG_PAY }),
+    ]
+    expect(totalExpensesForMonth(list, "2026-09")).toBe(5_617_725)
+  })
+
+  it("counts a swipe whose card was deleted as 0 too", () => {
+    const e = expense({ amount: 250_000, card: { kind: "swipe", cardName: null } })
+    expect(countedAmount(e)).toBe(0)
+    expect(swipedAmount(e)).toBe(250_000)
   })
 })

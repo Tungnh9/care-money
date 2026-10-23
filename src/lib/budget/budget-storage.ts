@@ -20,12 +20,19 @@ const tagSnapshotSchema = z.object({
   tint: z.string(),
 })
 
+const cardLinkSchema = z.object({
+  kind: z.enum(["swipe", "payment"]),
+  cardName: z.string().nullable(),
+})
+
 const expenseSchema: z.ZodType<Expense> = z.object({
   id: z.number(),
   dayKey: z.string(),
   amount: z.number().int().nonnegative(),
   note: z.string().optional(),
   tag: tagSnapshotSchema.nullable(),
+  // Liên kết thẻ hỏng thì chỉ mất liên kết, không mất khoản chi (khoản chi là lịch sử tiền thật).
+  card: cardLinkSchema.optional().catch(undefined),
 })
 
 const monthlySalarySchema: z.ZodType<MonthlySalary> = z.object({
@@ -82,6 +89,30 @@ function renameFundInSettlements(oldName: string, newName: string) {
   })
 }
 
+// Khoản chi gắn thẻ lưu TÊN thẻ — trang Tài chính gọi hàm này khi người dùng đổi tên thẻ để các
+// khoản quẹt/trả nợ cũ vẫn trỏ đúng thẻ (xoá khoản sau này mới trừ/cộng đúng nợ thẻ tên mới).
+function renameCardInExpenses(oldName: string, newName: string) {
+  const state = getStoredBudget()
+  setStoredBudget({
+    ...state,
+    expenses: state.expenses.map((e) =>
+      e.card?.cardName === oldName ? { ...e, card: { ...e.card, cardName: newName } } : e
+    ),
+  })
+}
+
+// Trang Tài chính gọi khi xoá thẻ. Gỡ liên kết (cardName: null, giữ kind) thay vì xoá khoản chi:
+// tiền đã quẹt/trả là lịch sử thật, và một thẻ mới cùng tên tạo sau này không được bị khoản cũ đụng tới.
+function detachCardFromExpenses(name: string) {
+  const state = getStoredBudget()
+  setStoredBudget({
+    ...state,
+    expenses: state.expenses.map((e) =>
+      e.card?.cardName === name ? { ...e, card: { ...e.card, cardName: null } } : e
+    ),
+  })
+}
+
 export {
   BUDGET_STORAGE_KEY,
   DEFAULT_BUDGET_STATE,
@@ -89,5 +120,7 @@ export {
   setStoredBudget,
   parseBudgetState,
   renameFundInSettlements,
+  renameCardInExpenses,
+  detachCardFromExpenses,
   type BudgetState,
 }

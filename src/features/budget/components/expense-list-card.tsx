@@ -128,14 +128,26 @@ function ExpenseListCard({ expenses, settlements = [], onRemove, onEdit }: Expen
                         >
                           {e.tag?.emoji ?? UNTAGGED_EMOJI}
                         </span>
-                        <div className="min-w-0 flex-1">
-                          <div className="text-sm font-bold">{e.tag?.label ?? UNTAGGED_LABEL}</div>
-                          {e.note ? (
-                            <div className="mt-0.5 text-[12.5px] text-[var(--ob-color-text-subtle)]">{e.note}</div>
-                          ) : null}
-                        </div>
-                        <div className="[font-family:var(--ob-font-num)] text-sm text-[var(--ob-color-text-muted)]">
-                          {formatMoney(e.amount, hidden)}
+                        {/* Nhãn và số tiền chung 1 cột tự xuống dòng: hàng hẹp (điện thoại 320–375px) thì số tiền
+                            xuống dưới nhãn, căn phải, và tự ngắt (ở dấu "/" của khoản quẹt, hay giữa số khi
+                            vẫn không vừa) thay vì đè lên nhãn hay đẩy nút Sửa/Xoá ra khỏi hàng. */}
+                        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-0.5">
+                          <div className="min-w-0 flex-[1_1_8rem]">
+                            <div className="text-sm font-bold">{e.tag?.label ?? UNTAGGED_LABEL}</div>
+                            {e.note ? (
+                              <div className="mt-0.5 text-[12.5px] text-[var(--ob-color-text-subtle)]">{e.note}</div>
+                            ) : null}
+                            {e.card ? (
+                              <div className="mt-0.5 text-[12.5px] text-[var(--ob-color-text-subtle)]">
+                                {e.card.cardName === null ? "Thẻ đã xoá" : `Thẻ ${e.card.cardName}`}
+                              </div>
+                            ) : null}
+                          </div>
+                          <div className="ml-auto min-w-0 text-right wrap-anywhere [font-family:var(--ob-font-num)] text-sm text-[var(--ob-color-text-muted)]">
+                            {e.card?.kind === "swipe"
+                              ? `${formatMoney(0, hidden)} / ${formatMoney(e.amount, hidden)}`
+                              : formatMoney(e.amount, hidden)}
+                          </div>
                         </div>
                         <div className="flex flex-none items-center">
                           <button
@@ -178,6 +190,9 @@ function ExpenseListCard({ expenses, settlements = [], onRemove, onEdit }: Expen
             <>
               Xoá khoản chi &quot;<strong>{deleting.tag?.label ?? UNTAGGED_LABEL}</strong>&quot;{" "}
               {formatMoney(deleting.amount, hidden)} ({formatDayKey(deleting.dayKey)}) sẽ không thể hoàn tác.
+              {deleting.card && deleting.card.cardName !== null
+                ? ` Nợ thẻ "${deleting.card.cardName}" sẽ ${deleting.card.kind === "swipe" ? "giảm" : "tăng"} ${formatMoney(deleting.amount, hidden)}.`
+                : null}
             </>
           ) : null
         }

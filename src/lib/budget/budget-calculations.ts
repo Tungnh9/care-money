@@ -17,10 +17,28 @@ function exceedsBudgetAmountLimit(amount: string): boolean {
   return Number(amount) > MAX_BUDGET_AMOUNT
 }
 
+// Khoản quẹt thẻ tín dụng chưa phải tiền ra khỏi túi (chỉ cộng vào nợ thẻ), nên tính 0 vào chi tiêu;
+// tiền chỉ ra khi trả nợ thẻ. Khoản cũ không có `card` (kể cả nhãn "Trả nợ thẻ") tính đủ như trước.
+function countedAmount(e: Expense): number {
+  return e.card?.kind === "swipe" ? 0 : e.amount
+}
+
+// Phần còn lại của countedAmount: số tiền đã quẹt thẻ, không tính vào chi tiêu.
+function swipedAmount(e: Expense): number {
+  return e.card?.kind === "swipe" ? e.amount : 0
+}
+
+function swipedTotal(expenses: Expense[], months: string[]): number {
+  return expenses
+    .filter((e) => months.includes(monthKeyFromDayKey(e.dayKey)))
+    .reduce((sum, e) => sum + swipedAmount(e), 0)
+}
+
+// Không tính khoản quẹt thẻ (xem countedAmount).
 function totalExpensesForMonth(expenses: Expense[], month: string): number {
   return expenses
     .filter((e) => monthKeyFromDayKey(e.dayKey) === month)
-    .reduce((sum, e) => sum + e.amount, 0)
+    .reduce((sum, e) => sum + countedAmount(e), 0)
 }
 
 function salaryForMonth(salaries: MonthlySalary[], month: string): number {
@@ -102,11 +120,12 @@ interface TagBreakdownEntry {
   total: number
 }
 
+// Bỏ hẳn khoản quẹt thẻ (không tính vào chi tiêu nên không có lát/series riêng); tổng quẹt xem swipedTotal.
 function breakdownByTag(expenses: Expense[], month: string): TagBreakdownEntry[] {
   const buckets = new Map<string, TagBreakdownEntry>()
 
   for (const e of expenses) {
-    if (monthKeyFromDayKey(e.dayKey) !== month) continue
+    if (monthKeyFromDayKey(e.dayKey) !== month || e.card?.kind === "swipe") continue
     const label = e.tag?.label ?? UNTAGGED_LABEL
     const emoji = e.tag?.emoji ?? UNTAGGED_EMOJI
     const tint = e.tag?.tint ?? UNTAGGED_TINT
@@ -127,6 +146,7 @@ interface DayGroup {
   total: number
 }
 
+// Khoản quẹt thẻ vẫn nằm trong danh sách của ngày nhưng không cộng vào `total`.
 function groupExpensesByDay(expenses: Expense[]): DayGroup[] {
   const buckets = new Map<string, Expense[]>()
 
@@ -137,7 +157,7 @@ function groupExpensesByDay(expenses: Expense[]): DayGroup[] {
   }
 
   return [...buckets.entries()]
-    .map(([dayKey, list]) => ({ dayKey, expenses: list, total: list.reduce((sum, e) => sum + e.amount, 0) }))
+    .map(([dayKey, list]) => ({ dayKey, expenses: list, total: list.reduce((sum, e) => sum + countedAmount(e), 0) }))
     .sort((a, b) => (a.dayKey < b.dayKey ? 1 : -1))
 }
 
@@ -152,7 +172,7 @@ function monthlyExpenseTotals(expenses: Expense[], months: string[]): MonthlyExp
 
 // tag.tint là màu pastel rất nhạt (dùng cho badge tròn nhỏ trong Cài đặt/danh sách chi tiêu),
 // không đủ rực để phân biệt trên chart — dùng chung 1 bảng màu rực cố định cho mọi chart liên quan
-// tới nhãn (donut "Chi theo nhãn" + cột "Xu hướng theo nhãn"). 11 màu = 11 nhãn mặc định trong Cài
+// tới nhãn (donut "Chi theo nhãn" + cột "Xu hướng theo nhãn"). 12 màu = 12 nhãn mặc định trong Cài
 // đặt, không màu nào lặp lại giữa chúng; xám để riêng cho "Không gắn thẻ".
 const CHART_PALETTE = [
   "#FF6B9D",
@@ -166,6 +186,7 @@ const CHART_PALETTE = [
   "#22B8CF",
   "#94D82D",
   "#E599F7",
+  "#1C7ED6",
 ]
 const UNTAGGED_CHART_COLOR = "#A0AEC0"
 
@@ -226,6 +247,9 @@ function monthlyTagBreakdown(expenses: Expense[], months: string[]): MonthlyTagS
 }
 
 export {
+  countedAmount,
+  swipedAmount,
+  swipedTotal,
   totalExpensesForMonth,
   salaryForMonth,
   hasSalaryRecord,

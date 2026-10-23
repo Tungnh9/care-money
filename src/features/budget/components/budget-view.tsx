@@ -18,6 +18,7 @@ import {
   shiftMonth,
 } from "@/lib/date"
 import { useBudget } from "@/lib/budget/use-budget"
+import { CARD_SWIPE_TAG_EMOJI, CARD_SWIPE_TAG_LABEL } from "@/lib/budget/card-link"
 import {
   breakdownByTag,
   hasSalaryRecord,
@@ -27,6 +28,7 @@ import {
   remainingToSettle,
   salaryForMonth,
   settlementsMadeInMonth,
+  swipedTotal,
   totalExpensesForMonth,
   unsettledPastMonths,
 } from "@/lib/budget/budget-calculations"
@@ -57,7 +59,7 @@ function BudgetView() {
     removeExpense,
     confirmSettlement,
   } = useBudget()
-  const { savings } = useFinance()
+  const { savings, cards, hydrated: cardsReady } = useFinance()
   const { settings } = useSettings()
   // null = modal tất toán đang đóng; ngược lại là tháng đang tất toán (tháng này, hoặc 1 tháng đã qua còn lệch).
   const [settleMonth, setSettleMonth] = useState<string | null>(null)
@@ -132,9 +134,15 @@ function BudgetView() {
   // 1 bảng màu cho cả donut lẫn chart 6 tháng, theo vị trí nhãn trong Cài đặt — cùng 1 nhãn luôn
   // cùng 1 màu dù 2 chart xếp nhãn theo 2 thứ tự khác nhau.
   const tagColors = tagChartColors(
-    [...tagTrend.map((s) => s.label), ...tagBreakdown.map((e) => e.label)],
+    [CARD_SWIPE_TAG_LABEL, ...tagTrend.map((s) => s.label), ...tagBreakdown.map((e) => e.label)],
     settings.tags
   )
+
+  const swiped = {
+    label: CARD_SWIPE_TAG_LABEL,
+    emoji: settings.tags.find((t) => t.label === CARD_SWIPE_TAG_LABEL)?.emoji ?? CARD_SWIPE_TAG_EMOJI,
+    total: swipedTotal(expenses, trendMonths),
+  }
 
   return (
     <div>
@@ -226,6 +234,8 @@ function BudgetView() {
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <ExpenseEntryForm
             tags={settings.tags}
+            cards={cards}
+            cardsReady={cardsReady}
             onAdd={(input) => addExpense({ ...input, dayKey: dayKey() })}
           />
 
@@ -246,7 +256,7 @@ function BudgetView() {
         </Card>
 
         <Card label="Xu hướng chi tiêu (6 tháng gần nhất)" className="min-w-0 w-full">
-          <MonthlyTagTrendChart months={trendMonths} series={tagTrend} colors={tagColors} />
+          <MonthlyTagTrendChart months={trendMonths} series={tagTrend} colors={tagColors} swiped={swiped} />
         </Card>
       </div>
 
@@ -270,6 +280,7 @@ function BudgetView() {
       <EditExpenseModal
         expense={editingExpense}
         tags={settings.tags}
+        cards={cards}
         onOpenChange={(open) => !open && setEditingExpense(null)}
         onSave={updateExpense}
       />

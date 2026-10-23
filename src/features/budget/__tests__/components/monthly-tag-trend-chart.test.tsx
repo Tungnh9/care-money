@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
-import { render, screen, waitFor } from "@testing-library/react"
+import { render, screen, waitFor, within } from "@testing-library/react"
 
+import { MoneyVisibilityProvider } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import { MonthlyTagTrendChart } from "../../components/monthly-tag-trend-chart"
 
@@ -155,5 +156,69 @@ describe("MonthlyTagTrendChart", () => {
 
     await waitFor(() => expect(apex.calls.length).toBeGreaterThan(0))
     expect(apex.calls.at(-1)?.options.colors).toEqual(["#22B8CF", "#FCC419"])
+  })
+
+  it("adds a Quẹt thẻ row showing 0 out of the swiped total, outside the grand total", () => {
+    render(
+      <MonthlyTagTrendChart
+        months={["2026-08", "2026-09"]}
+        series={[{ label: "Tiền trọ", emoji: "🏠", tint: "#FFF0B8", data: [3_000_000, 3_000_000] }]}
+        swiped={{ label: "Quẹt thẻ", emoji: "🧾", total: 1_200_000 }}
+      />
+    )
+
+    const row = screen.getByTestId("tag-trend-swiped")
+    expect(row).toHaveTextContent("Quẹt thẻ")
+    expect(row).toHaveTextContent("🧾")
+    expect(within(row).getByText(`${formatMoney(0)} / ${formatMoney(1_200_000)}`)).toBeInTheDocument()
+    expect(screen.getByText("Tổng cộng").parentElement).toHaveTextContent(formatMoney(6_000_000))
+  })
+
+  it("shows no Quẹt thẻ row when nothing was swiped", () => {
+    render(
+      <MonthlyTagTrendChart
+        months={["2026-09"]}
+        series={[{ label: "Tiền trọ", emoji: "🏠", tint: "#FFF0B8", data: [3_000_000] }]}
+        swiped={{ label: "Quẹt thẻ", emoji: "🧾", total: 0 }}
+      />
+    )
+
+    expect(screen.queryByTestId("tag-trend-swiped")).not.toBeInTheDocument()
+  })
+
+  it("masks both amounts of the Quẹt thẻ row while money is hidden", async () => {
+    window.localStorage.setItem("hide-money", "1")
+    try {
+      render(
+        <MoneyVisibilityProvider>
+          <MonthlyTagTrendChart
+            months={["2026-08", "2026-09"]}
+            series={[{ label: "Tiền trọ", emoji: "🏠", tint: "#FFF0B8", data: [3_000_000, 3_000_000] }]}
+            swiped={{ label: "Quẹt thẻ", emoji: "🧾", total: 1_200_000 }}
+          />
+        </MoneyVisibilityProvider>
+      )
+
+      const row = screen.getByTestId("tag-trend-swiped")
+      await waitFor(() =>
+        expect(within(row).getByText(`${formatMoney(0, true)} / ${formatMoney(1_200_000, true)}`)).toBeInTheDocument()
+      )
+      expect(row.textContent).not.toMatch(/\d/)
+    } finally {
+      window.localStorage.removeItem("hide-money")
+    }
+  })
+
+  it("shows the summary with only the Quẹt thẻ row when the months had swipes only", () => {
+    render(
+      <MonthlyTagTrendChart
+        months={["2026-09"]}
+        series={[]}
+        swiped={{ label: "Quẹt thẻ", emoji: "🧾", total: 800_000 }}
+      />
+    )
+
+    expect(screen.getByTestId("tag-trend-swiped")).toHaveTextContent(`${formatMoney(0)} / ${formatMoney(800_000)}`)
+    expect(screen.getByText("Tổng cộng").parentElement).toHaveTextContent(formatMoney(0))
   })
 })

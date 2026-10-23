@@ -1,5 +1,6 @@
 import { dayKey, daysBetween, formatDayKeyWithYear, monthKeyFromDayKey, shiftDay, shiftMonth } from "@/lib/date"
 import {
+  countedAmount,
   monthlyExpenseTotals,
   monthlyTagBreakdown,
   totalExpensesForMonth,
@@ -173,7 +174,7 @@ function detectMoodSpendingCorrelation(expenses: Expense[], entries: JournalEntr
   const highDaySpends: number[] = []
   for (const [day, scores] of moodByDay) {
     const avgScore = mean(scores)
-    const daySpend = expenses.filter((e) => e.dayKey === day).reduce((sum, e) => sum + e.amount, 0)
+    const daySpend = expenses.filter((e) => e.dayKey === day).reduce((sum, e) => sum + countedAmount(e), 0)
     if (avgScore <= MOOD_LOW_SCORE_MAX) lowDaySpends.push(daySpend)
     else if (avgScore >= MOOD_HIGH_SCORE_MIN) highDaySpends.push(daySpend)
   }

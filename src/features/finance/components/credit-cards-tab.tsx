@@ -19,7 +19,7 @@ interface CreditCardsTabProps {
   cards: CreditCard[]
   onAddCard: (card: CreditCard) => void
   onPayCard: (name: string, amount: number) => void
-  onUpdateCard: (originalName: string, card: CreditCard) => void
+  onUpdateCard: (originalName: string, card: CreditCard, balanceEdited: boolean) => void
   onRemoveCard: (name: string) => void
 }
 
@@ -143,8 +143,8 @@ function CreditCardsTab({
         card={cards.find((c) => c.name === editingCard) ?? null}
         existingNames={cardNames}
         onOpenChange={(open) => !open && setEditingCard("")}
-        onSave={(updated) => {
-          if (editingCard) onUpdateCard(editingCard, updated)
+        onSave={(updated, balanceEdited) => {
+          if (editingCard) onUpdateCard(editingCard, updated, balanceEdited)
           setEditingCard("")
         }}
       />
