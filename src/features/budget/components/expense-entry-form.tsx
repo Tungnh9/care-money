@@ -41,9 +41,15 @@ function ExpenseEntryForm({ tags, cards = NO_CARDS, cardsReady = true, onAdd }: 
   const effectiveLabel = swipeLocked && selectedLabel === CARD_SWIPE_TAG_LABEL ? null : selectedLabel
   const tag = activeTags.find((t) => t.label === effectiveLabel)
   const linkKind = tag ? cardLinkKindForTag(tag.label) : null
-  // 1 thẻ thì tự chọn; ≥ 2 thẻ thì phải bấm chọn, và thẻ đã chọn mà nay không còn thì coi như chưa chọn.
-  const card = linkKind ? (cards.length === 1 ? cards[0] : cards.find((c) => c.name === pickedCardName)) : undefined
-  const needsPick = linkKind !== null && cards.length > 1 && !card
+  // 1 thẻ thì tự chọn; ≥ 2 thẻ thì phải bấm chọn. Thẻ đã bấm chọn mà nay không còn (xoá/đổi tên ở tab
+  // khác) thì coi như chưa chọn — kể cả khi chỉ còn đúng 1 thẻ: không bao giờ âm thầm chuyển khoản này
+  // sang thẻ khác, phải bấm chọn lại.
+  const pickedCard = pickedCardName === null ? undefined : cards.find((c) => c.name === pickedCardName)
+  const onlyCard = pickedCardName === null && cards.length === 1 ? cards[0] : undefined
+  const card = linkKind ? (pickedCard ?? onlyCard) : undefined
+  const needsPick = linkKind !== null && cards.length > 0 && !card
+  // Đã bấm chọn 1 thẻ (lúc còn ≥ 2 thẻ) thì giữ hàng nút dù nay chỉ còn 1 thẻ, để thấy và chọn lại được.
+  const showCardPicker = linkKind !== null && (cards.length > 1 || (cards.length === 1 && pickedCardName !== null))
   // Chưa đọc xong thẻ: ghi lúc này thì khoản quẹt/trả nợ sẽ thành khoản thường, không đụng nợ thẻ.
   const cardsPending = linkKind !== null && !cardsReady
   const amountNumber = Number(amount) || 0
@@ -107,12 +113,10 @@ function ExpenseEntryForm({ tags, cards = NO_CARDS, cardsReady = true, onAdd }: 
             Chưa có thẻ tín dụng nên khoản này không trừ nợ thẻ.
           </p>
         )}
-        {linkKind && cards.length === 1 && (
-          <p className="mt-2 text-[12.5px] text-[var(--ob-color-text-subtle)]">{`Thẻ: ${cards[0].name}`}</p>
+        {linkKind && onlyCard && (
+          <p className="mt-2 text-[12.5px] text-[var(--ob-color-text-subtle)]">{`Thẻ: ${onlyCard.name}`}</p>
         )}
-        {linkKind && cards.length > 1 && (
-          <CardPicker cards={cards} selected={card?.name ?? null} onSelect={setPickedCardName} />
-        )}
+        {showCardPicker && <CardPicker cards={cards} selected={card?.name ?? null} onSelect={setPickedCardName} />}
       </div>
       <Field
         className="mt-3"

@@ -173,6 +173,45 @@ describe("ExpenseEntryForm", () => {
     expect(onAdd).toHaveBeenCalledWith(expect.objectContaining({ card: { kind: "swipe", cardName: "Master" } }))
   })
 
+  it("never switches to the remaining card when the picked one is deleted in another tab", () => {
+    const onAdd = vi.fn(() => true)
+    const { rerender } = render(<ExpenseEntryForm tags={TAGS} cards={[VISA, MASTER]} onAdd={onAdd} />)
+
+    fireEvent.click(screen.getByRole("button", { name: /Quẹt thẻ/ }))
+    fireEvent.click(screen.getByRole("button", { name: "Master" }))
+    fireEvent.change(amountField(), { target: { value: "100000" } })
+    expect(submit()).not.toBeDisabled()
+
+    // Tab khác xoá "Master", chỉ còn "Visa": không được tự chuyển khoản quẹt sang "Visa".
+    rerender(<ExpenseEntryForm tags={TAGS} cards={[VISA]} onAdd={onAdd} />)
+
+    expect(submit()).toBeDisabled()
+    expect(screen.queryByText("Thẻ: Visa")).not.toBeInTheDocument()
+    const visa = screen.getByRole("button", { name: "Visa" })
+    expect(visa).not.toHaveClass("border-[var(--ob-color-action)]")
+    fireEvent.click(submit())
+    expect(onAdd).not.toHaveBeenCalled()
+
+    fireEvent.click(visa)
+    expect(submit()).not.toBeDisabled()
+    fireEvent.click(submit())
+    expect(onAdd).toHaveBeenCalledWith(expect.objectContaining({ card: { kind: "swipe", cardName: "Visa" } }))
+  })
+
+  it("keeps a picked card that is still there when the other card is deleted", () => {
+    const onAdd = vi.fn(() => true)
+    const { rerender } = render(<ExpenseEntryForm tags={TAGS} cards={[VISA, MASTER]} onAdd={onAdd} />)
+
+    fireEvent.click(screen.getByRole("button", { name: /Trả nợ thẻ/ }))
+    fireEvent.click(screen.getByRole("button", { name: "Visa" }))
+    fireEvent.change(amountField(), { target: { value: "100000" } })
+    rerender(<ExpenseEntryForm tags={TAGS} cards={[VISA]} onAdd={onAdd} />)
+
+    expect(screen.getByRole("button", { name: "Visa" })).toHaveClass("border-[var(--ob-color-action)]")
+    fireEvent.click(submit())
+    expect(onAdd).toHaveBeenCalledWith(expect.objectContaining({ card: { kind: "payment", cardName: "Visa" } }))
+  })
+
   it("records a payment with its card", () => {
     const onAdd = vi.fn(() => true)
     render(<ExpenseEntryForm tags={TAGS} cards={[VISA]} onAdd={onAdd} />)
