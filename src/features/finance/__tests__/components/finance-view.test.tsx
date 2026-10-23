@@ -159,4 +159,24 @@ describe("FinanceView", () => {
 
     expect(screen.getByText("1 thẻ · không nợ")).toBeInTheDocument()
   })
+  it("shows 0 phân and a flat % on the gold pillar before any gold is bought", () => {
+    render(<FinanceView />)
+    expect(screen.getByText("0 phân · +0,0%")).toBeInTheDocument()
+  })
+
+  it("shows the phân held and the % gain on the gold pillar once there is gold", () => {
+    // 10 phân mua 800.000/phân, SJC hôm nay 900.000/phân: vốn 8.000.000, giá trị 9.000.000 → +12,5%.
+    window.localStorage.setItem(
+      FINANCE_STORAGE_KEY,
+      JSON.stringify({
+        ...DEFAULT_FINANCE_STATE,
+        gold: [{ id: 1, date: "10/08/2026", phan: 10, buy: 800_000, store: "SJC" }],
+        goldStores: [{ name: "SJC", price: "900000" }],
+      })
+    )
+
+    render(<FinanceView />)
+
+    expect(screen.getByText("10 phân · +12,5%")).toBeInTheDocument()
+  })
 })

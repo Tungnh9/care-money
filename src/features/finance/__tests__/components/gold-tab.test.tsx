@@ -566,3 +566,147 @@ describe("GoldTab", () => {
     expect(screen.getAllByText("0,3 phân")).toHaveLength(2)
   })
 })
+
+// Khoá nguyên văn chữ và luồng cửa hàng của tab vàng TRƯỚC khi tách phần dùng chung với tab bạc —
+// các test trên chưa giữ những chuỗi này, nên lỡ ghép sai noun/unit khi tổng quát hoá sẽ không ai báo.
+describe("GoldTab — chữ và luồng cửa hàng", () => {
+  it("explains a loss with the gold wording", () => {
+    const LOSS: FinanceSummary = {
+      ...HOLDING_SUMMARY,
+      goldValue: 7_500_000,
+      goldPL: -500_000,
+      goldPct: -6.25,
+    }
+    render(<GoldTab summary={LOSS} stores={[SJC]} gold={[]} {...noopHandlers} />)
+
+    expect(
+      screen.getByText(`Bạn đang lỗ ${formatMoney(500_000)} so với giá vốn do giá vàng giảm.`)
+    ).toBeInTheDocument()
+  })
+
+  it("names the purchase's date in the delete confirmation", () => {
+    const PURCHASE = { id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" }
+    render(<GoldTab summary={ZERO_SUMMARY} stores={[SJC]} gold={[PURCHASE]} {...noopHandlers} />)
+
+    fireEvent.click(screen.getAllByRole("button", { name: /^Xoá giao dịch vàng \d/ })[0])
+
+    expect(screen.getByRole("alertdialog")).toHaveTextContent(
+      'Xoá giao dịch mua vàng ngày "10/08/2026" sẽ không thể hoàn tác.'
+    )
+  })
+
+  it("labels the add-purchase form in phân, with the chỉ hint and the whole-phân error", () => {
+    render(<GoldTab summary={ZERO_SUMMARY} stores={[SJC]} gold={[]} {...noopHandlers} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Thêm lần mua vàng" }))
+
+    expect(screen.getByText("Lần mua vàng mới")).toBeInTheDocument()
+    expect(screen.getByText("10 phân = 1 chỉ")).toBeInTheDocument()
+    expect(screen.getByLabelText("Giá mua (mỗi phân)", { exact: false })).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText("Khối lượng (phân)", { exact: false }), {
+      target: { value: "1,5" },
+    })
+
+    expect(screen.getByText("Nhập số phân nguyên lớn hơn 0 (10 phân = 1 chỉ)")).toBeInTheDocument()
+  })
+
+  it("labels the edit-purchase modal and its fields in phân", () => {
+    const PURCHASE = { id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" }
+    render(<GoldTab summary={ZERO_SUMMARY} stores={[SJC]} gold={[PURCHASE]} {...noopHandlers} />)
+
+    fireEvent.click(screen.getAllByRole("button", { name: /Sửa giao dịch vàng/ })[0])
+
+    const dialog = screen.getByRole("dialog", { name: "Sửa lần mua vàng" })
+    expect(within(dialog).getByLabelText("Khối lượng (phân)", { exact: false })).toHaveValue("10")
+    expect(within(dialog).getByText("10 phân = 1 chỉ")).toBeInTheDocument()
+    expect(within(dialog).getByLabelText("Giá mua (mỗi phân)", { exact: false })).toBeInTheDocument()
+  })
+
+  it("prices stores per phân in the market-price card and the add-store form", () => {
+    render(<GoldTab summary={ZERO_SUMMARY} stores={[SJC]} gold={[]} {...noopHandlers} />)
+
+    expect(screen.getByText("Giá hôm nay (mỗi phân)")).toBeInTheDocument()
+    expect(screen.getByRole("textbox", { name: "Giá SJC hôm nay (mỗi phân)" })).toHaveValue("880.000")
+
+    fireEvent.click(screen.getByRole("button", { name: "Thêm cửa hàng" }))
+
+    expect(screen.getByText("Cửa hàng mới")).toBeInTheDocument()
+    expect(screen.getByLabelText("Tên cửa hàng")).toHaveAttribute("placeholder", "vd: SJC")
+    // Nhãn của Field gồm cả hậu tố "đ" nằm trong <label> → so khớp một phần.
+    expect(screen.getByLabelText("Giá hôm nay (mỗi phân)", { exact: false })).toBeInTheDocument()
+  })
+
+  it("explains why a store that still has gold purchases cannot be deleted", () => {
+    const PURCHASE = { id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" }
+    render(<GoldTab summary={ZERO_SUMMARY} stores={[SJC]} gold={[PURCHASE]} {...noopHandlers} />)
+
+    const remove = screen.getByRole("button", { name: "Xoá SJC" })
+    expect(remove).toBeDisabled()
+    expect(remove).toHaveAttribute("title", "Không thể xoá — vẫn còn giao dịch mua vàng gắn với cửa hàng này.")
+  })
+
+  it("reports a new store through onAddGoldStore", () => {
+    const onAddGoldStore = vi.fn()
+    render(
+      <GoldTab summary={ZERO_SUMMARY} stores={[SJC]} gold={[]} {...noopHandlers} onAddGoldStore={onAddGoldStore} />
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Thêm cửa hàng" }))
+    fireEvent.change(screen.getByLabelText("Tên cửa hàng"), { target: { value: " PNJ " } })
+    fireEvent.change(screen.getByLabelText("Giá hôm nay (mỗi phân)", { exact: false }), {
+      target: { value: "870000" },
+    })
+    fireEvent.click(screen.getByRole("button", { name: "Thêm" }))
+
+    expect(onAddGoldStore).toHaveBeenCalledWith({ name: "PNJ", price: "870000" })
+  })
+
+  it("reports a store rename through onUpdateGoldStore with the original name", () => {
+    const onUpdateGoldStore = vi.fn()
+    render(
+      <GoldTab
+        summary={ZERO_SUMMARY}
+        stores={[SJC]}
+        gold={[]}
+        {...noopHandlers}
+        onUpdateGoldStore={onUpdateGoldStore}
+      />
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Sửa SJC" }))
+    const dialog = screen.getByRole("dialog", { name: "Sửa cửa hàng" })
+    fireEvent.change(within(dialog).getByLabelText("Tên cửa hàng"), { target: { value: "SJC Hà Nội" } })
+    fireEvent.click(within(dialog).getByRole("button", { name: "Lưu" }))
+
+    expect(onUpdateGoldStore).toHaveBeenCalledWith("SJC", { name: "SJC Hà Nội", price: "880.000" })
+  })
+
+  it("asks before removing an unused store and reports it through onRemoveGoldStore", () => {
+    const onRemoveGoldStore = vi.fn()
+    render(
+      <GoldTab
+        summary={ZERO_SUMMARY}
+        stores={[SJC]}
+        gold={[]}
+        {...noopHandlers}
+        onRemoveGoldStore={onRemoveGoldStore}
+      />
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Xoá SJC" }))
+    expect(screen.getByRole("alertdialog")).toHaveTextContent('Xoá "SJC" sẽ không thể hoàn tác.')
+    fireEvent.click(screen.getByRole("button", { name: "Xoá" }))
+
+    expect(onRemoveGoldStore).toHaveBeenCalledWith("SJC")
+  })
+
+  it("shows each purchase's weight in chỉ/phân in the transactions list", () => {
+    const PURCHASE = { id: 1, date: "10/08/2026", phan: 12, buy: 900_000, store: "SJC" }
+    render(<GoldTab summary={ZERO_SUMMARY} stores={[SJC]} gold={[PURCHASE]} {...noopHandlers} />)
+
+    // Bảng (desktop) + card (mobile) + dòng SJC ở bảng và card "Tổng hợp theo cửa hàng". Dòng "Tổng cộng"
+    // lấy khối lượng từ summary (ở đây là 0), không cộng lại từ danh sách.
+    expect(screen.getAllByText("1 chỉ 2 phân")).toHaveLength(4)
+  })
+})
