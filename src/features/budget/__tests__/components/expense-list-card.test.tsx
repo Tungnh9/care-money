@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest"
 import { render, screen, fireEvent, within, waitFor } from "@testing-library/react"
 
+import { wholeText } from "@/test/whole-text"
 import { MoneyVisibilityProvider } from "@/components/money-visibility-provider"
 import { ExpenseListCard } from "../../components/expense-list-card"
 import { formatMoney } from "@/lib/format"
@@ -381,7 +382,19 @@ describe("ExpenseListCard", () => {
     it("shows a swipe as 0 out of its amount", () => {
       render(<ExpenseListCard expenses={[SWIPE]} onRemove={vi.fn()} onEdit={vi.fn()} />)
 
-      expect(screen.getByText(`${formatMoney(0)} / ${formatMoney(500_000)}`)).toBeInTheDocument()
+      expect(screen.getByText(wholeText(`${formatMoney(0)} / ${formatMoney(500_000)}`))).toBeInTheDocument()
+    })
+
+    it("keeps a swipe's 0 ₫ in the ordinary amount colour and paints the swiped amount after the slash red", () => {
+      const normal: Expense = { id: 4, dayKey: "2026-09-03", amount: 100_000, tag: null }
+      render(<ExpenseListCard expenses={[SWIPE, normal]} onRemove={vi.fn()} onEdit={vi.fn()} />)
+
+      const swipeAmount = screen.getByText(wholeText(`${formatMoney(0)} / ${formatMoney(500_000)}`))
+      expect(swipeAmount).toHaveClass("text-[var(--ob-color-text-muted)]")
+      expect(swipeAmount).not.toHaveClass("text-[var(--ob-color-expense)]")
+      expect(within(swipeAmount).getByText(formatMoney(500_000))).toHaveClass("text-[var(--ob-color-expense)]")
+      const rows = screen.getAllByTestId("expense-row")
+      expect(within(rows[1]).getByText(formatMoney(100_000))).toHaveClass("text-[var(--ob-color-text-muted)]")
     })
 
     it("leaves swipes out of the day total but counts them in the number of expenses", () => {
@@ -429,7 +442,7 @@ describe("ExpenseListCard", () => {
     it("puts the amount in one wrapping column with the label, so a 320px phone never pushes Sửa/Xoá out of the row", () => {
       render(<ExpenseListCard expenses={[SWIPE]} onRemove={vi.fn()} onEdit={vi.fn()} />)
 
-      const amount = screen.getByText(`${formatMoney(0)} / ${formatMoney(500_000)}`)
+      const amount = screen.getByText(wholeText(`${formatMoney(0)} / ${formatMoney(500_000)}`))
       // Không còn cột số tiền cứng (flex-none + max-w-[40%]) giành chỗ của nhãn và nút: số tiền co và tự ngắt.
       expect(amount).toHaveClass("min-w-0", "wrap-anywhere")
       expect(amount).not.toHaveClass("flex-none")
@@ -456,7 +469,7 @@ describe("ExpenseListCard", () => {
       )
 
       await waitFor(() => expect(screen.queryByText(/500\.000/)).not.toBeInTheDocument())
-      expect(screen.getByText(`${formatMoney(0, true)} / ${formatMoney(500_000, true)}`)).toBeInTheDocument()
+      expect(screen.getByText(wholeText(`${formatMoney(0, true)} / ${formatMoney(500_000, true)}`))).toBeInTheDocument()
       expect(document.body).not.toHaveTextContent("500.000")
 
       fireEvent.click(screen.getByRole("button", { name: "Xoá khoản chi Quẹt thẻ" }))

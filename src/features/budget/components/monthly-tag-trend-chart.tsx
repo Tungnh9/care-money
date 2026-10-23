@@ -15,7 +15,7 @@ interface MonthlyTagTrendChartProps {
   // nhãn) thì tô theo thứ tự như trước.
   colors?: Map<string, string>
   // Tổng đã quẹt thẻ trong các tháng — không phải chi tiêu nên không có cột/series và không cộng vào
-  // "Tổng cộng"; chỉ hiện thành 1 dòng riêng "0 ₫ / tổng quẹt".
+  // "Tổng cộng"; chỉ hiện thành 1 dòng riêng "0 ₫ / tổng quẹt". Dòng này không lấy màu từ `colors`.
   swiped?: { label: string; emoji: string; total: number }
 }
 
@@ -76,22 +76,24 @@ function MonthlyTagTrendChart({ months, series, colors, swiped }: MonthlyTagTren
           {showSwiped ? (
             <div data-testid="tag-trend-swiped" className="flex items-center justify-between gap-3 text-[13.5px]">
               <span className="flex items-center gap-2 text-[var(--ob-color-text-muted)]">
+                {/* Chấm đỏ cùng token với số đã quẹt cuối dòng cho đồng bộ màu, không theo màu biểu đồ của nhãn
+                    "Quẹt thẻ": quẹt thẻ không có cột trên chart nên chấm không phải khớp với cột nào. */}
                 <span
                   data-testid="tag-trend-dot"
                   className="h-2.5 w-2.5 shrink-0 rounded-full"
-                  style={{
-                    backgroundColor:
-                      colors?.get(swiped.label) ?? CHART_PALETTE[series.length % CHART_PALETTE.length],
-                  }}
+                  style={{ backgroundColor: "var(--ob-color-expense)" }}
                 />
                 <span>{swiped.emoji}</span>
                 <span>{swiped.label}</span>
               </span>
+              {/* Tô giống ô quẹt thẻ trong "Khoản chi tháng này": "0 ₫ /" màu các tổng nhãn, phần đã quẹt màu đỏ
+                  (cùng màu chấm đầu dòng). */}
               <span
                 className="min-w-0 text-right [font-family:var(--ob-font-num)]"
                 style={{ color: "var(--ob-color-text-muted)" }}
               >
-                {`${formatMoney(0, hidden)} / ${formatMoney(swiped.total, hidden)}`}
+                {`${formatMoney(0, hidden)} / `}
+                <span style={{ color: "var(--ob-color-expense)" }}>{formatMoney(swiped.total, hidden)}</span>
               </span>
             </div>
           ) : null}

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { act, render, screen, waitFor, fireEvent, within } from "@testing-library/react"
 import { renderToString } from "react-dom/server"
 
+import { wholeText } from "@/test/whole-text"
 import {
   setStoredFinance,
   DEFAULT_FINANCE_STATE,
@@ -848,7 +849,9 @@ describe("BudgetView", () => {
     await waitFor(() => expect(getStoredFinance().cards[0].balance).toBe(500_000))
     expect(screen.getByText(summaryLine(`Lương ${formatMoney(10_000_000)} · đã chi ${formatMoney(1_000_000)} tháng này`))).toBeInTheDocument()
     expect(screen.getByText(summaryLine(`Bạn đang dư ${formatMoney(9_000_000)} tháng này.`))).toBeInTheDocument()
-    expect(screen.getAllByText(`${formatMoney(0)} / ${formatMoney(500_000)}`).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(wholeText(`${formatMoney(0)} / ${formatMoney(500_000)}`)).length).toBeGreaterThan(0)
+    // Dòng "Quẹt thẻ" dưới chart 6 tháng: chấm đỏ như số đã quẹt, không phải màu biểu đồ của nhãn.
+    expect(trendDot("Quẹt thẻ")).toHaveStyle({ backgroundColor: "var(--ob-color-expense)" })
   })
 
   it("lowers the card debt when a Trả nợ thẻ is recorded and counts it as spending", async () => {
