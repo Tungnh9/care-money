@@ -187,6 +187,28 @@ function applySavingsFundDelta(
   return { ok: true, before: fund.amount, after }
 }
 
+type ApplyCardBalanceDeltaResult =
+  | { ok: true; before: number; after: number }
+  | { ok: false; reason: "card-not-found" }
+  | { ok: false; reason: "insufficient-debt"; balance: number }
+
+// Cộng/trừ dư nợ thẻ — useBudget gọi khi ghi/sửa/xoá khoản quẹt thẻ hoặc trả nợ thẻ. Đọc tươi tại
+// thời điểm gọi (như applySavingsFundDelta) vì tab Tài chính có thể vừa sửa nợ; từ chối thay vì
+// kẹp về 0 để nợ thẻ không bao giờ âm hay lệch so với khoản chi đã ghi.
+function applyCardBalanceDelta(name: string, delta: number): ApplyCardBalanceDeltaResult {
+  const current = getStoredFinance()
+  const card = current.cards.find((c) => c.name === name)
+  if (!card) return { ok: false, reason: "card-not-found" }
+  if (card.balance + delta < 0) return { ok: false, reason: "insufficient-debt", balance: card.balance }
+
+  const after = card.balance + delta
+  setStoredFinance({
+    ...current,
+    cards: current.cards.map((c) => (c.name === name ? { ...c, balance: after } : c)),
+  })
+  return { ok: true, before: card.balance, after }
+}
+
 export {
   FINANCE_STORAGE_KEY,
   DEFAULT_FINANCE_STATE,
@@ -194,6 +216,7 @@ export {
   getStoredFinance,
   setStoredFinance,
   applySavingsFundDelta,
+  applyCardBalanceDelta,
   parseFinanceState,
   savingsFundSchema,
   creditCardSchema,
@@ -202,4 +225,5 @@ export {
   silverPurchaseSchema,
   investmentSchema,
   type FinanceState,
+  type ApplyCardBalanceDeltaResult,
 }

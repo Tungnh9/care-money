@@ -6,6 +6,8 @@ import {
   getStoredBudget,
   setStoredBudget,
   renameFundInSettlements,
+  renameCardInExpenses,
+  detachCardFromExpenses,
 } from "@/lib/budget/budget-storage"
 import type { Expense } from "@/lib/budget/types"
 
@@ -274,5 +276,39 @@ describe("expense card link", () => {
     const [read] = getStoredBudget().expenses
     expect(read).toEqual(base)
     expect(read).not.toHaveProperty("card")
+  })
+})
+
+describe("renameCardInExpenses / detachCardFromExpenses", () => {
+  const visaSwipe: Expense = { id: 1, dayKey: "2026-09-01", amount: 100_000, tag: null, card: { kind: "swipe", cardName: "Visa" } }
+  const visaPayment: Expense = { id: 2, dayKey: "2026-10-05", amount: 200_000, tag: null, card: { kind: "payment", cardName: "Visa" } }
+  const masterSwipe: Expense = { id: 3, dayKey: "2026-10-06", amount: 300_000, tag: null, card: { kind: "swipe", cardName: "Master" } }
+  const plain: Expense = { id: 4, dayKey: "2026-10-07", amount: 400_000, tag: null }
+
+  beforeEach(() => {
+    window.localStorage.clear()
+    setStoredBudget({ ...DEFAULT_BUDGET_STATE, expenses: [visaSwipe, visaPayment, masterSwipe, plain] })
+  })
+
+  it("renames the card on every matching expense across months, leaving others identical", () => {
+    renameCardInExpenses("Visa", "Visa Pro")
+
+    expect(getStoredBudget().expenses).toEqual([
+      { ...visaSwipe, card: { kind: "swipe", cardName: "Visa Pro" } },
+      { ...visaPayment, card: { kind: "payment", cardName: "Visa Pro" } },
+      masterSwipe,
+      plain,
+    ])
+  })
+
+  it("detaches the card (cardName null) but keeps the kind, leaving others identical", () => {
+    detachCardFromExpenses("Visa")
+
+    expect(getStoredBudget().expenses).toEqual([
+      { ...visaSwipe, card: { kind: "swipe", cardName: null } },
+      { ...visaPayment, card: { kind: "payment", cardName: null } },
+      masterSwipe,
+      plain,
+    ])
   })
 })

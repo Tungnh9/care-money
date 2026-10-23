@@ -6,6 +6,7 @@ import {
   getStoredFinance,
   setStoredFinance,
   applySavingsFundDelta,
+  applyCardBalanceDelta,
 } from "@/lib/finance/finance-storage"
 import type { CreditCard, SavingsFund, SilverPurchase, SilverStore } from "@/lib/finance/types"
 
@@ -207,6 +208,59 @@ describe("applySavingsFundDelta", () => {
     const result = applySavingsFundDelta("Quỹ A", "deposit", 1_000)
 
     expect(result).toEqual({ ok: true, before: 9_000, after: 10_000 })
+  })
+})
+
+describe("applyCardBalanceDelta", () => {
+  const visa = { name: "Visa", balance: 1_000_000, min: 100_000, limit: 10_000_000, due: "15" }
+  const master = { name: "Master", balance: 300_000, min: 50_000, limit: 5_000_000, due: "20" }
+
+  beforeEach(() => {
+    window.localStorage.clear()
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, cards: [visa, master] })
+  })
+
+  it("raises the debt and returns before/after", () => {
+    const result = applyCardBalanceDelta("Visa", 500_000)
+
+    expect(result).toEqual({ ok: true, before: 1_000_000, after: 1_500_000 })
+    expect(getStoredFinance().cards[0].balance).toBe(1_500_000)
+  })
+
+  it("lowers the debt down to exactly zero", () => {
+    const result = applyCardBalanceDelta("Visa", -1_000_000)
+
+    expect(result).toEqual({ ok: true, before: 1_000_000, after: 0 })
+    expect(getStoredFinance().cards[0].balance).toBe(0)
+  })
+
+  it("refuses to push the debt below zero and leaves storage untouched", () => {
+    const result = applyCardBalanceDelta("Visa", -1_000_001)
+
+    expect(result).toEqual({ ok: false, reason: "insufficient-debt", balance: 1_000_000 })
+    expect(getStoredFinance().cards[0].balance).toBe(1_000_000)
+  })
+
+  it("refuses an unknown card and leaves storage untouched", () => {
+    const result = applyCardBalanceDelta("Không có", 10_000)
+
+    expect(result).toEqual({ ok: false, reason: "card-not-found" })
+    expect(getStoredFinance().cards).toEqual([visa, master])
+  })
+
+  it("always reads the current stored value, not a stale one", () => {
+    // Mô phỏng 1 tab khác đã ghi đè dư nợ trước khi lệnh này chạy.
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, cards: [{ ...visa, balance: 9_000 }] })
+
+    const result = applyCardBalanceDelta("Visa", 1_000)
+
+    expect(result).toEqual({ ok: true, before: 9_000, after: 10_000 })
+  })
+
+  it("touches only the named card", () => {
+    applyCardBalanceDelta("Visa", 1_000)
+
+    expect(getStoredFinance().cards).toEqual([{ ...visa, balance: 1_001_000 }, master])
   })
 })
 
