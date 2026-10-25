@@ -277,6 +277,21 @@ describe("ExpenseListCard", () => {
     expect(sentence.closest('[aria-hidden="true"]')).toBeNull()
   })
 
+  it("marks deposits and withdrawals with the same money-bag icon, tinted by direction", () => {
+    const deposit = closing({ id: 2, direction: "deposit", fundName: "Du lịch" })
+    render(<ExpenseListCard expenses={[]} settlements={[closing(), deposit]} onRemove={vi.fn()} onEdit={vi.fn()} />)
+
+    const badgeOf = (fund: string) => {
+      const row = screen.getByText(new RegExp(fund)).closest('[data-testid="settlement-row"]') as HTMLElement
+      const icon = row.querySelector("svg") as SVGElement
+      expect(icon).toHaveClass("lucide-money-bag")
+      expect(icon).toHaveAttribute("aria-hidden", "true")
+      return icon.parentElement as HTMLElement
+    }
+    expect(badgeOf("Du lịch")).toHaveStyle({ color: "var(--ob-color-income)" })
+    expect(badgeOf("Dự phòng")).toHaveStyle({ color: "var(--ob-color-expense)" })
+  })
+
   it("describes a deposit with a green plus amount", () => {
     const deposit = closing({ direction: "deposit", amount: 300_000, fundName: "Du lịch", fundAmountBefore: 100_000, fundAmountAfter: 400_000 })
     render(<ExpenseListCard expenses={[]} settlements={[deposit]} onRemove={vi.fn()} onEdit={vi.fn()} />)

@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowDownToLine, ArrowUpFromLine, type LucideIcon } from "lucide-react"
+import { createLucideIcon } from "lucide-react"
 
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
@@ -10,25 +10,31 @@ import { cn } from "@/lib/utils"
 import type { SettlementListItem } from "@/lib/budget/budget-calculations"
 import type { SettlementDirection } from "@/lib/budget/types"
 
+// lucide has no money bag; drawn on its 24px grid so the stroke matches the Gift icon in the gift block.
+const MoneyBag = createLucideIcon("money-bag", [
+  ["path", { d: "M9.5 8 8 4h8l-1.5 4", key: "top" }],
+  ["path", { d: "M8.5 8h7", key: "tie" }],
+  ["path", { d: "M9.5 8C6 10 4 13.5 4 16.5 4 19.3 6 21 8.5 21h7c2.5 0 4.5-1.7 4.5-4.5 0-3-2-6.5-5.5-8.5", key: "bag" }],
+  ["path", { d: "M12 10.5v1M12 17.5v1", key: "dollar-bar" }],
+  ["path", { d: "M14 11.5h-2.5a1.5 1.5 0 0 0 0 3h1a1.5 1.5 0 0 1 0 3H10", key: "dollar-s" }],
+])
+
 interface DirectionStyle {
   verb: string
-  icon: LucideIcon
   color: string
   soft: string
 }
 
-// Nạp = tiền vào sổ (xanh, mũi tên xuống), rút = tiền ra khỏi sổ (đỏ, mũi tên lên). Màu không phải tín hiệu
-// duy nhất: dấu +/− và chữ "Nạp vào"/"Rút từ" đã nói rõ hướng.
+// Nạp = tiền vào sổ (xanh), rút = tiền ra khỏi sổ (đỏ), cùng 1 icon túi tiền. Màu không phải tín hiệu duy
+// nhất: dấu +/− và chữ "Nạp vào"/"Rút từ" đã nói rõ hướng.
 const DIRECTIONS: Record<SettlementDirection, DirectionStyle> = {
   deposit: {
     verb: "Nạp vào sổ",
-    icon: ArrowDownToLine,
     color: "var(--ob-color-income)",
     soft: "var(--ob-color-income-soft)",
   },
   withdraw: {
     verb: "Rút từ sổ",
-    icon: ArrowUpFromLine,
     color: "var(--ob-color-expense)",
     soft: "var(--ob-color-expense-soft)",
   },
@@ -65,7 +71,7 @@ function ClosingBlock({ settlements }: ClosingBlockProps) {
         Chốt sổ
       </div>
       {settlements.map((s, i) => {
-        const { verb, icon: Icon, color, soft } = DIRECTIONS[s.direction]
+        const { verb, color, soft } = DIRECTIONS[s.direction]
         const before = formatMoney(s.fundAmountBefore, hidden)
         const after = formatMoney(s.fundAmountAfter, hidden)
         const day = formatShortDayKey(s.dayKey)
@@ -87,7 +93,7 @@ function ClosingBlock({ settlements }: ClosingBlockProps) {
               className="hidden size-10 flex-none items-center justify-center rounded-full @xs:flex"
               style={{ background: soft, color }}
             >
-              <Icon size={19} aria-hidden />
+              <MoneyBag size={19} aria-hidden />
             </span>
             <div className="min-w-0 flex-1">
               <div className="text-sm font-bold">{settlementTitle(s.month, s.dayKey)}</div>
