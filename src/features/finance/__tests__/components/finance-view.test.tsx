@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { act, render, screen, fireEvent, within } from "@testing-library/react"
 
 import { formatMoney } from "@/lib/format"
+import { wholeText } from "@/test/whole-text"
 import { FinanceView } from "../../components/finance-view"
 import { DEFAULT_FINANCE_STATE, FINANCE_STORAGE_KEY } from "@/lib/finance/finance-storage"
 
@@ -164,7 +165,7 @@ describe("FinanceView", () => {
   })
   it("shows 0 phân and a flat % on the gold pillar before any gold is bought", () => {
     render(<FinanceView />)
-    expect(screen.getByText("0 phân · +0,0%")).toBeInTheDocument()
+    expect(screen.getByText(wholeText("0 phân · +0,0%"))).toBeInTheDocument()
   })
 
   it("shows the phân held and the % gain on the gold pillar once there is gold", () => {
@@ -180,7 +181,49 @@ describe("FinanceView", () => {
 
     render(<FinanceView />)
 
-    expect(screen.getByText("10 phân · +12,5%")).toBeInTheDocument()
+    expect(screen.getByText(wholeText("10 phân · +12,5%"))).toBeInTheDocument()
+  })
+
+  it("colours the gold and silver pillar % red for a loss and green for a gain, but not at break-even", () => {
+    // Vàng: mua 900.000/phân, giá nay 825.000 → −8,3%. Bạc: mua 1.800.000/lượng, giá nay 2.000.000 → +11,1%.
+    window.localStorage.setItem(
+      FINANCE_STORAGE_KEY,
+      JSON.stringify({
+        ...DEFAULT_FINANCE_STATE,
+        gold: [{ id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" }],
+        goldStores: [{ name: "SJC", price: "825000" }],
+        silver: [{ id: 2, date: "10/08/2026", luong: 1, buy: 1_800_000, store: "Phú Quý" }],
+        silverStores: [{ name: "Phú Quý", price: "2000000" }],
+      })
+    )
+
+    render(<FinanceView />)
+
+    const goldHint = screen.getByText(wholeText("10 phân · −8,3%"))
+    expect(within(goldHint).getByText("−8,3%")).toHaveStyle({ color: "var(--ob-color-expense)" })
+    const silverHint = screen.getByText(wholeText("1 lượng · +11,1%"))
+    expect(within(silverHint).getByText("+11,1%")).toHaveStyle({ color: "var(--ob-color-income)" })
+  })
+
+  it("colours the investment pillar % the same way as gold and silver", () => {
+    // Vốn 10.000.000, giá trị hiện tại 9.000.000 → −10,0%.
+    window.localStorage.setItem(
+      FINANCE_STORAGE_KEY,
+      JSON.stringify({ ...DEFAULT_FINANCE_STATE, invests: [{ id: 1, name: "VESAF", cost: 10_000_000, value: 9_000_000 }] })
+    )
+
+    render(<FinanceView />)
+
+    const investHint = screen.getByText(wholeText("1 khoản · −10,0%"))
+    expect(within(investHint).getByText("−10,0%")).toHaveStyle({ color: "var(--ob-color-expense)" })
+  })
+
+  it("leaves the pillar % uncoloured when nothing is bought yet", () => {
+    render(<FinanceView />)
+
+    const goldHint = screen.getByText(wholeText("0 phân · +0,0%"))
+    expect(within(goldHint).getByText("+0,0%").getAttribute("style") ?? "").not.toContain("color")
+    expect(screen.getByText("Chưa có khoản nào").textContent).toBe("Chưa có khoản nào")
   })
   it("places the Tích lũy bạc tab right after Tích lũy vàng", () => {
     render(<FinanceView />)
@@ -194,7 +237,7 @@ describe("FinanceView", () => {
   it("shows 0 lượng and a flat % on the silver pillar before any silver is bought", () => {
     render(<FinanceView />)
 
-    expect(screen.getByText("0 lượng · +0,0%")).toBeInTheDocument()
+    expect(screen.getByText(wholeText("0 lượng · +0,0%"))).toBeInTheDocument()
   })
 
   it("setting up a silver store and buying 2 lượng shows the P&L, the silver pillar and the net worth", () => {
@@ -222,7 +265,7 @@ describe("FinanceView", () => {
 
     // vốn 2 × 1.800.000 = 3.600.000, giá trị 2 × 2.000.000 = 4.000.000 → lãi 400.000 (+11,1%).
     expect(screen.getByText(`+ ${formatMoney(400_000)}`)).toBeInTheDocument()
-    expect(screen.getByText("2 lượng · +11,1%")).toBeInTheDocument()
+    expect(screen.getByText(wholeText("2 lượng · +11,1%"))).toBeInTheDocument()
     const netSection = screen.getByText("Tài sản ròng").closest("section") as HTMLElement
     expect(within(netSection).getByText(formatMoney(4_000_000))).toBeInTheDocument()
     expect(within(netSection).getByText("Bạc")).toBeInTheDocument()
@@ -295,7 +338,7 @@ describe("FinanceView", () => {
     })
 
     // Còn 9 phân: vốn 7.200.000, giá trị 8.100.000 → +12,5%; Tài sản ròng = 8.100.000.
-    expect(screen.getByText("9 phân · +12,5%")).toBeInTheDocument()
+    expect(screen.getByText(wholeText("9 phân · +12,5%"))).toBeInTheDocument()
     expect(within(netSection).getByText(formatMoney(8_100_000))).toBeInTheDocument()
     expect(screen.getByText("Lịch sử tặng · 1 lần")).toBeInTheDocument()
     expect(JSON.parse(window.localStorage.getItem(FINANCE_STORAGE_KEY) ?? "{}").goldGifts).toEqual([
@@ -308,7 +351,7 @@ describe("FinanceView", () => {
       vi.advanceTimersByTime(1200)
     })
 
-    expect(screen.getByText("10 phân · +12,5%")).toBeInTheDocument()
+    expect(screen.getByText(wholeText("10 phân · +12,5%"))).toBeInTheDocument()
     expect(within(netSection).getByText(formatMoney(9_000_000))).toBeInTheDocument()
     expect(screen.queryByText(/Lịch sử tặng/)).not.toBeInTheDocument()
   })

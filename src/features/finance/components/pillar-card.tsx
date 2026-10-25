@@ -4,17 +4,26 @@ import { Figure } from "@/components/ob/figure"
 import { Card } from "@/components/ui/card"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
+import type { MetalPLTone } from "@/lib/finance/metal-calculations"
 
 interface PillarCardProps {
   icon: string
   label: string
   amount: number
   hint: string
+  // Shown after the hint, coloured by gain/loss so the % stands out from the neutral hint text.
+  delta?: { text: string; tone: MetalPLTone }
   tone?: "income" | "expense"
   className?: string
 }
 
-function PillarCard({ icon, label, amount, hint, tone, className }: PillarCardProps) {
+const DELTA_COLOR: Record<MetalPLTone, string | undefined> = {
+  gain: "var(--ob-color-income)",
+  loss: "var(--ob-color-expense)",
+  even: undefined,
+}
+
+function PillarCard({ icon, label, amount, hint, delta, tone, className }: PillarCardProps) {
   const { hidden } = useMoneyVisibility()
   const amountColor = tone
     ? tone === "income"
@@ -36,6 +45,14 @@ function PillarCard({ icon, label, amount, hint, tone, className }: PillarCardPr
         </div>
         <p className="col-start-2 mt-1.5 min-w-0 text-[12.5px] text-[var(--ob-color-text-subtle)]">
           {hint}
+          {delta ? (
+            <>
+              {" · "}
+              <span className="font-semibold" style={{ color: DELTA_COLOR[delta.tone] }}>
+                {delta.text}
+              </span>
+            </>
+          ) : null}
         </p>
       </div>
     </Card>

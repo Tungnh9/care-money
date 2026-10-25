@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react"
 
 import { MoneyVisibilityProvider } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
+import { wholeText } from "@/test/whole-text"
 import { PillarCard } from "../../components/pillar-card"
 
 describe("PillarCard", () => {
@@ -59,5 +60,26 @@ describe("PillarCard", () => {
     expect(column).not.toBe(amount.closest("section"))
     expect(column).toHaveClass("min-w-0")
     expect(column).toHaveStyle({ color: "var(--ob-color-income)" })
+  })
+
+  it("shows the delta after the hint, coloured by gain or loss", () => {
+    const { rerender } = render(
+      <PillarCard icon="gold" label="Tích lũy vàng" amount={1} hint="114 phân" delta={{ text: "−8,3%", tone: "loss" }} />
+    )
+
+    expect(screen.getByText(wholeText("114 phân · −8,3%"))).toBeInTheDocument()
+    expect(screen.getByText("−8,3%")).toHaveStyle({ color: "var(--ob-color-expense)" })
+
+    rerender(<PillarCard icon="gold" label="Tích lũy vàng" amount={1} hint="114 phân" delta={{ text: "+2,0%", tone: "gain" }} />)
+    expect(screen.getByText("+2,0%")).toHaveStyle({ color: "var(--ob-color-income)" })
+
+    rerender(<PillarCard icon="gold" label="Tích lũy vàng" amount={1} hint="114 phân" delta={{ text: "+0,0%", tone: "even" }} />)
+    expect(screen.getByText("+0,0%").getAttribute("style") ?? "").not.toContain("color")
+  })
+
+  it("shows just the hint when there is no delta", () => {
+    render(<PillarCard icon="pig" label="Tiết kiệm" amount={0} hint="3 quỹ đang chạy" />)
+
+    expect(screen.getByText("3 quỹ đang chạy").textContent).toBe("3 quỹ đang chạy")
   })
 })

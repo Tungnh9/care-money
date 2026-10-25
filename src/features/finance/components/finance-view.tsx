@@ -8,6 +8,7 @@ import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { longDate } from "@/lib/date"
 import { formatMoney } from "@/lib/format"
 import { formatLuong, formatPhan, nearestDueCard, pct1, summarizeFinance } from "@/lib/finance/finance-calculations"
+import { metalPLTone } from "@/lib/finance/metal-calculations"
 import { useFinance } from "@/lib/finance/use-finance"
 import { CreditCardsTab } from "./credit-cards-tab"
 import { GoldTab } from "./gold-tab"
@@ -120,7 +121,8 @@ function FinanceView() {
           label="Tích lũy vàng"
           amount={summary.goldValue}
           tone={summary.goldPL >= 0 ? "income" : "expense"}
-          hint={`${formatPhan(summary.goldPhan)} phân · ${pct1(summary.goldPct)}`}
+          hint={`${formatPhan(summary.goldPhan)} phân`}
+          delta={{ text: pct1(summary.goldPct), tone: metalPLTone(summary.goldPL) }}
           className={PILLAR_CLASS}
         />
         <PillarCard
@@ -128,7 +130,8 @@ function FinanceView() {
           label="Tích lũy bạc"
           amount={summary.silverValue}
           tone={summary.silverPL >= 0 ? "income" : "expense"}
-          hint={`${formatLuong(summary.silverLuong)} lượng · ${pct1(summary.silverPct)}`}
+          hint={`${formatLuong(summary.silverLuong)} lượng`}
+          delta={{ text: pct1(summary.silverPct), tone: metalPLTone(summary.silverPL) }}
           className={PILLAR_CLASS}
         />
         <PillarCard
@@ -136,9 +139,8 @@ function FinanceView() {
           label="Đầu tư"
           amount={summary.investValue}
           tone={invests.length ? (summary.investPL >= 0 ? "income" : "expense") : undefined}
-          hint={
-            invests.length ? `${invests.length} khoản · ${pct1(summary.investPct)}` : "Chưa có khoản nào"
-          }
+          hint={invests.length ? `${invests.length} khoản` : "Chưa có khoản nào"}
+          delta={invests.length ? { text: pct1(summary.investPct), tone: metalPLTone(summary.investPL) } : undefined}
           className={PILLAR_CLASS}
         />
       </div>
