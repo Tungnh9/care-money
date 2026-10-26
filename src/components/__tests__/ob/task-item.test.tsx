@@ -42,6 +42,9 @@ describe("TaskItem", () => {
   it("wraps a long unbroken label (a URL, a ticket path) inside the row instead of widening the page", () => {
     render(<TaskItem label="https://example.com/a/very/long/path/without/any/spaces" onToggle={vi.fn()} />)
 
-    expect(screen.getByText("https://example.com/a/very/long/path/without/any/spaces")).toHaveClass("min-w-0", "wrap-anywhere")
+    expect(screen.getByText("https://example.com/a/very/long/path/without/any/spaces")).toHaveClass(
+      "min-w-0",
+      "wrap-anywhere"
+    )
   })
 })

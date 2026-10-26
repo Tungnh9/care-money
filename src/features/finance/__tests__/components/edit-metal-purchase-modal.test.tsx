@@ -7,17 +7,36 @@ import { GOLD_METAL } from "../../metal-config"
 import type { GoldPurchase, GoldStore } from "@/lib/finance/types"
 
 const PURCHASE: GoldPurchase = { id: 1, date: "10/08/2026", phan: 2, buy: 7_500_000, store: "PNJ" }
-const STORES: GoldStore[] = [{ name: "PNJ", price: "7.550.000" }, { name: "SJC", price: "7.600.000" }]
+const STORES: GoldStore[] = [
+  { name: "PNJ", price: "7.550.000" },
+  { name: "SJC", price: "7.600.000" },
+]
 
 describe("EditMetalPurchaseModal", () => {
   it("renders nothing when purchase is null", () => {
-    render(<EditMetalPurchaseModal metal={GOLD_METAL} purchase={null} stores={STORES} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+    render(
+      <EditMetalPurchaseModal
+        metal={GOLD_METAL}
+        purchase={null}
+        stores={STORES}
+        onOpenChange={vi.fn()}
+        onSave={vi.fn()}
+      />
+    )
 
     expect(screen.queryByText("Sửa lần mua vàng")).not.toBeInTheDocument()
   })
 
   it("prefills every field from the given purchase", () => {
-    render(<EditMetalPurchaseModal metal={GOLD_METAL} purchase={PURCHASE} stores={STORES} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+    render(
+      <EditMetalPurchaseModal
+        metal={GOLD_METAL}
+        purchase={PURCHASE}
+        stores={STORES}
+        onOpenChange={vi.fn()}
+        onSave={vi.fn()}
+      />
+    )
 
     expect(screen.getByLabelText("Ngày mua", { exact: false })).toHaveValue("10/08/2026")
     expect(screen.getByLabelText("Khối lượng", { exact: false })).toHaveValue(String(PURCHASE.phan))
@@ -28,7 +47,15 @@ describe("EditMetalPurchaseModal", () => {
   it("saves the edited purchase and closes on Lưu", () => {
     const onSave = vi.fn()
     const onOpenChange = vi.fn()
-    render(<EditMetalPurchaseModal metal={GOLD_METAL} purchase={PURCHASE} stores={STORES} onOpenChange={onOpenChange} onSave={onSave} />)
+    render(
+      <EditMetalPurchaseModal
+        metal={GOLD_METAL}
+        purchase={PURCHASE}
+        stores={STORES}
+        onOpenChange={onOpenChange}
+        onSave={onSave}
+      />
+    )
 
     fireEvent.change(screen.getByLabelText("Khối lượng", { exact: false }), { target: { value: "5" } })
     fireEvent.click(screen.getByRole("button", { name: "SJC" }))
@@ -41,7 +68,15 @@ describe("EditMetalPurchaseModal", () => {
   it("blocks saving once the purchase's store has been deleted, until another store is picked", () => {
     const onSave = vi.fn()
     const remaining = STORES.filter((s) => s.name !== "PNJ")
-    render(<EditMetalPurchaseModal metal={GOLD_METAL} purchase={PURCHASE} stores={remaining} onOpenChange={vi.fn()} onSave={onSave} />)
+    render(
+      <EditMetalPurchaseModal
+        metal={GOLD_METAL}
+        purchase={PURCHASE}
+        stores={remaining}
+        onOpenChange={vi.fn()}
+        onSave={onSave}
+      />
+    )
 
     expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
 
@@ -53,7 +88,15 @@ describe("EditMetalPurchaseModal", () => {
 
   it("closes without saving on Huỷ", () => {
     const onSave = vi.fn()
-    render(<EditMetalPurchaseModal metal={GOLD_METAL} purchase={PURCHASE} stores={STORES} onOpenChange={vi.fn()} onSave={onSave} />)
+    render(
+      <EditMetalPurchaseModal
+        metal={GOLD_METAL}
+        purchase={PURCHASE}
+        stores={STORES}
+        onOpenChange={vi.fn()}
+        onSave={onSave}
+      />
+    )
 
     fireEvent.click(screen.getByRole("button", { name: "Huỷ" }))
 
@@ -61,7 +104,15 @@ describe("EditMetalPurchaseModal", () => {
   })
 
   it("disables Lưu while date, phan, buy or store is empty", () => {
-    render(<EditMetalPurchaseModal metal={GOLD_METAL} purchase={PURCHASE} stores={STORES} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+    render(
+      <EditMetalPurchaseModal
+        metal={GOLD_METAL}
+        purchase={PURCHASE}
+        stores={STORES}
+        onOpenChange={vi.fn()}
+        onSave={vi.fn()}
+      />
+    )
 
     fireEvent.change(screen.getByLabelText("Ngày mua", { exact: false }), { target: { value: "" } })
 
@@ -69,7 +120,15 @@ describe("EditMetalPurchaseModal", () => {
   })
 
   it("disables Lưu when khối lượng is zero or negative", () => {
-    render(<EditMetalPurchaseModal metal={GOLD_METAL} purchase={PURCHASE} stores={STORES} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+    render(
+      <EditMetalPurchaseModal
+        metal={GOLD_METAL}
+        purchase={PURCHASE}
+        stores={STORES}
+        onOpenChange={vi.fn()}
+        onSave={vi.fn()}
+      />
+    )
 
     fireEvent.change(screen.getByLabelText("Khối lượng", { exact: false }), { target: { value: "0" } })
     expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
@@ -79,7 +138,15 @@ describe("EditMetalPurchaseModal", () => {
   })
 
   it("disables Lưu when khối lượng is not a finite number", () => {
-    render(<EditMetalPurchaseModal metal={GOLD_METAL} purchase={PURCHASE} stores={STORES} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+    render(
+      <EditMetalPurchaseModal
+        metal={GOLD_METAL}
+        purchase={PURCHASE}
+        stores={STORES}
+        onOpenChange={vi.fn()}
+        onSave={vi.fn()}
+      />
+    )
 
     fireEvent.change(screen.getByLabelText("Khối lượng", { exact: false }), { target: { value: "1e400" } })
     expect(screen.getByRole("button", { name: "Lưu" })).toBeDisabled()
@@ -91,10 +158,24 @@ describe("EditMetalPurchaseModal", () => {
   it("reseeds fields when switching to a different purchase while already open", () => {
     const OTHER: GoldPurchase = { id: 2, date: "01/09/2026", phan: 1, buy: 7_550_000, store: "SJC" }
     const { rerender } = render(
-      <EditMetalPurchaseModal metal={GOLD_METAL} purchase={PURCHASE} stores={STORES} onOpenChange={vi.fn()} onSave={vi.fn()} />
+      <EditMetalPurchaseModal
+        metal={GOLD_METAL}
+        purchase={PURCHASE}
+        stores={STORES}
+        onOpenChange={vi.fn()}
+        onSave={vi.fn()}
+      />
     )
 
-    rerender(<EditMetalPurchaseModal metal={GOLD_METAL} purchase={OTHER} stores={STORES} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+    rerender(
+      <EditMetalPurchaseModal
+        metal={GOLD_METAL}
+        purchase={OTHER}
+        stores={STORES}
+        onOpenChange={vi.fn()}
+        onSave={vi.fn()}
+      />
+    )
 
     expect(screen.getByLabelText("Ngày mua", { exact: false })).toHaveValue("01/09/2026")
   })
@@ -102,7 +183,13 @@ describe("EditMetalPurchaseModal", () => {
   it("flags a purchase saved earlier with an unreadable date and only saves once the date is fixed", () => {
     const onSave = vi.fn()
     render(
-      <EditMetalPurchaseModal metal={GOLD_METAL} purchase={{ ...PURCHASE, date: "10/08/26" }} stores={STORES} onOpenChange={vi.fn()} onSave={onSave} />
+      <EditMetalPurchaseModal
+        metal={GOLD_METAL}
+        purchase={{ ...PURCHASE, date: "10/08/26" }}
+        stores={STORES}
+        onOpenChange={vi.fn()}
+        onSave={onSave}
+      />
     )
 
     expect(screen.getByText("Nhập ngày dạng dd/mm/yyyy, vd: 10/08/2026")).toBeInTheDocument()
@@ -115,7 +202,15 @@ describe("EditMetalPurchaseModal", () => {
   })
 
   it("disables Lưu and explains why for a fractional khối lượng", () => {
-    render(<EditMetalPurchaseModal metal={GOLD_METAL} purchase={PURCHASE} stores={STORES} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+    render(
+      <EditMetalPurchaseModal
+        metal={GOLD_METAL}
+        purchase={PURCHASE}
+        stores={STORES}
+        onOpenChange={vi.fn()}
+        onSave={vi.fn()}
+      />
+    )
 
     fireEvent.change(screen.getByLabelText("Khối lượng", { exact: false }), { target: { value: "2.5" } })
 

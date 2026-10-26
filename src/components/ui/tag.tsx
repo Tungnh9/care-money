@@ -31,22 +31,13 @@ const DOT_COLOR: Record<string, string> = {
   kehoach: "var(--ob-tag-kehoach)",
 }
 
-interface TagProps
-  extends React.ComponentProps<"span">,
-    VariantProps<typeof tagVariants> {}
+interface TagProps extends React.ComponentProps<"span">, VariantProps<typeof tagVariants> {}
 
 function Tag({ className, module, children, ...props }: TagProps) {
   const key = module ?? "taichinh"
   return (
-    <span
-      data-slot="tag"
-      className={cn(tagVariants({ module }), className)}
-      {...props}
-    >
-      <span
-        className="size-2 shrink-0 rounded-full"
-        style={{ background: DOT_COLOR[key] }}
-      />
+    <span data-slot="tag" className={cn(tagVariants({ module }), className)} {...props}>
+      <span className="size-2 shrink-0 rounded-full" style={{ background: DOT_COLOR[key] }} />
       {children}
     </span>
   )

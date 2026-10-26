@@ -47,9 +47,7 @@ describe("GoalsView", () => {
 
     fireEvent.click(within(carCard).getByRole("button", { name: "Quỹ mua xe" }))
 
-    await waitFor(() =>
-      expect(within(carCard).getByText(formatMoney(30_000_000))).toBeInTheDocument()
-    )
+    await waitFor(() => expect(within(carCard).getByText(formatMoney(30_000_000))).toBeInTheDocument())
     expect(within(carCard).getByText("15%")).toBeInTheDocument()
   })
 

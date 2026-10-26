@@ -20,23 +20,13 @@ interface FigureProps {
 // cho (số ký tự × 0,6) là cỡ lớn nhất để cả dòng số còn nằm trọn 1 dòng trong container gần nhất
 // (Card, hoặc ô riêng như ở PillarCard). 13cqi giữ nguyên cỡ cũ cho số ngắn (≤ 12 ký tự); chưa biết
 // số ký tự thì biến rơi về 1 → chỉ còn 13cqi như trước.
-const LG_FONT_SIZE =
-  "text-[length:clamp(16px,min(13cqi,calc(100cqi/var(--ob-figure-chars,1)/0.6)),36px)]"
+const LG_FONT_SIZE = "text-[length:clamp(16px,min(13cqi,calc(100cqi/var(--ob-figure-chars,1)/0.6)),36px)]"
 
 function textLength(node: React.ReactNode): number {
   return typeof node === "string" || typeof node === "number" ? String(node).length : 0
 }
 
-function Figure({
-  value,
-  unit,
-  delta,
-  direction = "up",
-  caption,
-  size = "lg",
-  fitChars,
-  className,
-}: FigureProps) {
+function Figure({ value, unit, delta, direction = "up", caption, size = "lg", fitChars, className }: FigureProps) {
   const up = direction === "up"
   const chars = size === "lg" ? (fitChars ?? textLength(value) + textLength(unit)) : 0
   return (
@@ -54,12 +44,7 @@ function Figure({
       {delta || caption ? (
         <div className="mt-[var(--ob-space-3)] flex items-center gap-[var(--ob-space-2)] text-[13.5px]">
           {delta ? (
-            <span
-              className={cn(
-                "font-bold",
-                up ? "text-[var(--ob-la-300)]" : "text-[var(--ob-do-300)]"
-              )}
-            >
+            <span className={cn("font-bold", up ? "text-[var(--ob-la-300)]" : "text-[var(--ob-do-300)]")}>
               {up ? "▲" : "▼"} {delta}
             </span>
           ) : null}

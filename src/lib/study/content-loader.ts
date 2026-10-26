@@ -39,10 +39,7 @@ function parseJsonl<T>(raw: string, filename: string, schema: z.ZodType<T>): T[]
       try {
         value = JSON.parse(line)
       } catch (cause) {
-        throw new Error(
-          `${filename}:${lineNumber}: dòng JSON không hợp lệ — ${line.slice(0, 80)}`,
-          { cause }
-        )
+        throw new Error(`${filename}:${lineNumber}: dòng JSON không hợp lệ — ${line.slice(0, 80)}`, { cause })
       }
       const result = schema.safeParse(value)
       if (!result.success) {

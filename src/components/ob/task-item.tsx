@@ -16,9 +16,7 @@ function TaskItem({ label, done, onToggle, className }: TaskItemProps) {
     <label
       className={cn(
         "relative flex min-h-8 cursor-pointer items-center gap-[var(--ob-space-3)] text-sm",
-        done
-          ? "font-normal text-[var(--ob-color-text-subtle)]"
-          : "font-medium text-[var(--ob-color-text)]",
+        done ? "font-normal text-[var(--ob-color-text-subtle)]" : "font-medium text-[var(--ob-color-text)]",
         className
       )}
     >

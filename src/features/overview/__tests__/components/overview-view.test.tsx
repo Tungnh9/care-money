@@ -106,7 +106,16 @@ describe("OverviewView", () => {
     setStoredWork({
       ...DEFAULT_WORK_STATE,
       tasks: [
-        { id: 1, title: "Gửi báo cáo", dueDate: "2026-08-14", priority: "high", columnId: 1, done: false, doneAt: null, createdAt: "2026-08-13" },
+        {
+          id: 1,
+          title: "Gửi báo cáo",
+          dueDate: "2026-08-14",
+          priority: "high",
+          columnId: 1,
+          done: false,
+          doneAt: null,
+          createdAt: "2026-08-13",
+        },
       ],
     })
 
@@ -116,7 +125,9 @@ describe("OverviewView", () => {
     expect(screen.getByText("Việc hôm nay")).toBeInTheDocument()
     fireEvent.click(checkbox)
 
-    await waitFor(() => expect(getStoredWork().tasks[0]).toMatchObject({ columnId: 3, done: true, doneAt: "2026-08-14" }))
+    await waitFor(() =>
+      expect(getStoredWork().tasks[0]).toMatchObject({ columnId: 3, done: true, doneAt: "2026-08-14" })
+    )
   })
 
   it("hides the work section when the lamviec module is turned off", async () => {
@@ -222,9 +233,8 @@ describe("OverviewView", () => {
     // đầu tiên trong ngày sẽ bị "khoá" ở giá trị sai đó suốt cả ngày. Đã sửa bằng cách chờ
     // `financeHydrated` trước khi ghi — test này xác nhận KHÔNG CÓ lần ghi nào (kể cả tạm thời)
     // mang giá trị 0, không chỉ "tự sửa lại sau".
-    const { getStoredNetWorthHistory, NET_WORTH_HISTORY_KEY } = await import(
-      "@/lib/net-worth/net-worth-history-storage"
-    )
+    const { getStoredNetWorthHistory, NET_WORTH_HISTORY_KEY } =
+      await import("@/lib/net-worth/net-worth-history-storage")
     setStoredFinance({
       ...DEFAULT_FINANCE_STATE,
       savings: [{ name: "Quỹ ABC", amount: 60_000_000, target: 100_000_000 }],

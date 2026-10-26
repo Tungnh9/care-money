@@ -13,7 +13,15 @@ const STORES: GoldStore[] = [
 describe("MetalStoresCard", () => {
   it("shows the empty-state message when there are no stores", () => {
     render(
-      <MetalStoresCard metal={GOLD_METAL} stores={[]} purchases={[]} onAdd={vi.fn()} onUpdate={vi.fn()} onRemove={vi.fn()} onSetPrice={vi.fn()} />
+      <MetalStoresCard
+        metal={GOLD_METAL}
+        stores={[]}
+        purchases={[]}
+        onAdd={vi.fn()}
+        onUpdate={vi.fn()}
+        onRemove={vi.fn()}
+        onSetPrice={vi.fn()}
+      />
     )
 
     expect(screen.getByText(/Chưa có cửa hàng nào/)).toBeInTheDocument()
@@ -21,7 +29,15 @@ describe("MetalStoresCard", () => {
 
   it("renders every store's name and price", () => {
     render(
-      <MetalStoresCard metal={GOLD_METAL} stores={STORES} purchases={[]} onAdd={vi.fn()} onUpdate={vi.fn()} onRemove={vi.fn()} onSetPrice={vi.fn()} />
+      <MetalStoresCard
+        metal={GOLD_METAL}
+        stores={STORES}
+        purchases={[]}
+        onAdd={vi.fn()}
+        onUpdate={vi.fn()}
+        onRemove={vi.fn()}
+        onSetPrice={vi.fn()}
+      />
     )
 
     expect(screen.getByText("SJC")).toBeInTheDocument()
@@ -33,7 +49,15 @@ describe("MetalStoresCard", () => {
   it("calls onSetPrice when a store's price field changes", () => {
     const onSetPrice = vi.fn()
     render(
-      <MetalStoresCard metal={GOLD_METAL} stores={STORES} purchases={[]} onAdd={vi.fn()} onUpdate={vi.fn()} onRemove={vi.fn()} onSetPrice={onSetPrice} />
+      <MetalStoresCard
+        metal={GOLD_METAL}
+        stores={STORES}
+        purchases={[]}
+        onAdd={vi.fn()}
+        onUpdate={vi.fn()}
+        onRemove={vi.fn()}
+        onSetPrice={onSetPrice}
+      />
     )
 
     fireEvent.change(screen.getByDisplayValue("935.000"), { target: { value: "950.000" } })
@@ -46,7 +70,15 @@ describe("MetalStoresCard", () => {
   it("opens a rename modal and calls onUpdate keyed by the original name", () => {
     const onUpdate = vi.fn()
     render(
-      <MetalStoresCard metal={GOLD_METAL} stores={STORES} purchases={[]} onAdd={vi.fn()} onUpdate={onUpdate} onRemove={vi.fn()} onSetPrice={vi.fn()} />
+      <MetalStoresCard
+        metal={GOLD_METAL}
+        stores={STORES}
+        purchases={[]}
+        onAdd={vi.fn()}
+        onUpdate={onUpdate}
+        onRemove={vi.fn()}
+        onSetPrice={vi.fn()}
+      />
     )
 
     fireEvent.click(screen.getByRole("button", { name: "Sửa SJC" }))
@@ -61,7 +93,15 @@ describe("MetalStoresCard", () => {
   it("allows removing a store that has no purchases attached", () => {
     const onRemove = vi.fn()
     render(
-      <MetalStoresCard metal={GOLD_METAL} stores={STORES} purchases={[]} onAdd={vi.fn()} onUpdate={vi.fn()} onRemove={onRemove} onSetPrice={vi.fn()} />
+      <MetalStoresCard
+        metal={GOLD_METAL}
+        stores={STORES}
+        purchases={[]}
+        onAdd={vi.fn()}
+        onUpdate={vi.fn()}
+        onRemove={onRemove}
+        onSetPrice={vi.fn()}
+      />
     )
 
     fireEvent.click(screen.getByRole("button", { name: "Xoá SJC" }))
@@ -73,7 +113,15 @@ describe("MetalStoresCard", () => {
   it("disables removing a store that still has purchases attached, with an explanatory tooltip", () => {
     const gold: GoldPurchase[] = [{ id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" }]
     render(
-      <MetalStoresCard metal={GOLD_METAL} stores={STORES} purchases={gold} onAdd={vi.fn()} onUpdate={vi.fn()} onRemove={vi.fn()} onSetPrice={vi.fn()} />
+      <MetalStoresCard
+        metal={GOLD_METAL}
+        stores={STORES}
+        purchases={gold}
+        onAdd={vi.fn()}
+        onUpdate={vi.fn()}
+        onRemove={vi.fn()}
+        onSetPrice={vi.fn()}
+      />
     )
 
     const disabledButton = screen.getByRole("button", { name: "Xoá SJC" })
@@ -85,7 +133,15 @@ describe("MetalStoresCard", () => {
   it("opens the add-store form, fills in fields and reports the new store on submit", () => {
     const onAdd = vi.fn()
     render(
-      <MetalStoresCard metal={GOLD_METAL} stores={[]} purchases={[]} onAdd={onAdd} onUpdate={vi.fn()} onRemove={vi.fn()} onSetPrice={vi.fn()} />
+      <MetalStoresCard
+        metal={GOLD_METAL}
+        stores={[]}
+        purchases={[]}
+        onAdd={onAdd}
+        onUpdate={vi.fn()}
+        onRemove={vi.fn()}
+        onSetPrice={vi.fn()}
+      />
     )
 
     fireEvent.click(screen.getByRole("button", { name: "Thêm cửa hàng" }))
@@ -102,7 +158,15 @@ describe("MetalStoresCard", () => {
 
   it("keeps Thêm disabled until a store name is filled in", () => {
     render(
-      <MetalStoresCard metal={GOLD_METAL} stores={[]} purchases={[]} onAdd={vi.fn()} onUpdate={vi.fn()} onRemove={vi.fn()} onSetPrice={vi.fn()} />
+      <MetalStoresCard
+        metal={GOLD_METAL}
+        stores={[]}
+        purchases={[]}
+        onAdd={vi.fn()}
+        onUpdate={vi.fn()}
+        onRemove={vi.fn()}
+        onSetPrice={vi.fn()}
+      />
     )
 
     fireEvent.click(screen.getByRole("button", { name: "Thêm cửa hàng" }))
@@ -119,7 +183,15 @@ describe("MetalStoresCard — tên cửa hàng trùng", () => {
   it("blocks adding a store whose name is already taken and keeps what was typed", () => {
     const onAdd = vi.fn()
     render(
-      <MetalStoresCard metal={GOLD_METAL} stores={STORES} purchases={[]} onAdd={onAdd} onUpdate={vi.fn()} onRemove={vi.fn()} onSetPrice={vi.fn()} />
+      <MetalStoresCard
+        metal={GOLD_METAL}
+        stores={STORES}
+        purchases={[]}
+        onAdd={onAdd}
+        onUpdate={vi.fn()}
+        onRemove={vi.fn()}
+        onSetPrice={vi.fn()}
+      />
     )
 
     fireEvent.click(screen.getByRole("button", { name: "Thêm cửa hàng" }))
@@ -138,7 +210,15 @@ describe("MetalStoresCard — tên cửa hàng trùng", () => {
   it("blocks renaming a store to another store's name from the Sửa form", () => {
     const onUpdate = vi.fn()
     render(
-      <MetalStoresCard metal={GOLD_METAL} stores={STORES} purchases={[]} onAdd={vi.fn()} onUpdate={onUpdate} onRemove={vi.fn()} onSetPrice={vi.fn()} />
+      <MetalStoresCard
+        metal={GOLD_METAL}
+        stores={STORES}
+        purchases={[]}
+        onAdd={vi.fn()}
+        onUpdate={onUpdate}
+        onRemove={vi.fn()}
+        onSetPrice={vi.fn()}
+      />
     )
 
     fireEvent.click(screen.getByRole("button", { name: "Sửa SJC" }))
@@ -154,7 +234,15 @@ describe("MetalStoresCard — tên đọc được của ô giá", () => {
   it("names each store's price field after the store instead of just the 'đ' suffix", () => {
     const onSetPrice = vi.fn()
     render(
-      <MetalStoresCard metal={GOLD_METAL} stores={STORES} purchases={[]} onAdd={vi.fn()} onUpdate={vi.fn()} onRemove={vi.fn()} onSetPrice={onSetPrice} />
+      <MetalStoresCard
+        metal={GOLD_METAL}
+        stores={STORES}
+        purchases={[]}
+        onAdd={vi.fn()}
+        onUpdate={vi.fn()}
+        onRemove={vi.fn()}
+        onSetPrice={onSetPrice}
+      />
     )
 
     expect(screen.getByRole("textbox", { name: "Giá SJC hôm nay (mỗi phân)" })).toHaveValue("935.000")

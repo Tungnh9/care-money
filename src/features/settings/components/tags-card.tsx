@@ -51,9 +51,7 @@ function TagsCard({ tags, onToggle }: TagsCardProps) {
             />
           </div>
         ))}
-        {!tags.length ? (
-          <p className="text-[13.5px] text-[var(--ob-color-text-subtle)]">Chưa có nhãn nào.</p>
-        ) : null}
+        {!tags.length ? <p className="text-[13.5px] text-[var(--ob-color-text-subtle)]">Chưa có nhãn nào.</p> : null}
       </div>
     </Card>
   )

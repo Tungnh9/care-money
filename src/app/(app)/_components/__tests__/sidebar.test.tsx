@@ -41,9 +41,7 @@ describe("Sidebar", () => {
     const [toggleButton] = await screen.findAllByRole("button", { name: "Ẩn số tiền" })
     fireEvent.click(toggleButton)
 
-    await waitFor(() =>
-      expect(screen.getAllByRole("button", { name: "Hiện số tiền" })).toHaveLength(2)
-    )
+    await waitFor(() => expect(screen.getAllByRole("button", { name: "Hiện số tiền" })).toHaveLength(2))
     expect(window.localStorage.getItem("hide-money")).toBe("1")
   })
 
@@ -187,7 +185,16 @@ describe("Sidebar", () => {
       label.style.display = "none"
     }
 
-    for (const name of ["Tổng quan", "Tài chính", "Chi tiêu", "Nhật ký", "Học tập", "Mục tiêu", "Làm việc", "Cài đặt"]) {
+    for (const name of [
+      "Tổng quan",
+      "Tài chính",
+      "Chi tiêu",
+      "Nhật ký",
+      "Học tập",
+      "Mục tiêu",
+      "Làm việc",
+      "Cài đặt",
+    ]) {
       expect(within(nav).getByRole("link", { name })).toBeInTheDocument()
     }
   })

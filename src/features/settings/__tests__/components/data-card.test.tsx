@@ -67,10 +67,7 @@ describe("DataCard", () => {
 
   it("shows the exported file info banner", () => {
     render(
-      <DataCard
-        {...BASE_PROPS}
-        exported={{ file: "orange-banana-2026-08-14.json", size: "1,2 KB", time: "09:00" }}
-      />
+      <DataCard {...BASE_PROPS} exported={{ file: "orange-banana-2026-08-14.json", size: "1,2 KB", time: "09:00" }} />
     )
 
     expect(screen.getByText("Đã tải orange-banana-2026-08-14.json")).toBeInTheDocument()
@@ -95,9 +92,7 @@ describe("DataCard", () => {
     expect(screen.getByText("Đã nạp backup.json")).toBeInTheDocument()
     expect(screen.getByText("3 bài nhật ký")).toBeInTheDocument()
 
-    rerender(
-      <DataCard {...BASE_PROPS} imported={{ ok: false, error: "File không phải JSON hợp lệ." }} />
-    )
+    rerender(<DataCard {...BASE_PROPS} imported={{ ok: false, error: "File không phải JSON hợp lệ." }} />)
     expect(screen.getByText("Nhập file không thành công")).toBeInTheDocument()
     expect(screen.getByText("File không phải JSON hợp lệ.")).toBeInTheDocument()
   })

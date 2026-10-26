@@ -47,7 +47,12 @@ function QuizGame({ vocab, onFinish, onWordReviewed }: QuizGameProps) {
       ? mistakes
       : [
           ...mistakes,
-          { wordId: question.correct.id, word: question.correct.word, correctMeaning: question.correct.meaning, chosenMeaning: chosen?.meaning ?? null },
+          {
+            wordId: question.correct.id,
+            word: question.correct.word,
+            correctMeaning: question.correct.meaning,
+            chosenMeaning: chosen?.meaning ?? null,
+          },
         ]
     if (index + 1 >= questions.length) {
       onFinish(nextScore, questions.length, nextMistakes)

@@ -12,9 +12,7 @@ describe("PillarCard", () => {
   })
 
   it("renders the icon, formatted amount, label and hint for arbitrary props", () => {
-    render(
-      <PillarCard icon="pig" label="Tiết kiệm" amount={12_345_678} hint="3 quỹ đang chạy" />
-    )
+    render(<PillarCard icon="pig" label="Tiết kiệm" amount={12_345_678} hint="3 quỹ đang chạy" />)
 
     const icon = screen.getByAltText("")
     expect(icon.getAttribute("src")).toContain("pig.svg")
@@ -47,9 +45,7 @@ describe("PillarCard", () => {
   })
 
   it("sizes a large amount from its own column next to the icon, so it stays inside the card", () => {
-    render(
-      <PillarCard icon="pig" label="Tiết kiệm" amount={1_234_567_890} hint="3 quỹ đang chạy" tone="income" />
-    )
+    render(<PillarCard icon="pig" label="Tiết kiệm" amount={1_234_567_890} hint="3 quỹ đang chạy" tone="income" />)
 
     // Số tiền là chuỗi thuần nên Figure tự đếm: "1.234.567.890 ₫" = 15 ký tự.
     const amount = screen.getByText(formatMoney(1_234_567_890))
@@ -64,16 +60,38 @@ describe("PillarCard", () => {
 
   it("shows the delta after the hint, coloured by gain or loss", () => {
     const { rerender } = render(
-      <PillarCard icon="gold" label="Tích lũy vàng" amount={1} hint="114 phân" delta={{ text: "−8,3%", tone: "loss" }} />
+      <PillarCard
+        icon="gold"
+        label="Tích lũy vàng"
+        amount={1}
+        hint="114 phân"
+        delta={{ text: "−8,3%", tone: "loss" }}
+      />
     )
 
     expect(screen.getByText(wholeText("114 phân · −8,3%"))).toBeInTheDocument()
     expect(screen.getByText("−8,3%")).toHaveStyle({ color: "var(--ob-color-expense)" })
 
-    rerender(<PillarCard icon="gold" label="Tích lũy vàng" amount={1} hint="114 phân" delta={{ text: "+2,0%", tone: "gain" }} />)
+    rerender(
+      <PillarCard
+        icon="gold"
+        label="Tích lũy vàng"
+        amount={1}
+        hint="114 phân"
+        delta={{ text: "+2,0%", tone: "gain" }}
+      />
+    )
     expect(screen.getByText("+2,0%")).toHaveStyle({ color: "var(--ob-color-income)" })
 
-    rerender(<PillarCard icon="gold" label="Tích lũy vàng" amount={1} hint="114 phân" delta={{ text: "+0,0%", tone: "even" }} />)
+    rerender(
+      <PillarCard
+        icon="gold"
+        label="Tích lũy vàng"
+        amount={1}
+        hint="114 phân"
+        delta={{ text: "+0,0%", tone: "even" }}
+      />
+    )
     expect(screen.getByText("+0,0%").getAttribute("style") ?? "").not.toContain("color")
   })
 

@@ -53,7 +53,12 @@ function TaskForm({ today, initial, onSubmit, onCancel, onDelete }: TaskFormProp
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      <Field label="Tên việc" placeholder="vd: Gửi báo cáo tuần" value={title} onChange={(e) => setTitle(e.target.value)} />
+      <Field
+        label="Tên việc"
+        placeholder="vd: Gửi báo cáo tuần"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+      />
 
       <div>
         <div role="group" aria-label="Chọn hạn nhanh" className="mb-2 flex flex-wrap gap-2">

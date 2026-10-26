@@ -17,16 +17,8 @@ import { useDataManagement } from "../hooks/use-data-management"
 import { useSettings } from "@/lib/settings/use-settings"
 
 function SettingsView() {
-  const {
-    settings,
-    updateProfile,
-    toggleModule,
-    toggleMood,
-    removeMood,
-    addMood,
-    toggleTag,
-    replaceSettings,
-  } = useSettings()
+  const { settings, updateProfile, toggleModule, toggleMood, removeMood, addMood, toggleTag, replaceSettings } =
+    useSettings()
   const { entries, replaceJournal } = useJournal()
   const { savings, cards, gold, silver, invests, replaceFinance } = useFinance()
   const { tasks, learned, gameHighScores, gameStreak, wordReviews, replaceStudy } = useStudy()

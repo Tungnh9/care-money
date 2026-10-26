@@ -97,9 +97,7 @@ function StudyView({ vocab, grammar }: StudyViewProps) {
           {tab === "Từ vựng" ? (
             <VocabCard
               label={`Kho từ vựng giao tiếp · ${vocab.length} từ`}
-              action={
-                <span className="text-[12.5px] text-[var(--ob-color-text-subtle)]">Đã học {learned.length}</span>
-              }
+              action={<span className="text-[12.5px] text-[var(--ob-color-text-subtle)]">Đã học {learned.length}</span>}
               entries={vocab}
               learned={learned}
               onToggleLearned={toggleLearned}

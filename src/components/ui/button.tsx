@@ -9,8 +9,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary: "bg-[var(--ob-color-action)] text-[var(--ob-color-on-action)]",
-        secondary:
-          "bg-[var(--ob-color-action-soft)] text-[var(--ob-color-action-strong)]",
+        secondary: "bg-[var(--ob-color-action-soft)] text-[var(--ob-color-action-strong)]",
         reward: "bg-[var(--ob-color-reward)] text-[var(--ob-vo-900)]",
         ghost:
           "border-[var(--ob-color-border)] bg-transparent text-[var(--ob-color-text)] hover:bg-[var(--ob-color-surface-sunken)]",

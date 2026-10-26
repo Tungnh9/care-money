@@ -36,7 +36,13 @@ function columnOf(lists: Lists, dndId: UniqueIdentifier): number | null {
 
 // Kéo sang cột khác: bỏ thẻ khỏi cột cũ, chèn vào cột mới ngay trên (hoặc dưới) thẻ đang trỏ;
 // đang trỏ vào chính cột (chỗ trống, cột rỗng) thì xuống cuối.
-function moveAcross(lists: Lists, taskId: number, toColumnId: number, overTaskId: number | null, below: boolean): Lists {
+function moveAcross(
+  lists: Lists,
+  taskId: number,
+  toColumnId: number,
+  overTaskId: number | null,
+  below: boolean
+): Lists {
   const next = new Map([...lists].map(([columnId, ids]) => [columnId, ids.filter((id) => id !== taskId)]))
   const target = next.get(toColumnId)
   if (!target) return lists

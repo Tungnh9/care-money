@@ -3,7 +3,11 @@ import { useEffect } from "react"
 import { act, renderHook, waitFor } from "@testing-library/react"
 
 import { useNetWorthHistory } from "@/lib/net-worth/use-net-worth-history"
-import { NET_WORTH_HISTORY_KEY, getStoredNetWorthHistory, setStoredNetWorthHistory } from "@/lib/net-worth/net-worth-history-storage"
+import {
+  NET_WORTH_HISTORY_KEY,
+  getStoredNetWorthHistory,
+  setStoredNetWorthHistory,
+} from "@/lib/net-worth/net-worth-history-storage"
 
 describe("useNetWorthHistory", () => {
   beforeEach(() => {

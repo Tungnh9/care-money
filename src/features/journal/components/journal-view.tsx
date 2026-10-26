@@ -121,9 +121,7 @@ function JournalView() {
   return (
     <div>
       <h1 className="mb-1 [font:var(--ob-text-h2)] tracking-[var(--ob-track-heading)]">Nhật ký</h1>
-      <p className="mb-5 text-sm text-[var(--ob-color-text-subtle)]">
-        {longDate()} · viết bao nhiêu cũng được
-      </p>
+      <p className="mb-5 text-sm text-[var(--ob-color-text-subtle)]">{longDate()} · viết bao nhiêu cũng được</p>
       <div className="ob-card-grid flex flex-wrap gap-5">
         <div className="min-w-0 flex-[1_1_100%]">
           {justSaved ? (
@@ -159,12 +157,7 @@ function JournalView() {
             />
           </div>
         ) : null}
-        <div
-          className={cn(
-            "min-w-0 [&>*]:h-full",
-            entries.length ? "flex-[1_1_100%]" : "flex-[2_1_360px]"
-          )}
-        >
+        <div className={cn("min-w-0 [&>*]:h-full", entries.length ? "flex-[1_1_100%]" : "flex-[2_1_360px]")}>
           <JournalEntriesCard
             entries={entries}
             onDelete={handleDelete}

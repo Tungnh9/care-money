@@ -243,11 +243,7 @@ describe("groupExpensesByDay", () => {
       expense({ id: 2, dayKey: "2026-09-20" }),
       expense({ id: 3, dayKey: "2026-09-12" }),
     ]
-    expect(groupExpensesByDay(expenses).map((g) => g.dayKey)).toEqual([
-      "2026-09-20",
-      "2026-09-12",
-      "2026-09-05",
-    ])
+    expect(groupExpensesByDay(expenses).map((g) => g.dayKey)).toEqual(["2026-09-20", "2026-09-12", "2026-09-05"])
   })
 
   it("returns an empty array for no expenses", () => {
@@ -371,7 +367,9 @@ describe("unsettledPastMonths", () => {
       settlement({ id: 2, month: "2026-07", direction: "deposit", amount: 400_000 }),
     ]
 
-    expect(unsettledPastMonths(salaries, expenses, settlements, "2026-09")).toEqual([{ month: "2026-07", remaining: 600_000 }])
+    expect(unsettledPastMonths(salaries, expenses, settlements, "2026-09")).toEqual([
+      { month: "2026-07", remaining: 600_000 },
+    ])
   })
 
   it("lists a month only once when its salary was recorded twice", () => {
@@ -403,7 +401,11 @@ describe("unsettledPastMonths", () => {
       { month: "2025-12", amount: 1 },
     ]
 
-    expect(unsettledPastMonths(salaries, [], [], "2026-02").map((m) => m.month)).toEqual(["2026-01", "2025-12", "2025-11"])
+    expect(unsettledPastMonths(salaries, [], [], "2026-02").map((m) => m.month)).toEqual([
+      "2026-01",
+      "2025-12",
+      "2025-11",
+    ])
   })
 })
 
@@ -483,7 +485,9 @@ describe("settlementsMadeInMonth", () => {
     const sameInstantUtc = settlement({ id: 3, at: "2026-09-10T02:00:00.000Z" })
     const later = settlement({ id: 1, at: new Date(2026, 8, 12, 8).toISOString() })
 
-    const ids = settlementsMadeInMonth([sameInstantOffset, later, sameInstantUtc], "2026-09", ["Quỹ A"]).map((s) => s.id)
+    const ids = settlementsMadeInMonth([sameInstantOffset, later, sameInstantUtc], "2026-09", ["Quỹ A"]).map(
+      (s) => s.id
+    )
 
     expect(ids).toEqual([1, 3, 2])
   })
@@ -547,10 +551,7 @@ describe("card swipes", () => {
   })
 
   it("leaves a swipe out of the monthly spending chart", () => {
-    const list = [
-      ...mixed,
-      expense({ id: 3, dayKey: "2026-08-15", amount: 2_000_000, tag: TAG_SWIPE, card: SWIPE }),
-    ]
+    const list = [...mixed, expense({ id: 3, dayKey: "2026-08-15", amount: 2_000_000, tag: TAG_SWIPE, card: SWIPE })]
 
     expect(monthlyExpenseTotals(list, ["2026-08", "2026-09"])).toEqual([
       { month: "2026-08", total: 0 },
@@ -579,7 +580,14 @@ describe("card swipes", () => {
 })
 
 describe("giftsMadeInMonth", () => {
-  const gift = (id: number, date: string, store = "SJC"): MetalGift => ({ id, purchaseId: 1, date, qty: 1, store, buy: 900_000 })
+  const gift = (id: number, date: string, store = "SJC"): MetalGift => ({
+    id,
+    purchaseId: 1,
+    date,
+    qty: 1,
+    store,
+    buy: 900_000,
+  })
 
   it("merges this month's gold and silver gifts, newest first, each with its own naming", () => {
     const gold = [gift(1, "02/09/2026"), gift(2, "20/08/2026")]

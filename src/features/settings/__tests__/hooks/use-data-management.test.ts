@@ -36,7 +36,16 @@ const RESTORED_WORK: WorkState = {
     { id: 2, title: "Xong" },
   ],
   tasks: [
-    { id: 1, title: "Gửi báo cáo", dueDate: "2026-10-13", priority: "high", columnId: 1, done: false, doneAt: null, createdAt: "2026-10-12" },
+    {
+      id: 1,
+      title: "Gửi báo cáo",
+      dueDate: "2026-10-13",
+      priority: "high",
+      columnId: 1,
+      done: false,
+      doneAt: null,
+      createdAt: "2026-10-12",
+    },
   ],
   standups: [],
 }
@@ -163,8 +172,10 @@ describe("useDataManagement", () => {
       source: "file",
       fileName: "backup.json",
       exportedAt: "2026-09-20T02:00:00.000Z",
-      incomingCounts: "1 bài nhật ký · 0 khoản chi · 1 quỹ tiết kiệm · 0 lần mua vàng · 0 lần mua bạc · 0 từ đã học · 1 việc",
-      localCounts: "1 bài nhật ký · 0 khoản chi · 0 quỹ tiết kiệm · 0 lần mua vàng · 0 lần mua bạc · 0 từ đã học · 0 việc",
+      incomingCounts:
+        "1 bài nhật ký · 0 khoản chi · 1 quỹ tiết kiệm · 0 lần mua vàng · 0 lần mua bạc · 0 từ đã học · 1 việc",
+      localCounts:
+        "1 bài nhật ký · 0 khoản chi · 0 quỹ tiết kiệm · 0 lần mua vàng · 0 lần mua bạc · 0 từ đã học · 0 việc",
     })
 
     act(() => {
@@ -262,8 +273,15 @@ describe("useDataManagement", () => {
       silver: [{ id: 1, date: "10/08/2026", luong: 2, buy: 1_800_000, store: "Phú Quý" }],
       silverStores: [{ name: "Phú Quý", price: "2.000.000" }],
     })
-    const { result, onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceBudget, onReplaceNetWorthHistory, onReplaceWork } =
-      renderDataManagement()
+    const {
+      result,
+      onReplaceJournal,
+      onReplaceFinance,
+      onReplaceStudy,
+      onReplaceBudget,
+      onReplaceNetWorthHistory,
+      onReplaceWork,
+    } = renderDataManagement()
 
     act(() => {
       result.current.wipeData()
@@ -299,7 +317,10 @@ describe("useDataManagement", () => {
   })
 
   it("wipeData also clears the leftover status of the removed auto-backup feature", () => {
-    window.localStorage.setItem("auto-backup-status", JSON.stringify({ lastSyncedAt: null, lastError: "Sai secret đồng bộ." }))
+    window.localStorage.setItem(
+      "auto-backup-status",
+      JSON.stringify({ lastSyncedAt: null, lastError: "Sai secret đồng bộ." })
+    )
     const { result } = renderDataManagement()
 
     act(() => {
@@ -324,7 +345,9 @@ describe("useDataManagement", () => {
       "my-secret",
       expect.objectContaining({
         version: EXPORT_VERSION,
-        journal: expect.objectContaining({ entries: expect.arrayContaining([expect.objectContaining({ text: "Bài 1" })]) }),
+        journal: expect.objectContaining({
+          entries: expect.arrayContaining([expect.objectContaining({ text: "Bài 1" })]),
+        }),
         finance: DEFAULT_FINANCE_STATE,
         study: DEFAULT_STUDY_STATE,
         settings: DEFAULT_SETTINGS,
@@ -687,7 +710,9 @@ describe("useDataManagement", () => {
 
   describe("car-goal fund link", () => {
     function backupFile(extra: Record<string, unknown>) {
-      return new File([JSON.stringify({ version: EXPORT_VERSION, ...extra })], "backup.json", { type: "application/json" })
+      return new File([JSON.stringify({ version: EXPORT_VERSION, ...extra })], "backup.json", {
+        type: "application/json",
+      })
     }
 
     it("exportData writes the current car-goal link into the exported file", async () => {
@@ -717,7 +742,10 @@ describe("useDataManagement", () => {
         await result.current.pushToCloud("my-secret")
       })
 
-      expect(pushSnapshot).toHaveBeenCalledWith("my-secret", expect.objectContaining({ goals: { carFundName: "Quỹ mua xe" } }))
+      expect(pushSnapshot).toHaveBeenCalledWith(
+        "my-secret",
+        expect.objectContaining({ goals: { carFundName: "Quỹ mua xe" } })
+      )
     })
 
     it("importData restores the link from a backup that has a goals section", async () => {

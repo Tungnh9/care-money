@@ -164,7 +164,9 @@ function KanbanBoard({
     onDragOver: ({ active, over }) =>
       over ? `Thẻ "${titleOf(active.id)}" đang ở cột "${columnTitleOf(over.id)}".` : undefined,
     onDragEnd: ({ active, over }) =>
-      over ? `Đã thả thẻ "${titleOf(active.id)}" vào cột "${columnTitleOf(over.id)}".` : `Đã thả thẻ "${titleOf(active.id)}".`,
+      over
+        ? `Đã thả thẻ "${titleOf(active.id)}" vào cột "${columnTitleOf(over.id)}".`
+        : `Đã thả thẻ "${titleOf(active.id)}".`,
     onDragCancel: ({ active }) => `Đã huỷ kéo thẻ "${titleOf(active.id)}".`,
   }
 
@@ -319,7 +321,9 @@ function KanbanBoard({
           removing ? (
             <>
               Xoá cột &quot;<strong>{removing.title}</strong>&quot;.
-              {removingCount ? ` ${removingCount} thẻ trong cột sẽ chuyển sang cột "${remainingColumns[0]?.title}".` : ""}
+              {removingCount
+                ? ` ${removingCount} thẻ trong cột sẽ chuyển sang cột "${remainingColumns[0]?.title}".`
+                : ""}
               {removing.id === lastColumn?.id && remainingColumns.length
                 ? ` Cột "${remainingColumns[remainingColumns.length - 1].title}" sẽ thành cột hoàn thành — thẻ trong đó được tính là đã xong.`
                 : ""}

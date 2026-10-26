@@ -17,13 +17,7 @@ function ModulesCard({ modules, onToggle }: ModulesCardProps) {
       </p>
       <div className="flex flex-col gap-1">
         {modules.map((m, i) => (
-          <Switch
-            key={m.key}
-            label={m.label}
-            hint={m.hint}
-            checked={m.on}
-            onCheckedChange={() => onToggle(i)}
-          />
+          <Switch key={m.key} label={m.label} hint={m.hint} checked={m.on} onCheckedChange={() => onToggle(i)} />
         ))}
       </div>
     </Card>

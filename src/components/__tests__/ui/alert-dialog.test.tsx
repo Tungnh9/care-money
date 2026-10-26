@@ -5,14 +5,7 @@ import { AlertDialog } from "../../ui/alert-dialog"
 
 describe("AlertDialog", () => {
   it("renders nothing when closed", () => {
-    render(
-      <AlertDialog
-        open={false}
-        onOpenChange={vi.fn()}
-        title="Xoá quỹ tiết kiệm?"
-        onConfirm={vi.fn()}
-      />
-    )
+    render(<AlertDialog open={false} onOpenChange={vi.fn()} title="Xoá quỹ tiết kiệm?" onConfirm={vi.fn()} />)
 
     expect(screen.queryByText("Xoá quỹ tiết kiệm?")).not.toBeInTheDocument()
   })
@@ -38,9 +31,7 @@ describe("AlertDialog", () => {
   it("clicking Huỷ closes without confirming", () => {
     const onConfirm = vi.fn()
     const onOpenChange = vi.fn()
-    render(
-      <AlertDialog open onOpenChange={onOpenChange} title="Xoá quỹ?" onConfirm={onConfirm} />
-    )
+    render(<AlertDialog open onOpenChange={onOpenChange} title="Xoá quỹ?" onConfirm={onConfirm} />)
 
     fireEvent.click(screen.getByRole("button", { name: "Huỷ" }))
 
@@ -51,15 +42,7 @@ describe("AlertDialog", () => {
   it("clicking the confirm button calls onConfirm and closes the dialog", () => {
     const onConfirm = vi.fn()
     const onOpenChange = vi.fn()
-    render(
-      <AlertDialog
-        open
-        onOpenChange={onOpenChange}
-        title="Xoá quỹ?"
-        confirmLabel="Xoá"
-        onConfirm={onConfirm}
-      />
-    )
+    render(<AlertDialog open onOpenChange={onOpenChange} title="Xoá quỹ?" confirmLabel="Xoá" onConfirm={onConfirm} />)
 
     fireEvent.click(screen.getByRole("button", { name: "Xoá" }))
 
@@ -70,9 +53,7 @@ describe("AlertDialog", () => {
   it("clicking the backdrop closes the dialog without confirming", () => {
     const onConfirm = vi.fn()
     const onOpenChange = vi.fn()
-    render(
-      <AlertDialog open onOpenChange={onOpenChange} title="Xoá quỹ?" onConfirm={onConfirm} />
-    )
+    render(<AlertDialog open onOpenChange={onOpenChange} title="Xoá quỹ?" onConfirm={onConfirm} />)
 
     fireEvent.click(screen.getByTestId("alert-dialog-backdrop"))
 
@@ -83,9 +64,7 @@ describe("AlertDialog", () => {
   it("pressing Escape closes the dialog without confirming", () => {
     const onConfirm = vi.fn()
     const onOpenChange = vi.fn()
-    render(
-      <AlertDialog open onOpenChange={onOpenChange} title="Xoá quỹ?" onConfirm={onConfirm} />
-    )
+    render(<AlertDialog open onOpenChange={onOpenChange} title="Xoá quỹ?" onConfirm={onConfirm} />)
 
     fireEvent.keyDown(window, { key: "Escape" })
 
@@ -95,14 +74,7 @@ describe("AlertDialog", () => {
 
   it("applies the destructive red styling to the confirm button when destructive is set", () => {
     render(
-      <AlertDialog
-        open
-        onOpenChange={vi.fn()}
-        title="Xoá quỹ?"
-        confirmLabel="Xoá"
-        onConfirm={vi.fn()}
-        destructive
-      />
+      <AlertDialog open onOpenChange={vi.fn()} title="Xoá quỹ?" confirmLabel="Xoá" onConfirm={vi.fn()} destructive />
     )
 
     expect(screen.getByRole("button", { name: "Xoá" })).toHaveClass(
@@ -123,9 +95,7 @@ describe("AlertDialog", () => {
   })
 
   it("renders via a portal directly under document.body, so it isn't trapped inside an ancestor's CSS transform/containing-block (e.g. the ob-rise entrance animation)", () => {
-    const { container } = render(
-      <AlertDialog open onOpenChange={vi.fn()} title="Xoá quỹ?" onConfirm={vi.fn()} />
-    )
+    const { container } = render(<AlertDialog open onOpenChange={vi.fn()} title="Xoá quỹ?" onConfirm={vi.fn()} />)
 
     // Not inside the local render tree...
     expect(container.querySelector('[data-testid="alert-dialog-backdrop"]')).toBeNull()
@@ -164,13 +134,7 @@ describe("AlertDialog", () => {
   it("keeps each dialog's own title and description when two are open at once", () => {
     render(
       <>
-        <AlertDialog
-          open
-          onOpenChange={vi.fn()}
-          title="Xoá tâm trạng?"
-          description="Cảnh báo A"
-          onConfirm={vi.fn()}
-        />
+        <AlertDialog open onOpenChange={vi.fn()} title="Xoá tâm trạng?" description="Cảnh báo A" onConfirm={vi.fn()} />
         <AlertDialog
           open
           onOpenChange={vi.fn()}

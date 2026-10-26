@@ -5,7 +5,16 @@ import { DEFAULT_COLUMNS } from "@/lib/work/board"
 import type { WorkTask } from "@/lib/work/types"
 
 function task(id: number, columnId: number): WorkTask {
-  return { id, title: `Việc ${id}`, dueDate: null, priority: "normal", columnId, done: columnId === 3, doneAt: null, createdAt: "2026-10-01" }
+  return {
+    id,
+    title: `Việc ${id}`,
+    dueDate: null,
+    priority: "normal",
+    columnId,
+    done: columnId === 3,
+    doneAt: null,
+    createdAt: "2026-10-01",
+  }
 }
 
 // Cột 1: [1, 2, 3] · cột 2: [4] · cột 3: []

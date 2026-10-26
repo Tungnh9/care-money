@@ -16,9 +16,7 @@ function round6(n: number): number {
 
 /** Định dạng kết quả hiển thị: phân tách hàng nghìn kiểu Việt Nam, tối đa 6 chữ số thập phân. */
 function formatResult(n: number): string {
-  return Number.isFinite(n)
-    ? round6(n).toLocaleString("vi-VN", { maximumFractionDigits: 6 })
-    : "Sai cú pháp"
+  return Number.isFinite(n) ? round6(n).toLocaleString("vi-VN", { maximumFractionDigits: 6 }) : "Sai cú pháp"
 }
 
 /**
@@ -29,9 +27,7 @@ function toMachineString(n: number): string {
   // String() đổi sang dạng mũ khi |n| ≥ 1e21 ("1e+22"), mà evalExpr lọc mất chữ "e" rồi cộng phần
   // định trị với số mũ (1e22 + 1 = 24) — in đủ chữ số, không dấu ngăn nghìn, tối đa 6 chữ số lẻ.
   // `|| 0` đổi -0 thành 0 (toLocaleString in -0 thành "-0").
-  return (round6(n) || 0)
-    .toLocaleString("en-US", { useGrouping: false, maximumFractionDigits: 6 })
-    .replace(".", ",")
+  return (round6(n) || 0).toLocaleString("en-US", { useGrouping: false, maximumFractionDigits: 6 }).replace(".", ",")
 }
 
 /**
@@ -57,9 +53,7 @@ function evalExpr(raw: string): number | null {
   try {
     // `clean` ở trên chỉ còn số và ký hiệu toán học (chữ/dấu chấm phẩy/backtick đã bị lọc sạch),
     // không có cách nào tiêm mã tuỳ ý qua Function() ở đây.
-    const v: unknown = Function(
-      '"use strict";return (' + clean.replace(/(\d+(?:\.\d+)?)%/g, "($1/100)") + ")"
-    )()
+    const v: unknown = Function('"use strict";return (' + clean.replace(/(\d+(?:\.\d+)?)%/g, "($1/100)") + ")")()
     return typeof v === "number" && Number.isFinite(v) ? v : null
   } catch {
     return null

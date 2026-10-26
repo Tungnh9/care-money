@@ -161,7 +161,10 @@ describe("getStoredBudget", () => {
       fundAmountBefore: 150_000.5,
       fundAmountAfter: 450_000.5,
     }
-    window.localStorage.setItem(BUDGET_STORAGE_KEY, JSON.stringify({ ...DEFAULT_BUDGET_STATE, settlements: [settlement] }))
+    window.localStorage.setItem(
+      BUDGET_STORAGE_KEY,
+      JSON.stringify({ ...DEFAULT_BUDGET_STATE, settlements: [settlement] })
+    )
 
     expect(getStoredBudget().settlements).toEqual([settlement])
   })
@@ -177,7 +180,10 @@ describe("getStoredBudget", () => {
       fundAmountBefore: "150000",
       fundAmountAfter: 450_000,
     }
-    window.localStorage.setItem(BUDGET_STORAGE_KEY, JSON.stringify({ ...DEFAULT_BUDGET_STATE, settlements: [settlement] }))
+    window.localStorage.setItem(
+      BUDGET_STORAGE_KEY,
+      JSON.stringify({ ...DEFAULT_BUDGET_STATE, settlements: [settlement] })
+    )
 
     expect(getStoredBudget().settlements).toEqual([])
   })
@@ -280,9 +286,27 @@ describe("expense card link", () => {
 })
 
 describe("renameCardInExpenses / detachCardFromExpenses", () => {
-  const visaSwipe: Expense = { id: 1, dayKey: "2026-09-01", amount: 100_000, tag: null, card: { kind: "swipe", cardName: "Visa" } }
-  const visaPayment: Expense = { id: 2, dayKey: "2026-10-05", amount: 200_000, tag: null, card: { kind: "payment", cardName: "Visa" } }
-  const masterSwipe: Expense = { id: 3, dayKey: "2026-10-06", amount: 300_000, tag: null, card: { kind: "swipe", cardName: "Master" } }
+  const visaSwipe: Expense = {
+    id: 1,
+    dayKey: "2026-09-01",
+    amount: 100_000,
+    tag: null,
+    card: { kind: "swipe", cardName: "Visa" },
+  }
+  const visaPayment: Expense = {
+    id: 2,
+    dayKey: "2026-10-05",
+    amount: 200_000,
+    tag: null,
+    card: { kind: "payment", cardName: "Visa" },
+  }
+  const masterSwipe: Expense = {
+    id: 3,
+    dayKey: "2026-10-06",
+    amount: 300_000,
+    tag: null,
+    card: { kind: "swipe", cardName: "Master" },
+  }
   const plain: Expense = { id: 4, dayKey: "2026-10-07", amount: 400_000, tag: null }
 
   beforeEach(() => {

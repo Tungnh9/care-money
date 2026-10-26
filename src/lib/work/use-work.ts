@@ -113,7 +113,10 @@ function useWork() {
 
   const moveTask = useCallback(
     (id: number, columnId: number, index: number) =>
-      update((current) => board.moveTask(current, id, columnId, index, dayKey()), "Không thể chuyển thẻ. Vui lòng thử lại."),
+      update(
+        (current) => board.moveTask(current, id, columnId, index, dayKey()),
+        "Không thể chuyển thẻ. Vui lòng thử lại."
+      ),
     [update]
   )
 
@@ -177,9 +180,7 @@ function useWork() {
         const exists = current.standups.some((s) => s.day === day)
         persist({
           ...current,
-          standups: exists
-            ? current.standups.map((s) => (s.day === day ? entry : s))
-            : [...current.standups, entry],
+          standups: exists ? current.standups.map((s) => (s.day === day ? entry : s)) : [...current.standups, entry],
         })
         toast.success("Đã lưu standup")
         return true

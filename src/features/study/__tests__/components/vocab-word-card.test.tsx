@@ -50,7 +50,11 @@ describe("VocabWordCard", () => {
 
   it("renders the example sentence only when present", () => {
     const { rerender } = render(
-      <VocabWordCard entry={{ ...WITH_IMAGE, example: "I study at a university." }} learned={false} onToggleLearned={vi.fn()} />
+      <VocabWordCard
+        entry={{ ...WITH_IMAGE, example: "I study at a university." }}
+        learned={false}
+        onToggleLearned={vi.fn()}
+      />
     )
     expect(screen.getByText("I study at a university.")).toBeInTheDocument()
 
@@ -127,9 +131,7 @@ describe("VocabWordCard", () => {
 
       render(<VocabWordCard entry={WITH_IMAGE} learned={false} onToggleLearned={vi.fn()} />)
 
-      expect(() =>
-        fireEvent.click(screen.getByRole("button", { name: 'Phát âm "university"' }))
-      ).not.toThrow()
+      expect(() => fireEvent.click(screen.getByRole("button", { name: 'Phát âm "university"' }))).not.toThrow()
     })
   })
 })

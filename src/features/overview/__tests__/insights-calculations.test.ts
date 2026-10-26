@@ -336,7 +336,14 @@ describe("detectTagAnomaly", () => {
 })
 
 function moodEntry(id: number, score: number): JournalEntry {
-  return { id, text: "x", time: "09:00", date: "01/01", words: 1, mood: { emoji: "🙂", label: "x", tint: "#fff", score } }
+  return {
+    id,
+    text: "x",
+    time: "09:00",
+    date: "01/01",
+    words: 1,
+    mood: { emoji: "🙂", label: "x", tint: "#fff", score },
+  }
 }
 
 describe("detectMoodSpendingCorrelation", () => {
@@ -414,7 +421,12 @@ describe("detectMoodSpendingCorrelation", () => {
 import { forecastSavingsGoal } from "../insights-calculations"
 import type { NetWorthSnapshot } from "@/lib/net-worth/net-worth-history-storage"
 
-function linearHistory(startDate: string, points: number, dailyIncrease: number, startValue: number): NetWorthSnapshot[] {
+function linearHistory(
+  startDate: string,
+  points: number,
+  dailyIncrease: number,
+  startValue: number
+): NetWorthSnapshot[] {
   return Array.from({ length: points }, (_, i) => {
     const d = new Date(startDate)
     d.setDate(d.getDate() + i)
@@ -454,10 +466,7 @@ describe("forecastSavingsGoal", () => {
     // 100 triệu (khớp mục tiêu tiết kiệm thật trong app) — nếu KHÔNG có điều kiện 30 ngày, hồi quy
     // trên dữ liệu này ra độ dốc ~1,077,000đ/ngày → dự báo đạt mục tiêu chỉ trong ~79 ngày, một kết
     // luận lạc quan sai lệch chỉ vì 1 lần lương rơi đúng giữa cửa sổ ngắn.
-    const history = [
-      ...linearHistory("2026-09-01", 7, 0, 5_000_000),
-      ...linearHistory("2026-09-08", 7, 0, 15_000_000),
-    ]
+    const history = [...linearHistory("2026-09-01", 7, 0, 5_000_000), ...linearHistory("2026-09-08", 7, 0, 15_000_000)]
     expect(forecastSavingsGoal(history, 100_000_000, "2026-09-14")).toBeNull()
   })
 
@@ -516,10 +525,7 @@ describe("forecastSavingsGoal", () => {
   it("ignores the leading 0 snapshot recorded before any savings were entered", () => {
     // Ngày đầu mở Tổng quan ghi 1 điểm 0 (chưa nhập quỹ nào); hôm sau nhập 50 triệu đang có sẵn rồi
     // để yên 31 ngày. Bước nhảy 0 → 50 triệu không phải nhịp tiết kiệm — không được dự báo gì.
-    const history = [
-      { date: "2026-08-01", net: 0, savingsTotal: 0 },
-      ...linearHistory("2026-08-02", 31, 0, 50_000_000),
-    ]
+    const history = [{ date: "2026-08-01", net: 0, savingsTotal: 0 }, ...linearHistory("2026-08-02", 31, 0, 50_000_000)]
 
     expect(forecastSavingsGoal(history, 100_000_000, "2026-09-01")).toBeNull()
   })

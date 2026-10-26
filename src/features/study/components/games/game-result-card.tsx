@@ -16,7 +16,15 @@ interface GameResultCardProps {
   onBackToMenu: () => void
 }
 
-function GameResultCard({ type, score, total, isNewHighScore, mistakes, onPlayAgain, onBackToMenu }: GameResultCardProps) {
+function GameResultCard({
+  type,
+  score,
+  total,
+  isNewHighScore,
+  mistakes,
+  onPlayAgain,
+  onBackToMenu,
+}: GameResultCardProps) {
   const { label } = gameDefinition(type)
 
   return (
@@ -24,9 +32,7 @@ function GameResultCard({ type, score, total, isNewHighScore, mistakes, onPlayAg
       <p className="mb-2 [font-family:var(--ob-font-num)] text-3xl font-bold">
         {score}/{total}
       </p>
-      {isNewHighScore ? (
-        <p className="mb-4 text-sm font-bold text-[var(--ob-color-income)]">🎉 Kỷ lục mới!</p>
-      ) : null}
+      {isNewHighScore ? <p className="mb-4 text-sm font-bold text-[var(--ob-color-income)]">🎉 Kỷ lục mới!</p> : null}
       {mistakes && mistakes.length === 0 ? (
         <p className="mb-4 text-sm font-semibold text-[var(--ob-color-income)]">Chính xác tuyệt đối 🎉</p>
       ) : null}

@@ -6,7 +6,15 @@ import { MetalGiftModal } from "../../components/metal-gift-modal"
 import { GOLD_METAL, SILVER_METAL } from "../../metal-config"
 
 const TARGET = { purchaseDate: "10/08/2026", store: "SJC", available: 9, gift: null }
-const GIFT: MetalGift = { id: 1, purchaseId: 1, date: "11/10/2026", qty: 1, store: "SJC", buy: 900_000, note: "tặng mẹ" }
+const GIFT: MetalGift = {
+  id: 1,
+  purchaseId: 1,
+  date: "11/10/2026",
+  qty: 1,
+  store: "SJC",
+  buy: 900_000,
+  note: "tặng mẹ",
+}
 
 function quantityBox() {
   return screen.getByLabelText("Số lượng tặng (phân)", { exact: false })
@@ -136,7 +144,14 @@ describe("MetalGiftModal", () => {
   })
 
   it("asks for silver in lượng", () => {
-    render(<MetalGiftModal metal={SILVER_METAL} target={{ ...TARGET, store: "Phú Quý", available: 3 }} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+    render(
+      <MetalGiftModal
+        metal={SILVER_METAL}
+        target={{ ...TARGET, store: "Phú Quý", available: 3 }}
+        onOpenChange={vi.fn()}
+        onSave={vi.fn()}
+      />
+    )
 
     expect(screen.getByRole("dialog", { name: "Tặng bạc" })).toBeInTheDocument()
     expect(screen.getByText("Lần mua ngày 10/08/2026 ở Phú Quý · tặng được tối đa 3 lượng")).toBeInTheDocument()

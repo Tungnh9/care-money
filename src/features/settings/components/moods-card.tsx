@@ -77,8 +77,8 @@ function MoodsCard({ moods, onToggle, onRemove, onAdd }: MoodsCardProps) {
         title="Xoá tâm trạng?"
         description={
           <>
-            Xoá &quot;<strong>{deleting}</strong>&quot; sẽ không thể hoàn tác — thêm lại sau cũng không lấy
-            lại được màu và điểm tâm trạng cũ. Muốn ẩn khỏi màn Nhật ký thì chỉ cần tắt công tắc.
+            Xoá &quot;<strong>{deleting}</strong>&quot; sẽ không thể hoàn tác — thêm lại sau cũng không lấy lại được màu
+            và điểm tâm trạng cũ. Muốn ẩn khỏi màn Nhật ký thì chỉ cần tắt công tắc.
           </>
         }
         confirmLabel="Xoá"

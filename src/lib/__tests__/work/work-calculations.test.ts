@@ -217,7 +217,19 @@ describe("formatStandup", () => {
     const text = formatStandup({ day: TODAY, yesterday: "- Gửi báo cáo", today: "- Duyệt bài\n- Họp", blockers: "  " })
 
     expect(text).toBe(
-      ["Standup Thứ Ba, 13/10", "", "Hôm qua:", "- Gửi báo cáo", "", "Hôm nay:", "- Duyệt bài", "- Họp", "", "Vướng mắc:", "- Không có"].join("\n")
+      [
+        "Standup Thứ Ba, 13/10",
+        "",
+        "Hôm qua:",
+        "- Gửi báo cáo",
+        "",
+        "Hôm nay:",
+        "- Duyệt bài",
+        "- Họp",
+        "",
+        "Vướng mắc:",
+        "- Không có",
+      ].join("\n")
     )
   })
 })
@@ -271,7 +283,18 @@ describe("weeklyReport", () => {
 
   it("writes 'Không có' for every empty section", () => {
     expect(weeklyReport({ tasks: [], standups: [] }, TODAY)).toBe(
-      ["Báo cáo tuần 12/10 – 18/10", "", "Đã xong (0):", "- Không có", "", "Còn dở (0):", "- Không có", "", "Vướng mắc:", "- Không có"].join("\n")
+      [
+        "Báo cáo tuần 12/10 – 18/10",
+        "",
+        "Đã xong (0):",
+        "- Không có",
+        "",
+        "Còn dở (0):",
+        "- Không có",
+        "",
+        "Vướng mắc:",
+        "- Không có",
+      ].join("\n")
     )
   })
 })

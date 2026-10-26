@@ -48,9 +48,7 @@ function AdjustSavingsFundModal({ open, fund, onOpenChange, onConfirm }: AdjustS
         <span className="text-[var(--ob-color-action-strong)]">{fund.name}</span>
         &quot;
       </div>
-      <p className="mb-4 text-sm text-[var(--ob-color-text-muted)]">
-        Hiện có: {formatMoney(fund.amount, hidden)}
-      </p>
+      <p className="mb-4 text-sm text-[var(--ob-color-text-muted)]">Hiện có: {formatMoney(fund.amount, hidden)}</p>
 
       <div className="mb-4 grid grid-cols-2 gap-[10px]">
         <button
@@ -95,7 +93,8 @@ function AdjustSavingsFundModal({ open, fund, onOpenChange, onConfirm }: AdjustS
       />
 
       <p className="mt-3 text-sm text-[var(--ob-color-text-muted)]">
-        Số dư mới: <span className="font-semibold text-[var(--ob-color-text)]">{formatMoney(previewAmount, hidden)}</span>
+        Số dư mới:{" "}
+        <span className="font-semibold text-[var(--ob-color-text)]">{formatMoney(previewAmount, hidden)}</span>
       </p>
 
       <div className="mt-5 flex justify-end gap-[10px]">

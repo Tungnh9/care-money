@@ -36,11 +36,7 @@ function MoneyVisibilityProvider({ children }: MoneyVisibilityProviderProps) {
     setHideMoney(next)
   }
 
-  return (
-    <MoneyVisibilityContext.Provider value={{ hidden, toggle }}>
-      {children}
-    </MoneyVisibilityContext.Provider>
-  )
+  return <MoneyVisibilityContext.Provider value={{ hidden, toggle }}>{children}</MoneyVisibilityContext.Provider>
 }
 
 function useMoneyVisibility() {

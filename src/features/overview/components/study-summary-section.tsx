@@ -54,7 +54,9 @@ function VocabTeaserCard({ entry, learned }: VocabTeaserCardProps) {
         >
           {entry.word}
         </div>
-        <div className="text-[11px] leading-[1.4] text-[var(--ob-color-text-subtle)] wrap-anywhere">{entry.meaning}</div>
+        <div className="text-[11px] leading-[1.4] text-[var(--ob-color-text-subtle)] wrap-anywhere">
+          {entry.meaning}
+        </div>
       </div>
     </div>
   )

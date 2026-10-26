@@ -1,20 +1,20 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
-import { Progress } from "@/components/ui/progress";
-import { Field } from "@/components/ui/field";
-import { Tag } from "@/components/ui/tag";
-import { Figure } from "@/components/ob/figure";
-import { Streak } from "@/components/ob/streak";
-import { TaskItem } from "@/components/ob/task-item";
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { Switch } from "@/components/ui/switch"
+import { Progress } from "@/components/ui/progress"
+import { Field } from "@/components/ui/field"
+import { Tag } from "@/components/ui/tag"
+import { Figure } from "@/components/ob/figure"
+import { Streak } from "@/components/ob/streak"
+import { TaskItem } from "@/components/ob/task-item"
 
 export default function SandboxPage() {
-  const [checked, setChecked] = useState(true);
-  const [done, setDone] = useState(false);
-  const [amount, setAmount] = useState("12500000");
+  const [checked, setChecked] = useState(true)
+  const [done, setDone] = useState(false)
+  const [amount, setAmount] = useState("12500000")
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-[var(--ob-space-8)] p-[var(--ob-space-8)]">
@@ -75,24 +75,13 @@ export default function SandboxPage() {
           checked={checked}
           onCheckedChange={(v: boolean) => setChecked(v)}
         />
-        <TaskItem
-          label="Ôn 20 từ vựng"
-          done={done}
-          onToggle={() => setDone((d) => !d)}
-        />
+        <TaskItem label="Ôn 20 từ vựng" done={done} onToggle={() => setDone((d) => !d)} />
       </section>
 
       <section className="flex flex-col gap-[var(--ob-space-4)] max-w-sm">
         <Field label="Email" type="email" placeholder="ban@email.com" />
-        <Field
-          label="Số tiền"
-          numeric
-          group
-          suffix="đ"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-        />
+        <Field label="Số tiền" numeric group suffix="đ" value={amount} onChange={(e) => setAmount(e.target.value)} />
       </section>
     </div>
-  );
+  )
 }

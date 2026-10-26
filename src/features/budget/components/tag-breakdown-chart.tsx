@@ -176,9 +176,7 @@ function TagBreakdownChart({ data, colors: tagColors }: TagBreakdownChartProps) 
   const [containerRef, width] = useMeasuredWidth(320)
 
   if (!data.length) {
-    return (
-      <p className="text-[13.5px] text-[var(--ob-color-text-subtle)]">Chưa có khoản chi nào để thống kê.</p>
-    )
+    return <p className="text-[13.5px] text-[var(--ob-color-text-subtle)]">Chưa có khoản chi nào để thống kê.</p>
   }
 
   const total = data.reduce((sum, entry) => sum + entry.total, 0)

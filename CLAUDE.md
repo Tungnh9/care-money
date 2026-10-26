@@ -12,8 +12,8 @@
 | react-hook-form + Zod (`@hookform/resolvers`) | Form & validation |
 | Zustand | State |
 | dnd-kit (`@dnd-kit/core` + `@dnd-kit/sortable`) | Kéo thả thẻ trên bảng Kanban trang Làm việc |
-| ESLint 9 + Prettier | Lint & format |
-| Husky | Git hooks (pre-commit chạy lint) |
+| ESLint 9 + Prettier | Lint & format (`src/` đúng định dạng Prettier: không chấm phẩy, dòng 120 ký tự) |
+| Husky | Git hooks (pre-commit chạy lint + kiểm định dạng, pre-push chạy toàn bộ test) |
 
 ## 2. Cấu trúc thư mục
 
@@ -92,7 +92,7 @@ docs: update tech stack section
 ### PR Requirements
 
 - ✅ Một task một branch/PR, không gộp việc không liên quan
-- ✅ `npm run lint` sạch (Husky pre-commit đã tự chặn nếu lỗi)
+- ✅ `npm run lint` và `npm run format:check` sạch (Husky pre-commit đã tự chặn nếu lỗi; `npm run format` để định dạng lại `src/`)
 - ✅ Cập nhật `CLAUDE.md` nếu thay đổi ảnh hưởng tới quy ước hoặc tech stack
 - ✅ Báo lại để duyệt trước khi merge vào `developer`
 
@@ -101,4 +101,4 @@ docs: update tech stack section
 - **Test framework: Vitest** + React Testing Library cho component test — đã cài (`npm run test` = `vitest run`), setup file ở `src/test/setup.ts`.
 - Test nằm trong `__tests__/` con của feature, mirror cấu trúc bên trong (`src/features/[ten]/__tests__/components/[ten]-form.test.tsx`) — xem mục 3. Code dùng chung đặt test cạnh nhánh thư mục của nó: `src/lib/__tests__/<domain>/`, `src/components/__tests__/ob/` (hoặc `ui/`).
 - **Quy trình trước khi commit**: viết test cho phần vừa thêm/sửa → chạy test → tự review lại diff → commit.
-- **Trước khi push**: chạy lại toàn bộ test suite. Chưa có hook `pre-push` (Husky) tự chạy `npm run test` — cân nhắc thêm khi test suite đủ lớn để đáng chặn push.
+- **Trước khi push**: chạy lại toàn bộ test suite — hook `pre-push` (Husky) tự chạy `npm run test` và chặn push nếu có test đỏ.

@@ -18,10 +18,7 @@ describe("getStoredSettings", () => {
   it("backfills a module added after the user's data was first saved", () => {
     // Giả lập bản lưu cũ chưa có module "muctieu" (thêm sau này).
     const oldModules = DEFAULT_MODULES.filter((m) => m.key !== "muctieu")
-    window.localStorage.setItem(
-      SETTINGS_STORAGE_KEY,
-      JSON.stringify({ ...DEFAULT_SETTINGS, modules: oldModules })
-    )
+    window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ ...DEFAULT_SETTINGS, modules: oldModules }))
 
     const settings = getStoredSettings()
 
@@ -33,10 +30,7 @@ describe("getStoredSettings", () => {
 
   it("keeps the user's on/off choice for a module that already exists in storage", () => {
     const modules = DEFAULT_MODULES.map((m) => (m.key === "taichinh" ? { ...m, on: false } : m))
-    window.localStorage.setItem(
-      SETTINGS_STORAGE_KEY,
-      JSON.stringify({ ...DEFAULT_SETTINGS, modules })
-    )
+    window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ ...DEFAULT_SETTINGS, modules }))
 
     const settings = getStoredSettings()
 
@@ -44,13 +38,8 @@ describe("getStoredSettings", () => {
   })
 
   it("always uses the current label/hint copy, not whatever was frozen in storage", () => {
-    const modules = DEFAULT_MODULES.map((m) =>
-      m.key === "muctieu" ? { ...m, label: "Nhãn cũ", hint: "Gợi ý cũ" } : m
-    )
-    window.localStorage.setItem(
-      SETTINGS_STORAGE_KEY,
-      JSON.stringify({ ...DEFAULT_SETTINGS, modules })
-    )
+    const modules = DEFAULT_MODULES.map((m) => (m.key === "muctieu" ? { ...m, label: "Nhãn cũ", hint: "Gợi ý cũ" } : m))
+    window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ ...DEFAULT_SETTINGS, modules }))
 
     const settings = getStoredSettings()
 
@@ -60,10 +49,7 @@ describe("getStoredSettings", () => {
 
   it("drops module keys that no longer exist in the source list", () => {
     const modules = [...DEFAULT_MODULES, { key: "obsolete", label: "Cũ", hint: "", on: true }]
-    window.localStorage.setItem(
-      SETTINGS_STORAGE_KEY,
-      JSON.stringify({ ...DEFAULT_SETTINGS, modules })
-    )
+    window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ ...DEFAULT_SETTINGS, modules }))
 
     const settings = getStoredSettings()
 
@@ -171,7 +157,10 @@ describe("getStoredSettings", () => {
   })
 
   it("defaults dismissedInsights to an empty array when missing from storage", () => {
-    window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ ...DEFAULT_SETTINGS, dismissedInsights: undefined }))
+    window.localStorage.setItem(
+      SETTINGS_STORAGE_KEY,
+      JSON.stringify({ ...DEFAULT_SETTINGS, dismissedInsights: undefined })
+    )
 
     expect(getStoredSettings().dismissedInsights).toEqual([])
   })

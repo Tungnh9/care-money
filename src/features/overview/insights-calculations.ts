@@ -130,9 +130,7 @@ function detectTagAnomaly(expenses: Expense[], month: string, today: string): In
     if (tagSeries.label === UNTAGGED_LABEL) continue
     const currentValue = tagSeries.data[ANOMALY_LOOKBACK_MONTHS]
     const increase = relativeChange(currentValue, tagSeries.data.slice(0, ANOMALY_LOOKBACK_MONTHS))
-    const decrease = samePeriodReady
-      ? relativeChange(currentValue, samePeriodByLabel.get(tagSeries.label) ?? [])
-      : null
+    const decrease = samePeriodReady ? relativeChange(currentValue, samePeriodByLabel.get(tagSeries.label) ?? []) : null
     const pct =
       increase !== null && increase >= TAG_ANOMALY_PCT_THRESHOLD
         ? increase

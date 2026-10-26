@@ -74,7 +74,13 @@ describe("pickQuizOptions", () => {
 
   it("never shows two options with the same meaning", () => {
     const correct = vocab("1")
-    const pool = [correct, entry("v-0064", "famous", "nổi tiếng"), entry("v-0062", "popular", "nổi tiếng"), vocab("2"), vocab("3")]
+    const pool = [
+      correct,
+      entry("v-0064", "famous", "nổi tiếng"),
+      entry("v-0062", "popular", "nổi tiếng"),
+      vocab("2"),
+      vocab("3"),
+    ]
 
     for (let i = 0; i < 20; i++) {
       const meanings = pickQuizOptions(pool, correct, 4).map((option) => option.meaning)

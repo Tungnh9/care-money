@@ -54,9 +54,7 @@ function VocabWordCard({ entry, learned, onToggleLearned }: VocabWordCardProps) 
         </div>
         <div className="text-sm font-medium">{entry.meaning}</div>
         {entry.example ? (
-          <div className="text-[12.5px] leading-[1.5] text-[var(--ob-color-text-subtle)] italic">
-            {entry.example}
-          </div>
+          <div className="text-[12.5px] leading-[1.5] text-[var(--ob-color-text-subtle)] italic">{entry.example}</div>
         ) : null}
       </div>
     </div>

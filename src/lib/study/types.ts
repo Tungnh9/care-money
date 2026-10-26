@@ -58,4 +58,14 @@ interface WordReviewState {
   lastReviewedAt: string | null
 }
 
-export type { VocabEntry, GrammarEntry, Task, GameType, GameMistake, GameHighScores, GameStreak, ReviewGrade, WordReviewState }
+export type {
+  VocabEntry,
+  GrammarEntry,
+  Task,
+  GameType,
+  GameMistake,
+  GameHighScores,
+  GameStreak,
+  ReviewGrade,
+  WordReviewState,
+}

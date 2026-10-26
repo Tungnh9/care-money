@@ -80,9 +80,7 @@ function useJournal() {
         persist({
           ...current,
           entries: current.entries.map((entry) =>
-            entry.id === id
-              ? { ...entry, text: input.text, words: input.words, mood: input.mood }
-              : entry
+            entry.id === id ? { ...entry, text: input.text, words: input.words, mood: input.mood } : entry
           ),
         })
         toast.success("Đã cập nhật bài viết")

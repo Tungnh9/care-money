@@ -12,27 +12,14 @@ interface ProgressProps extends Omit<ProgressPrimitive.Root.Props, "children"> {
   hint?: React.ReactNode
 }
 
-function Progress({
-  className,
-  value,
-  track,
-  tone = "reward",
-  label,
-  hint,
-  ...props
-}: ProgressProps) {
+function Progress({ className, value, track, tone = "reward", label, hint, ...props }: ProgressProps) {
   // NaN (vd. quỹ 0 ₫ trên mục tiêu 0 ₫ → 0/0) lọt qua Math.min/Math.max, mà Base UI coi mọi giá trị
   // không hữu hạn là "không xác định": thanh chạy kín 100%, trình đọc màn hình đọc "indeterminate
   // progress". Đưa NaN về 0; số âm, ±Infinity và > 100 vẫn kẹp về 0–100 như cũ.
   const raw = value ?? 0
   const pct = Number.isNaN(raw) ? 0 : Math.max(0, Math.min(100, raw))
   return (
-    <ProgressPrimitive.Root
-      data-slot="progress"
-      value={pct}
-      className={cn(className)}
-      {...props}
-    >
+    <ProgressPrimitive.Root data-slot="progress" value={pct} className={cn(className)} {...props}>
       <ProgressPrimitive.Track
         data-slot="progress-track"
         className="h-2 overflow-hidden rounded-[var(--ob-radius-pill)]"

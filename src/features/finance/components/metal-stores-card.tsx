@@ -74,9 +74,7 @@ function MetalStoresCard({ metal, stores, purchases, onAdd, onUpdate, onRemove, 
                     aria-label={`Xoá ${store.name}`}
                     disabled={inUse}
                     title={
-                      inUse
-                        ? `Không thể xoá — vẫn còn giao dịch mua ${metal.noun} gắn với cửa hàng này.`
-                        : undefined
+                      inUse ? `Không thể xoá — vẫn còn giao dịch mua ${metal.noun} gắn với cửa hàng này.` : undefined
                     }
                     onClick={() => setDeletingName(store.name)}
                     className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)] disabled:cursor-not-allowed disabled:opacity-45"

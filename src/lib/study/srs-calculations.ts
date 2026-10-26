@@ -26,10 +26,7 @@ const GRADE_QUALITY: Record<ReviewGrade, number> = { again: 0, hard: 3, good: 4,
 
 function applyGrade(state: WordReviewState, grade: ReviewGrade, today: string, now: string): WordReviewState {
   const quality = GRADE_QUALITY[grade]
-  const easeFactor = Math.max(
-    SRS_EASE_FLOOR,
-    state.easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
-  )
+  const easeFactor = Math.max(SRS_EASE_FLOOR, state.easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)))
 
   if (quality < 3) {
     // Quên: về lại lịch ôn ngắn nhất, không tính là 1 lần nhớ liên tiếp — nhưng easeFactor vẫn hạ
@@ -38,8 +35,7 @@ function applyGrade(state: WordReviewState, grade: ReviewGrade, today: string, n
   }
 
   const repetitions = state.repetitions + 1
-  const intervalDays =
-    repetitions === 1 ? 1 : repetitions === 2 ? 6 : Math.round(state.intervalDays * easeFactor)
+  const intervalDays = repetitions === 1 ? 1 : repetitions === 2 ? 6 : Math.round(state.intervalDays * easeFactor)
   return { ...state, easeFactor, repetitions, intervalDays, dueAt: shiftDay(today, intervalDays), lastReviewedAt: now }
 }
 

@@ -53,13 +53,7 @@ function GameTab({ vocab, highScores, streak, onFinish, onWordReviewed }: GameTa
     const { Component } = gameDefinition(screen.game)
     return (
       <div>
-        <Button
-          variant="ghost"
-          size="sm"
-          type="button"
-          className="mb-4"
-          onClick={() => setScreen({ kind: "menu" })}
-        >
+        <Button variant="ghost" size="sm" type="button" className="mb-4" onClick={() => setScreen({ kind: "menu" })}>
           <ChevronLeft size={16} />
           Về màn chọn
         </Button>

@@ -68,9 +68,7 @@ describe("SilverTab", () => {
     const stores = [{ name: "Phú Quý", price: "1.500.000" }]
     render(<SilverTab summary={summaryOf(silver, stores)} stores={stores} silver={silver} {...noopHandlers} />)
 
-    expect(
-      screen.getByText(`Bạn đang lỗ ${formatMoney(600_000)} so với giá vốn do giá bạc giảm.`)
-    ).toBeInTheDocument()
+    expect(screen.getByText(`Bạn đang lỗ ${formatMoney(600_000)} so với giá vốn do giá bạc giảm.`)).toBeInTheDocument()
   })
 
   it("says silver from a store without today's price is valued at its buy price", () => {
@@ -107,13 +105,7 @@ describe("SilverTab", () => {
   it("reports a new silver store through onAddSilverStore", () => {
     const onAddSilverStore = vi.fn()
     render(
-      <SilverTab
-        summary={ZERO_SUMMARY}
-        stores={[]}
-        silver={[]}
-        {...noopHandlers}
-        onAddSilverStore={onAddSilverStore}
-      />
+      <SilverTab summary={ZERO_SUMMARY} stores={[]} silver={[]} {...noopHandlers} onAddSilverStore={onAddSilverStore} />
     )
 
     fireEvent.click(screen.getByRole("button", { name: "Thêm cửa hàng" }))
@@ -162,7 +154,9 @@ describe("SilverTab", () => {
 
   it("adds a purchase in whole lượng, with no chỉ/phân hint", () => {
     const onAddSilver = vi.fn()
-    render(<SilverTab summary={ZERO_SUMMARY} stores={[PHU_QUY]} silver={[]} {...noopHandlers} onAddSilver={onAddSilver} />)
+    render(
+      <SilverTab summary={ZERO_SUMMARY} stores={[PHU_QUY]} silver={[]} {...noopHandlers} onAddSilver={onAddSilver} />
+    )
 
     fireEvent.click(screen.getByRole("button", { name: "Thêm lần mua bạc" }))
     expect(screen.getByText("Lần mua bạc mới")).toBeInTheDocument()

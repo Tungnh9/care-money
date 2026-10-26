@@ -53,11 +53,7 @@ function LoginForm() {
 
   return (
     <Card tone="plain" elevated className="w-full max-w-[400px]">
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        noValidate
-        className="flex flex-col gap-[var(--ob-space-4)]"
-      >
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-[var(--ob-space-4)]">
         <div className="flex items-center gap-[11px]">
           <Image src="/assets/logo-mark.svg" width={30} height={30} alt="" />
           <span className="[font:700_16px/1_var(--ob-font-display)] tracking-[-0.02em] whitespace-nowrap">
@@ -68,9 +64,7 @@ function LoginForm() {
 
         <div>
           <h2 className="mb-1 [font:var(--ob-text-h2)]">Đăng nhập</h2>
-          <p className="text-sm text-[var(--ob-color-text-muted)]">
-            Nhập email và mật khẩu của bạn.
-          </p>
+          <p className="text-sm text-[var(--ob-color-text-muted)]">Nhập email và mật khẩu của bạn.</p>
         </div>
 
         <Controller

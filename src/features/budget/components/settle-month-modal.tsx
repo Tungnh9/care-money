@@ -65,7 +65,8 @@ function SettleMonthModal({ open, onOpenChange, month, remaining, savings, onCon
         Tất toán {formatMonthKey(month)}
       </div>
       <p className="mb-4 text-sm text-[var(--ob-color-text-muted)]">
-        {direction === "deposit" ? "Bạn dư" : "Bạn đang thiếu"} {formatMoney(cap, hidden)} trong {formatMonthKey(month)}.
+        {direction === "deposit" ? "Bạn dư" : "Bạn đang thiếu"} {formatMoney(cap, hidden)} trong {formatMonthKey(month)}
+        .
       </p>
 
       <FundPicker savings={savings} selected={selectedFund} onSelect={setSelectedFund} />
@@ -93,9 +94,7 @@ function SettleMonthModal({ open, onOpenChange, month, remaining, savings, onCon
           {fund && previewAmount !== null ? (
             <p className="mt-3 text-sm text-[var(--ob-color-text-muted)]">
               Số dư mới của &quot;{fund.name}&quot;:{" "}
-              <span className="font-semibold text-[var(--ob-color-text)]">
-                {formatMoney(previewAmount, hidden)}
-              </span>
+              <span className="font-semibold text-[var(--ob-color-text)]">{formatMoney(previewAmount, hidden)}</span>
             </p>
           ) : null}
 

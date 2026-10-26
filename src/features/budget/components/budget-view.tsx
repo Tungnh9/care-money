@@ -44,8 +44,7 @@ import { SettleMonthModal } from "./settle-month-modal"
 import type { Expense } from "@/lib/budget/types"
 
 // Thay câu "Bạn đang dư/thiếu" ở thẻ Tất toán khi tháng này chưa có bản ghi lương (kể cả 0 đ).
-const MISSING_SALARY_HINT =
-  "Chưa nhập lương tháng này. Nhập lương (kể cả 0 đ) ở thẻ Lương tháng này rồi mới tất toán."
+const MISSING_SALARY_HINT = "Chưa nhập lương tháng này. Nhập lương (kể cả 0 đ) ở thẻ Lương tháng này rồi mới tất toán."
 
 function BudgetView() {
   const { hidden } = useMoneyVisibility()
@@ -86,7 +85,11 @@ function BudgetView() {
   // khoản chi, nên gộp vào thì lần tất toán thành 1 dòng chi trong nhóm ngày, bị cộng vào tổng ngày và "· N khoản"
   // ("đã chi" và các biểu đồ đọc thẳng `expenses` nên không đổi). Lọc theo ngày BẤM chứ không theo tháng được
   // tất toán — xem settlementsMadeInMonth.
-  const monthSettlements = settlementsMadeInMonth(settlements, currentMonth, savings.map((f) => f.name))
+  const monthSettlements = settlementsMadeInMonth(
+    settlements,
+    currentMonth,
+    savings.map((f) => f.name)
+  )
   // Lần tặng vàng/bạc trong tháng: chỉ để xem (khối "Quà tặng từ tích lũy"), không phải khoản chi — tiền mua đã
   // tính lúc mua, nên không vào monthExpenses, "đã chi" hay số còn phải tất toán.
   const monthGifts = giftsMadeInMonth(goldGifts, silverGifts, currentMonth)
@@ -167,12 +170,7 @@ function BudgetView() {
         {/* Chỉ thẻ Lương (con đầu) không giãn theo hàng: thẻ Tất toán dài ra theo số tháng cũ thì thẻ Lương vẫn
             gọn, còn lúc thẻ Tất toán ngắn hơn thì nó giãn ra, 2 thẻ cao bằng nhau như trước. */}
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 [&>:first-child]:self-start">
-          <SalaryCard
-            month={currentMonth}
-            salary={salary}
-            recorded={salaryRecorded}
-            onSave={setSalary}
-          />
+          <SalaryCard month={currentMonth} salary={salary} recorded={salaryRecorded} onSave={setSalary} />
 
           <Card
             ref={settleCardRef}

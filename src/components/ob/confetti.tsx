@@ -1,9 +1,4 @@
-const CONFETTI_COLORS = [
-  "var(--ob-cam-500)",
-  "var(--ob-chuoi-400)",
-  "var(--ob-la-500)",
-  "var(--ob-cam-300)",
-]
+const CONFETTI_COLORS = ["var(--ob-cam-500)", "var(--ob-chuoi-400)", "var(--ob-la-500)", "var(--ob-cam-300)"]
 
 interface ConfettiProps {
   n?: number
@@ -11,10 +6,7 @@ interface ConfettiProps {
 
 function Confetti({ n = 16 }: ConfettiProps) {
   return (
-    <div
-      aria-hidden="true"
-      className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]"
-    >
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]">
       {Array.from({ length: n }, (_, i) => (
         <span
           key={i}

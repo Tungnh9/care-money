@@ -23,13 +23,7 @@ interface CreditCardsTabProps {
   onRemoveCard: (name: string) => void
 }
 
-function CreditCardsTab({
-  cards,
-  onAddCard,
-  onPayCard,
-  onUpdateCard,
-  onRemoveCard,
-}: CreditCardsTabProps) {
+function CreditCardsTab({ cards, onAddCard, onPayCard, onUpdateCard, onRemoveCard }: CreditCardsTabProps) {
   const { hidden } = useMoneyVisibility()
   const [payCard, setPayCard] = useState("")
   const [editingCard, setEditingCard] = useState("")
@@ -55,9 +49,7 @@ function CreditCardsTab({
             return (
               <Card
                 key={card.name}
-                label={
-                  <span style={card.color ? { color: card.color } : undefined}>{card.name}</span>
-                }
+                label={<span style={card.color ? { color: card.color } : undefined}>{card.name}</span>}
                 className="min-w-0 flex-[1_1_300px]"
               >
                 <Figure value={formatMoney(card.balance, hidden)} />
@@ -69,16 +61,11 @@ function CreditCardsTab({
                       ["Hạn mức", formatMoney(card.limit, hidden)],
                     ] as const
                   ).map(([k, v]) => (
-                    <div
-                      key={k}
-                      className="flex items-center justify-between gap-3 py-[9px] first:pt-0 last:pb-0"
-                    >
+                    <div key={k} className="flex items-center justify-between gap-3 py-[9px] first:pt-0 last:pb-0">
                       <span className="[font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
                         {k}
                       </span>
-                      <span className="text-[13.5px] [font-family:var(--ob-font-num)] tabular-nums">
-                        {v}
-                      </span>
+                      <span className="text-[13.5px] [font-family:var(--ob-font-num)] tabular-nums">{v}</span>
                     </div>
                   ))}
                 </div>
@@ -88,12 +75,7 @@ function CreditCardsTab({
                   hint={`${Math.round(limitPct)}% hạn mức`}
                 />
                 <div className="mt-4 flex flex-wrap items-center gap-[10px]">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    type="button"
-                    onClick={() => startPay(card.name)}
-                  >
+                  <Button variant="secondary" size="sm" type="button" onClick={() => startPay(card.name)}>
                     Ghi một lần trả
                   </Button>
                   <button

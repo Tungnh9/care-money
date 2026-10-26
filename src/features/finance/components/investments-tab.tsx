@@ -64,9 +64,7 @@ function InvestmentsTab({ invests, summary, onAddInvest, onUpdateInvest, onRemov
                 <span className="flex size-9 flex-none items-center justify-center rounded-[var(--ob-radius-md)] bg-[var(--ob-color-action-soft)] text-[var(--ob-color-action-strong)]">
                   <Image src="/assets/icons/chart.svg" width={20} height={20} alt="" />
                 </span>
-                <span className="min-w-[160px] flex-1 text-[14px] font-bold">
-                  {investment.name}
-                </span>
+                <span className="min-w-[160px] flex-1 text-[14px] font-bold">{investment.name}</span>
                 <span className="whitespace-nowrap text-[13px] [font-family:var(--ob-font-num)] tabular-nums text-[var(--ob-color-text-subtle)]">
                   vốn {formatMoney(investment.cost, hidden)}
                 </span>

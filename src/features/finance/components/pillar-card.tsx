@@ -25,11 +25,7 @@ const DELTA_COLOR: Record<MetalPLTone, string | undefined> = {
 
 function PillarCard({ icon, label, amount, hint, delta, tone, className }: PillarCardProps) {
   const { hidden } = useMoneyVisibility()
-  const amountColor = tone
-    ? tone === "income"
-      ? "var(--ob-color-income)"
-      : "var(--ob-color-expense)"
-    : undefined
+  const amountColor = tone ? (tone === "income" ? "var(--ob-color-income)" : "var(--ob-color-expense)") : undefined
 
   return (
     <Card label={label} className={className}>

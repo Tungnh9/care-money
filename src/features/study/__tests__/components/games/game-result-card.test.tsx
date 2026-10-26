@@ -50,14 +50,7 @@ describe("GameResultCard", () => {
     expect(screen.queryByText("🎉 Kỷ lục mới!")).not.toBeInTheDocument()
 
     rerender(
-      <GameResultCard
-        type="match"
-        score={9}
-        total={10}
-        isNewHighScore
-        onPlayAgain={vi.fn()}
-        onBackToMenu={vi.fn()}
-      />
+      <GameResultCard type="match" score={9} total={10} isNewHighScore onPlayAgain={vi.fn()} onBackToMenu={vi.fn()} />
     )
     expect(screen.getByText("🎉 Kỷ lục mới!")).toBeInTheDocument()
   })
@@ -126,7 +119,14 @@ describe("GameResultCard", () => {
 
   it("shows no mistakes section at all for games that don't report mistakes", () => {
     render(
-      <GameResultCard type="match" score={6} total={10} isNewHighScore={false} onPlayAgain={vi.fn()} onBackToMenu={vi.fn()} />
+      <GameResultCard
+        type="match"
+        score={6}
+        total={10}
+        isNewHighScore={false}
+        onPlayAgain={vi.fn()}
+        onBackToMenu={vi.fn()}
+      />
     )
 
     expect(screen.queryByText("Các câu làm sai")).not.toBeInTheDocument()

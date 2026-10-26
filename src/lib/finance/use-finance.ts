@@ -24,11 +24,7 @@ import type {
 } from "@/lib/finance/types"
 import { toast } from "sonner"
 import { getCarGoalFundName, setCarGoalFundName } from "@/lib/goals/car-goal-storage"
-import {
-  detachCardFromExpenses,
-  renameCardInExpenses,
-  renameFundInSettlements,
-} from "@/lib/budget/budget-storage"
+import { detachCardFromExpenses, renameCardInExpenses, renameFundInSettlements } from "@/lib/budget/budget-storage"
 import { nextId } from "@/lib/next-id"
 import { useStorageSync } from "@/lib/use-storage-sync"
 
@@ -91,10 +87,7 @@ function giftRecord(base: Pick<MetalGift, "id" | "purchaseId" | "store" | "buy">
 // Các thao tác ghi của 1 kim loại — vàng và bạc dùng chung, mỗi kim loại chỉ đụng tới mảng của chính nó
 // (trùng tên, đổi tên lan sang lần mua, chặn xoá cửa hàng còn lần mua, lần tặng đều xét trong kim loại đó).
 // `lens` là hằng cấp module nên các hàm trả ra ổn định như useCallback thường.
-function useMetalActions<P extends MetalPurchaseBase>(
-  lens: MetalLens<P>,
-  persist: (next: FinanceState) => void
-) {
+function useMetalActions<P extends MetalPurchaseBase>(lens: MetalLens<P>, persist: (next: FinanceState) => void) {
   const addStore = useCallback(
     (store: MetalStore) => {
       const current = getStoredFinance()
@@ -118,7 +111,12 @@ function useMetalActions<P extends MetalPurchaseBase>(
       // Gõ trực tiếp từng phím, không phải submit 1 lần — không toast để tránh spam,
       // chỉ chặn throw khi ghi storage lỗi (khác payCard/updateCard là hành động rời rạc).
       try {
-        persist(lens.withStores(current, lens.stores(current).map((s) => (s.name === name ? { ...s, price } : s))))
+        persist(
+          lens.withStores(
+            current,
+            lens.stores(current).map((s) => (s.name === name ? { ...s, price } : s))
+          )
+        )
       } catch {
         // im lặng bỏ qua, giữ nguyên giá trị hiển thị cũ
       }
@@ -167,7 +165,12 @@ function useMetalActions<P extends MetalPurchaseBase>(
         return
       }
       try {
-        persist(lens.withStores(current, lens.stores(current).filter((s) => s.name !== name)))
+        persist(
+          lens.withStores(
+            current,
+            lens.stores(current).filter((s) => s.name !== name)
+          )
+        )
         toast.success(`Đã xoá cửa hàng "${name}"`)
       } catch {
         toast.error(`Không thể xoá cửa hàng "${name}". Vui lòng thử lại.`)
@@ -196,9 +199,7 @@ function useMetalActions<P extends MetalPurchaseBase>(
       // Số còn lại = số đã mua − đã tặng: hạ số đã mua xuống dưới phần đã tặng thì số còn lại âm.
       const gifted = giftedByPurchase(lens.gifts(current)).get(id) ?? 0
       if (lens.quantityOf(lens.withId(purchase, id)) < gifted) {
-        toast.error(
-          `Lần mua này đã tặng ${lens.naming.formatQuantity(gifted)} — không sửa số lượng xuống thấp hơn.`
-        )
+        toast.error(`Lần mua này đã tặng ${lens.naming.formatQuantity(gifted)} — không sửa số lượng xuống thấp hơn.`)
         return
       }
       try {
@@ -228,7 +229,12 @@ function useMetalActions<P extends MetalPurchaseBase>(
       const purchases = lens.purchases(current)
       const date = purchases.find((purchase) => purchase.id === id)?.date
       try {
-        persist(lens.withPurchases(current, purchases.filter((purchase) => purchase.id !== id)))
+        persist(
+          lens.withPurchases(
+            current,
+            purchases.filter((purchase) => purchase.id !== id)
+          )
+        )
         toast.success(
           date ? `Đã xoá giao dịch ${lens.naming.noun} ngày ${date}` : `Đã xoá giao dịch ${lens.naming.noun}`
         )
@@ -256,14 +262,9 @@ function useMetalActions<P extends MetalPurchaseBase>(
         return false
       }
       try {
-        const gift = giftRecord(
-          { id: nextId(gifts), purchaseId, store: purchase.store, buy: purchase.buy },
-          input
-        )
+        const gift = giftRecord({ id: nextId(gifts), purchaseId, store: purchase.store, buy: purchase.buy }, input)
         persist(lens.withGifts(current, [gift, ...gifts]))
-        toast.success(
-          `Đã ghi lần tặng ${lens.naming.formatQuantity(input.qty)} ${lens.naming.noun} ngày ${input.date}`
-        )
+        toast.success(`Đã ghi lần tặng ${lens.naming.formatQuantity(input.qty)} ${lens.naming.noun} ngày ${input.date}`)
         return true
       } catch {
         toast.error(`Không thể ghi lần tặng ${lens.naming.noun}. Vui lòng thử lại.`)
@@ -295,7 +296,12 @@ function useMetalActions<P extends MetalPurchaseBase>(
         return false
       }
       try {
-        persist(lens.withGifts(current, gifts.map((g) => (g.id === id ? giftRecord(g, input) : g))))
+        persist(
+          lens.withGifts(
+            current,
+            gifts.map((g) => (g.id === id ? giftRecord(g, input) : g))
+          )
+        )
         toast.success(`Đã cập nhật lần tặng ${lens.naming.noun} ngày ${input.date}`)
         return true
       } catch {
@@ -313,10 +319,13 @@ function useMetalActions<P extends MetalPurchaseBase>(
       const gifts = lens.gifts(current)
       const date = gifts.find((gift) => gift.id === id)?.date
       try {
-        persist(lens.withGifts(current, gifts.filter((gift) => gift.id !== id)))
-        toast.success(
-          date ? `Đã huỷ lần tặng ${lens.naming.noun} ngày ${date}` : `Đã huỷ lần tặng ${lens.naming.noun}`
+        persist(
+          lens.withGifts(
+            current,
+            gifts.filter((gift) => gift.id !== id)
+          )
         )
+        toast.success(date ? `Đã huỷ lần tặng ${lens.naming.noun} ngày ${date}` : `Đã huỷ lần tặng ${lens.naming.noun}`)
       } catch {
         toast.error(`Không thể huỷ lần tặng ${lens.naming.noun}. Vui lòng thử lại.`)
       }
@@ -545,9 +554,7 @@ function useFinance() {
         if (original) {
           // Chèn lại đúng vị trí cũ (thứ tự thẻ là thứ tự hiển thị).
           restoreCards((cards) =>
-            cards.some((c) => c.name === name)
-              ? cards
-              : [...cards.slice(0, index), original, ...cards.slice(index)]
+            cards.some((c) => c.name === name) ? cards : [...cards.slice(0, index), original, ...cards.slice(index)]
           )
         }
         toast.error(`Không thể xoá thẻ tín dụng "${name}". Vui lòng thử lại.`)

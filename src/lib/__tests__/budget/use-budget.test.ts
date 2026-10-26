@@ -201,8 +201,7 @@ describe("useBudget", () => {
 
     it("hides the amount in the not-enough-balance toast while money is hidden", async () => {
       window.localStorage.setItem("hide-money", "1")
-      const wrapper = ({ children }: { children: ReactNode }) =>
-        createElement(MoneyVisibilityProvider, null, children)
+      const wrapper = ({ children }: { children: ReactNode }) => createElement(MoneyVisibilityProvider, null, children)
       const { result } = renderHook(() => ({ budget: useBudget(), visibility: useMoneyVisibility() }), {
         wrapper,
       })
@@ -351,7 +350,10 @@ describe("useBudget", () => {
       })
 
       expect(getStoredBudget().settlements).toHaveLength(1)
-      expect(getStoredBudget().settlements[0]).toMatchObject({ fundAmountBefore: 150_000.5, fundAmountAfter: 450_000.5 })
+      expect(getStoredBudget().settlements[0]).toMatchObject({
+        fundAmountBefore: 150_000.5,
+        fundAmountAfter: 450_000.5,
+      })
     })
   })
 })
@@ -385,7 +387,11 @@ describe("useBudget — dữ liệu do nơi khác ghi", () => {
     })
 
     expect(getStoredBudget().salaries).toEqual([{ month: "2026-09", amount: 20_000_000 }])
-    expect(getStoredBudget().expenses.map((e) => e.id).sort((a, b) => a - b)).toEqual([1, 2])
+    expect(
+      getStoredBudget()
+        .expenses.map((e) => e.id)
+        .sort((a, b) => a - b)
+    ).toEqual([1, 2])
   })
 
   it("keeps the expense and settlement another tab saved when confirming a settlement here, with a fresh id", async () => {
@@ -870,10 +876,20 @@ describe("useBudget — nợ thẻ", () => {
 
   it("only takes a card link that names a card when adding (checked by tsc --noEmit)", () => {
     type AddInput = Parameters<ReturnType<typeof useBudget>["addExpense"]>[0]
-    const named: AddInput = { dayKey: "2026-11-03", amount: 1, tag: TAG_SWIPE, card: { kind: "swipe", cardName: "Visa" } }
+    const named: AddInput = {
+      dayKey: "2026-11-03",
+      amount: 1,
+      tag: TAG_SWIPE,
+      card: { kind: "swipe", cardName: "Visa" },
+    }
     // Khoản mới gắn thẻ "đã xoá" sẽ tính 0 vào chi tiêu mà không cộng vào nợ thẻ nào.
-    // @ts-expect-error cardName null chỉ có ở khoản đã lưu, sau khi thẻ bị xoá
-    const orphan: AddInput = { dayKey: "2026-11-03", amount: 1, tag: TAG_SWIPE, card: { kind: "swipe", cardName: null } }
+    const orphan: AddInput = {
+      dayKey: "2026-11-03",
+      amount: 1,
+      tag: TAG_SWIPE,
+      // @ts-expect-error cardName null chỉ có ở khoản đã lưu, sau khi thẻ bị xoá
+      card: { kind: "swipe", cardName: null },
+    }
 
     expect([named, orphan]).toHaveLength(2)
   })

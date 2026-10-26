@@ -70,9 +70,7 @@ describe("ConfirmWipeModal", () => {
     fireEvent.change(screen.getByLabelText("Mật khẩu", { exact: false }), { target: { value: "sai" } })
     fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }))
 
-    expect(toast.error).toHaveBeenCalledWith(
-      "Bạn đã nhập sai quá 5 lần. Tính năng xoá dữ liệu bị khoá tạm 10 phút."
-    )
+    expect(toast.error).toHaveBeenCalledWith("Bạn đã nhập sai quá 5 lần. Tính năng xoá dữ liệu bị khoá tạm 10 phút.")
   })
 
   it("disables the password field and confirm button when isLocked is true", () => {

@@ -24,9 +24,7 @@ describe("OnThisDayCard", () => {
     expect(screen.getByText(`10/08/${lastYear} · 20:15`)).toBeInTheDocument()
     expect(screen.getByText("Vui")).toBeInTheDocument()
     expect(screen.getByText("🙂")).toBeInTheDocument()
-    expect(
-      screen.getByText("Hôm nay trời đẹp, mình đi dạo công viên.")
-    ).toBeInTheDocument()
+    expect(screen.getByText("Hôm nay trời đẹp, mình đi dạo công viên.")).toBeInTheDocument()
   })
 
   it("shows the full entry text without truncation, even when it's long", () => {

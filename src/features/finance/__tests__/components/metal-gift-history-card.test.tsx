@@ -8,7 +8,15 @@ import { MetalGiftHistoryCard } from "../../components/metal-gift-history-card"
 import { GOLD_METAL } from "../../metal-config"
 
 const OLDER: MetalGift = { id: 1, purchaseId: 1, date: "05/10/2026", qty: 1, store: "SJC", buy: 900_000 }
-const NEWER: MetalGift = { id: 2, purchaseId: 2, date: "12/10/2026", qty: 12, store: "PNJ", buy: 950_000, note: "tặng mẹ" }
+const NEWER: MetalGift = {
+  id: 2,
+  purchaseId: 2,
+  date: "12/10/2026",
+  qty: 12,
+  store: "PNJ",
+  buy: 950_000,
+  note: "tặng mẹ",
+}
 
 describe("MetalGiftHistoryCard", () => {
   beforeEach(() => {

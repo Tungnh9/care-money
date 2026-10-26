@@ -14,12 +14,7 @@ function LearnedProgressCard({ learnedCount, totalCount, className }: LearnedPro
   return (
     <Card label="Đã học" className={className}>
       <Figure value={String(learnedCount)} unit={`/${totalCount}`} size="sm" />
-      <Progress
-        value={percent}
-        tone="action"
-        className="mt-4"
-        label={`Thuộc ${percent}% kho từ`}
-      />
+      <Progress value={percent} tone="action" className="mt-4" label={`Thuộc ${percent}% kho từ`} />
     </Card>
   )
 }

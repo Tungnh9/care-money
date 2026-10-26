@@ -175,7 +175,14 @@ function KanbanColumn({
       <SortableContext items={tasks.map((t) => taskDndId(t.id))} strategy={verticalListSortingStrategy}>
         <ul ref={setNodeRef} className="flex flex-col gap-2 empty:min-h-10">
           {tasks.map((t) => (
-            <KanbanCard key={t.id} task={t} columns={columns} today={today} onOpen={onOpenTask} onMoveTo={onMoveTaskTo} />
+            <KanbanCard
+              key={t.id}
+              task={t}
+              columns={columns}
+              today={today}
+              onOpen={onOpenTask}
+              onMoveTo={onMoveTaskTo}
+            />
           ))}
         </ul>
       </SortableContext>

@@ -15,7 +15,12 @@ import {
   type JournalState,
 } from "@/lib/journal/journal-storage"
 import { DEFAULT_STUDY_STATE, STUDY_STORAGE_KEY, getStoredStudy, type StudyState } from "@/lib/study/study-storage"
-import { BUDGET_STORAGE_KEY, DEFAULT_BUDGET_STATE, getStoredBudget, type BudgetState } from "@/lib/budget/budget-storage"
+import {
+  BUDGET_STORAGE_KEY,
+  DEFAULT_BUDGET_STATE,
+  getStoredBudget,
+  type BudgetState,
+} from "@/lib/budget/budget-storage"
 import {
   DEFAULT_NET_WORTH_HISTORY,
   NET_WORTH_HISTORY_KEY,

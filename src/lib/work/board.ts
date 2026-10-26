@@ -34,7 +34,10 @@ function moveTask(state: WorkState, taskId: number, toColumnId: number, toIndex:
   const moving = state.tasks.find((t) => t.id === taskId)
   if (!moving || !state.columns.some((c) => c.id === toColumnId)) return state
   const lists = listsOf(state)
-  lists.set(moving.columnId, lists.get(moving.columnId)!.filter((t) => t.id !== taskId))
+  lists.set(
+    moving.columnId,
+    lists.get(moving.columnId)!.filter((t) => t.id !== taskId)
+  )
   const target = [...lists.get(toColumnId)!]
   target.splice(Math.max(0, Math.min(toIndex, target.length)), 0, moving)
   lists.set(toColumnId, target)

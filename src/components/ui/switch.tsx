@@ -21,16 +21,8 @@ function Switch({ className, label, hint, disabled, ...props }: SwitchProps) {
     >
       {label || hint ? (
         <span>
-          {label ? (
-            <span className="block text-sm font-medium text-[var(--ob-color-text)]">
-              {label}
-            </span>
-          ) : null}
-          {hint ? (
-            <span className="mt-0.5 block text-xs text-[var(--ob-color-text-subtle)]">
-              {hint}
-            </span>
-          ) : null}
+          {label ? <span className="block text-sm font-medium text-[var(--ob-color-text)]">{label}</span> : null}
+          {hint ? <span className="mt-0.5 block text-xs text-[var(--ob-color-text-subtle)]">{hint}</span> : null}
         </span>
       ) : null}
       <SwitchPrimitive.Root

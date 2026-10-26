@@ -32,9 +32,7 @@ describe("LoginForm", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /đăng nhập/i }))
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      EMPTY_CREDENTIALS_MESSAGE
-    )
+    expect(await screen.findByRole("alert")).toHaveTextContent(EMPTY_CREDENTIALS_MESSAGE)
   })
 
   it("shows a failure message with remaining attempts on wrong credentials", async () => {

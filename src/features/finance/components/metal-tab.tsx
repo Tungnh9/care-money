@@ -151,9 +151,7 @@ function MetalTab<P extends MetalPurchaseBase>({
 
   function saveGift(input: MetalGiftInput): boolean {
     if (!giftTarget) return false
-    return giftTarget.giftId === null
-      ? onAddGift(giftTarget.purchaseId, input)
-      : onUpdateGift(giftTarget.giftId, input)
+    return giftTarget.giftId === null ? onAddGift(giftTarget.purchaseId, input) : onUpdateGift(giftTarget.giftId, input)
   }
 
   const stats: [label: string, value: string][] = [

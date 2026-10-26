@@ -9,10 +9,7 @@ describe("getStoredStudy", () => {
   })
 
   it("falls back to the default tasks when the stored tasks field is not an array at all", () => {
-    window.localStorage.setItem(
-      STUDY_STORAGE_KEY,
-      JSON.stringify({ ...DEFAULT_STUDY_STATE, tasks: "not an array" })
-    )
+    window.localStorage.setItem(STUDY_STORAGE_KEY, JSON.stringify({ ...DEFAULT_STUDY_STATE, tasks: "not an array" }))
 
     expect(getStoredStudy().tasks).toEqual(DEFAULT_STUDY_STATE.tasks)
   })
@@ -27,10 +24,7 @@ describe("getStoredStudy", () => {
   })
 
   it("keeps valid learned words even when tasks is malformed", () => {
-    window.localStorage.setItem(
-      STUDY_STORAGE_KEY,
-      JSON.stringify({ tasks: "corrupted", learned: ["v-1", "v-2"] })
-    )
+    window.localStorage.setItem(STUDY_STORAGE_KEY, JSON.stringify({ tasks: "corrupted", learned: ["v-1", "v-2"] }))
 
     const state = getStoredStudy()
     expect(state.tasks).toEqual(DEFAULT_STUDY_STATE.tasks)
@@ -68,10 +62,7 @@ describe("getStoredStudy", () => {
   })
 
   it("backfills an empty wordReviews map for data saved before this feature existed", () => {
-    window.localStorage.setItem(
-      STUDY_STORAGE_KEY,
-      JSON.stringify({ tasks: DEFAULT_STUDY_STATE.tasks, learned: [] })
-    )
+    window.localStorage.setItem(STUDY_STORAGE_KEY, JSON.stringify({ tasks: DEFAULT_STUDY_STATE.tasks, learned: [] }))
 
     expect(getStoredStudy().wordReviews).toEqual({})
   })
@@ -108,19 +99,13 @@ describe("getStoredStudy", () => {
   })
 
   it("backfills tasksDay as null for data saved before ticks were tied to a day", () => {
-    window.localStorage.setItem(
-      STUDY_STORAGE_KEY,
-      JSON.stringify({ tasks: DEFAULT_STUDY_STATE.tasks, learned: [] })
-    )
+    window.localStorage.setItem(STUDY_STORAGE_KEY, JSON.stringify({ tasks: DEFAULT_STUDY_STATE.tasks, learned: [] }))
 
     expect(getStoredStudy().tasksDay).toBeNull()
   })
 
   it("keeps the stored day the task ticks belong to", () => {
-    window.localStorage.setItem(
-      STUDY_STORAGE_KEY,
-      JSON.stringify({ ...DEFAULT_STUDY_STATE, tasksDay: "2026-09-28" })
-    )
+    window.localStorage.setItem(STUDY_STORAGE_KEY, JSON.stringify({ ...DEFAULT_STUDY_STATE, tasksDay: "2026-09-28" }))
 
     expect(getStoredStudy().tasksDay).toBe("2026-09-28")
   })

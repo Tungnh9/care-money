@@ -5,7 +5,12 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { dayKey } from "@/lib/date"
 import { useStorageSync } from "@/lib/use-storage-sync"
 import { nextStreak } from "@/lib/study/game-calculations"
-import { applyGrade, ensureReviewStates, initialReviewState, seedLearnedReviewState } from "@/lib/study/srs-calculations"
+import {
+  applyGrade,
+  ensureReviewStates,
+  initialReviewState,
+  seedLearnedReviewState,
+} from "@/lib/study/srs-calculations"
 import {
   DEFAULT_STUDY_STATE,
   STUDY_STORAGE_KEY,
@@ -120,9 +125,7 @@ function useStudy() {
       // luôn trong 1 bước.
       const existing =
         current.wordReviews[wordId] ??
-        (current.learned.includes(wordId)
-          ? seedLearnedReviewState(wordId, today)
-          : initialReviewState(wordId, today))
+        (current.learned.includes(wordId) ? seedLearnedReviewState(wordId, today) : initialReviewState(wordId, today))
 
       // Giới hạn 1 lần chấm/từ/ngày, áp dụng chung cho cả chấm tay lẫn tín hiệu tự động từ
       // mini-game — nếu không, trúng lại đúng 1 từ nhiều lần trong cùng ngày (chơi nhiều ván liên

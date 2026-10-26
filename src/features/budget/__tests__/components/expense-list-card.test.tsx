@@ -5,7 +5,12 @@ import { wholeText } from "@/test/whole-text"
 import { MoneyVisibilityProvider } from "@/components/money-visibility-provider"
 import { ExpenseListCard } from "../../components/expense-list-card"
 import { formatMoney } from "@/lib/format"
-import { UNTAGGED_EMOJI, UNTAGGED_LABEL, type GiftListItem, type SettlementListItem } from "@/lib/budget/budget-calculations"
+import {
+  UNTAGGED_EMOJI,
+  UNTAGGED_LABEL,
+  type GiftListItem,
+  type SettlementListItem,
+} from "@/lib/budget/budget-calculations"
 import { GOLD_NAMING, SILVER_NAMING } from "@/lib/finance/metal-naming"
 import type { Expense } from "@/lib/budget/types"
 
@@ -293,7 +298,13 @@ describe("ExpenseListCard", () => {
   })
 
   it("describes a deposit with a green plus amount", () => {
-    const deposit = closing({ direction: "deposit", amount: 300_000, fundName: "Du lịch", fundAmountBefore: 100_000, fundAmountAfter: 400_000 })
+    const deposit = closing({
+      direction: "deposit",
+      amount: 300_000,
+      fundName: "Du lịch",
+      fundAmountBefore: 100_000,
+      fundAmountAfter: 400_000,
+    })
     render(<ExpenseListCard expenses={[]} settlements={[deposit]} onRemove={vi.fn()} onEdit={vi.fn()} />)
 
     const row = screen.getByTestId("settlement-row")
@@ -317,14 +328,24 @@ describe("ExpenseListCard", () => {
     expect(within(screen.getByTestId("settlement-row")).getByText("Tất toán tháng 12, 2025")).toBeInTheDocument()
   })
 
-  it.each(["garbage", "2026-13", "2026-9"])("titles a settlement whose month %j is not a year-month just 'Tất toán'", (month) => {
-    render(<ExpenseListCard expenses={[]} settlements={[closing({ month })]} onRemove={vi.fn()} onEdit={vi.fn()} />)
+  it.each(["garbage", "2026-13", "2026-9"])(
+    "titles a settlement whose month %j is not a year-month just 'Tất toán'",
+    (month) => {
+      render(<ExpenseListCard expenses={[]} settlements={[closing({ month })]} onRemove={vi.fn()} onEdit={vi.fn()} />)
 
-    expect(within(screen.getByTestId("settlement-row")).getByText("Tất toán")).toBeInTheDocument()
-  })
+      expect(within(screen.getByTestId("settlement-row")).getByText("Tất toán")).toBeInTheDocument()
+    }
+  )
 
   it("marks a fund that no longer exists", () => {
-    render(<ExpenseListCard expenses={[]} settlements={[closing({ fundDeleted: true })]} onRemove={vi.fn()} onEdit={vi.fn()} />)
+    render(
+      <ExpenseListCard
+        expenses={[]}
+        settlements={[closing({ fundDeleted: true })]}
+        onRemove={vi.fn()}
+        onEdit={vi.fn()}
+      />
+    )
 
     expect(screen.getByText("Rút từ sổ Dự phòng (đã xoá) · 30/09")).toBeInTheDocument()
   })
@@ -342,7 +363,14 @@ describe("ExpenseListCard", () => {
   })
 
   it("leaves the day groups, their totals and counts as they were", () => {
-    render(<ExpenseListCard expenses={EXPENSES} settlements={[closing({ dayKey: "2026-09-02" })]} onRemove={vi.fn()} onEdit={vi.fn()} />)
+    render(
+      <ExpenseListCard
+        expenses={EXPENSES}
+        settlements={[closing({ dayKey: "2026-09-02" })]}
+        onRemove={vi.fn()}
+        onEdit={vi.fn()}
+      />
+    )
 
     const headers = screen.getAllByTestId("expense-day-header")
     expect(headers).toHaveLength(2)
@@ -377,7 +405,14 @@ describe("ExpenseListCard", () => {
 
   it("wraps a long unbroken fund name inside the row instead of widening the page", () => {
     const longName = "QuỹDựPhòngKhẩnCấpChoCảGiaĐìnhNămNay"
-    render(<ExpenseListCard expenses={[]} settlements={[closing({ fundName: longName })]} onRemove={vi.fn()} onEdit={vi.fn()} />)
+    render(
+      <ExpenseListCard
+        expenses={[]}
+        settlements={[closing({ fundName: longName })]}
+        onRemove={vi.fn()}
+        onEdit={vi.fn()}
+      />
+    )
 
     const line = screen.getByText(`Rút từ sổ ${longName} · 30/09`)
     expect(line).toHaveClass("wrap-anywhere")

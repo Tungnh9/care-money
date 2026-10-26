@@ -6,8 +6,7 @@ import { cn } from "@/lib/utils"
 import { groupVN, pastedMoneyDigits } from "@/lib/format"
 import { Input } from "@/components/ui/input"
 
-interface FieldProps
-  extends Omit<React.ComponentProps<"input">, "value" | "prefix" | "suffix"> {
+interface FieldProps extends Omit<React.ComponentProps<"input">, "value" | "prefix" | "suffix"> {
   label?: React.ReactNode
   hint?: React.ReactNode
   prefix?: React.ReactNode
@@ -104,9 +103,7 @@ function Field({
           aria-invalid={invalid || undefined}
           className={cn(
             "order-none flex-1 py-[11px]",
-            numeric
-              ? "[font:var(--ob-text-num)] text-[18px] tabular-nums"
-              : "[font:var(--ob-text-body)] text-[15px]"
+            numeric ? "[font:var(--ob-text-num)] text-[18px] tabular-nums" : "[font:var(--ob-text-body)] text-[15px]"
           )}
           {...props}
         />
@@ -115,9 +112,7 @@ function Field({
             {prefix}
           </span>
         ) : null}
-        {suffix ? (
-          <span className="text-sm text-[var(--ob-color-text-subtle)]">{suffix}</span>
-        ) : null}
+        {suffix ? <span className="text-sm text-[var(--ob-color-text-subtle)]">{suffix}</span> : null}
       </span>
       {hint ? (
         <span

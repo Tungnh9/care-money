@@ -55,9 +55,7 @@ function useAttemptLockout(storageKey: string) {
     setState((prev) => {
       const attempts = prev.attempts + 1
       const next: LockoutState =
-        attempts >= MAX_ATTEMPTS
-          ? { attempts, lockedUntil: Date.now() + LOCKOUT_MS }
-          : { attempts, lockedUntil: null }
+        attempts >= MAX_ATTEMPTS ? { attempts, lockedUntil: Date.now() + LOCKOUT_MS } : { attempts, lockedUntil: null }
       writeState(storageKey, next)
       return next
     })

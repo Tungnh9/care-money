@@ -7,9 +7,7 @@ describe("Button", () => {
   it("gives the ghost variant a hover background, since it has none by default (bg-transparent)", () => {
     render(<Button variant="ghost">Huỷ</Button>)
 
-    expect(screen.getByRole("button", { name: "Huỷ" })).toHaveClass(
-      "hover:bg-[var(--ob-color-surface-sunken)]"
-    )
+    expect(screen.getByRole("button", { name: "Huỷ" })).toHaveClass("hover:bg-[var(--ob-color-surface-sunken)]")
   })
 
   it("gives the sm size wider left/right padding, so short labels like Lưu/Huỷ/Xoá/Thêm are easier to hit with the mouse", () => {

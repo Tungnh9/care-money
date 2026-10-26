@@ -57,9 +57,7 @@ describe("StudyView", () => {
     const markButtons = screen.getAllByRole("button", { name: "Đánh dấu đã học" })
     fireEvent.click(markButtons[0])
 
-    await waitFor(() =>
-      expect(screen.getAllByRole("button", { name: "Bỏ đánh dấu đã học" })).toHaveLength(1)
-    )
+    await waitFor(() => expect(screen.getAllByRole("button", { name: "Bỏ đánh dấu đã học" })).toHaveLength(1))
     // LearnedProgressCard chỉ nằm ở tab "Hôm nay" — quay lại đó để đọc số liệu đã cập nhật.
     fireEvent.click(screen.getByRole("button", { name: "Hôm nay" }))
     expect(screen.getByText("Thuộc 10% kho từ")).toBeInTheDocument()
@@ -70,9 +68,7 @@ describe("StudyView", () => {
 
     fireEvent.click(screen.getByText("Ôn 20 từ vựng"))
 
-    await waitFor(() =>
-      expect(screen.getByText("1/3 nhiệm vụ · 10 từ cần ôn · ngày 14/08")).toBeInTheDocument()
-    )
+    await waitFor(() => expect(screen.getByText("1/3 nhiệm vụ · 10 từ cần ôn · ngày 14/08")).toBeInTheDocument())
   })
 
   it("stagger-animates the Hôm nay boxes in on mount, like the Tài chính page", () => {
@@ -96,9 +92,7 @@ describe("StudyView", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Từ vựng" }))
 
-    const vocabSection = screen
-      .getByText("Kho từ vựng giao tiếp · 10 từ")
-      .closest("section") as HTMLElement
+    const vocabSection = screen.getByText("Kho từ vựng giao tiếp · 10 từ").closest("section") as HTMLElement
     expect(vocabSection.parentElement).toHaveClass("ob-card-grid")
   })
 
@@ -116,9 +110,7 @@ describe("StudyView", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Ngữ pháp" }))
 
-    const grammarSection = screen
-      .getByText("Ngữ pháp tiếng Anh · 5 mục")
-      .closest("section") as HTMLElement
+    const grammarSection = screen.getByText("Ngữ pháp tiếng Anh · 5 mục").closest("section") as HTMLElement
     expect(grammarSection.parentElement).toHaveClass("ob-card-grid")
   })
 
@@ -141,9 +133,7 @@ describe("StudyView", () => {
     fireEvent.click(revealButtons[0])
     fireEvent.click(screen.getByRole("button", { name: "Nhớ" }))
 
-    await waitFor(() =>
-      expect(screen.getByText("0/3 nhiệm vụ · 9 từ cần ôn · ngày 14/08")).toBeInTheDocument()
-    )
+    await waitFor(() => expect(screen.getByText("0/3 nhiệm vụ · 9 từ cần ôn · ngày 14/08")).toBeInTheDocument())
     // Thẻ vừa chấm vẫn còn hiển thị (đóng băng theo phiên), không biến mất khỏi lưới.
     expect(screen.getByText(VOCAB[0].word)).toBeInTheDocument()
   })
@@ -184,9 +174,7 @@ describe("StudyView", () => {
     fireEvent.click(sorted[1]) // luôn là 1 cặp giống nhau — chắc chắn ăn cặp, bất kể 6 cặp nào được rút ngẫu nhiên
 
     fireEvent.click(screen.getByRole("button", { name: "Hôm nay" }))
-    await waitFor(() =>
-      expect(screen.getByText("0/3 nhiệm vụ · 9 từ cần ôn · ngày 14/08")).toBeInTheDocument()
-    )
+    await waitFor(() => expect(screen.getByText("0/3 nhiệm vụ · 9 từ cần ôn · ngày 14/08")).toBeInTheDocument())
   })
 
   it("shows the actually-due words for a returning user, not the cold-seed order (regression: ReviewDueCard must not freeze before hydration)", async () => {

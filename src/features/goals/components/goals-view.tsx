@@ -48,9 +48,7 @@ function GoalsView() {
             key={goal.key}
             goal={goal}
             className="min-w-0 flex-[1_1_300px]"
-            {...(goal.key === "car"
-              ? { savings, selectedFundName: fundName, onSelectFund: selectFund }
-              : {})}
+            {...(goal.key === "car" ? { savings, selectedFundName: fundName, onSelectFund: selectFund } : {})}
           />
         ))}
       </div>

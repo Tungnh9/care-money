@@ -39,9 +39,7 @@ function swipedTotal(expenses: Expense[], months: string[]): number {
 
 // Không tính khoản quẹt thẻ (xem countedAmount).
 function totalExpensesForMonth(expenses: Expense[], month: string): number {
-  return expenses
-    .filter((e) => monthKeyFromDayKey(e.dayKey) === month)
-    .reduce((sum, e) => sum + countedAmount(e), 0)
+  return expenses.filter((e) => monthKeyFromDayKey(e.dayKey) === month).reduce((sum, e) => sum + countedAmount(e), 0)
 }
 
 function salaryForMonth(salaries: MonthlySalary[], month: string): number {
@@ -91,9 +89,7 @@ function unsettledPastMonths(
   currentMonth: string
 ): UnsettledMonth[] {
   // YYYY-MM đệm số 0 nên so chuỗi cũng là so thời gian — nhưng chỉ khi key đúng dạng, vì vậy lọc dạng trước.
-  const months = [...new Set(salaries.map((s) => s.month))].filter(
-    (month) => isMonthKey(month) && month < currentMonth
-  )
+  const months = [...new Set(salaries.map((s) => s.month))].filter((month) => isMonthKey(month) && month < currentMonth)
   return months
     .sort((a, b) => (a < b ? 1 : -1))
     .map((month) => ({ month, remaining: remainingToSettle(salaries, expenses, settlements, month) }))
