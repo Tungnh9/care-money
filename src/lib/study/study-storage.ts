@@ -69,18 +69,36 @@ function safeField<T>(schema: z.ZodType<T>, value: unknown, fallback: T): T {
 function safeWordReviews(value: unknown): Record<string, WordReviewState> {
   if (typeof value !== "object" || value === null) return {}
   const out: Record<string, WordReviewState> = {}
+  const merged: WordReviewState[] = []
   for (const [id, entry] of Object.entries(value as Record<string, unknown>)) {
     const result = wordReviewStateSchema.safeParse(entry)
-    if (result.success) out[id] = result.data
+    if (!result.success) continue
+    const target = mergedWordId(id)
+    if (target === id) out[id] = result.data
+    else merged.push({ ...result.data, wordId: target })
   }
+  // Lịch ôn của chính từ được giữ thắng; chỉ khi nó chưa có mới lấy lịch của bản đã gộp vào.
+  for (const review of merged) if (!(review.wordId in out)) out[review.wordId] = review
   return out
+}
+
+// Từ đã bỏ khỏi bộ từ vựng vì trùng y nguyên 1 từ khác → id của bản được giữ. Tiến độ (đã học, lịch ôn) lưu
+// theo id cũ được chuyển sang id mới ngay lúc đọc (máy và bản sao lưu cùng đi qua đây), để không còn id mồ côi
+// làm số "Đã học" dư ra mà không gỡ được.
+const MERGED_WORD_IDS: Record<string, string> = {
+  // "pay" (mức lương) lặp y nguyên ở chủ đề activities (v-0004) và jobs (v-0179) — giữ bản ở jobs.
+  "v-0004": "v-0179",
+}
+
+function mergedWordId(id: string): string {
+  return MERGED_WORD_IDS[id] ?? id
 }
 
 // learned là danh sách tích luỹ dài hạn (khác tasks có mặc định riêng) — lọc TỪNG phần tử qua
 // safeArray: 1 phần tử sai kiểu chỉ bị bỏ riêng nó thay vì kéo cả danh sách về [] như safeField;
 // id trùng được gộp, giữ thứ tự lần xuất hiện đầu.
 function safeLearned(value: unknown): string[] {
-  return [...new Set(safeArray(z.string(), value))]
+  return [...new Set(safeArray(z.string(), value).map(mergedWordId))]
 }
 
 function parseStudyState(value: unknown): StudyState {

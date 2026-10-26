@@ -320,16 +320,16 @@ describe("useStudy", () => {
     await waitFor(() => expect(result.current.tasks).toEqual(DEFAULT_STUDY_STATE.tasks))
 
     act(() => {
-      result.current.gradeWord("v-0004", "good")
+      result.current.gradeWord("v-0005", "good")
     })
-    const before = result.current.wordReviews["v-0004"]
+    const before = result.current.wordReviews["v-0005"]
     expect(before.lastReviewedAt).not.toBeNull()
 
     act(() => {
-      result.current.toggleLearned("v-0004")
+      result.current.toggleLearned("v-0005")
     })
 
-    expect(result.current.wordReviews["v-0004"]).toEqual(before)
+    expect(result.current.wordReviews["v-0005"]).toEqual(before)
   })
 
   it("keeps a word another tab marked as learned when grading a word here", async () => {

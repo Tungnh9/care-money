@@ -50,6 +50,12 @@ describe("getVocab", () => {
     const ids = new Set(vocab.map((v) => v.id))
     expect(ids.size).toBe(vocab.length)
   })
+
+  it("keeps a single 'pay' (mức lương), the one in the jobs topic", () => {
+    const pay = getVocab().filter((v) => v.word.toLowerCase() === "pay")
+
+    expect(pay.map((v) => v.id)).toEqual(["v-0179"])
+  })
 })
 
 describe("getGrammar", () => {
