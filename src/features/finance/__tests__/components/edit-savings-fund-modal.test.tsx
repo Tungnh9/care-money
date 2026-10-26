@@ -33,13 +33,28 @@ describe("EditSavingsFundModal", () => {
     })
     fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
 
-    expect(onSave).toHaveBeenCalledWith({
-      name: "Quỹ du lịch",
-      amount: 3_000_000,
-      target: 10_000_000,
-      note: "Đi Đà Lạt cuối năm",
-    })
+    expect(onSave).toHaveBeenCalledWith(
+      {
+        name: "Quỹ du lịch",
+        amount: 3_000_000,
+        target: 10_000_000,
+        note: "Đi Đà Lạt cuối năm",
+      },
+      true
+    )
     expect(onOpenChange).toHaveBeenCalledWith(false)
+  })
+
+  it("says the amount was left alone, compared with what the form showed when it opened", () => {
+    const onSave = vi.fn()
+    const { rerender } = render(<EditSavingsFundModal fund={FUND} onOpenChange={vi.fn()} onSave={onSave} />)
+    // Trang vừa đọc lại số dư mới (tab khác bán vàng vào quỹ) — ô vẫn giữ số lúc mở, người dùng chưa sửa.
+    rerender(<EditSavingsFundModal fund={{ ...FUND, amount: 3_900_000 }} onOpenChange={vi.fn()} onSave={onSave} />)
+
+    fireEvent.change(screen.getByLabelText("Mục tiêu", { exact: false }), { target: { value: "12000000" } })
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
+
+    expect(onSave).toHaveBeenCalledWith({ ...FUND, target: 12_000_000 }, false)
   })
 
   it("closes without saving on Huỷ", () => {
@@ -71,7 +86,7 @@ describe("EditSavingsFundModal", () => {
     fireEvent.change(screen.getByLabelText("Ghi chú", { exact: false }), { target: { value: "" } })
     fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
 
-    expect(onSave).toHaveBeenCalledWith({ name: "Quỹ du lịch", amount: 2_000_000, target: 10_000_000 })
+    expect(onSave).toHaveBeenCalledWith({ name: "Quỹ du lịch", amount: 2_000_000, target: 10_000_000 }, false)
   })
 
   it("reseeds fields when switching to a different fund while already open", () => {

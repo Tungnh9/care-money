@@ -106,12 +106,16 @@ describe("SavingsTab", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
 
-    expect(onUpdateSavingsFund).toHaveBeenCalledWith("Quỹ du lịch", {
-      name: "Quỹ du lịch",
-      amount: 3_000_000,
-      target: 10_000_000,
-      note: "Đi Đà Lạt cuối năm",
-    })
+    expect(onUpdateSavingsFund).toHaveBeenCalledWith(
+      "Quỹ du lịch",
+      {
+        name: "Quỹ du lịch",
+        amount: 3_000_000,
+        target: 10_000_000,
+        note: "Đi Đà Lạt cuối năm",
+      },
+      true
+    )
   })
 
   it("closes the edit form without saving when Huỷ is clicked", () => {
@@ -346,5 +350,51 @@ describe("SavingsTab — quỹ có mục tiêu 0", () => {
     const bar = screen.getByRole("progressbar")
     expect(bar).toHaveAttribute("aria-valuenow", "0")
     expect(bar).not.toHaveAttribute("data-indeterminate")
+  })
+})
+
+describe("SavingsTab — quỹ đã nhận tiền bán vàng/bạc", () => {
+  const SAVINGS = [
+    { name: "Quỹ khẩn cấp", amount: 5_000_000, target: 20_000_000 },
+    { name: "Quỹ du lịch", amount: 2_000_000, target: 10_000_000 },
+    { name: "Quỹ mới", amount: 0, target: 1_000_000 },
+  ]
+  // 2 lần bán còn trỏ "Quỹ khẩn cấp", 1 lần đã gắn cờ của 1 quỹ cũ trùng tên (không tính), 1 lần vào "Quỹ du lịch".
+  const SALES = [
+    { fundName: "Quỹ khẩn cấp" },
+    { fundName: "Quỹ khẩn cấp" },
+    { fundName: "Quỹ khẩn cấp", fundRemoved: true },
+    { fundName: "Quỹ du lịch" },
+  ]
+
+  function renderTab() {
+    render(
+      <SavingsTab
+        savings={SAVINGS}
+        sales={SALES}
+        onAddSavingsFund={vi.fn()}
+        onUpdateSavingsFund={vi.fn()}
+        onRemoveSavingsFund={vi.fn()}
+      />
+    )
+  }
+
+  it("warns before deleting a fund that its sales can no longer be undone", () => {
+    renderTab()
+
+    fireEvent.click(screen.getByRole("button", { name: "Xoá Quỹ khẩn cấp" }))
+
+    expect(screen.getByRole("alertdialog")).toHaveTextContent(
+      'Xoá "Quỹ khẩn cấp" sẽ không thể hoàn tác. Quỹ này đã nhận tiền từ 2 lần bán vàng/bạc — xoá quỹ thì không huỷ được các lần bán đó nữa.'
+    )
+  })
+
+  it("says nothing about sales for a fund that never received any", () => {
+    renderTab()
+
+    fireEvent.click(screen.getByRole("button", { name: "Xoá Quỹ mới" }))
+
+    expect(screen.getByRole("alertdialog")).toHaveTextContent('Xoá "Quỹ mới" sẽ không thể hoàn tác.')
+    expect(screen.getByRole("alertdialog")).not.toHaveTextContent("lần bán")
   })
 })
