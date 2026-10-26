@@ -8,6 +8,7 @@ import type {
   GoldStore,
   Investment,
   MetalGift,
+  MetalSale,
   MetalStore,
   SavingsFund,
   SilverPurchase,
@@ -20,9 +21,11 @@ interface FinanceState {
   gold: GoldPurchase[]
   goldStores: GoldStore[]
   goldGifts: MetalGift[]
+  goldSales: MetalSale[]
   silver: SilverPurchase[]
   silverStores: SilverStore[]
   silverGifts: MetalGift[]
+  silverSales: MetalSale[]
   invests: Investment[]
 }
 
@@ -35,9 +38,11 @@ const DEFAULT_FINANCE_STATE: FinanceState = {
   gold: [],
   goldStores: [],
   goldGifts: [],
+  goldSales: [],
   silver: [],
   silverStores: [],
   silverGifts: [],
+  silverSales: [],
   invests: [],
 }
 
@@ -86,6 +91,21 @@ const metalGiftSchema: z.ZodType<MetalGift> = z.object({
   qty: z.number(),
   store: z.string(),
   buy: z.number(),
+  note: z.string().optional(),
+})
+
+// `received` đọc bằng z.number() (không .int()): lần bán đã ghi thì tiền đã vào sổ — bỏ lần bán lúc đọc vì 1 số
+// tiền lạ sẽ làm lệch sổ so với lịch sử. Giới hạn số tiền nằm ở form và hook lúc ghi.
+const metalSaleSchema: z.ZodType<MetalSale> = z.object({
+  id: z.number(),
+  purchaseId: z.number(),
+  date: z.string(),
+  qty: z.number(),
+  store: z.string(),
+  buy: z.number(),
+  received: z.number(),
+  fundName: z.string(),
+  fundRemoved: z.boolean().optional(),
   note: z.string().optional(),
 })
 
@@ -159,9 +179,11 @@ function parseFinanceState(value: unknown): FinanceState {
     // Bạc và các lần tặng có sau: dữ liệu/bản sao lưu cũ không có các key này thì safeArray trả [] — không
     // cần migrate.
     goldGifts: safeArray(metalGiftSchema, parsed.goldGifts),
+    goldSales: safeArray(metalSaleSchema, parsed.goldSales),
     silver: safeArray(silverPurchaseSchema, parsed.silver),
     silverStores: safeArray(metalStoreSchema, parsed.silverStores),
     silverGifts: safeArray(metalGiftSchema, parsed.silverGifts),
+    silverSales: safeArray(metalSaleSchema, parsed.silverSales),
     invests: safeArray(investmentSchema, parsed.invests),
   }
 }
@@ -246,6 +268,7 @@ export {
   goldPurchaseSchema,
   silverPurchaseSchema,
   metalGiftSchema,
+  metalSaleSchema,
   investmentSchema,
   type FinanceState,
   type ApplyCardBalanceDeltaResult,

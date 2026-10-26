@@ -1,5 +1,5 @@
 import { monthKeyFromDayKey } from "@/lib/date"
-import type { MetalGift, MetalPurchaseBase, MetalStore } from "@/lib/finance/types"
+import type { MetalGift, MetalPurchaseBase, MetalSale, MetalStore } from "@/lib/finance/types"
 
 // Phép tính dùng chung cho tích lũy vàng và bạc. Hàm nào cần khối lượng thì nhận `quantityOf` để đọc
 // đúng field của từng kim loại (vàng: `phan`, bạc: `luong`); giá mua/giá hôm nay luôn tính theo đúng
@@ -89,13 +89,13 @@ function toPurchaseDate(d: Date): string {
   return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`
 }
 
-// Ngày tặng sớm nhất (dd/mm/yyyy) trong các lần tặng lấy từ 1 lần mua — ngày mua không được dời qua mốc này.
-// Ngày không đọc được (chỉ có từ file sửa tay) thì bỏ qua; không có lần tặng nào → null.
-function earliestGiftDate(gifts: Pick<MetalGift, "purchaseId" | "date">[], purchaseId: number): string | null {
+// Ngày sớm nhất (dd/mm/yyyy) trong các lần lấy ra (tặng, bán) từ 1 lần mua — ngày mua không được dời qua mốc
+// này. Ngày không đọc được (chỉ có từ file sửa tay) thì bỏ qua; chưa lấy ra lần nào → null.
+function earliestTakeoutDate(takeouts: Pick<MetalGift, "purchaseId" | "date">[], purchaseId: number): string | null {
   let earliest: string | null = null
-  for (const gift of gifts) {
-    if (gift.purchaseId !== purchaseId) continue
-    const date = normalizePurchaseDate(gift.date)
+  for (const takeout of takeouts) {
+    if (takeout.purchaseId !== purchaseId) continue
+    const date = normalizePurchaseDate(takeout.date)
     if (date !== null && (earliest === null || parsePurchaseDate(date) < parsePurchaseDate(earliest))) {
       earliest = date
     }
@@ -121,15 +121,23 @@ function heldQuantityOf<P extends MetalPurchaseBase>(
   return (purchase) => quantityOf(purchase) - (gifted.get(purchase.id) ?? 0)
 }
 
-// Các lần tặng có ngày tặng thuộc `month` (YYYY-MM), mới nhất trước; cùng ngày thì id cao (ghi sau) trước.
-// Ngày không đọc được (chỉ có từ file sửa tay) thì bỏ — không đoán nó thuộc tháng nào.
-function giftsInMonth(gifts: MetalGift[], month: string): (MetalGift & { dayKey: string })[] {
-  const items: (MetalGift & { dayKey: string })[] = []
-  for (const gift of gifts) {
-    const dayKey = purchaseDateToDayKey(gift.date)
-    if (dayKey !== null && monthKeyFromDayKey(dayKey) === month) items.push({ ...gift, dayKey })
+// Các lần lấy ra (tặng, bán) có ngày thuộc `month` (YYYY-MM), mới nhất trước; cùng ngày thì id cao (ghi sau)
+// trước. Ngày không đọc được (chỉ có từ file sửa tay) thì bỏ — không đoán nó thuộc tháng nào.
+function takeoutsInMonth<T extends Pick<MetalGift, "id" | "date">>(
+  items: T[],
+  month: string
+): (T & { dayKey: string })[] {
+  const inMonth: (T & { dayKey: string })[] = []
+  for (const item of items) {
+    const dayKey = purchaseDateToDayKey(item.date)
+    if (dayKey !== null && monthKeyFromDayKey(dayKey) === month) inMonth.push({ ...item, dayKey })
   }
-  return items.sort((a, b) => b.dayKey.localeCompare(a.dayKey) || b.id - a.id)
+  return inMonth.sort((a, b) => b.dayKey.localeCompare(a.dayKey) || b.id - a.id)
+}
+
+// Lãi/lỗ đã chốt của 1 lần bán: tiền thực nhận trừ giá vốn của đúng phần đã bán (theo giá mua chụp lúc bán).
+function metalSalePL(sale: Pick<MetalSale, "qty" | "buy" | "received">): number {
+  return sale.received - sale.qty * sale.buy
 }
 
 // Ô khối lượng chỉ nhận số nguyên dương (phân với vàng, lượng với bạc): số lẻ thì hiện nhiễu số thực
@@ -246,9 +254,10 @@ export {
   purchaseDateToDayKey,
   toPurchaseDate,
   giftedByPurchase,
-  earliestGiftDate,
+  earliestTakeoutDate,
   heldQuantityOf,
-  giftsInMonth,
+  takeoutsInMonth,
+  metalSalePL,
   parseWholeQuantity,
   metalPurchaseLabels,
   summarizeMetalHolding,

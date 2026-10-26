@@ -1,6 +1,6 @@
 import { dayKeyFromIso, isMonthKey, monthKeyFromDayKey } from "@/lib/date"
 import type { Expense, MonthlySalary, Settlement } from "@/lib/budget/types"
-import { giftsInMonth } from "@/lib/finance/metal-calculations"
+import { takeoutsInMonth } from "@/lib/finance/metal-calculations"
 import { GOLD_NAMING, SILVER_NAMING, type MetalNaming } from "@/lib/finance/metal-naming"
 import type { MetalGift } from "@/lib/finance/types"
 
@@ -119,8 +119,8 @@ type GiftListItem = MetalGift & { dayKey: string; naming: MetalNaming }
 // sổ. Gộp vàng + bạc, mới nhất trước; cùng ngày thì vàng trước bạc, rồi id cao (ghi sau) trước.
 function giftsMadeInMonth(goldGifts: MetalGift[], silverGifts: MetalGift[], month: string): GiftListItem[] {
   return [
-    ...giftsInMonth(goldGifts, month).map((gift) => ({ ...gift, naming: GOLD_NAMING })),
-    ...giftsInMonth(silverGifts, month).map((gift) => ({ ...gift, naming: SILVER_NAMING })),
+    ...takeoutsInMonth(goldGifts, month).map((gift) => ({ ...gift, naming: GOLD_NAMING })),
+    ...takeoutsInMonth(silverGifts, month).map((gift) => ({ ...gift, naming: SILVER_NAMING })),
   ].sort((a, b) => b.dayKey.localeCompare(a.dayKey))
 }
 

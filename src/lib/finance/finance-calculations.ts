@@ -59,11 +59,11 @@ function summarizeFinance(state: FinanceState): FinanceSummary {
   const savingsTotal = state.savings.reduce((sum, fund) => sum + fund.amount, 0)
   const debtTotal = state.cards.reduce((sum, card) => sum + card.balance, 0)
 
-  // Chỉ tính phần còn giữ: số đã tặng của từng lần mua được trừ ra trước khi định giá.
+  // Chỉ tính phần còn giữ: số đã tặng và đã bán của từng lần mua được trừ ra trước khi định giá.
   const gold = summarizeMetalHolding(
     state.gold,
     state.goldStores,
-    heldQuantityOf((purchase) => purchase.phan, state.goldGifts)
+    heldQuantityOf((purchase) => purchase.phan, [...state.goldGifts, ...state.goldSales])
   )
   const goldPhan = gold.qty
   const goldCost = gold.cost
@@ -74,7 +74,7 @@ function summarizeFinance(state: FinanceState): FinanceSummary {
   const silver = summarizeMetalHolding(
     state.silver,
     state.silverStores,
-    heldQuantityOf((purchase) => purchase.luong, state.silverGifts)
+    heldQuantityOf((purchase) => purchase.luong, [...state.silverGifts, ...state.silverSales])
   )
 
   const investCost = state.invests.reduce((sum, invest) => sum + invest.cost, 0)

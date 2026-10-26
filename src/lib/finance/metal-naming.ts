@@ -21,4 +21,14 @@ const SILVER_NAMING: MetalNaming = {
   formatQuantity: (luong) => `${formatLuong(luong)} lượng`,
 }
 
-export { GOLD_NAMING, SILVER_NAMING, type MetalNaming }
+// Phần đã lấy ra khỏi 1 lần mua, vd. "đã tặng 1 phân · đã bán 2 phân" — dòng phụ dưới lần mua, câu báo lỗi khi
+// sửa số lượng. Chưa lấy ra gì → null.
+function formatTakenOut(naming: MetalNaming, gifted: number, sold: number): string | null {
+  const parts = [
+    gifted > 0 ? `đã tặng ${naming.formatQuantity(gifted)}` : null,
+    sold > 0 ? `đã bán ${naming.formatQuantity(sold)}` : null,
+  ].filter((part) => part !== null)
+  return parts.length ? parts.join(" · ") : null
+}
+
+export { GOLD_NAMING, SILVER_NAMING, formatTakenOut, type MetalNaming }

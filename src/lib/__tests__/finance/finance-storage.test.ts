@@ -8,7 +8,7 @@ import {
   applySavingsFundDelta,
   applyCardBalanceDelta,
 } from "@/lib/finance/finance-storage"
-import type { CreditCard, MetalGift, SavingsFund, SilverPurchase, SilverStore } from "@/lib/finance/types"
+import type { CreditCard, MetalGift, MetalSale, SavingsFund, SilverPurchase, SilverStore } from "@/lib/finance/types"
 
 describe("getStoredFinance", () => {
   beforeEach(() => {
@@ -458,5 +458,54 @@ describe("getStoredFinance — lần tặng vàng/bạc", () => {
     expect(stored.goldGifts).toEqual([])
     expect(stored.silverGifts).toEqual([])
     expect(stored.gold).toEqual(gold)
+  })
+})
+
+describe("getStoredFinance — lần bán vàng/bạc", () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+
+  const SALE: Required<MetalSale> = {
+    id: 1,
+    purchaseId: 3,
+    date: "15/09/2026",
+    qty: 2,
+    store: "SJC",
+    buy: 900_000,
+    received: 1_900_000,
+    fundName: "Quỹ A",
+    fundRemoved: true,
+    note: "bán bớt",
+  }
+
+  it("keeps every field of a gold and a silver sale through a stored round trip", () => {
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, goldSales: [SALE], silverSales: [{ ...SALE, store: "Phú Quý" }] })
+
+    expect(getStoredFinance().goldSales).toEqual([SALE])
+    expect(getStoredFinance().silverSales).toEqual([{ ...SALE, store: "Phú Quý" }])
+  })
+
+  it("drops only the malformed sale, keeping its valid siblings", () => {
+    window.localStorage.setItem(
+      FINANCE_STORAGE_KEY,
+      JSON.stringify({ ...DEFAULT_FINANCE_STATE, goldSales: [{ ...SALE, id: 2, received: null }, SALE] })
+    )
+
+    expect(getStoredFinance().goldSales).toEqual([SALE])
+  })
+
+  it("reads no sales from data saved before sales existed", () => {
+    window.localStorage.setItem(FINANCE_STORAGE_KEY, JSON.stringify({ savings: [], gold: [], goldGifts: [] }))
+
+    expect(getStoredFinance().goldSales).toEqual([])
+    expect(getStoredFinance().silverSales).toEqual([])
+  })
+
+  it("never drops a recorded sale because of a large amount received", () => {
+    const big = { ...SALE, received: 1_500_000_000_000 }
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, goldSales: [big] })
+
+    expect(getStoredFinance().goldSales).toEqual([big])
   })
 })

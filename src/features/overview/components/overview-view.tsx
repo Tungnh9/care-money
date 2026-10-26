@@ -50,9 +50,11 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
     gold,
     goldStores,
     goldGifts,
+    goldSales,
     silver,
     silverStores,
     silverGifts,
+    silverSales,
     invests,
     hydrated: financeHydrated,
   } = useFinance()
@@ -72,9 +74,11 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
     gold,
     goldStores,
     goldGifts,
+    goldSales,
     silver,
     silverStores,
     silverGifts,
+    silverSales,
     invests,
   })
 

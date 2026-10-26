@@ -12,7 +12,7 @@ import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import { pct1, signedMoney } from "@/lib/finance/finance-calculations"
 import {
-  earliestGiftDate,
+  earliestTakeoutDate,
   giftedByPurchase,
   heldQuantityOf,
   metalMarketPrice,
@@ -362,7 +362,7 @@ function MetalTab<P extends MetalPurchaseBase>({
         purchase={purchases.find((p) => p.id === editingId) ?? null}
         stores={stores}
         minQuantity={editingId !== null ? (gifted.get(editingId) ?? 0) : 0}
-        latestDate={editingId !== null ? (earliestGiftDate(gifts, editingId) ?? undefined) : undefined}
+        latestDate={editingId !== null ? (earliestTakeoutDate(gifts, editingId) ?? undefined) : undefined}
         onOpenChange={(open) => !open && setEditingId(null)}
         onSave={(id, updated) => {
           onUpdatePurchase(id, updated)

@@ -37,9 +37,11 @@ function FinanceView() {
     gold,
     goldStores,
     goldGifts,
+    goldSales,
     silver,
     silverStores,
     silverGifts,
+    silverSales,
     invests,
     addSavingsFund,
     updateSavingsFund,
@@ -79,9 +81,11 @@ function FinanceView() {
     gold,
     goldStores,
     goldGifts,
+    goldSales,
     silver,
     silverStores,
     silverGifts,
+    silverSales,
     invests,
   })
   const goldTone = metalPLTone(summary.goldPL)

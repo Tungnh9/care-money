@@ -294,9 +294,11 @@ describe("useDataManagement", () => {
       gold: [],
       goldStores: [{ name: "SJC", price: "935.000" }],
       goldGifts: [],
+      goldSales: [],
       silver: [],
       silverStores: [{ name: "Phú Quý", price: "2.000.000" }],
       silverGifts: [],
+      silverSales: [],
       invests: [],
     })
     expect(onReplaceStudy).toHaveBeenCalledWith(DEFAULT_STUDY_STATE)

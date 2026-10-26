@@ -59,6 +59,25 @@ interface MetalGift {
 
 type MetalGiftInput = Pick<MetalGift, "date" | "qty" | "note">
 
+// 1 lần bán vàng/bạc lấy ra từ 1 lần mua. `store` và `buy` chụp lại từ lần mua lúc bán (lãi/lỗ đã chốt =
+// received − qty × buy); `received` là tổng tiền thực nhận, đã cộng vào sổ tiết kiệm `fundName` (định danh
+// bằng tên, đổi tên sổ thì đổi theo). `fundRemoved` đặt lúc xoá sổ đó — không suy theo tên, vì 1 sổ mới trùng
+// tên không phải sổ đã nhận tiền.
+interface MetalSale {
+  id: number
+  purchaseId: number
+  date: string
+  qty: number
+  store: string
+  buy: number
+  received: number
+  fundName: string
+  fundRemoved?: boolean
+  note?: string
+}
+
+type MetalSaleInput = Pick<MetalSale, "date" | "qty" | "received" | "fundName" | "note">
+
 interface Investment {
   id: number
   name: string
@@ -77,5 +96,7 @@ export type {
   SilverPurchase,
   MetalGift,
   MetalGiftInput,
+  MetalSale,
+  MetalSaleInput,
   Investment,
 }

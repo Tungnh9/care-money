@@ -9,7 +9,7 @@ import {
   setStoredFinance,
   type FinanceState,
 } from "@/lib/finance/finance-storage"
-import { earliestGiftDate, giftedByPurchase, parsePurchaseDate } from "@/lib/finance/metal-calculations"
+import { earliestTakeoutDate, giftedByPurchase, parsePurchaseDate } from "@/lib/finance/metal-calculations"
 import { GOLD_NAMING, SILVER_NAMING, type MetalNaming } from "@/lib/finance/metal-naming"
 import type {
   CreditCard,
@@ -206,7 +206,7 @@ function useMetalActions<P extends MetalPurchaseBase>(lens: MetalLens<P>, persis
         return
       }
       // Không tặng được trước khi mua: ngày mua không được dời qua ngày tặng sớm nhất của chính lần mua này.
-      const earliestGift = earliestGiftDate(lens.gifts(current), id)
+      const earliestGift = earliestTakeoutDate(lens.gifts(current), id)
       if (earliestGift && parsePurchaseDate(purchase.date) > parsePurchaseDate(earliestGift)) {
         toast.error(`Ngày mua không được sau ngày tặng sớm nhất (${earliestGift}).`)
         return
@@ -626,9 +626,11 @@ function useFinance() {
     gold: state.gold,
     goldStores: state.goldStores,
     goldGifts: state.goldGifts,
+    goldSales: state.goldSales,
     silver: state.silver,
     silverStores: state.silverStores,
     silverGifts: state.silverGifts,
+    silverSales: state.silverSales,
     invests: state.invests,
     hydrated,
     addSavingsFund,
