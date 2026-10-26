@@ -24,6 +24,10 @@ const TABS = ["Tiết kiệm", "Nợ thẻ tín dụng", "Tích lũy vàng", "T�
 // để 1 trụ nằm một mình kéo dài hết hàng (4+1). Trụ không hẹp hơn 260px — số tiền dài sẽ tràn.
 const PILLAR_CLASS = "min-w-[260px] flex-[1_1_calc((100%_-_2rem)/3)] @min-[1364px]:flex-[1_1_0%]"
 
+// Số tiền trên trụ vàng/bạc/đầu tư tô theo lãi/lỗ, cùng quy tắc làm tròn với dấu % ngay dưới (metalPLTone):
+// hoà vốn — kể cả chưa mua gì — để màu thường, không tô "0 ₫" màu xanh như báo lãi.
+const PL_PILLAR_TONE = { gain: "income", loss: "expense", even: undefined } as const
+
 function FinanceView() {
   const { hidden } = useMoneyVisibility()
   const [tab, setTab] = useState(TABS[0])
@@ -80,6 +84,9 @@ function FinanceView() {
     silverGifts,
     invests,
   })
+  const goldTone = metalPLTone(summary.goldPL)
+  const silverTone = metalPLTone(summary.silverPL)
+  const investTone = metalPLTone(summary.investPL)
   // "Hạn gần nhất" = thẻ còn nợ đến hạn sớm nhất tính từ hôm nay, không phải thẻ thêm đầu tiên.
   const nearestCard = nearestDueCard(cards, new Date())
 
@@ -120,27 +127,27 @@ function FinanceView() {
           icon="gold"
           label="Tích lũy vàng"
           amount={summary.goldValue}
-          tone={summary.goldPL >= 0 ? "income" : "expense"}
+          tone={PL_PILLAR_TONE[goldTone]}
           hint={`${formatPhan(summary.goldPhan)} phân`}
-          delta={{ text: pct1(summary.goldPct), tone: metalPLTone(summary.goldPL) }}
+          delta={{ text: pct1(summary.goldPct), tone: goldTone }}
           className={PILLAR_CLASS}
         />
         <PillarCard
           icon="silver"
           label="Tích lũy bạc"
           amount={summary.silverValue}
-          tone={summary.silverPL >= 0 ? "income" : "expense"}
+          tone={PL_PILLAR_TONE[silverTone]}
           hint={`${formatLuong(summary.silverLuong)} lượng`}
-          delta={{ text: pct1(summary.silverPct), tone: metalPLTone(summary.silverPL) }}
+          delta={{ text: pct1(summary.silverPct), tone: silverTone }}
           className={PILLAR_CLASS}
         />
         <PillarCard
           icon="chart"
           label="Đầu tư"
           amount={summary.investValue}
-          tone={invests.length ? (summary.investPL >= 0 ? "income" : "expense") : undefined}
+          tone={PL_PILLAR_TONE[investTone]}
           hint={invests.length ? `${invests.length} khoản` : "Chưa có khoản nào"}
-          delta={invests.length ? { text: pct1(summary.investPct), tone: metalPLTone(summary.investPL) } : undefined}
+          delta={invests.length ? { text: pct1(summary.investPct), tone: investTone } : undefined}
           className={PILLAR_CLASS}
         />
       </div>

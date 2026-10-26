@@ -218,6 +218,46 @@ describe("FinanceView", () => {
     expect(within(investHint).getByText("−10,0%")).toHaveStyle({ color: "var(--ob-color-expense)" })
   })
 
+  // Ô chứa số tiền của 1 trụ (PillarCard tô màu ở ô này, Figure bên trong thừa hưởng). Nhãn trụ là span
+  // "uppercase" của Card — "Đầu tư" còn có ở nút tab và chú giải Tài sản ròng.
+  function pillarAmount(label: string): HTMLElement {
+    const section = screen
+      .getAllByText(label)
+      .find((el) => el.tagName === "SPAN" && el.className.includes("uppercase"))
+      ?.closest("section") as HTMLElement
+    return section.querySelector(".grid > div") as HTMLElement
+  }
+
+  it("colours the pillar amounts like their %: red for a loss, green for a gain, plain at break-even", () => {
+    // Vàng: mua 900.000/phân, giá nay 825.000 → lỗ. Bạc: cửa hàng chưa có giá → tính theo giá mua, hoà vốn.
+    // Đầu tư: vốn 10.000.000, giá trị 11.000.000 → lãi.
+    window.localStorage.setItem(
+      FINANCE_STORAGE_KEY,
+      JSON.stringify({
+        ...DEFAULT_FINANCE_STATE,
+        gold: [{ id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" }],
+        goldStores: [{ name: "SJC", price: "825000" }],
+        silver: [{ id: 1, date: "10/08/2026", luong: 1, buy: 1_800_000, store: "Phú Quý" }],
+        silverStores: [{ name: "Phú Quý", price: "" }],
+        invests: [{ id: 1, name: "VESAF", cost: 10_000_000, value: 11_000_000 }],
+      })
+    )
+
+    render(<FinanceView />)
+
+    expect(pillarAmount("Tích lũy vàng")).toHaveStyle({ color: "var(--ob-color-expense)" })
+    expect(pillarAmount("Tích lũy bạc").getAttribute("style") ?? "").not.toContain("color")
+    expect(pillarAmount("Đầu tư")).toHaveStyle({ color: "var(--ob-color-income)" })
+  })
+
+  it("leaves the gold, silver and investment pillar amounts uncoloured before anything is bought", () => {
+    render(<FinanceView />)
+
+    for (const label of ["Tích lũy vàng", "Tích lũy bạc", "Đầu tư"]) {
+      expect(pillarAmount(label).getAttribute("style") ?? "", label).not.toContain("color")
+    }
+  })
+
   it("leaves the pillar % uncoloured when nothing is bought yet", () => {
     render(<FinanceView />)
 
