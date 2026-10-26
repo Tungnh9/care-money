@@ -8,10 +8,11 @@ import { formatMoney } from "@/lib/format"
 import {
   UNTAGGED_EMOJI,
   UNTAGGED_LABEL,
-  type GiftListItem,
+  type MetalMonthItem,
   type SettlementListItem,
 } from "@/lib/budget/budget-calculations"
-import { GOLD_NAMING, SILVER_NAMING } from "@/lib/finance/metal-naming"
+import { GOLD_NAMING, SILVER_NAMING, type MetalNaming } from "@/lib/finance/metal-naming"
+import type { MetalGift, MetalSale } from "@/lib/finance/types"
 import type { Expense } from "@/lib/budget/types"
 
 const EXPENSES: Expense[] = [
@@ -527,9 +528,10 @@ describe("ExpenseListCard", () => {
       expect(screen.getByRole("alertdialog")).not.toHaveTextContent("500.000")
     })
   })
-  describe("Quà tặng từ tích lũy", () => {
-    function giftItem(overrides: Partial<GiftListItem> = {}): GiftListItem {
+  describe("Vàng/bạc tháng này", () => {
+    function giftItem(overrides: Partial<MetalGift & { naming: MetalNaming }> = {}): MetalMonthItem {
       return {
+        kind: "gift",
         id: 1,
         purchaseId: 1,
         date: "15/09/2026",
@@ -543,12 +545,29 @@ describe("ExpenseListCard", () => {
       }
     }
 
-    it("lists this month's gifts in their own block, valued at the purchase price", () => {
-      render(<ExpenseListCard expenses={EXPENSES} gifts={[giftItem()]} onRemove={vi.fn()} onEdit={vi.fn()} />)
+    function saleItem(overrides: Partial<MetalSale & { naming: MetalNaming }> = {}): MetalMonthItem {
+      return {
+        kind: "sale",
+        id: 1,
+        purchaseId: 1,
+        date: "16/09/2026",
+        dayKey: "2026-09-16",
+        qty: 2,
+        store: "SJC",
+        buy: 900_000,
+        received: 1_900_000,
+        fundName: "Quỹ dự phòng",
+        naming: GOLD_NAMING,
+        ...overrides,
+      }
+    }
 
-      const block = screen.getByTestId("gift-block")
-      expect(within(block).getByText("Quà tặng từ tích lũy")).toBeInTheDocument()
-      const row = within(block).getByTestId("gift-row")
+    it("lists this month's gifts in their own block, valued at the purchase price", () => {
+      render(<ExpenseListCard expenses={EXPENSES} metalMoves={[giftItem()]} onRemove={vi.fn()} onEdit={vi.fn()} />)
+
+      const block = screen.getByTestId("metal-month-block")
+      expect(within(block).getByText("Vàng/bạc tháng này")).toBeInTheDocument()
+      const row = within(block).getByTestId("metal-month-row")
       expect(within(row).getByText("Tặng 1 phân vàng")).toBeInTheDocument()
       expect(within(row).getByText("15/09 · SJC · tặng mẹ")).toBeInTheDocument()
       expect(within(row).getByText(formatMoney(900_000))).toBeInTheDocument()
@@ -556,45 +575,82 @@ describe("ExpenseListCard", () => {
       expect(screen.getAllByTestId("expense-day-header")).toHaveLength(2)
     })
 
-    it("names silver gifts in lượng and leaves out an empty note", () => {
+    it("lists a sale with the money received and the fund it went into, next to the gifts", () => {
       render(
         <ExpenseListCard
-          expenses={[]}
-          gifts={[giftItem({ naming: SILVER_NAMING, qty: 2, store: "Phú Quý", buy: 1_800_000, note: undefined })]}
+          expenses={EXPENSES}
+          metalMoves={[saleItem(), giftItem()]}
           onRemove={vi.fn()}
           onEdit={vi.fn()}
         />
       )
 
-      const row = screen.getByTestId("gift-row")
+      const rows = screen.getAllByTestId("metal-month-row")
+      expect(rows).toHaveLength(2)
+      expect(within(rows[0]).getByText("Bán 2 phân vàng")).toBeInTheDocument()
+      expect(within(rows[0]).getByText("16/09 · SJC · vào Quỹ dự phòng")).toBeInTheDocument()
+      expect(within(rows[0]).getByText(formatMoney(1_900_000))).toBeInTheDocument()
+      expect(within(rows[1]).getByText("Tặng 1 phân vàng")).toBeInTheDocument()
+      expect(screen.getAllByTestId("expense-day-header")).toHaveLength(2)
+    })
+
+    it("marks a sale whose fund was deleted and adds its note", () => {
+      render(
+        <ExpenseListCard
+          expenses={[]}
+          metalMoves={[saleItem({ fundRemoved: true, note: "bán bớt", naming: SILVER_NAMING, qty: 1 })]}
+          onRemove={vi.fn()}
+          onEdit={vi.fn()}
+        />
+      )
+
+      const row = screen.getByTestId("metal-month-row")
+      expect(within(row).getByText("Bán 1 lượng bạc")).toBeInTheDocument()
+      expect(within(row).getByText("16/09 · SJC · vào Quỹ dự phòng (đã xoá) · bán bớt")).toBeInTheDocument()
+    })
+
+    it("names silver gifts in lượng and leaves out an empty note", () => {
+      render(
+        <ExpenseListCard
+          expenses={[]}
+          metalMoves={[giftItem({ naming: SILVER_NAMING, qty: 2, store: "Phú Quý", buy: 1_800_000, note: undefined })]}
+          onRemove={vi.fn()}
+          onEdit={vi.fn()}
+        />
+      )
+
+      const row = screen.getByTestId("metal-month-row")
       expect(within(row).getByText("Tặng 2 lượng bạc")).toBeInTheDocument()
       expect(within(row).getByText("15/09 · Phú Quý")).toBeInTheDocument()
       expect(within(row).getByText(formatMoney(3_600_000))).toBeInTheDocument()
     })
 
-    it("has no gift block when nothing was given away this month", () => {
+    it("has no block when nothing was given away or sold this month", () => {
       render(<ExpenseListCard expenses={EXPENSES} onRemove={vi.fn()} onEdit={vi.fn()} />)
 
-      expect(screen.queryByTestId("gift-block")).not.toBeInTheDocument()
+      expect(screen.queryByTestId("metal-month-block")).not.toBeInTheDocument()
     })
 
-    it("still shows the empty-state sentence under the gift block, spaced from it", () => {
-      render(<ExpenseListCard expenses={[]} gifts={[giftItem()]} onRemove={vi.fn()} onEdit={vi.fn()} />)
+    it("still shows the empty-state sentence under the block, spaced from it", () => {
+      render(<ExpenseListCard expenses={[]} metalMoves={[saleItem()]} onRemove={vi.fn()} onEdit={vi.fn()} />)
 
       expect(screen.getByText("Chưa có khoản chi nào trong tháng này.")).toHaveClass("mt-3")
     })
 
-    it("masks the value of every gift while money is hidden", async () => {
+    it("masks the value of every gift and the money of every sale while money is hidden", async () => {
       window.localStorage.setItem("hide-money", "1")
       render(
         <MoneyVisibilityProvider>
-          <ExpenseListCard expenses={[]} gifts={[giftItem()]} onRemove={vi.fn()} onEdit={vi.fn()} />
+          <ExpenseListCard expenses={[]} metalMoves={[giftItem(), saleItem()]} onRemove={vi.fn()} onEdit={vi.fn()} />
         </MoneyVisibilityProvider>
       )
 
-      const row = screen.getByTestId("gift-row")
-      await waitFor(() => expect(within(row).getByText("•••••••• ₫")).toBeInTheDocument())
-      expect(row.textContent).not.toMatch(/\d{1,3}(\.\d{3})+/)
+      const rows = screen.getAllByTestId("metal-month-row")
+      await waitFor(() => expect(within(rows[0]).getByText("•••••••• ₫")).toBeInTheDocument())
+      for (const row of rows) {
+        expect(within(row).getByText("•••••••• ₫")).toBeInTheDocument()
+        expect(row.textContent).not.toMatch(/\d{1,3}(\.\d{3})+/)
+      }
     })
   })
 })

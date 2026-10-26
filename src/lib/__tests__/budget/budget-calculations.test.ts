@@ -15,7 +15,7 @@ import {
   unsettledPastMonths,
   hasSalaryRecord,
   settlementsMadeInMonth,
-  giftsMadeInMonth,
+  metalMovesMadeInMonth,
   tagChartColors,
   CHART_PALETTE,
   UNTAGGED_CHART_COLOR,
@@ -24,7 +24,7 @@ import {
 } from "@/lib/budget/budget-calculations"
 import type { Expense, MonthlySalary, Settlement } from "@/lib/budget/types"
 import { GOLD_NAMING, SILVER_NAMING } from "@/lib/finance/metal-naming"
-import type { MetalGift } from "@/lib/finance/types"
+import type { MetalGift, MetalSale } from "@/lib/finance/types"
 import { DEFAULT_TAGS } from "@/lib/settings/settings-storage"
 
 const TAG_RENT = { label: "Tiền trọ", emoji: "🏠", tint: "#FFF0B8" }
@@ -579,7 +579,7 @@ describe("card swipes", () => {
   })
 })
 
-describe("giftsMadeInMonth", () => {
+describe("metalMovesMadeInMonth", () => {
   const gift = (id: number, date: string, store = "SJC"): MetalGift => ({
     id,
     purchaseId: 1,
@@ -588,20 +588,45 @@ describe("giftsMadeInMonth", () => {
     store,
     buy: 900_000,
   })
+  const sale = (id: number, date: string, store = "SJC"): MetalSale => ({
+    id,
+    purchaseId: 1,
+    date,
+    qty: 2,
+    store,
+    buy: 900_000,
+    received: 1_900_000,
+    fundName: "Quỹ A",
+  })
+  const NONE = { goldGifts: [], silverGifts: [], goldSales: [], silverSales: [] }
 
-  it("merges this month's gold and silver gifts, newest first, each with its own naming", () => {
-    const gold = [gift(1, "02/09/2026"), gift(2, "20/08/2026")]
-    const silver = [gift(1, "15/09/2026", "Phú Quý")]
+  it("merges this month's gold and silver gifts and sales, newest first, each with its kind and naming", () => {
+    const items = metalMovesMadeInMonth(
+      {
+        goldGifts: [gift(1, "02/09/2026"), gift(2, "20/08/2026")],
+        silverGifts: [gift(1, "15/09/2026", "Phú Quý")],
+        goldSales: [sale(1, "10/09/2026"), sale(2, "31/08/2026")],
+        silverSales: [sale(1, "02/09/2026", "Phú Quý")],
+      },
+      "2026-09"
+    )
 
-    const items = giftsMadeInMonth(gold, silver, "2026-09")
-
-    expect(items.map((item) => [item.naming, item.dayKey])).toEqual([
-      [SILVER_NAMING, "2026-09-15"],
-      [GOLD_NAMING, "2026-09-02"],
+    // Cùng ngày 02/09: lần tặng vàng trước lần bán bạc.
+    expect(items.map((item) => [item.kind, item.naming, item.dayKey])).toEqual([
+      ["gift", SILVER_NAMING, "2026-09-15"],
+      ["sale", GOLD_NAMING, "2026-09-10"],
+      ["gift", GOLD_NAMING, "2026-09-02"],
+      ["sale", SILVER_NAMING, "2026-09-02"],
     ])
+    expect(items[1]).toMatchObject({ received: 1_900_000, fundName: "Quỹ A" })
   })
 
-  it("returns nothing when no gift falls in the month", () => {
-    expect(giftsMadeInMonth([gift(1, "20/08/2026")], [], "2026-09")).toEqual([])
+  it("returns nothing when nothing falls in the month", () => {
+    expect(
+      metalMovesMadeInMonth(
+        { ...NONE, goldGifts: [gift(1, "20/08/2026")], goldSales: [sale(1, "31/08/2026")] },
+        "2026-09"
+      )
+    ).toEqual([])
   })
 })

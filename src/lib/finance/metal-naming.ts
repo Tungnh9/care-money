@@ -1,8 +1,8 @@
 import { formatLuong, phanToChi } from "@/lib/finance/finance-calculations"
 
 // Tên gọi và cách hiện khối lượng của từng kim loại — dùng chung cho Tài chính (tab Tích lũy) và Chi tiêu
-// (khối "Quà tặng từ tích lũy"), nên nằm ở lib chứ không ở feature. Danh từ và đơn vị tiếng Việt không biến
-// đổi theo vị trí, nên ghép thẳng vào câu ("Tặng 1 phân vàng", "Các lần mua bạc").
+// (khối "Vàng/bạc tháng này"), nên nằm ở lib chứ không ở feature. Danh từ và đơn vị tiếng Việt không biến
+// đổi theo vị trí, nên ghép thẳng vào câu ("Tặng 1 phân vàng", "Bán 2 lượng bạc", "Các lần mua bạc").
 interface MetalNaming {
   noun: string
   unit: string

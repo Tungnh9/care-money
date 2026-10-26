@@ -898,13 +898,65 @@ describe("BudgetView", () => {
 
     render(<BudgetView />)
 
-    const block = await screen.findByTestId("gift-block")
-    const rows = within(block).getAllByTestId("gift-row")
+    const block = await screen.findByTestId("metal-month-block")
+    const rows = within(block).getAllByTestId("metal-month-row")
     // Lần tặng 20/08 thuộc tháng trước — không có trong khối của tháng 9.
     expect(rows).toHaveLength(2)
     expect(within(rows[0]).getByText("Tặng 1 phân vàng")).toBeInTheDocument()
     expect(within(rows[0]).getByText("15/09 · SJC · tặng mẹ")).toBeInTheDocument()
     expect(within(rows[1]).getByText("Tặng 2 lượng bạc")).toBeInTheDocument()
+    expect(screen.getAllByTestId("expense-day-header")).toHaveLength(1)
+    expect(
+      screen.getByText(summaryLine(`Lương ${formatMoney(1_000_000)} · đã chi ${formatMoney(200_000)} tháng này`))
+    ).toBeInTheDocument()
+  })
+
+  it("lists this month's gold and silver sales with the gifts, without counting them as spending", async () => {
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      savings: [{ name: "Quỹ dự phòng", amount: 5_000_000, target: 0 }],
+      gold: [{ id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" }],
+      goldGifts: [{ id: 1, purchaseId: 1, date: "05/09/2026", qty: 1, store: "SJC", buy: 900_000 }],
+      goldSales: [
+        {
+          id: 1,
+          purchaseId: 1,
+          date: "15/09/2026",
+          qty: 2,
+          store: "SJC",
+          buy: 900_000,
+          received: 1_900_000,
+          fundName: "Quỹ dự phòng",
+        },
+        {
+          id: 2,
+          purchaseId: 1,
+          date: "25/08/2026",
+          qty: 1,
+          store: "SJC",
+          buy: 900_000,
+          received: 950_000,
+          fundName: "Quỹ dự phòng",
+        },
+      ],
+    })
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      salaries: [{ month: "2026-09", amount: 1_000_000 }],
+      expenses: [{ id: 1, dayKey: "2026-09-01", amount: 200_000, tag: null }],
+    })
+
+    render(<BudgetView />)
+
+    const block = await screen.findByTestId("metal-month-block")
+    expect(within(block).getByText("Vàng/bạc tháng này")).toBeInTheDocument()
+    const rows = within(block).getAllByTestId("metal-month-row")
+    // Lần bán 25/08 thuộc tháng trước — không có trong khối của tháng 9.
+    expect(rows).toHaveLength(2)
+    expect(within(rows[0]).getByText("Bán 2 phân vàng")).toBeInTheDocument()
+    expect(within(rows[0]).getByText("15/09 · SJC · vào Quỹ dự phòng")).toBeInTheDocument()
+    expect(within(rows[0]).getByText(formatMoney(1_900_000))).toBeInTheDocument()
+    expect(within(rows[1]).getByText("Tặng 1 phân vàng")).toBeInTheDocument()
     expect(screen.getAllByTestId("expense-day-header")).toHaveLength(1)
     expect(
       screen.getByText(summaryLine(`Lương ${formatMoney(1_000_000)} · đã chi ${formatMoney(200_000)} tháng này`))
