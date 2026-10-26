@@ -1,7 +1,15 @@
 "use client"
 
 import type { FinanceSummary } from "@/lib/finance/finance-calculations"
-import type { GoldPurchase, GoldStore, MetalGift, MetalGiftInput } from "@/lib/finance/types"
+import type {
+  GoldPurchase,
+  GoldStore,
+  MetalGift,
+  MetalGiftInput,
+  MetalSale,
+  MetalSaleInput,
+  SavingsFund,
+} from "@/lib/finance/types"
 import { GOLD_METAL } from "../metal-config"
 import { MetalTab } from "./metal-tab"
 
@@ -20,6 +28,10 @@ interface GoldTabProps {
   onAddGoldGift: (purchaseId: number, input: MetalGiftInput) => boolean
   onUpdateGoldGift: (id: number, input: MetalGiftInput) => boolean
   onRemoveGoldGift: (id: number) => void
+  goldSales: MetalSale[]
+  savings: SavingsFund[]
+  onAddGoldSale: (purchaseId: number, input: MetalSaleInput) => boolean
+  onRemoveGoldSale: (id: number) => void
 }
 
 function GoldTab({
@@ -37,6 +49,10 @@ function GoldTab({
   onAddGoldGift,
   onUpdateGoldGift,
   onRemoveGoldGift,
+  goldSales,
+  savings,
+  onAddGoldSale,
+  onRemoveGoldSale,
 }: GoldTabProps) {
   return (
     <MetalTab
@@ -61,6 +77,10 @@ function GoldTab({
       onAddGift={onAddGoldGift}
       onUpdateGift={onUpdateGoldGift}
       onRemoveGift={onRemoveGoldGift}
+      sales={goldSales}
+      savings={savings}
+      onAddSale={onAddGoldSale}
+      onRemoveSale={onRemoveGoldSale}
     />
   )
 }

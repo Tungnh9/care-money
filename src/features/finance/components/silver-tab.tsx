@@ -1,7 +1,15 @@
 "use client"
 
 import type { FinanceSummary } from "@/lib/finance/finance-calculations"
-import type { SilverPurchase, SilverStore, MetalGift, MetalGiftInput } from "@/lib/finance/types"
+import type {
+  MetalGift,
+  MetalGiftInput,
+  MetalSale,
+  MetalSaleInput,
+  SavingsFund,
+  SilverPurchase,
+  SilverStore,
+} from "@/lib/finance/types"
 import { SILVER_METAL } from "../metal-config"
 import { MetalTab } from "./metal-tab"
 
@@ -20,6 +28,10 @@ interface SilverTabProps {
   onAddSilverGift: (purchaseId: number, input: MetalGiftInput) => boolean
   onUpdateSilverGift: (id: number, input: MetalGiftInput) => boolean
   onRemoveSilverGift: (id: number) => void
+  silverSales: MetalSale[]
+  savings: SavingsFund[]
+  onAddSilverSale: (purchaseId: number, input: MetalSaleInput) => boolean
+  onRemoveSilverSale: (id: number) => void
 }
 
 function SilverTab({
@@ -37,6 +49,10 @@ function SilverTab({
   onAddSilverGift,
   onUpdateSilverGift,
   onRemoveSilverGift,
+  silverSales,
+  savings,
+  onAddSilverSale,
+  onRemoveSilverSale,
 }: SilverTabProps) {
   return (
     <MetalTab
@@ -61,6 +77,10 @@ function SilverTab({
       onAddGift={onAddSilverGift}
       onUpdateGift={onUpdateSilverGift}
       onRemoveGift={onRemoveSilverGift}
+      sales={silverSales}
+      savings={savings}
+      onAddSale={onAddSilverSale}
+      onRemoveSale={onRemoveSilverSale}
     />
   )
 }

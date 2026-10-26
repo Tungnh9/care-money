@@ -398,4 +398,72 @@ describe("FinanceView", () => {
     expect(within(netSection).getByText(formatMoney(9_000_000))).toBeInTheDocument()
     expect(screen.queryByText(/Lịch sử tặng/)).not.toBeInTheDocument()
   })
+
+  it("sells 2 phân into a savings fund, then undoes it, with the pillars, net worth and history following", () => {
+    // 10 phân mua 800.000/phân, SJC hôm nay 900.000/phân; sổ "Quỹ A" có 1.000.000.
+    window.localStorage.setItem(
+      FINANCE_STORAGE_KEY,
+      JSON.stringify({
+        ...DEFAULT_FINANCE_STATE,
+        savings: [{ name: "Quỹ A", amount: 1_000_000, target: 0 }],
+        gold: [{ id: 1, date: "10/08/2026", phan: 10, buy: 800_000, store: "SJC" }],
+        goldStores: [{ name: "SJC", price: "900000" }],
+      })
+    )
+    render(<FinanceView />)
+    act(() => {
+      vi.advanceTimersByTime(1200)
+    })
+    const netSection = screen.getByText("Tài sản ròng").closest("section") as HTMLElement
+    const savingsPillar = screen
+      .getAllByText("Tiết kiệm")
+      .find((el) => el.tagName === "SPAN" && el.className.includes("uppercase"))
+      ?.closest("section") as HTMLElement
+    expect(within(netSection).getByText(formatMoney(10_000_000))).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: "Tích lũy vàng" }))
+    fireEvent.click(screen.getAllByRole("button", { name: "Bán từ lần mua vàng 10/08/2026" })[0])
+    const dialog = screen.getByRole("dialog", { name: "Bán vàng" })
+    fireEvent.change(within(dialog).getByLabelText("Ngày bán", { exact: false }), { target: { value: "15/10/2026" } })
+    fireEvent.change(within(dialog).getByLabelText("Số lượng bán (phân)", { exact: false }), {
+      target: { value: "2" },
+    })
+    fireEvent.change(within(dialog).getByLabelText("Tiền thực nhận", { exact: false }), {
+      target: { value: "1900000" },
+    })
+    fireEvent.click(within(dialog).getByRole("button", { name: "Quỹ A" }))
+    fireEvent.click(within(dialog).getByRole("button", { name: "Lưu" }))
+    act(() => {
+      vi.advanceTimersByTime(1200)
+    })
+
+    // Còn 8 phân: vốn 6.400.000, giá trị 7.200.000 → +12,5%; sổ 2.900.000; Tài sản ròng = 10.100.000.
+    expect(screen.getByText(wholeText("8 phân · +12,5%"))).toBeInTheDocument()
+    expect(within(savingsPillar).getByText(formatMoney(2_900_000))).toBeInTheDocument()
+    expect(within(netSection).getByText(formatMoney(10_100_000))).toBeInTheDocument()
+    expect(screen.getByText("Lịch sử bán · 1 lần")).toBeInTheDocument()
+    expect(JSON.parse(window.localStorage.getItem(FINANCE_STORAGE_KEY) ?? "{}").goldSales).toEqual([
+      {
+        id: 1,
+        purchaseId: 1,
+        date: "15/10/2026",
+        qty: 2,
+        store: "SJC",
+        buy: 800_000,
+        received: 1_900_000,
+        fundName: "Quỹ A",
+      },
+    ])
+
+    fireEvent.click(screen.getByRole("button", { name: "Huỷ lần bán 15/10/2026" }))
+    fireEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Huỷ lần bán" }))
+    act(() => {
+      vi.advanceTimersByTime(1200)
+    })
+
+    expect(screen.getByText(wholeText("10 phân · +12,5%"))).toBeInTheDocument()
+    expect(within(savingsPillar).getByText(formatMoney(1_000_000))).toBeInTheDocument()
+    expect(within(netSection).getByText(formatMoney(10_000_000))).toBeInTheDocument()
+    expect(screen.queryByText(/Lịch sử bán/)).not.toBeInTheDocument()
+  })
 })

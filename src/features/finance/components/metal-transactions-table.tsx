@@ -1,11 +1,12 @@
 "use client"
 
-import { Gift, Pencil, Trash2 } from "lucide-react"
+import { Gift, HandCoins, Pencil, Trash2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import { metalMarketPrice, metalPLTone, metalPurchaseLabels, metalPurchasePL } from "@/lib/finance/metal-calculations"
+import { formatTakenOut } from "@/lib/finance/metal-naming"
 import type { MetalPurchaseBase, MetalStore } from "@/lib/finance/types"
 import type { MetalConfig } from "../metal-config"
 import { MetalPLBadge } from "./metal-pl-indicator"
@@ -16,15 +17,20 @@ interface MetalTransactionsTableProps<P extends MetalPurchaseBase> {
   stores: MetalStore[]
   onRemove: (id: number) => void
   onEdit: (purchase: P) => void
-  // Tổng đã tặng theo id lần mua: hiện số còn lại (định giá theo số đó) kèm "đã tặng …".
+  // Tổng đã tặng / đã bán theo id lần mua: hiện số còn lại (định giá theo số đó) kèm "đã tặng … · đã bán …".
   gifted?: Map<number, number>
-  // Có thì mỗi lần mua có nút Tặng.
+  sold?: Map<number, number>
+  // Có thì mỗi lần mua có nút Tặng / nút Bán.
   onGift?: (purchase: P) => void
+  onSell?: (purchase: P) => void
+  // Khác rỗng thì nút Bán bị khoá với lý do này (vd. chưa có sổ tiết kiệm nào để nhận tiền).
+  sellBlockedReason?: string
 }
 
-const NO_GIFTS = new Map<number, number>()
-// Lần tặng trỏ tới lần mua theo id — xoá lần mua đã có lần tặng thì lịch sử tặng mồ côi (hook cũng chặn).
+const NO_TAKEOUTS = new Map<number, number>()
+// Lần tặng/bán trỏ tới lần mua theo id — xoá lần mua đã có lần tặng/bán thì lịch sử mồ côi (hook cũng chặn).
 const REMOVE_BLOCKED_TITLE = "Không thể xoá — lần mua này đã có lần tặng. Huỷ các lần tặng trước."
+const REMOVE_BLOCKED_BY_SALE_TITLE = "Không thể xoá — lần mua này đã có lần tặng hoặc lần bán. Huỷ chúng trước."
 
 const HEADERS = ["Ngày mua", "Cửa hàng", "Khối lượng", "Giá mua", "Giá vốn", "Giá hiện tại", "Lãi lỗ", ""]
 
@@ -34,8 +40,11 @@ function MetalTransactionsTable<P extends MetalPurchaseBase>({
   stores,
   onRemove,
   onEdit,
-  gifted = NO_GIFTS,
+  gifted = NO_TAKEOUTS,
+  sold = NO_TAKEOUTS,
   onGift,
+  onSell,
+  sellBlockedReason,
 }: MetalTransactionsTableProps<P>) {
   const { hidden } = useMoneyVisibility()
 
@@ -77,7 +86,9 @@ function MetalTransactionsTable<P extends MetalPurchaseBase>({
           {purchases.map((purchase, index) => {
             const price = metalMarketPrice(stores, purchase)
             const giftedQty = gifted.get(purchase.id) ?? 0
-            const qty = metal.quantityOf(purchase) - giftedQty
+            const soldQty = sold.get(purchase.id) ?? 0
+            const qty = metal.quantityOf(purchase) - giftedQty - soldQty
+            const takenOut = formatTakenOut(metal, giftedQty, soldQty)
             const cost = qty * purchase.buy
             const value = qty * price
             const pl = metalPurchasePL(qty, purchase.buy, price)
@@ -105,9 +116,9 @@ function MetalTransactionsTable<P extends MetalPurchaseBase>({
                 <td className="whitespace-nowrap py-[10px] px-[12px] text-left text-[13px]">{purchase.store}</td>
                 <td className="whitespace-nowrap py-[10px] px-[12px] text-right text-[13px] [font-family:var(--ob-font-num)] tabular-nums">
                   {metal.formatQuantity(qty)}
-                  {giftedQty > 0 ? (
+                  {takenOut ? (
                     <div className="text-[11.5px] [font-family:var(--ob-font-text)] text-[var(--ob-color-text-subtle)]">
-                      {`đã tặng ${metal.formatQuantity(giftedQty)}`}
+                      {takenOut}
                     </div>
                   ) : null}
                 </td>
@@ -137,6 +148,18 @@ function MetalTransactionsTable<P extends MetalPurchaseBase>({
                         <Gift size={17} />
                       </button>
                     ) : null}
+                    {onSell ? (
+                      <button
+                        type="button"
+                        aria-label={`Bán từ lần mua ${metal.noun} ${labels.get(purchase.id)}`}
+                        disabled={qty < 1 || !!sellBlockedReason}
+                        title={qty < 1 ? `Còn dưới 1 ${metal.unit} — không bán được.` : sellBlockedReason}
+                        onClick={() => onSell(purchase)}
+                        className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-income)] disabled:cursor-not-allowed disabled:opacity-45"
+                      >
+                        <HandCoins size={17} />
+                      </button>
+                    ) : null}
                     <button
                       type="button"
                       aria-label={`Sửa giao dịch ${metal.noun} ${labels.get(purchase.id)}`}
@@ -148,8 +171,10 @@ function MetalTransactionsTable<P extends MetalPurchaseBase>({
                     <button
                       type="button"
                       aria-label={`Xoá giao dịch ${metal.noun} ${labels.get(purchase.id)}`}
-                      disabled={giftedQty > 0}
-                      title={giftedQty > 0 ? REMOVE_BLOCKED_TITLE : undefined}
+                      disabled={giftedQty > 0 || soldQty > 0}
+                      title={
+                        soldQty > 0 ? REMOVE_BLOCKED_BY_SALE_TITLE : giftedQty > 0 ? REMOVE_BLOCKED_TITLE : undefined
+                      }
                       onClick={() => onRemove(purchase.id)}
                       className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)] disabled:cursor-not-allowed disabled:opacity-45"
                     >

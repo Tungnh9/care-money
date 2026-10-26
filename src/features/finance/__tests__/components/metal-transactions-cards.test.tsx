@@ -158,4 +158,23 @@ describe("MetalTransactionsCards", () => {
     expect(screen.getByText(formatMoney(6_400_000))).toBeInTheDocument()
     expect(screen.getByText(formatMoney(800_000))).toBeInTheDocument()
   })
+
+  it("lets the four buttons drop under the date and store on a narrow card instead of squeezing them", () => {
+    render(
+      <MetalTransactionsCards
+        metal={GOLD_METAL}
+        purchases={[PURCHASES[0]]}
+        stores={STORES}
+        onRemove={vi.fn()}
+        onEdit={vi.fn()}
+        onGift={vi.fn()}
+        onSell={vi.fn()}
+      />
+    )
+
+    // jsdom không dàn trang — chỉ khoá đúng các class mà việc xuống dòng dựa vào.
+    const buttons = screen.getByRole("button", { name: "Bán từ lần mua vàng 01/08/2026" }).parentElement as HTMLElement
+    expect(buttons).toHaveClass("ml-auto")
+    expect(buttons.parentElement).toHaveClass("flex-wrap")
+  })
 })

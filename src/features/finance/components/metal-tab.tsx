@@ -24,12 +24,23 @@ import {
   type MetalHolding,
   type MetalStoreSummary,
 } from "@/lib/finance/metal-calculations"
-import type { MetalGift, MetalGiftInput, MetalPurchaseBase, MetalStore } from "@/lib/finance/types"
+import { formatTakenOut } from "@/lib/finance/metal-naming"
+import type {
+  MetalGift,
+  MetalGiftInput,
+  MetalPurchaseBase,
+  MetalSale,
+  MetalSaleInput,
+  MetalStore,
+  SavingsFund,
+} from "@/lib/finance/types"
 import type { MetalConfig } from "../metal-config"
 import { AddMetalPurchaseForm } from "./add-metal-purchase-form"
 import { EditMetalPurchaseModal } from "./edit-metal-purchase-modal"
 import { MetalGiftHistoryCard } from "./metal-gift-history-card"
 import { MetalGiftModal, type MetalGiftTarget } from "./metal-gift-modal"
+import { MetalSaleHistoryCard } from "./metal-sale-history-card"
+import { MetalSaleModal, type MetalSaleTarget } from "./metal-sale-modal"
 import { MetalStoreSummaryCards } from "./metal-store-summary-cards"
 import { MetalStoreSummaryTable } from "./metal-store-summary-table"
 import { MetalStoresCard } from "./metal-stores-card"
@@ -37,6 +48,7 @@ import { MetalTransactionsCards } from "./metal-transactions-cards"
 import { MetalTransactionsTable } from "./metal-transactions-table"
 
 const PURCHASE_LIST_PAGE_SIZE = 5
+const NO_FUND_TO_SELL_INTO = "Chưa có sổ tiết kiệm nào để nhận tiền — tạo 1 sổ ở tab Tiết kiệm trước."
 
 interface MetalTabProps<P extends MetalPurchaseBase> {
   metal: MetalConfig<P>
@@ -56,6 +68,12 @@ interface MetalTabProps<P extends MetalPurchaseBase> {
   onAddGift: (purchaseId: number, input: MetalGiftInput) => boolean
   onUpdateGift: (id: number, input: MetalGiftInput) => boolean
   onRemoveGift: (id: number) => void
+  sales: MetalSale[]
+  // Sổ tiết kiệm nhận tiền bán — chưa có sổ nào thì nút Bán bị khoá.
+  savings: SavingsFund[]
+  // Trả true khi đã ghi — modal Bán chỉ đóng khi true.
+  onAddSale: (purchaseId: number, input: MetalSaleInput) => boolean
+  onRemoveSale: (id: number) => void
 }
 
 // Modal Tặng đang mở cho lần mua nào; `giftId` khác null = đang sửa lần tặng đó.
@@ -83,18 +101,30 @@ function MetalTab<P extends MetalPurchaseBase>({
   onAddGift,
   onUpdateGift,
   onRemoveGift,
+  sales,
+  savings,
+  onAddSale,
+  onRemoveSale,
 }: MetalTabProps<P>) {
   const { hidden } = useMoneyVisibility()
   const { qty, cost, value, pl, pct } = holding
   const plTone = metalPLTone(pl)
   // Hoà vốn (hay chưa có gì) thì hiện "0 ₫" trơn — "+ 0 ₫" màu xanh là báo lãi không có thật.
   const plText = plTone === "even" ? formatMoney(0, hidden) : signedMoney(pl, hidden)
-  // Mỗi lần mua chỉ còn phần chưa tặng; lần mua đã tặng hết không còn trong danh sách đang giữ (vẫn có trong
-  // lịch sử tặng). Thẻ "Giá thị trường hôm nay" vẫn nhận mọi lần mua để giữ chặn xoá cửa hàng.
+  // Mỗi lần mua chỉ còn phần chưa tặng/bán; lần mua đã lấy ra hết không còn trong danh sách đang giữ (vẫn có
+  // trong lịch sử tặng/bán). Thẻ "Giá thị trường hôm nay" vẫn nhận mọi lần mua để giữ chặn xoá cửa hàng.
   const gifted = takenOutByPurchase(gifts)
-  const heldQty = heldQuantityOf(metal.quantityOf, gifts)
+  const sold = takenOutByPurchase(sales)
+  const heldQty = heldQuantityOf(metal.quantityOf, [...gifts, ...sales])
   const heldPurchases = purchases.filter((p) => heldQty(p) > 0)
-  const allGivenAway = purchases.length > 0 && heldPurchases.length === 0
+  const giftedPurchases = purchases.filter((p) => gifted.has(p.id))
+  const soldPurchases = purchases.filter((p) => sold.has(p.id))
+  const allTakenOut = purchases.length > 0 && heldPurchases.length === 0
+  const allTakenOutNote = !soldPurchases.length
+    ? `Đã tặng hết các lần mua ${metal.noun} — xem lại ở mục Lịch sử tặng.`
+    : giftedPurchases.length
+      ? `Đã tặng và bán hết các lần mua ${metal.noun} — xem lại ở mục Lịch sử tặng và Lịch sử bán.`
+      : `Đã bán hết các lần mua ${metal.noun} — xem lại ở mục Lịch sử bán.`
   const unpriced = unpricedMetalStores(heldPurchases, stores)
   const maxBar = Math.max(cost, value, 1)
   const avgCost = qty > 0 ? cost / qty : 0
@@ -119,6 +149,9 @@ function MetalTab<P extends MetalPurchaseBase>({
 
   const [editingId, setEditingId] = useState<number | null>(null)
   const [deletingId, setDeletingId] = useState<number | null>(null)
+  const editingGifted = editingId !== null ? (gifted.get(editingId) ?? 0) : 0
+  const editingSold = editingId !== null ? (sold.get(editingId) ?? 0) : 0
+  const editingTakenOut = formatTakenOut(metal, editingGifted, editingSold)
   const deletingPurchase = purchases.find((p) => p.id === deletingId) ?? null
   // Danh sách giao dịch có thể rất dài — chỉ hiện dần từng đợt, tránh 1 bảng dài vô tận ngay khi mở tab.
   const [visibleCount, setVisibleCount] = useState(PURCHASE_LIST_PAGE_SIZE)
@@ -154,6 +187,21 @@ function MetalTab<P extends MetalPurchaseBase>({
   // mới lấy lại đúng id đó (nextId) sẽ tự bật modal/hộp xác nhận lên mà không ai bấm.
   if (giftTarget && !giftModalTarget) setGiftTarget(null)
   if (undoingGiftId !== null && !undoingGift) setUndoingGiftId(null)
+
+  const [salePurchaseId, setSalePurchaseId] = useState<number | null>(null)
+  const [undoingSaleId, setUndoingSaleId] = useState<number | null>(null)
+  const salePurchase = salePurchaseId !== null ? (purchases.find((p) => p.id === salePurchaseId) ?? null) : null
+  const saleModalTarget: MetalSaleTarget | null = salePurchase && {
+    purchaseDate: salePurchase.date,
+    store: salePurchase.store,
+    buy: salePurchase.buy,
+    available: heldQty(salePurchase),
+  }
+  const undoingSale = sales.find((sale) => sale.id === undoingSaleId) ?? null
+  const undoingSalePurchase = undoingSale ? purchases.find((p) => p.id === undoingSale.purchaseId) : undefined
+  // Như phần Tặng: lần mua/lần bán đang mở biến mất thì bỏ luôn trạng thái "đang mở".
+  if (salePurchaseId !== null && !saleModalTarget) setSalePurchaseId(null)
+  if (undoingSaleId !== null && !undoingSale) setUndoingSaleId(null)
 
   function saveGift(input: MetalGiftInput): boolean {
     if (!giftTarget) return false
@@ -256,6 +304,8 @@ function MetalTab<P extends MetalPurchaseBase>({
         stores={stores}
         purchases={purchases}
         heldPurchases={heldPurchases}
+        giftedPurchases={giftedPurchases}
+        soldPurchases={soldPurchases}
         onAdd={onAddStore}
         onUpdate={onUpdateStore}
         onRemove={onRemoveStore}
@@ -287,10 +337,8 @@ function MetalTab<P extends MetalPurchaseBase>({
             </div>
           </div>
         ) : null}
-        {allGivenAway ? (
-          <p className="text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)]">
-            {`Đã tặng hết các lần mua ${metal.noun} — xem lại ở mục Lịch sử tặng.`}
-          </p>
+        {allTakenOut ? (
+          <p className="text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)]">{allTakenOutNote}</p>
         ) : (
           <>
             <div className="hidden lg:block">
@@ -301,7 +349,10 @@ function MetalTab<P extends MetalPurchaseBase>({
                 onRemove={setDeletingId}
                 onEdit={(purchase) => setEditingId(purchase.id)}
                 gifted={gifted}
+                sold={sold}
                 onGift={(purchase) => setGiftTarget({ purchaseId: purchase.id, giftId: null })}
+                onSell={(purchase) => setSalePurchaseId(purchase.id)}
+                sellBlockedReason={savings.length ? undefined : NO_FUND_TO_SELL_INTO}
               />
             </div>
             <div className="lg:hidden">
@@ -312,7 +363,10 @@ function MetalTab<P extends MetalPurchaseBase>({
                 onRemove={setDeletingId}
                 onEdit={(purchase) => setEditingId(purchase.id)}
                 gifted={gifted}
+                sold={sold}
                 onGift={(purchase) => setGiftTarget({ purchaseId: purchase.id, giftId: null })}
+                onSell={(purchase) => setSalePurchaseId(purchase.id)}
+                sellBlockedReason={savings.length ? undefined : NO_FUND_TO_SELL_INTO}
               />
             </div>
           </>
@@ -357,12 +411,21 @@ function MetalTab<P extends MetalPurchaseBase>({
         onRemove={(gift) => setUndoingGiftId(gift.id)}
       />
 
+      <MetalSaleHistoryCard metal={metal} sales={sales} onRemove={(sale) => setUndoingSaleId(sale.id)} />
+
       <EditMetalPurchaseModal
         metal={metal}
         purchase={purchases.find((p) => p.id === editingId) ?? null}
         stores={stores}
-        minQuantity={editingId !== null ? (gifted.get(editingId) ?? 0) : 0}
-        latestDate={editingId !== null ? (earliestTakeoutDate(gifts, editingId) ?? undefined) : undefined}
+        minQuantity={editingGifted + editingSold}
+        minQuantityHint={
+          editingTakenOut
+            ? `${editingTakenOut.charAt(0).toUpperCase()}${editingTakenOut.slice(1)} từ lần mua này — số lượng không được nhỏ hơn.`
+            : undefined
+        }
+        latestDate={
+          editingId !== null ? (earliestTakeoutDate([...gifts, ...sales], editingId) ?? undefined) : undefined
+        }
         onOpenChange={(open) => !open && setEditingId(null)}
         onSave={(id, updated) => {
           onUpdatePurchase(id, updated)
@@ -407,6 +470,30 @@ function MetalTab<P extends MetalPurchaseBase>({
         cancelLabel="Giữ lại"
         onConfirm={() => {
           if (undoingGiftId !== null) onRemoveGift(undoingGiftId)
+        }}
+      />
+      <MetalSaleModal
+        metal={metal}
+        target={saleModalTarget}
+        savings={savings}
+        onOpenChange={(open) => !open && setSalePurchaseId(null)}
+        onSave={(input) => salePurchaseId !== null && onAddSale(salePurchaseId, input)}
+      />
+      <AlertDialog
+        open={!!undoingSale}
+        onOpenChange={(open) => !open && setUndoingSaleId(null)}
+        title="Huỷ lần bán này?"
+        description={
+          !undoingSale
+            ? undefined
+            : undoingSalePurchase
+              ? `${metal.formatQuantity(undoingSale.qty)} sẽ trả về lần mua ngày ${undoingSalePurchase.date} ở ${undoingSalePurchase.store}, và ${formatMoney(undoingSale.received, hidden)} được rút lại khỏi sổ "${undoingSale.fundName}".`
+              : `Lần mua gốc không còn — huỷ xoá lần bán ${metal.formatQuantity(undoingSale.qty)} khỏi lịch sử, và ${formatMoney(undoingSale.received, hidden)} được rút lại khỏi sổ "${undoingSale.fundName}".`
+        }
+        confirmLabel="Huỷ lần bán"
+        cancelLabel="Giữ lại"
+        onConfirm={() => {
+          if (undoingSaleId !== null) onRemoveSale(undoingSaleId)
         }}
       />
     </div>

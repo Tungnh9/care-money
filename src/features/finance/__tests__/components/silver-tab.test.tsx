@@ -4,7 +4,7 @@ import { render, screen, fireEvent, within } from "@testing-library/react"
 import { formatMoney } from "@/lib/format"
 import { pct1, summarizeFinance, type FinanceSummary } from "@/lib/finance/finance-calculations"
 import { DEFAULT_FINANCE_STATE } from "@/lib/finance/finance-storage"
-import type { MetalGift, SilverPurchase, SilverStore } from "@/lib/finance/types"
+import type { MetalGift, MetalSale, SavingsFund, SilverPurchase, SilverStore } from "@/lib/finance/types"
 import { SilverTab } from "../../components/silver-tab"
 
 const ZERO_SUMMARY: FinanceSummary = summarizeFinance(DEFAULT_FINANCE_STATE)
@@ -24,6 +24,10 @@ const noopHandlers = {
   onAddSilverGift: vi.fn(() => true),
   onUpdateSilverGift: vi.fn(() => true),
   onRemoveSilverGift: vi.fn(),
+  silverSales: [] as MetalSale[],
+  savings: [] as SavingsFund[],
+  onAddSilverSale: vi.fn(() => true),
+  onRemoveSilverSale: vi.fn(),
 }
 
 function summaryOf(silver: SilverPurchase[], silverStores: SilverStore[]): FinanceSummary {
@@ -257,5 +261,57 @@ describe("SilverTab", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "Lưu" }))
 
     expect(onAddSilverGift).toHaveBeenCalledWith(1, { date: "12/10/2026", qty: 1 })
+  })
+
+  it("sells from a silver purchase in lượng and lists the sale in the silver history", () => {
+    const onAddSilverSale = vi.fn(() => true)
+    const sale: MetalSale = {
+      id: 1,
+      purchaseId: 1,
+      date: "15/10/2026",
+      qty: 1,
+      store: "Phú Quý",
+      buy: 1_800_000,
+      received: 2_000_000,
+      fundName: "Quỹ A",
+    }
+    render(
+      <SilverTab
+        summary={summarizeFinance({
+          ...DEFAULT_FINANCE_STATE,
+          silver: [PURCHASE],
+          silverStores: [PHU_QUY],
+          silverSales: [sale],
+        })}
+        stores={[PHU_QUY]}
+        silver={[PURCHASE]}
+        {...noopHandlers}
+        silverSales={[sale]}
+        savings={[{ name: "Quỹ A", amount: 2_000_000, target: 0 }]}
+        onAddSilverSale={onAddSilverSale}
+      />
+    )
+
+    expect(screen.getAllByText("đã bán 1 lượng")).toHaveLength(2)
+    expect(screen.getByText("Bán 1 lượng")).toBeInTheDocument()
+    fireEvent.click(screen.getAllByRole("button", { name: "Bán từ lần mua bạc 10/08/2026" })[0])
+    const dialog = screen.getByRole("dialog", { name: "Bán bạc" })
+    expect(within(dialog).getByText("Lần mua ngày 10/08/2026 ở Phú Quý · bán được tối đa 1 lượng")).toBeInTheDocument()
+    fireEvent.change(within(dialog).getByLabelText("Ngày bán", { exact: false }), { target: { value: "16/10/2026" } })
+    fireEvent.change(within(dialog).getByLabelText("Số lượng bán (lượng)", { exact: false }), {
+      target: { value: "1" },
+    })
+    fireEvent.change(within(dialog).getByLabelText("Tiền thực nhận", { exact: false }), {
+      target: { value: "2100000" },
+    })
+    fireEvent.click(within(dialog).getByRole("button", { name: "Quỹ A" }))
+    fireEvent.click(within(dialog).getByRole("button", { name: "Lưu" }))
+
+    expect(onAddSilverSale).toHaveBeenCalledWith(1, {
+      date: "16/10/2026",
+      qty: 1,
+      received: 2_100_000,
+      fundName: "Quỹ A",
+    })
   })
 })
