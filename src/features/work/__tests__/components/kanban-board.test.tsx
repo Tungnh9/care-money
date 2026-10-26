@@ -49,10 +49,11 @@ describe("KanbanBoard", () => {
     renderBoard()
 
     const start = column("Bắt đầu")
-    expect(within(start).getAllByRole("button", { name: /^(Gửi báo cáo|Viết tài liệu)$/ }).map((b) => b.textContent)).toEqual([
-      "Gửi báo cáo",
-      "Viết tài liệu",
-    ])
+    expect(
+      within(start)
+        .getAllByRole("button", { name: /^(Gửi báo cáo|Viết tài liệu)$/ })
+        .map((b) => b.textContent)
+    ).toEqual(["Gửi báo cáo", "Viết tài liệu"])
     expect(within(start).getByRole("heading", { level: 2 })).toHaveTextContent("Bắt đầu2")
     expect(within(column("Đang làm")).getByRole("button", { name: "Duyệt bài" })).toBeInTheDocument()
     expect(within(column("Hoàn thành")).getByRole("heading", { level: 2 })).toHaveTextContent("(cột hoàn thành)")
@@ -139,7 +140,11 @@ describe("KanbanBoard", () => {
 
     fireEvent.click(screen.getByRole("button", { name: 'Chuyển "Duyệt bài" sang cột' }))
     const menu = screen.getByRole("group", { name: "Chuyển sang" })
-    expect(within(menu).getAllByRole("menuitemradio").map((o) => o.textContent)).toEqual(["Bắt đầu", "Đang làm", "Hoàn thành"])
+    expect(
+      within(menu)
+        .getAllByRole("menuitemradio")
+        .map((o) => o.textContent)
+    ).toEqual(["Bắt đầu", "Đang làm", "Hoàn thành"])
     expect(within(menu).getByRole("menuitemradio", { name: "Đang làm" })).toHaveAttribute("aria-checked", "true")
     fireEvent.click(within(menu).getByRole("menuitemradio", { name: "Hoàn thành" }))
 

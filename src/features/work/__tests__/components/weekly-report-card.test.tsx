@@ -60,7 +60,9 @@ describe("WeeklyReportCard", () => {
 
     const done = section("Đã xong")
     expect(within(done).getByText("Thứ Hai, 12/10").nextElementSibling).toHaveTextContent("Gửi báo cáo")
-    expect(within(done).getByText("Thứ Ba, 13/10").nextElementSibling).toHaveTextContent("Họp teamSố liệu thángNộp hồ sơ")
+    expect(within(done).getByText("Thứ Ba, 13/10").nextElementSibling).toHaveTextContent(
+      "Họp teamSố liệu thángNộp hồ sơ"
+    )
     expect(within(done).queryByText("Việc tuần trước")).not.toBeInTheDocument()
   })
 

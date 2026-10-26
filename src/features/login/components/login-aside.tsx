@@ -21,8 +21,7 @@ function LoginAside() {
           mỗi ngày.
         </h1>
         <p className="max-w-[34ch] text-[17px] leading-relaxed text-[var(--ob-vo-300)]">
-          Tiền bạc, nhật ký và việc học của bạn — một nơi duy nhất, chỉ bạn
-          nhìn thấy.
+          Tiền bạc, nhật ký và việc học của bạn — một nơi duy nhất, chỉ bạn nhìn thấy.
         </p>
         <div className="mt-[var(--ob-space-7)] flex gap-[var(--ob-space-2)]">
           {BRAND_ICONS.map((icon) => (
@@ -30,12 +29,7 @@ function LoginAside() {
               key={icon}
               className="grid size-[46px] place-items-center rounded-[var(--ob-radius-md)] bg-[var(--ob-vo-700)]"
             >
-              <Image
-                src={`/assets/icons/${icon}.svg`}
-                width={26}
-                height={26}
-                alt=""
-              />
+              <Image src={`/assets/icons/${icon}.svg`} width={26} height={26} alt="" />
             </span>
           ))}
         </div>

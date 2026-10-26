@@ -45,4 +45,13 @@ interface Settlement {
   fundAmountAfter: number
 }
 
-export type { CardLinkKind, CardLink, ActiveCardLink, TagSnapshot, Expense, MonthlySalary, Settlement, SettlementDirection }
+export type {
+  CardLinkKind,
+  CardLink,
+  ActiveCardLink,
+  TagSnapshot,
+  Expense,
+  MonthlySalary,
+  Settlement,
+  SettlementDirection,
+}

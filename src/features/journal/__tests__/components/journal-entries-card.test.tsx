@@ -67,9 +67,7 @@ describe("JournalEntriesCard", () => {
 
   it("expanding one entry does not affect another entry's truncation state", () => {
     const secondLong: JournalEntry = { ...LONG_ENTRY, id: 3, date: "12/08" }
-    render(
-      <JournalEntriesCard entries={[LONG_ENTRY, secondLong]} onDelete={vi.fn()} onEdit={vi.fn()} />
-    )
+    render(<JournalEntriesCard entries={[LONG_ENTRY, secondLong]} onDelete={vi.fn()} onEdit={vi.fn()} />)
 
     const expandButtons = screen.getAllByRole("button", { name: "Xem thêm" })
     fireEvent.click(expandButtons[0])

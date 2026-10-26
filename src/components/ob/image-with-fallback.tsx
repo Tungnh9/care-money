@@ -21,14 +21,7 @@ function ImageWithFallback({ src, alt, iconSize = 28, imageSizes, className, chi
   return (
     <div className={cn("relative aspect-[4/3] bg-[var(--ob-color-surface-sunken)]", className)}>
       {src && !failed ? (
-        <Image
-          src={src}
-          alt={alt}
-          fill
-          sizes={imageSizes}
-          className="object-cover"
-          onError={() => setFailed(true)}
-        />
+        <Image src={src} alt={alt} fill sizes={imageSizes} className="object-cover" onError={() => setFailed(true)} />
       ) : (
         <div
           data-testid="vocab-image-placeholder"

@@ -3,11 +3,7 @@ import { act, renderHook, waitFor } from "@testing-library/react"
 import { toast } from "sonner"
 
 import { useJournal } from "@/lib/journal/use-journal"
-import {
-  DEFAULT_JOURNAL_STATE,
-  JOURNAL_STORAGE_KEY,
-  getStoredJournal,
-} from "@/lib/journal/journal-storage"
+import { DEFAULT_JOURNAL_STATE, JOURNAL_STORAGE_KEY, getStoredJournal } from "@/lib/journal/journal-storage"
 import type { JournalEntry } from "@/lib/journal/types"
 
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
@@ -157,9 +153,7 @@ describe("useJournal", () => {
     const { result } = renderHook(() => useJournal())
     await waitFor(() => expect(result.current.entries).toEqual([]))
 
-    const restored: JournalEntry[] = [
-      { id: 1, text: "Khôi phục", time: "09:00", date: "01/08", words: 2, mood: null },
-    ]
+    const restored: JournalEntry[] = [{ id: 1, text: "Khôi phục", time: "09:00", date: "01/08", words: 2, mood: null }]
     act(() => {
       result.current.replaceJournal({ entries: restored })
     })

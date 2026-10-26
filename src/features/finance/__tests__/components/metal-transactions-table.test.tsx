@@ -17,13 +17,7 @@ const PURCHASES: GoldPurchase[] = [
 describe("MetalTransactionsTable", () => {
   it("renders the empty-state message when there are no purchases", () => {
     render(
-      <MetalTransactionsTable
-        metal={GOLD_METAL}
-        purchases={[]}
-        stores={STORES}
-        onRemove={vi.fn()}
-        onEdit={vi.fn()}
-      />,
+      <MetalTransactionsTable metal={GOLD_METAL} purchases={[]} stores={STORES} onRemove={vi.fn()} onEdit={vi.fn()} />
     )
 
     expect(screen.getByText(/Chưa có giao dịch vàng nào/)).toBeInTheDocument()
@@ -38,7 +32,7 @@ describe("MetalTransactionsTable", () => {
         stores={STORES}
         onRemove={vi.fn()}
         onEdit={vi.fn()}
-      />,
+      />
     )
 
     expect(screen.getAllByText("SJC").length).toBe(2)
@@ -68,7 +62,7 @@ describe("MetalTransactionsTable", () => {
         stores={STORES}
         onRemove={onRemove}
         onEdit={vi.fn()}
-      />,
+      />
     )
 
     // Mỗi nút xoá kèm ngày mua như nút sửa — trình đọc màn hình phân biệt được từng dòng.
@@ -88,7 +82,7 @@ describe("MetalTransactionsTable", () => {
         stores={STORES}
         onRemove={vi.fn()}
         onEdit={onEdit}
-      />,
+      />
     )
 
     const editButton = screen.getByRole("button", { name: "Sửa giao dịch vàng 05/08/2026" })
@@ -106,7 +100,7 @@ describe("MetalTransactionsTable", () => {
         stores={STORES}
         onRemove={vi.fn()}
         onEdit={vi.fn()}
-      />,
+      />
     )
 
     const winningBadge = screen.getByText(formatMoney(500_000))
@@ -127,7 +121,15 @@ describe("MetalTransactionsTable", () => {
 
   it("shows a break-even purchase (store has no price yet) in a neutral tone, not as a gain", () => {
     const unpriced: GoldStore[] = [{ name: "SJC", price: "" }]
-    render(<MetalTransactionsTable metal={GOLD_METAL} purchases={[PURCHASES[0]]} stores={unpriced} onRemove={vi.fn()} onEdit={vi.fn()} />)
+    render(
+      <MetalTransactionsTable
+        metal={GOLD_METAL}
+        purchases={[PURCHASES[0]]}
+        stores={unpriced}
+        onRemove={vi.fn()}
+        onEdit={vi.fn()}
+      />
+    )
 
     const badge = screen.getByText(formatMoney(0)).closest("[data-tone]") as HTMLElement
     expect(badge).toHaveAttribute("data-tone", "even")
@@ -142,7 +144,15 @@ describe("MetalTransactionsTable", () => {
       { id: 2, date: "01/08/2026", phan: 5, buy: 900_000, store: "SJC" },
     ]
     const onRemove = vi.fn()
-    render(<MetalTransactionsTable metal={GOLD_METAL} purchases={sameDay} stores={STORES} onRemove={onRemove} onEdit={vi.fn()} />)
+    render(
+      <MetalTransactionsTable
+        metal={GOLD_METAL}
+        purchases={sameDay}
+        stores={STORES}
+        onRemove={onRemove}
+        onEdit={vi.fn()}
+      />
+    )
 
     fireEvent.click(screen.getByRole("button", { name: `Xoá giao dịch vàng 01/08/2026 · SJC · ${phanToChi(5)}` }))
 
@@ -157,7 +167,7 @@ describe("MetalTransactionsTable", () => {
         stores={STORES}
         onRemove={vi.fn()}
         onEdit={vi.fn()}
-      />,
+      />
     )
 
     const editButton = screen.getByRole("button", { name: "Sửa giao dịch vàng 05/08/2026" })
@@ -178,7 +188,15 @@ describe("MetalTransactionsTable", () => {
       { name: "PNJ", price: "800.000" },
     ]
 
-    render(<MetalTransactionsTable metal={GOLD_METAL} purchases={purchases} stores={stores} onRemove={vi.fn()} onEdit={vi.fn()} />)
+    render(
+      <MetalTransactionsTable
+        metal={GOLD_METAL}
+        purchases={purchases}
+        stores={stores}
+        onRemove={vi.fn()}
+        onEdit={vi.fn()}
+      />
+    )
 
     expect(screen.getByText("SJC")).toBeInTheDocument()
     expect(screen.getByText("PNJ")).toBeInTheDocument()

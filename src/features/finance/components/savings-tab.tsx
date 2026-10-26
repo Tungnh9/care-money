@@ -20,12 +20,7 @@ interface SavingsTabProps {
   onRemoveSavingsFund: (name: string) => void
 }
 
-function SavingsTab({
-  savings,
-  onAddSavingsFund,
-  onUpdateSavingsFund,
-  onRemoveSavingsFund,
-}: SavingsTabProps) {
+function SavingsTab({ savings, onAddSavingsFund, onUpdateSavingsFund, onRemoveSavingsFund }: SavingsTabProps) {
   const { hidden } = useMoneyVisibility()
   const [editingName, setEditingName] = useState<string | null>(null)
   const [deletingName, setDeletingName] = useState<string | null>(null)
@@ -37,10 +32,7 @@ function SavingsTab({
     <Card label={`Tiết kiệm · ${formatMoney(savingsTotal, hidden)}`}>
       {savings.length ? (
         savings.map((fund) => (
-          <div
-            key={fund.name}
-            className="border-b border-[var(--ob-color-border)] py-[14px] last:border-b-0"
-          >
+          <div key={fund.name} className="border-b border-[var(--ob-color-border)] py-[14px] last:border-b-0">
             <div className="mb-2 flex items-center justify-between gap-3">
               <div className="text-[14px] font-bold">{fund.name}</div>
               <div className="flex items-center gap-1">
@@ -77,9 +69,7 @@ function SavingsTab({
               hint={`trên ${formatMoney(fund.target, hidden)}`}
             />
             {fund.note ? (
-              <div className="mt-2 text-[12.5px] text-[var(--ob-color-text-subtle)]">
-                {fund.note}
-              </div>
+              <div className="mt-2 text-[12.5px] text-[var(--ob-color-text-subtle)]">{fund.note}</div>
             ) : null}
           </div>
         ))

@@ -155,10 +155,18 @@ const CARDS: CreditCard[] = [{ name: "Visa", balance: 1_000_000, min: 0, limit: 
 const SWIPE_TAG = { label: "Quẹt thẻ", emoji: "🧾", tint: "#F0ECFE" }
 const PAY_TAG = { label: "Trả nợ thẻ", emoji: "💳", tint: "#EAF1FE" }
 const SWIPE: Expense = {
-  id: 10, dayKey: "2026-09-05", amount: 500_000, tag: SWIPE_TAG, card: { kind: "swipe", cardName: "Visa" },
+  id: 10,
+  dayKey: "2026-09-05",
+  amount: 500_000,
+  tag: SWIPE_TAG,
+  card: { kind: "swipe", cardName: "Visa" },
 }
 const PAYMENT: Expense = {
-  id: 11, dayKey: "2026-09-05", amount: 400_000, tag: PAY_TAG, card: { kind: "payment", cardName: "Visa" },
+  id: 11,
+  dayKey: "2026-09-05",
+  amount: 400_000,
+  tag: PAY_TAG,
+  card: { kind: "payment", cardName: "Visa" },
 }
 const TAGS_WITH_CARD: BudgetTag[] = [
   ...TAGS,
@@ -169,7 +177,9 @@ const TAGS_WITH_CARD: BudgetTag[] = [
 describe("EditExpenseModal with cards", () => {
   it("shows a linked expense's tag and card as text, with no tag chips", () => {
     const onSave = vi.fn(() => true)
-    render(<EditExpenseModal expense={SWIPE} tags={TAGS_WITH_CARD} cards={CARDS} onOpenChange={vi.fn()} onSave={onSave} />)
+    render(
+      <EditExpenseModal expense={SWIPE} tags={TAGS_WITH_CARD} cards={CARDS} onOpenChange={vi.fn()} onSave={onSave} />
+    )
 
     expect(screen.getByText("🧾 Quẹt thẻ")).toBeInTheDocument()
     expect(screen.getByText("Thẻ Visa")).toBeInTheDocument()
@@ -183,13 +193,17 @@ describe("EditExpenseModal with cards", () => {
 
   it("shows Thẻ đã xoá for a linked expense whose card was deleted", () => {
     const orphan: Expense = { ...SWIPE, card: { kind: "swipe", cardName: null } }
-    render(<EditExpenseModal expense={orphan} tags={TAGS_WITH_CARD} cards={[]} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+    render(
+      <EditExpenseModal expense={orphan} tags={TAGS_WITH_CARD} cards={[]} onOpenChange={vi.fn()} onSave={vi.fn()} />
+    )
 
     expect(screen.getByText("Thẻ đã xoá")).toBeInTheDocument()
   })
 
   it("blocks raising a payment above the card's debt", () => {
-    render(<EditExpenseModal expense={PAYMENT} tags={TAGS_WITH_CARD} cards={CARDS} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+    render(
+      <EditExpenseModal expense={PAYMENT} tags={TAGS_WITH_CARD} cards={CARDS} onOpenChange={vi.fn()} onSave={vi.fn()} />
+    )
 
     fireEvent.change(screen.getByLabelText("Số tiền", { exact: false }), { target: { value: "1500000" } })
 
@@ -199,7 +213,15 @@ describe("EditExpenseModal with cards", () => {
 
   it("blocks lowering a swipe by more than the card still owes", () => {
     const paidDown = [{ ...CARDS[0], balance: 200_000 }]
-    render(<EditExpenseModal expense={SWIPE} tags={TAGS_WITH_CARD} cards={paidDown} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+    render(
+      <EditExpenseModal
+        expense={SWIPE}
+        tags={TAGS_WITH_CARD}
+        cards={paidDown}
+        onOpenChange={vi.fn()}
+        onSave={vi.fn()}
+      />
+    )
 
     fireEvent.change(screen.getByLabelText("Số tiền", { exact: false }), { target: { value: "100000" } })
 
@@ -212,7 +234,13 @@ describe("EditExpenseModal with cards", () => {
     try {
       render(
         <MoneyVisibilityProvider>
-          <EditExpenseModal expense={PAYMENT} tags={TAGS_WITH_CARD} cards={CARDS} onOpenChange={vi.fn()} onSave={vi.fn()} />
+          <EditExpenseModal
+            expense={PAYMENT}
+            tags={TAGS_WITH_CARD}
+            cards={CARDS}
+            onOpenChange={vi.fn()}
+            onSave={vi.fn()}
+          />
         </MoneyVisibilityProvider>
       )
 
@@ -229,7 +257,9 @@ describe("EditExpenseModal with cards", () => {
   })
 
   it("does not offer Quẹt thẻ or Trả nợ thẻ when editing an ordinary expense", () => {
-    render(<EditExpenseModal expense={EXPENSE} tags={TAGS_WITH_CARD} cards={CARDS} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+    render(
+      <EditExpenseModal expense={EXPENSE} tags={TAGS_WITH_CARD} cards={CARDS} onOpenChange={vi.fn()} onSave={vi.fn()} />
+    )
 
     expect(screen.queryByRole("button", { name: /Quẹt thẻ/ })).not.toBeInTheDocument()
     expect(screen.queryByRole("button", { name: /Trả nợ thẻ/ })).not.toBeInTheDocument()
@@ -237,7 +267,9 @@ describe("EditExpenseModal with cards", () => {
 
   it("keeps an old Trả nợ thẻ expense's own tag selectable", () => {
     const old: Expense = { id: 12, dayKey: "2026-09-05", amount: 300_000, tag: PAY_TAG }
-    render(<EditExpenseModal expense={old} tags={TAGS_WITH_CARD} cards={CARDS} onOpenChange={vi.fn()} onSave={vi.fn()} />)
+    render(
+      <EditExpenseModal expense={old} tags={TAGS_WITH_CARD} cards={CARDS} onOpenChange={vi.fn()} onSave={vi.fn()} />
+    )
 
     expect(screen.getByRole("button", { name: /Trả nợ thẻ/ })).toHaveClass("border-[var(--ob-color-action)]")
   })

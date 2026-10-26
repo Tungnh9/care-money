@@ -66,7 +66,13 @@ describe("PayCreditCardModal", () => {
   })
 
   it("resets the amount field when switching to a different card while already open", () => {
-    const OTHER: CreditCard = { name: "Vietcombank Visa", balance: 1_000_000, min: 100_000, limit: 10_000_000, due: "5 hàng tháng" }
+    const OTHER: CreditCard = {
+      name: "Vietcombank Visa",
+      balance: 1_000_000,
+      min: 100_000,
+      limit: 10_000_000,
+      due: "5 hàng tháng",
+    }
     const { rerender } = render(<PayCreditCardModal card={CARD} onOpenChange={vi.fn()} onPay={vi.fn()} />)
 
     fireEvent.change(screen.getByLabelText("Số tiền trả", { exact: false }), {

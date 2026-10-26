@@ -29,7 +29,12 @@ function playMatchGameToCompletion() {
 describe("GameTab", () => {
   it("starts on the menu and enters a game when a card is selected", () => {
     render(
-      <GameTab vocab={VOCAB} highScores={HIGH_SCORES} streak={STREAK} onFinish={vi.fn(() => ({ isNewHighScore: false }))} />
+      <GameTab
+        vocab={VOCAB}
+        highScores={HIGH_SCORES}
+        streak={STREAK}
+        onFinish={vi.fn(() => ({ isNewHighScore: false }))}
+      />
     )
 
     expect(screen.getByText("Trắc nghiệm")).toBeInTheDocument()
@@ -130,7 +135,12 @@ describe("GameTab", () => {
   })
   it("shows the quiz's wrong answers on the result screen after a round with mistakes", () => {
     render(
-      <GameTab vocab={VOCAB} highScores={HIGH_SCORES} streak={STREAK} onFinish={vi.fn(() => ({ isNewHighScore: false }))} />
+      <GameTab
+        vocab={VOCAB}
+        highScores={HIGH_SCORES}
+        streak={STREAK}
+        onFinish={vi.fn(() => ({ isNewHighScore: false }))}
+      />
     )
 
     fireEvent.click(screen.getByText("Trắc nghiệm"))

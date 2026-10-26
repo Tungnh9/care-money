@@ -115,23 +115,11 @@ function DataCard({
           <Button variant="secondary" size="sm" type="button" onClick={onExport}>
             Xuất file JSON
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            type="button"
-            disabled={syncing}
-            onClick={() => fileRef.current?.click()}
-          >
+          <Button variant="ghost" size="sm" type="button" disabled={syncing} onClick={() => fileRef.current?.click()}>
             Nhập từ file
           </Button>
         </div>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="application/json"
-          onChange={handleFileChange}
-          className="hidden"
-        />
+        <input ref={fileRef} type="file" accept="application/json" onChange={handleFileChange} className="hidden" />
         {imported ? (
           <div
             className="mt-[14px] flex items-start gap-[11px] rounded-[var(--ob-radius-md)] px-[15px] py-[13px] text-[13.5px] leading-[1.5]"
@@ -251,14 +239,14 @@ function DataCard({
           pendingRestore ? (
             <>
               <span className="block">
-                {pendingRestore.source === "cloud" ? "Bản trên đám mây" : `File ${pendingRestore.fileName}`} được tạo lúc{" "}
-                <strong className="font-bold">{formatSnapshotTime(pendingRestore.exportedAt)}</strong>
+                {pendingRestore.source === "cloud" ? "Bản trên đám mây" : `File ${pendingRestore.fileName}`} được tạo
+                lúc <strong className="font-bold">{formatSnapshotTime(pendingRestore.exportedAt)}</strong>
               </span>
               <span className="mt-2 block">Bản sắp nạp: {pendingRestore.incomingCounts}</span>
               <span className="block">Trên máy này: {pendingRestore.localCounts}</span>
               <span className="mt-2 block">
-                Toàn bộ dữ liệu trên máy này sẽ bị thay bằng bản đó và không hoàn tác được. Nếu chưa chắc, hãy
-                Huỷ rồi bấm &quot;Xuất file JSON&quot; trước.
+                Toàn bộ dữ liệu trên máy này sẽ bị thay bằng bản đó và không hoàn tác được. Nếu chưa chắc, hãy Huỷ rồi
+                bấm &quot;Xuất file JSON&quot; trước.
               </span>
             </>
           ) : null

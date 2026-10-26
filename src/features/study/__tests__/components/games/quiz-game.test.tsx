@@ -63,9 +63,7 @@ describe("QuizGame", () => {
       const correctEntry = VOCAB.find((entry) => entry.word === heading.textContent)
       expect(correctEntry).toBeDefined()
 
-      const wrongButton = screen
-        .getAllByRole("button")
-        .find((button) => button.textContent !== correctEntry!.meaning)
+      const wrongButton = screen.getAllByRole("button").find((button) => button.textContent !== correctEntry!.meaning)
       expect(wrongButton).toBeDefined()
       fireEvent.click(wrongButton!)
     }
@@ -128,9 +126,7 @@ describe("QuizGame", () => {
 
     const nextHeading = screen.getByRole("heading", { level: 3 })
     const nextCorrectEntry = VOCAB.find((entry) => entry.word === nextHeading.textContent)!
-    const wrongButton = screen
-      .getAllByRole("button")
-      .find((button) => button.textContent !== nextCorrectEntry.meaning)!
+    const wrongButton = screen.getAllByRole("button").find((button) => button.textContent !== nextCorrectEntry.meaning)!
     fireEvent.click(wrongButton)
 
     expect(onWordReviewed).toHaveBeenCalledWith(nextCorrectEntry.id, false)
@@ -175,7 +171,12 @@ describe("QuizGame", () => {
       const heading = screen.getByRole("heading", { level: 3 })
       const correctEntry = VOCAB.find((entry) => entry.word === heading.textContent)!
       const wrongButton = screen.getAllByRole("button").find((button) => button.textContent !== correctEntry.meaning)!
-      expected.push({ wordId: correctEntry.id, word: correctEntry.word, correctMeaning: correctEntry.meaning, chosenMeaning: wrongButton.textContent! })
+      expected.push({
+        wordId: correctEntry.id,
+        word: correctEntry.word,
+        correctMeaning: correctEntry.meaning,
+        chosenMeaning: wrongButton.textContent!,
+      })
       fireEvent.click(wrongButton)
     }
 

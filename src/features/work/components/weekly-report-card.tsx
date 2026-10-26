@@ -50,7 +50,9 @@ function StatTile({ label, value, icon, tone, note }: StatTileProps) {
         <span className="hidden @xs:inline-flex">{icon}</span>
         <span className="min-w-0 wrap-anywhere">{label}</span>
       </div>
-      <div className="mt-1.5 [font-family:var(--ob-font-num)] text-[28px] leading-none font-bold tabular-nums">{value}</div>
+      <div className="mt-1.5 [font-family:var(--ob-font-num)] text-[28px] leading-none font-bold tabular-nums">
+        {value}
+      </div>
       {note}
     </li>
   )
@@ -69,7 +71,10 @@ function DayChart({ perDay, today }: DayChartProps) {
       {perDay.map(({ day, count }) => (
         <li key={day} className="flex min-w-0 flex-1 flex-col items-center gap-1">
           <span className="sr-only">{`${formatDayKey(day)}: ${count} việc`}</span>
-          <span aria-hidden="true" className="text-[11.5px] font-semibold text-[var(--ob-color-text-muted)] tabular-nums">
+          <span
+            aria-hidden="true"
+            className="text-[11.5px] font-semibold text-[var(--ob-color-text-muted)] tabular-nums"
+          >
             {count || ""}
           </span>
           <span aria-hidden="true" className="flex h-16 w-full max-w-10 items-end">
@@ -178,7 +183,12 @@ function WeeklyReportCard({ state, today, className }: WeeklyReportCardProps) {
       </div>
 
       <ul aria-label="Tóm tắt tuần" className="mb-5 grid grid-cols-3 gap-2 @md:gap-3">
-        <StatTile label="Đã xong" value={data.finished.length} tone="done" icon={<CheckCircle2 size={15} aria-hidden="true" />} />
+        <StatTile
+          label="Đã xong"
+          value={data.finished.length}
+          tone="done"
+          icon={<CheckCircle2 size={15} aria-hidden="true" />}
+        />
         <StatTile
           label="Còn dở"
           value={data.unfinished.length}
@@ -204,7 +214,10 @@ function WeeklyReportCard({ state, today, className }: WeeklyReportCardProps) {
       </div>
 
       <div className="grid gap-5 @xl:grid-cols-2">
-        <ReportSection title="Đã xong" icon={<CheckCircle2 size={16} aria-hidden="true" className="text-[var(--ob-color-income)]" />}>
+        <ReportSection
+          title="Đã xong"
+          icon={<CheckCircle2 size={16} aria-hidden="true" className="text-[var(--ob-color-income)]" />}
+        >
           {data.finished.length ? (
             <div className="flex flex-col gap-3">
               {byDay(data.finished).map((g) => (
@@ -213,7 +226,11 @@ function WeeklyReportCard({ state, today, className }: WeeklyReportCardProps) {
                   <ul className="flex flex-col gap-1">
                     {g.tasks.map((t) => (
                       <li key={t.id} className="flex items-start gap-2 text-sm">
-                        <CheckCircle2 size={15} aria-hidden="true" className="mt-0.5 flex-none text-[var(--ob-la-300)]" />
+                        <CheckCircle2
+                          size={15}
+                          aria-hidden="true"
+                          className="mt-0.5 flex-none text-[var(--ob-la-300)]"
+                        />
                         <span className="min-w-0 wrap-anywhere">{t.title}</span>
                       </li>
                     ))}
@@ -227,7 +244,10 @@ function WeeklyReportCard({ state, today, className }: WeeklyReportCardProps) {
         </ReportSection>
 
         <div className="flex flex-col gap-5">
-          <ReportSection title="Còn dở" icon={<Clock size={16} aria-hidden="true" className="text-[var(--ob-color-action)]" />}>
+          <ReportSection
+            title="Còn dở"
+            icon={<Clock size={16} aria-hidden="true" className="text-[var(--ob-color-action)]" />}
+          >
             {data.unfinished.length ? (
               <ul className="flex flex-col gap-2">
                 {data.unfinished.map((t) => (

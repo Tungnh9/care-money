@@ -89,7 +89,9 @@ function JournalEditor({
   function insertSanitized(data: DataTransfer) {
     const html = data.getData("text/html")
     const plain = data.getData("text/plain")
-    const safeHtml = html ? sanitizeJournalHtml(html) : plain.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c] as string)
+    const safeHtml = html
+      ? sanitizeJournalHtml(html)
+      : plain.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c] as string)
     document.execCommand("insertHTML", false, safeHtml)
     handleInput()
   }

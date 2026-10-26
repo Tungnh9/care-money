@@ -30,9 +30,7 @@ function VocabCard({
   return (
     <Card label={label} action={action} className={cn(celebrate && "ob-tada relative", className)}>
       {celebrate ? <Confetti n={14} /> : null}
-      {intro ? (
-        <p className="mb-1 text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)]">{intro}</p>
-      ) : null}
+      {intro ? <p className="mb-1 text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)]">{intro}</p> : null}
       <div className={gridClassName}>
         {entries.map((entry) => (
           <VocabWordCard

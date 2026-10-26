@@ -17,7 +17,12 @@ interface ChipProps {
 // Nhãn nhỏ dạng viên thuốc trên thẻ việc và báo cáo tuần (hạn, ngày xong, tên cột).
 function Chip({ tone = "neutral", children }: ChipProps) {
   return (
-    <span className={cn("rounded-[var(--ob-radius-pill)] px-2 py-0.5 text-[11.5px] font-semibold whitespace-nowrap", TONES[tone])}>
+    <span
+      className={cn(
+        "rounded-[var(--ob-radius-pill)] px-2 py-0.5 text-[11.5px] font-semibold whitespace-nowrap",
+        TONES[tone]
+      )}
+    >
       {children}
     </span>
   )

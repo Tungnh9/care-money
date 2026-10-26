@@ -21,8 +21,7 @@ function goldRemainingNote(goldPhan: number, target: number, goldPricePerPhan: n
   // Round to 0.1 phân so float noise (e.g. 149.99999) doesn't print "15,0" or "Còn 0,0 chỉ".
   const remaining = Math.round((target - goldPhan) * 10) / 10
   if (remaining <= 0) return `Đã đạt mục tiêu ${formatChi(target)}`
-  const remainingChi =
-    remaining % 10 === 0 ? String(remaining / 10) : (remaining / 10).toFixed(1).replace(".", ",")
+  const remainingChi = remaining % 10 === 0 ? String(remaining / 10) : (remaining / 10).toFixed(1).replace(".", ",")
   if (goldPricePerPhan <= 0) return `Còn ${remainingChi} chỉ`
   return `Còn ${remainingChi} chỉ · tương đương ${formatMoney(remaining * goldPricePerPhan, hidden)}`
 }
@@ -49,9 +48,7 @@ function withPercent(now: number, target: number) {
 function getGoals(data: GoalsInput, hidden = false): { goals: Goal[]; avg: number } {
   const { savingsTotal, goldPhan, goldPricePerPhan } = data
 
-  const carFund = data.carFundName
-    ? data.savings.find((f) => f.name === data.carFundName)
-    : undefined
+  const carFund = data.carFundName ? data.savings.find((f) => f.name === data.carFundName) : undefined
 
   const defs = [
     {
@@ -90,9 +87,7 @@ function getGoals(data: GoalsInput, hidden = false): { goals: Goal[]; avg: numbe
   ]
 
   const goals: Goal[] = defs.map((g) => ({ ...g, ...withPercent(g.now, g.target) }))
-  const avg = Math.round(
-    (goals.reduce((sum, g) => sum + progressRatio(g.now, g.target), 0) / goals.length) * 100
-  )
+  const avg = Math.round((goals.reduce((sum, g) => sum + progressRatio(g.now, g.target), 0) / goals.length) * 100)
 
   return { goals, avg }
 }

@@ -17,13 +17,7 @@ const PURCHASES: GoldPurchase[] = [
 describe("MetalTransactionsCards", () => {
   it("renders the empty-state message when there are no purchases", () => {
     render(
-      <MetalTransactionsCards
-        metal={GOLD_METAL}
-        purchases={[]}
-        stores={STORES}
-        onRemove={vi.fn()}
-        onEdit={vi.fn()}
-      />
+      <MetalTransactionsCards metal={GOLD_METAL} purchases={[]} stores={STORES} onRemove={vi.fn()} onEdit={vi.fn()} />
     )
 
     expect(screen.getByText(/Chưa có giao dịch vàng nào/)).toBeInTheDocument()
@@ -147,7 +141,15 @@ describe("MetalTransactionsCards", () => {
       { name: "PNJ", price: "800.000" },
     ]
 
-    render(<MetalTransactionsCards metal={GOLD_METAL} purchases={purchases} stores={stores} onRemove={vi.fn()} onEdit={vi.fn()} />)
+    render(
+      <MetalTransactionsCards
+        metal={GOLD_METAL}
+        purchases={purchases}
+        stores={stores}
+        onRemove={vi.fn()}
+        onEdit={vi.fn()}
+      />
+    )
 
     expect(screen.getByText("SJC")).toBeInTheDocument()
     expect(screen.getByText("PNJ")).toBeInTheDocument()

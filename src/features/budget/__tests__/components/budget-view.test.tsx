@@ -60,17 +60,13 @@ function stubChartMeasurement() {
 
 // Màu của 1 nhãn trên vòng donut: badge nằm cùng nhóm <g> với chữ tên nhãn.
 function donutColor(label: string) {
-  const badge = screen
-    .getAllByTestId("tag-badge")
-    .find((el) => el.parentElement?.textContent?.includes(label))
+  const badge = screen.getAllByTestId("tag-badge").find((el) => el.parentElement?.textContent?.includes(label))
   return badge?.getAttribute("fill")
 }
 
 // Chấm màu của 1 nhãn trong bảng tổng dưới chart 6 tháng: chấm nằm cùng hàng với tên nhãn.
 function trendDot(label: string): HTMLElement {
-  const dot = screen
-    .getAllByTestId("tag-trend-dot")
-    .find((el) => el.parentElement?.textContent?.includes(label))
+  const dot = screen.getAllByTestId("tag-trend-dot").find((el) => el.parentElement?.textContent?.includes(label))
   if (!dot) throw new Error(`Không thấy chấm màu của nhãn "${label}"`)
   return dot
 }
@@ -162,9 +158,7 @@ describe("BudgetView", () => {
     fireEvent.click(within(modal).getByRole("button", { name: "Lưu" }))
 
     const listCard = screen.getByText("Khoản chi tháng này").closest("section") as HTMLElement
-    await waitFor(() =>
-      expect(within(listCard).getAllByText(formatMoney(350_000)).length).toBeGreaterThan(0)
-    )
+    await waitFor(() => expect(within(listCard).getAllByText(formatMoney(350_000)).length).toBeGreaterThan(0))
     expect(screen.queryByText("Sửa khoản chi")).not.toBeInTheDocument()
   })
 
@@ -428,7 +422,9 @@ describe("BudgetView", () => {
     await waitFor(() => expect(getStoredBudget().settlements).toHaveLength(1))
     expect(getStoredBudget().settlements[0]).toMatchObject({ month: "2026-06", direction: "deposit", amount: 100_000 })
     expect(getStoredFinance().savings[0].amount).toBe(200_000)
-    await waitFor(() => expect(screen.queryByRole("button", { name: "Tất toán tháng 6, 2026" })).not.toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.queryByRole("button", { name: "Tất toán tháng 6, 2026" })).not.toBeInTheDocument()
+    )
     expect(screen.getByRole("button", { name: "Tất toán tháng 8, 2026" })).toBeInTheDocument()
   })
 
@@ -509,7 +505,9 @@ describe("BudgetView", () => {
     expect(screen.getAllByTestId("expense-day-header")).toHaveLength(1)
     expect(within(block).getByText("Tất toán tháng 9")).toBeInTheDocument()
     expect(within(block).getByText("Nạp vào sổ Quỹ A · 15/09")).toBeInTheDocument()
-    expect(screen.getByText(summaryLine(`Lương ${formatMoney(1_000_000)} · đã chi ${formatMoney(200_000)} tháng này`))).toBeInTheDocument()
+    expect(
+      screen.getByText(summaryLine(`Lương ${formatMoney(1_000_000)} · đã chi ${formatMoney(200_000)} tháng này`))
+    ).toBeInTheDocument()
   })
 
   it("lists only the settlements made this month, by the local day they were made", async () => {
@@ -550,7 +548,9 @@ describe("BudgetView", () => {
     render(<BudgetView />)
 
     expect(
-      await screen.findByText("Chưa nhập lương tháng này. Nhập lương (kể cả 0 đ) ở thẻ Lương tháng này rồi mới tất toán.")
+      await screen.findByText(
+        "Chưa nhập lương tháng này. Nhập lương (kể cả 0 đ) ở thẻ Lương tháng này rồi mới tất toán."
+      )
     ).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Tất toán tháng" })).toBeDisabled()
     expect(screen.queryByText(/Bạn đang thiếu/)).not.toBeInTheDocument()
@@ -847,7 +847,9 @@ describe("BudgetView", () => {
     fireEvent.click(within(form).getByRole("button", { name: "Ghi khoản chi" }))
 
     await waitFor(() => expect(getStoredFinance().cards[0].balance).toBe(500_000))
-    expect(screen.getByText(summaryLine(`Lương ${formatMoney(10_000_000)} · đã chi ${formatMoney(1_000_000)} tháng này`))).toBeInTheDocument()
+    expect(
+      screen.getByText(summaryLine(`Lương ${formatMoney(10_000_000)} · đã chi ${formatMoney(1_000_000)} tháng này`))
+    ).toBeInTheDocument()
     expect(screen.getByText(summaryLine(`Bạn đang dư ${formatMoney(9_000_000)} tháng này.`))).toBeInTheDocument()
     expect(screen.getAllByText(wholeText(`${formatMoney(0)} / ${formatMoney(500_000)}`)).length).toBeGreaterThan(0)
     // Dòng "Quẹt thẻ" dưới chart 6 tháng: chấm đỏ như số đã quẹt, không phải màu biểu đồ của nhãn.
@@ -873,7 +875,9 @@ describe("BudgetView", () => {
     fireEvent.click(within(form).getByRole("button", { name: "Ghi khoản chi" }))
 
     await waitFor(() => expect(getStoredFinance().cards[0].balance).toBe(500_000))
-    expect(screen.getByText(summaryLine(`Lương ${formatMoney(10_000_000)} · đã chi ${formatMoney(300_000)} tháng này`))).toBeInTheDocument()
+    expect(
+      screen.getByText(summaryLine(`Lương ${formatMoney(10_000_000)} · đã chi ${formatMoney(300_000)} tháng này`))
+    ).toBeInTheDocument()
   })
   it("lists this month's gold and silver gifts without counting them as spending", async () => {
     setStoredFinance({

@@ -178,9 +178,7 @@ function Sidebar() {
                 <ItemIcon size={18} />
                 {/* Ô ~45px hẹp hơn "Tổng quan": nhãn trang đang mở tràn nhẹ ra 2 bên (ô cạnh chỉ có icon nên
                     còn chỗ) thay vì cắt "Tổng …"; ô min-w-0 basis-0 nên chữ tràn không làm ô phình. */}
-                <span className={active ? "whitespace-nowrap md:hidden lg:inline" : "hidden lg:inline"}>
-                  {label}
-                </span>
+                <span className={active ? "whitespace-nowrap md:hidden lg:inline" : "hidden lg:inline"}>{label}</span>
               </Link>
             )
           })}

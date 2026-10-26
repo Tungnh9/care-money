@@ -26,7 +26,10 @@ function seed(tasks: WorkTask[]) {
   setStoredWork({ ...DEFAULT_WORK_STATE, tasks })
 }
 
-const columnIds = (columnId: number) => getStoredWork().tasks.filter((t) => t.columnId === columnId).map((t) => t.id)
+const columnIds = (columnId: number) =>
+  getStoredWork()
+    .tasks.filter((t) => t.columnId === columnId)
+    .map((t) => t.id)
 
 describe("useWork", () => {
   beforeEach(() => {
@@ -85,7 +88,9 @@ describe("useWork", () => {
     })
 
     expect(blank).toBe(false)
-    expect(getStoredWork().tasks).toEqual([expect.objectContaining({ title: "Đã làm xong", columnId: 3, done: true, doneAt: "2026-10-13" })])
+    expect(getStoredWork().tasks).toEqual([
+      expect.objectContaining({ title: "Đã làm xong", columnId: 3, done: true, doneAt: "2026-10-13" }),
+    ])
   })
 
   it("moveTask moves a card to a column at a position and saves the order", async () => {
@@ -150,7 +155,15 @@ describe("useWork", () => {
 
     expect(ok).toBe(true)
     expect(getStoredWork().tasks[0]).toEqual(
-      stored({ id: 1, title: "Đổi tên", dueDate: "2026-10-20", priority: "high", columnId: 3, done: true, doneAt: "2026-10-12" })
+      stored({
+        id: 1,
+        title: "Đổi tên",
+        dueDate: "2026-10-20",
+        priority: "high",
+        columnId: 3,
+        done: true,
+        doneAt: "2026-10-12",
+      })
     )
   })
 
@@ -225,7 +238,9 @@ describe("useWork", () => {
       result.current.saveStandup("2026-10-13", { yesterday: "- A", today: "- B sửa", blockers: "Chờ duyệt" })
     })
 
-    expect(getStoredWork().standups).toEqual([{ day: "2026-10-13", yesterday: "- A", today: "- B sửa", blockers: "Chờ duyệt" }])
+    expect(getStoredWork().standups).toEqual([
+      { day: "2026-10-13", yesterday: "- A", today: "- B sửa", blockers: "Chờ duyệt" },
+    ])
     expect(toast.success).toHaveBeenCalledWith("Đã lưu standup")
   })
 
@@ -269,7 +284,11 @@ describe("useWork — dữ liệu do nơi khác ghi", () => {
       result.current.addTask("Gửi báo cáo")
     })
 
-    expect(getStoredWork().tasks.map((t) => t.id).sort((a, b) => a - b)).toEqual([1, 2])
+    expect(
+      getStoredWork()
+        .tasks.map((t) => t.id)
+        .sort((a, b) => a - b)
+    ).toEqual([1, 2])
   })
 
   it("re-reads when another tab writes work-data", async () => {

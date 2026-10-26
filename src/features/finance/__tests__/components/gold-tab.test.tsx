@@ -213,9 +213,7 @@ describe("GoldTab", () => {
   it("stagger-animates its stacked cards in via the shared ob-card-grid wrapper", () => {
     render(<GoldTab summary={ZERO_SUMMARY} stores={[]} gold={[]} {...noopHandlers} />)
 
-    const plSection = screen
-      .getByText("Lãi / lỗ theo giá thị trường")
-      .closest("section") as HTMLElement
+    const plSection = screen.getByText("Lãi / lỗ theo giá thị trường").closest("section") as HTMLElement
     expect(plSection.parentElement).toHaveClass("ob-card-grid")
   })
 
@@ -223,13 +221,7 @@ describe("GoldTab", () => {
     const onUpdateGold = vi.fn()
     const PURCHASE = { id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" }
     render(
-      <GoldTab
-        summary={ZERO_SUMMARY}
-        stores={[SJC]}
-        gold={[PURCHASE]}
-        {...noopHandlers}
-        onUpdateGold={onUpdateGold}
-      />
+      <GoldTab summary={ZERO_SUMMARY} stores={[SJC]} gold={[PURCHASE]} {...noopHandlers} onUpdateGold={onUpdateGold} />
     )
 
     fireEvent.click(screen.getAllByRole("button", { name: /Sửa giao dịch vàng/ })[0])
@@ -254,13 +246,7 @@ describe("GoldTab", () => {
     const onUpdateGold = vi.fn()
     const PURCHASE = { id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" }
     render(
-      <GoldTab
-        summary={ZERO_SUMMARY}
-        stores={[SJC]}
-        gold={[PURCHASE]}
-        {...noopHandlers}
-        onUpdateGold={onUpdateGold}
-      />
+      <GoldTab summary={ZERO_SUMMARY} stores={[SJC]} gold={[PURCHASE]} {...noopHandlers} onUpdateGold={onUpdateGold} />
     )
 
     fireEvent.click(screen.getAllByRole("button", { name: /Sửa giao dịch vàng/ })[0])
@@ -276,13 +262,7 @@ describe("GoldTab", () => {
     const onRemoveGold = vi.fn()
     const PURCHASE = { id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" }
     render(
-      <GoldTab
-        summary={ZERO_SUMMARY}
-        stores={[SJC]}
-        gold={[PURCHASE]}
-        {...noopHandlers}
-        onRemoveGold={onRemoveGold}
-      />
+      <GoldTab summary={ZERO_SUMMARY} stores={[SJC]} gold={[PURCHASE]} {...noopHandlers} onRemoveGold={onRemoveGold} />
     )
 
     fireEvent.click(screen.getAllByRole("button", { name: /^Xoá giao dịch vàng \d/ })[0])
@@ -305,12 +285,7 @@ describe("GoldTab", () => {
       { id: 3, date: "03/01/2026", phan: 8, buy: 980_000, store: "SJC" },
     ]
     render(
-      <GoldTab
-        summary={ZERO_SUMMARY}
-        stores={[{ name: "SJC", price: "950.000" }]}
-        gold={purchases}
-        {...noopHandlers}
-      />
+      <GoldTab summary={ZERO_SUMMARY} stores={[{ name: "SJC", price: "950.000" }]} gold={purchases} {...noopHandlers} />
     )
 
     expect(screen.getByText("Các lần mua vàng · 3 lần")).toBeInTheDocument()
@@ -366,9 +341,7 @@ describe("GoldTab", () => {
     )
 
     const table = document.querySelector("table") as HTMLTableElement
-    const dates = Array.from(table.querySelectorAll("tbody tr")).map(
-      (row) => row.querySelector("td")?.textContent
-    )
+    const dates = Array.from(table.querySelectorAll("tbody tr")).map((row) => row.querySelector("td")?.textContent)
 
     expect(dates).toEqual(["28/07/2026", "03/06/2026", "05/05/2026"])
   })
@@ -499,13 +472,7 @@ describe("GoldTab", () => {
     const onRemoveGold = vi.fn()
     const PURCHASE = { id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" }
     render(
-      <GoldTab
-        summary={ZERO_SUMMARY}
-        stores={[SJC]}
-        gold={[PURCHASE]}
-        {...noopHandlers}
-        onRemoveGold={onRemoveGold}
-      />
+      <GoldTab summary={ZERO_SUMMARY} stores={[SJC]} gold={[PURCHASE]} {...noopHandlers} onRemoveGold={onRemoveGold} />
     )
 
     fireEvent.click(screen.getAllByRole("button", { name: /^Xoá giao dịch vàng \d/ })[0])
@@ -519,12 +486,7 @@ describe("GoldTab", () => {
 
   it("sizes the P&L figure from the signed amount's length so a large gain stays inside the card", () => {
     render(
-      <GoldTab
-        summary={{ ...HOLDING_SUMMARY, goldPL: 1_234_567_890 }}
-        stores={[SJC]}
-        gold={[]}
-        {...noopHandlers}
-      />
+      <GoldTab summary={{ ...HOLDING_SUMMARY, goldPL: 1_234_567_890 }} stores={[SJC]} gold={[]} {...noopHandlers} />
     )
 
     // Value của Figure ở đây là <span> tô màu lãi/lỗ nên Figure không tự đếm được — GoldTab phải
@@ -588,9 +550,7 @@ describe("GoldTab — chữ và luồng cửa hàng", () => {
     }
     render(<GoldTab summary={LOSS} stores={[SJC]} gold={[]} {...noopHandlers} />)
 
-    expect(
-      screen.getByText(`Bạn đang lỗ ${formatMoney(500_000)} so với giá vốn do giá vàng giảm.`)
-    ).toBeInTheDocument()
+    expect(screen.getByText(`Bạn đang lỗ ${formatMoney(500_000)} so với giá vốn do giá vàng giảm.`)).toBeInTheDocument()
   })
 
   it("names the purchase's date in the delete confirmation", () => {

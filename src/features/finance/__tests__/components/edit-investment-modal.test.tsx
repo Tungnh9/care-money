@@ -56,9 +56,7 @@ describe("EditInvestmentModal", () => {
 
   it("reseeds fields when switching to a different investment while already open", () => {
     const OTHER: Investment = { id: 2, name: "Quỹ VNDIRECT", cost: 5_000_000, value: 5_800_000 }
-    const { rerender } = render(
-      <EditInvestmentModal investment={INVESTMENT} onOpenChange={vi.fn()} onSave={vi.fn()} />
-    )
+    const { rerender } = render(<EditInvestmentModal investment={INVESTMENT} onOpenChange={vi.fn()} onSave={vi.fn()} />)
 
     rerender(<EditInvestmentModal investment={OTHER} onOpenChange={vi.fn()} onSave={vi.fn()} />)
 

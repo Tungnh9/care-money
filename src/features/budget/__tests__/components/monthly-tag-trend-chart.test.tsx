@@ -240,7 +240,9 @@ describe("MonthlyTagTrendChart", () => {
 
       const row = screen.getByTestId("tag-trend-swiped")
       await waitFor(() =>
-        expect(within(row).getByText(wholeText(`${formatMoney(0, true)} / ${formatMoney(1_200_000, true)}`))).toBeInTheDocument()
+        expect(
+          within(row).getByText(wholeText(`${formatMoney(0, true)} / ${formatMoney(1_200_000, true)}`))
+        ).toBeInTheDocument()
       )
       expect(row.textContent).not.toMatch(/\d/)
     } finally {

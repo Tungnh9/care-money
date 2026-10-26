@@ -562,7 +562,10 @@ describe("parseImportPayload — work", () => {
   }
 
   it("restores the board's columns, tasks and standups from the file", () => {
-    const columns = [{ id: 1, title: "Việc mới" }, { id: 7, title: "Xong" }]
+    const columns = [
+      { id: 1, title: "Việc mới" },
+      { id: 7, title: "Xong" },
+    ]
     const done = { ...TASK, id: 2, columnId: 7, done: true, doneAt: "2026-10-13" }
     const standup = { day: "2026-10-13", yesterday: "- A", today: "- B", blockers: "" }
     const work = { columns, tasks: [{ ...TASK, columnId: 1 }, done], standups: [standup] }
@@ -574,7 +577,9 @@ describe("parseImportPayload — work", () => {
 
   it("puts tasks from a file saved before the board existed onto the default columns", () => {
     const finished = { ...TASK, id: 2, done: true, doneAt: "2026-10-12" }
-    const result = parseImportPayload(JSON.stringify({ version: EXPORT_VERSION, work: { tasks: [TASK, finished], standups: [] } }))
+    const result = parseImportPayload(
+      JSON.stringify({ version: EXPORT_VERSION, work: { tasks: [TASK, finished], standups: [] } })
+    )
 
     expect(result.ok).toBe(true)
     if (result.ok)
@@ -594,7 +599,8 @@ describe("parseImportPayload — work", () => {
     )
 
     expect(result.ok).toBe(true)
-    if (result.ok) expect(result.data.work).toEqual({ columns: DEFAULT_COLUMNS, tasks: [{ ...TASK, columnId: 1 }], standups: [] })
+    if (result.ok)
+      expect(result.data.work).toEqual({ columns: DEFAULT_COLUMNS, tasks: [{ ...TASK, columnId: 1 }], standups: [] })
   })
 })
 
@@ -643,7 +649,10 @@ describe("parseImportPayload — tích lũy bạc", () => {
 
   it("reads no silver from a backup made before silver existed", () => {
     const result = parseImportPayload(
-      JSON.stringify({ version: EXPORT_VERSION, finance: { savings: [], cards: [], gold: [], goldStores: [], invests: [] } })
+      JSON.stringify({
+        version: EXPORT_VERSION,
+        finance: { savings: [], cards: [], gold: [], goldStores: [], invests: [] },
+      })
     )
 
     expect(result.ok).toBe(true)

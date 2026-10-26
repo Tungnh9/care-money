@@ -12,7 +12,11 @@ function DueChip({ task, today }: DueChipProps) {
   if (!task.dueDate) return null
   const overdue = !task.done && task.dueDate < today
   if (task.dueDate === today) return <Chip>hạn hôm nay</Chip>
-  return <Chip tone={overdue ? "danger" : "neutral"}>{`${overdue ? "quá hạn" : "hạn"} ${shortDay(task.dueDate, today)}`}</Chip>
+  return (
+    <Chip
+      tone={overdue ? "danger" : "neutral"}
+    >{`${overdue ? "quá hạn" : "hạn"} ${shortDay(task.dueDate, today)}`}</Chip>
+  )
 }
 
 export { DueChip }

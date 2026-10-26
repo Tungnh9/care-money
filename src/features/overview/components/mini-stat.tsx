@@ -25,9 +25,7 @@ function MiniStat({ icon, label, value, hint, color }: MiniStatProps) {
         >
           {value}
         </div>
-        {hint ? (
-          <div className="mt-[3px] text-[11.5px] text-[var(--ob-color-text-subtle)]">{hint}</div>
-        ) : null}
+        {hint ? <div className="mt-[3px] text-[11.5px] text-[var(--ob-color-text-subtle)]">{hint}</div> : null}
       </div>
     </div>
   )

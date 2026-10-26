@@ -320,7 +320,13 @@ describe("summarizeMetalHolding", () => {
     const lots = [{ id: 1, date: "01/01/2026", luong: 2, buy: 1_800_000, store: "Phú Quý" }]
     const holding = summarizeMetalHolding(lots, [{ name: "Phú Quý", price: "2.000.000" }], (p) => p.luong)
 
-    expect(holding).toEqual({ qty: 2, cost: 3_600_000, value: 4_000_000, pl: 400_000, pct: (400_000 / 3_600_000) * 100 })
+    expect(holding).toEqual({
+      qty: 2,
+      cost: 3_600_000,
+      value: 4_000_000,
+      pl: 400_000,
+      pct: (400_000 / 3_600_000) * 100,
+    })
   })
 
   it("gives bit-for-bit the gold figures of the three separate reduces it replaced, fractional phân included", () => {
@@ -408,10 +414,23 @@ describe("toPurchaseDate", () => {
 })
 
 describe("giftsInMonth", () => {
-  const gift = (id: number, date: string): MetalGift => ({ id, purchaseId: 1, date, qty: 1, store: "SJC", buy: 900_000 })
+  const gift = (id: number, date: string): MetalGift => ({
+    id,
+    purchaseId: 1,
+    date,
+    qty: 1,
+    store: "SJC",
+    buy: 900_000,
+  })
 
   it("keeps the gifts dated in the month, newest first, and skips dates it cannot read", () => {
-    const gifts = [gift(1, "02/09/2026"), gift(2, "15/09/2026"), gift(3, "31/08/2026"), gift(4, "abc"), gift(5, "02/09/2026")]
+    const gifts = [
+      gift(1, "02/09/2026"),
+      gift(2, "15/09/2026"),
+      gift(3, "31/08/2026"),
+      gift(4, "abc"),
+      gift(5, "02/09/2026"),
+    ]
 
     expect(giftsInMonth(gifts, "2026-09")).toEqual([
       { ...gift(2, "15/09/2026"), dayKey: "2026-09-15" },

@@ -28,9 +28,7 @@ describe("ResetCard", () => {
       )
     ).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Xoá toàn bộ dữ liệu" })).toBeInTheDocument()
-    expect(
-      screen.getByText("Cần nhập lại mật khẩu đăng nhập để xác nhận.", { exact: false })
-    ).toBeInTheDocument()
+    expect(screen.getByText("Cần nhập lại mật khẩu đăng nhập để xác nhận.", { exact: false })).toBeInTheDocument()
   })
 
   it("shows what will be deleted after clicking the first button, and cancel returns to the start", () => {

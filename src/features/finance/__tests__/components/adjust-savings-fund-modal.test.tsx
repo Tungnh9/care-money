@@ -9,9 +9,7 @@ const FUND: SavingsFund = { name: "Quỹ khẩn cấp", amount: 5_000_000, targe
 
 describe("AdjustSavingsFundModal", () => {
   it("renders nothing when closed", () => {
-    render(
-      <AdjustSavingsFundModal open={false} fund={FUND} onOpenChange={vi.fn()} onConfirm={vi.fn()} />
-    )
+    render(<AdjustSavingsFundModal open={false} fund={FUND} onOpenChange={vi.fn()} onConfirm={vi.fn()} />)
 
     expect(screen.queryByText(/Điều chỉnh số tiền quỹ/)).not.toBeInTheDocument()
   })
@@ -46,9 +44,7 @@ describe("AdjustSavingsFundModal", () => {
   it("confirms in add mode with the fund's amount increased by the entered delta", () => {
     const onConfirm = vi.fn()
     const onOpenChange = vi.fn()
-    render(
-      <AdjustSavingsFundModal open fund={FUND} onOpenChange={onOpenChange} onConfirm={onConfirm} />
-    )
+    render(<AdjustSavingsFundModal open fund={FUND} onOpenChange={onOpenChange} onConfirm={onConfirm} />)
 
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "1000000" } })
     fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }))
@@ -85,9 +81,7 @@ describe("AdjustSavingsFundModal", () => {
   it("pressing Escape closes without confirming", () => {
     const onConfirm = vi.fn()
     const onOpenChange = vi.fn()
-    render(
-      <AdjustSavingsFundModal open fund={FUND} onOpenChange={onOpenChange} onConfirm={onConfirm} />
-    )
+    render(<AdjustSavingsFundModal open fund={FUND} onOpenChange={onOpenChange} onConfirm={onConfirm} />)
 
     fireEvent.keyDown(window, { key: "Escape" })
 
@@ -98,9 +92,7 @@ describe("AdjustSavingsFundModal", () => {
   it("clicking the backdrop closes without confirming", () => {
     const onConfirm = vi.fn()
     const onOpenChange = vi.fn()
-    render(
-      <AdjustSavingsFundModal open fund={FUND} onOpenChange={onOpenChange} onConfirm={onConfirm} />
-    )
+    render(<AdjustSavingsFundModal open fund={FUND} onOpenChange={onOpenChange} onConfirm={onConfirm} />)
 
     fireEvent.click(screen.getByTestId("adjust-savings-fund-backdrop"))
 
@@ -117,5 +109,4 @@ describe("AdjustSavingsFundModal", () => {
 
     expect(screen.getByRole("button", { name: "Xác nhận" })).not.toBeDisabled()
   })
-
 })

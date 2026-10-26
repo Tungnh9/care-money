@@ -32,10 +32,7 @@ describe("useCountUp", () => {
   })
 
   it("jumps straight to the target when prefers-reduced-motion is set", () => {
-    vi.stubGlobal(
-      "matchMedia",
-      vi.fn().mockReturnValue({ matches: true })
-    )
+    vi.stubGlobal("matchMedia", vi.fn().mockReturnValue({ matches: true }))
 
     const { result } = renderHook(() => useCountUp(1000, 400))
 

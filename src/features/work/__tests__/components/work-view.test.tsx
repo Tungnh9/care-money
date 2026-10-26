@@ -38,7 +38,9 @@ describe("WorkView", () => {
     fireEvent.change(input, { target: { value: "Gửi báo cáo" } })
     fireEvent.submit(input)
 
-    const card = await within(screen.getByRole("region", { name: "Cột Bắt đầu" })).findByRole("button", { name: "Gửi báo cáo" })
+    const card = await within(screen.getByRole("region", { name: "Cột Bắt đầu" })).findByRole("button", {
+      name: "Gửi báo cáo",
+    })
     expect(getStoredWork().tasks[0]).toMatchObject({ title: "Gửi báo cáo", columnId: 1, done: false })
 
     fireEvent.click(card)
@@ -54,7 +56,16 @@ describe("WorkView", () => {
     setStoredWork({
       ...DEFAULT_WORK_STATE,
       tasks: [
-        { id: 1, title: "Duyệt bài", dueDate: null, priority: "normal", columnId: 2, done: false, doneAt: null, createdAt: "2026-10-12" },
+        {
+          id: 1,
+          title: "Duyệt bài",
+          dueDate: null,
+          priority: "normal",
+          columnId: 2,
+          done: false,
+          doneAt: null,
+          createdAt: "2026-10-12",
+        },
       ],
     })
     render(<WorkView />)
@@ -63,7 +74,9 @@ describe("WorkView", () => {
     fireEvent.click(screen.getByRole("menuitemradio", { name: "Hoàn thành" }))
 
     await waitFor(() =>
-      expect(within(screen.getByRole("region", { name: "Cột Hoàn thành" })).getByRole("button", { name: "Duyệt bài" })).toBeInTheDocument()
+      expect(
+        within(screen.getByRole("region", { name: "Cột Hoàn thành" })).getByRole("button", { name: "Duyệt bài" })
+      ).toBeInTheDocument()
     )
     expect(getStoredWork().tasks[0]).toMatchObject({ columnId: 3, done: true, doneAt: "2026-10-13" })
     // Thẻ được dựng lại ở cột mới — focus đi theo nút "Chuyển" của nó, không rơi về <body>.

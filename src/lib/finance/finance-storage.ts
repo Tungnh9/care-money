@@ -182,8 +182,7 @@ function setStoredFinance(state: FinanceState) {
 }
 
 type ApplySavingsFundDeltaResult =
-  | { ok: true; before: number; after: number }
-  | { ok: false; reason: "fund-not-found" | "insufficient-balance" }
+  { ok: true; before: number; after: number } | { ok: false; reason: "fund-not-found" | "insufficient-balance" }
 
 // Đọc tươi ngay tại thời điểm gọi (không nhận state đã đọc từ trước) — dùng cho flow chốt
 // ngân sách, nơi có khoảng chờ người dùng (mở modal, chọn quỹ, gõ số tiền) giữa lúc đọc và ghi.

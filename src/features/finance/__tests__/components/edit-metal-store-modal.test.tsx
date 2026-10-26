@@ -60,9 +60,7 @@ describe("EditMetalStoreModal", () => {
 
 describe("EditMetalStoreModal — tên cửa hàng trùng", () => {
   it("disables Lưu and explains why when renaming to another store's name", () => {
-    render(
-      <EditMetalStoreModal store={STORE} existingNames={["PNJ", "SJC"]} onOpenChange={vi.fn()} onSave={vi.fn()} />
-    )
+    render(<EditMetalStoreModal store={STORE} existingNames={["PNJ", "SJC"]} onOpenChange={vi.fn()} onSave={vi.fn()} />)
 
     fireEvent.change(screen.getByLabelText("Tên cửa hàng", { exact: false }), { target: { value: "SJC" } })
 
@@ -71,9 +69,7 @@ describe("EditMetalStoreModal — tên cửa hàng trùng", () => {
   })
 
   it("still allows saving under the store's own current name", () => {
-    render(
-      <EditMetalStoreModal store={STORE} existingNames={["PNJ", "SJC"]} onOpenChange={vi.fn()} onSave={vi.fn()} />
-    )
+    render(<EditMetalStoreModal store={STORE} existingNames={["PNJ", "SJC"]} onOpenChange={vi.fn()} onSave={vi.fn()} />)
 
     expect(screen.getByRole("button", { name: "Lưu" })).toBeEnabled()
     expect(screen.queryByText("Đã có cửa hàng tên này — chọn tên khác")).not.toBeInTheDocument()

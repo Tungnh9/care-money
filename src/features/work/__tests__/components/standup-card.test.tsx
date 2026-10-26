@@ -63,7 +63,11 @@ describe("StandupCard", () => {
     fireEvent.change(screen.getByLabelText("Vướng mắc"), { target: { value: "Chờ số liệu" } })
     fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
 
-    expect(onSave).toHaveBeenCalledWith(TODAY, { yesterday: "- Gửi báo cáo", today: "- Duyệt bài", blockers: "Chờ số liệu" })
+    expect(onSave).toHaveBeenCalledWith(TODAY, {
+      yesterday: "- Gửi báo cáo",
+      today: "- Duyệt bài",
+      blockers: "Chờ số liệu",
+    })
   })
 
   it("says there are unsaved changes after editing a saved entry", () => {
@@ -96,7 +100,18 @@ describe("StandupCard", () => {
     fireEvent.click(screen.getByRole("button", { name: "Copy" }))
 
     expect(copyText).toHaveBeenCalledWith(
-      ["Standup Thứ Ba, 13/10", "", "Hôm qua:", "- Gửi báo cáo", "", "Hôm nay:", "- Duyệt bài", "", "Vướng mắc:", "- Không có"].join("\n")
+      [
+        "Standup Thứ Ba, 13/10",
+        "",
+        "Hôm qua:",
+        "- Gửi báo cáo",
+        "",
+        "Hôm nay:",
+        "- Duyệt bài",
+        "",
+        "Vướng mắc:",
+        "- Không có",
+      ].join("\n")
     )
   })
 
@@ -110,7 +125,9 @@ describe("StandupCard", () => {
   })
 
   it("follows the data once it loads, as long as nothing has been typed yet", () => {
-    const { rerender } = render(<StandupCard state={{ columns: DEFAULT_COLUMNS, tasks: [], standups: [] }} today={TODAY} onSave={vi.fn()} />)
+    const { rerender } = render(
+      <StandupCard state={{ columns: DEFAULT_COLUMNS, tasks: [], standups: [] }} today={TODAY} onSave={vi.fn()} />
+    )
     expect(screen.getByLabelText("Hôm nay")).toHaveValue("")
 
     rerender(<StandupCard state={STATE} today={TODAY} onSave={vi.fn()} />)

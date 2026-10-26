@@ -5,7 +5,7 @@ import { sanitizeJournalHtml, stripHtmlToPlainText } from "@/lib/journal/journal
 describe("sanitizeJournalHtml", () => {
   it("keeps tags produced by the editor toolbar (bold/italic/underline/heading/list/quote)", () => {
     const html =
-      '<b>đậm</b> <i>nghiêng</i> <u>gạch chân</u><h3>tiêu đề</h3><ul><li>mục 1</li></ul><blockquote>trích</blockquote>'
+      "<b>đậm</b> <i>nghiêng</i> <u>gạch chân</u><h3>tiêu đề</h3><ul><li>mục 1</li></ul><blockquote>trích</blockquote>"
 
     expect(sanitizeJournalHtml(html)).toBe(html)
   })

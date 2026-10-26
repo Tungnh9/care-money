@@ -103,9 +103,7 @@ describe("FinanceView", () => {
   it("stagger-animates the active tab's content back in on every tab switch", () => {
     render(<FinanceView />)
 
-    const savingsSection = screen
-      .getByText("Tiết kiệm ·", { exact: false })
-      .closest("section") as HTMLElement
+    const savingsSection = screen.getByText("Tiết kiệm ·", { exact: false }).closest("section") as HTMLElement
     expect(savingsSection.parentElement).toHaveClass("ob-card-grid")
   })
 
@@ -209,7 +207,10 @@ describe("FinanceView", () => {
     // Vốn 10.000.000, giá trị hiện tại 9.000.000 → −10,0%.
     window.localStorage.setItem(
       FINANCE_STORAGE_KEY,
-      JSON.stringify({ ...DEFAULT_FINANCE_STATE, invests: [{ id: 1, name: "VESAF", cost: 10_000_000, value: 9_000_000 }] })
+      JSON.stringify({
+        ...DEFAULT_FINANCE_STATE,
+        invests: [{ id: 1, name: "VESAF", cost: 10_000_000, value: 9_000_000 }],
+      })
     )
 
     render(<FinanceView />)
@@ -371,7 +372,9 @@ describe("FinanceView", () => {
     fireEvent.click(screen.getAllByRole("button", { name: "Tặng từ lần mua vàng 10/08/2026" })[0])
     const dialog = screen.getByRole("dialog", { name: "Tặng vàng" })
     fireEvent.change(within(dialog).getByLabelText("Ngày tặng", { exact: false }), { target: { value: "12/10/2026" } })
-    fireEvent.change(within(dialog).getByLabelText("Số lượng tặng (phân)", { exact: false }), { target: { value: "1" } })
+    fireEvent.change(within(dialog).getByLabelText("Số lượng tặng (phân)", { exact: false }), {
+      target: { value: "1" },
+    })
     fireEvent.click(within(dialog).getByRole("button", { name: "Lưu" }))
     act(() => {
       vi.advanceTimersByTime(1200)

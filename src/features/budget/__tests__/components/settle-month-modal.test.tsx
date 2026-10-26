@@ -16,7 +16,14 @@ describe("SettleMonthModal", () => {
   })
   it("frames a positive remaining as a surplus and pre-fills the full amount", () => {
     render(
-      <SettleMonthModal open onOpenChange={vi.fn()} month="2026-09" remaining={200_000} savings={SAVINGS} onConfirm={vi.fn()} />
+      <SettleMonthModal
+        open
+        onOpenChange={vi.fn()}
+        month="2026-09"
+        remaining={200_000}
+        savings={SAVINGS}
+        onConfirm={vi.fn()}
+      />
     )
 
     expect(screen.getByText(/Bạn dư/)).toBeInTheDocument()
@@ -26,7 +33,14 @@ describe("SettleMonthModal", () => {
 
   it("titles the modal with the specific month being settled", () => {
     render(
-      <SettleMonthModal open onOpenChange={vi.fn()} month="2026-07" remaining={200_000} savings={SAVINGS} onConfirm={vi.fn()} />
+      <SettleMonthModal
+        open
+        onOpenChange={vi.fn()}
+        month="2026-07"
+        remaining={200_000}
+        savings={SAVINGS}
+        onConfirm={vi.fn()}
+      />
     )
 
     expect(screen.getByText("Tất toán Tháng 7, 2026")).toBeInTheDocument()
@@ -34,7 +48,14 @@ describe("SettleMonthModal", () => {
 
   it("frames a negative remaining as a deficit", () => {
     render(
-      <SettleMonthModal open onOpenChange={vi.fn()} month="2026-09" remaining={-150_000} savings={SAVINGS} onConfirm={vi.fn()} />
+      <SettleMonthModal
+        open
+        onOpenChange={vi.fn()}
+        month="2026-09"
+        remaining={-150_000}
+        savings={SAVINGS}
+        onConfirm={vi.fn()}
+      />
     )
 
     expect(screen.getByText(/Bạn đang thiếu/)).toBeInTheDocument()
@@ -42,7 +63,16 @@ describe("SettleMonthModal", () => {
   })
 
   it("shows the empty-state and no confirm action when there are no savings funds", () => {
-    render(<SettleMonthModal open onOpenChange={vi.fn()} month="2026-09" remaining={200_000} savings={[]} onConfirm={vi.fn()} />)
+    render(
+      <SettleMonthModal
+        open
+        onOpenChange={vi.fn()}
+        month="2026-09"
+        remaining={200_000}
+        savings={[]}
+        onConfirm={vi.fn()}
+      />
+    )
 
     expect(screen.getByText(/Chưa có quỹ tiết kiệm nào/)).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Xác nhận" })).not.toBeInTheDocument()
@@ -50,7 +80,14 @@ describe("SettleMonthModal", () => {
 
   it("disables confirm until a fund is selected", () => {
     render(
-      <SettleMonthModal open onOpenChange={vi.fn()} month="2026-09" remaining={200_000} savings={SAVINGS} onConfirm={vi.fn()} />
+      <SettleMonthModal
+        open
+        onOpenChange={vi.fn()}
+        month="2026-09"
+        remaining={200_000}
+        savings={SAVINGS}
+        onConfirm={vi.fn()}
+      />
     )
 
     expect(screen.getByRole("button", { name: "Xác nhận" })).toBeDisabled()
@@ -62,7 +99,14 @@ describe("SettleMonthModal", () => {
 
   it("disables confirm when the typed amount exceeds the remaining surplus", () => {
     render(
-      <SettleMonthModal open onOpenChange={vi.fn()} month="2026-09" remaining={200_000} savings={SAVINGS} onConfirm={vi.fn()} />
+      <SettleMonthModal
+        open
+        onOpenChange={vi.fn()}
+        month="2026-09"
+        remaining={200_000}
+        savings={SAVINGS}
+        onConfirm={vi.fn()}
+      />
     )
     fireEvent.click(screen.getByRole("button", { name: "Quỹ A" }))
 
@@ -73,7 +117,14 @@ describe("SettleMonthModal", () => {
 
   it("disables confirm and warns when the withdraw amount exceeds the selected fund's balance", () => {
     render(
-      <SettleMonthModal open onOpenChange={vi.fn()} month="2026-09" remaining={-150_000} savings={SAVINGS} onConfirm={vi.fn()} />
+      <SettleMonthModal
+        open
+        onOpenChange={vi.fn()}
+        month="2026-09"
+        remaining={-150_000}
+        savings={SAVINGS}
+        onConfirm={vi.fn()}
+      />
     )
 
     fireEvent.click(screen.getByRole("button", { name: "Quỹ B" }))
@@ -84,7 +135,14 @@ describe("SettleMonthModal", () => {
 
   it("live-updates the fund's new balance preview as the amount changes", () => {
     render(
-      <SettleMonthModal open onOpenChange={vi.fn()} month="2026-09" remaining={200_000} savings={SAVINGS} onConfirm={vi.fn()} />
+      <SettleMonthModal
+        open
+        onOpenChange={vi.fn()}
+        month="2026-09"
+        remaining={200_000}
+        savings={SAVINGS}
+        onConfirm={vi.fn()}
+      />
     )
     fireEvent.click(screen.getByRole("button", { name: "Quỹ A" }))
 
@@ -96,7 +154,14 @@ describe("SettleMonthModal", () => {
   it("calls onConfirm with the fund name, direction and amount", () => {
     const onConfirm = vi.fn()
     render(
-      <SettleMonthModal open onOpenChange={vi.fn()} month="2026-09" remaining={200_000} savings={SAVINGS} onConfirm={onConfirm} />
+      <SettleMonthModal
+        open
+        onOpenChange={vi.fn()}
+        month="2026-09"
+        remaining={200_000}
+        savings={SAVINGS}
+        onConfirm={onConfirm}
+      />
     )
     fireEvent.click(screen.getByRole("button", { name: "Quỹ A" }))
 
@@ -108,7 +173,14 @@ describe("SettleMonthModal", () => {
   it("calls onConfirm with direction withdraw for a deficit", () => {
     const onConfirm = vi.fn()
     render(
-      <SettleMonthModal open onOpenChange={vi.fn()} month="2026-09" remaining={-50_000} savings={SAVINGS} onConfirm={onConfirm} />
+      <SettleMonthModal
+        open
+        onOpenChange={vi.fn()}
+        month="2026-09"
+        remaining={-50_000}
+        savings={SAVINGS}
+        onConfirm={onConfirm}
+      />
     )
     fireEvent.click(screen.getByRole("button", { name: "Quỹ A" }))
 
@@ -179,7 +251,14 @@ describe("SettleMonthModal", () => {
 
   it("shows each fund's balance on its chip", () => {
     render(
-      <SettleMonthModal open onOpenChange={vi.fn()} month="2026-09" remaining={-150_000} savings={SAVINGS} onConfirm={vi.fn()} />
+      <SettleMonthModal
+        open
+        onOpenChange={vi.fn()}
+        month="2026-09"
+        remaining={-150_000}
+        savings={SAVINGS}
+        onConfirm={vi.fn()}
+      />
     )
 
     expect(within(screen.getByRole("button", { name: "Quỹ A" })).getByText("100k")).toBeInTheDocument()
@@ -191,7 +270,14 @@ describe("SettleMonthModal", () => {
     window.localStorage.setItem("hide-money", "1")
     render(
       <MoneyVisibilityProvider>
-        <SettleMonthModal open onOpenChange={vi.fn()} month="2026-09" remaining={-150_000} savings={SAVINGS} onConfirm={vi.fn()} />
+        <SettleMonthModal
+          open
+          onOpenChange={vi.fn()}
+          month="2026-09"
+          remaining={-150_000}
+          savings={SAVINGS}
+          onConfirm={vi.fn()}
+        />
       </MoneyVisibilityProvider>
     )
 

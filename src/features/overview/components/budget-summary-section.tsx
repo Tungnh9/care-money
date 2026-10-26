@@ -40,10 +40,7 @@ function BudgetSummarySection({ salary, spent, remaining }: BudgetSummarySection
           ) : (
             <>
               <span data-testid="segment-spent" style={{ flex: spent, background: "var(--ob-color-expense)" }} />
-              <span
-                data-testid="segment-headroom"
-                style={{ flex: headroom, background: "var(--ob-color-income)" }}
-              />
+              <span data-testid="segment-headroom" style={{ flex: headroom, background: "var(--ob-color-income)" }} />
             </>
           )}
         </div>

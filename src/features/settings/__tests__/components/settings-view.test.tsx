@@ -74,7 +74,16 @@ describe("SettingsView", () => {
       ...DEFAULT_BUDGET_STATE,
       salaries: [{ month: "2026-09", amount: 20_000_000 }],
       settlements: [
-        { id: 1, month: "2026-08", at: "2026-08-31T12:00:00.000Z", direction: "deposit", amount: 500_000, fundName: "Quỹ A", fundAmountBefore: 0, fundAmountAfter: 500_000 },
+        {
+          id: 1,
+          month: "2026-08",
+          at: "2026-08-31T12:00:00.000Z",
+          direction: "deposit",
+          amount: 500_000,
+          fundName: "Quỹ A",
+          fundAmountBefore: 0,
+          fundAmountAfter: 500_000,
+        },
       ],
     })
     setStoredNetWorthHistory([
@@ -112,8 +121,26 @@ describe("SettingsView", () => {
     setStoredWork({
       ...DEFAULT_WORK_STATE,
       tasks: [
-        { id: 1, title: "A", dueDate: null, priority: "normal", columnId: 1, done: false, doneAt: null, createdAt: "2026-10-12" },
-        { id: 2, title: "B", dueDate: null, priority: "normal", columnId: 3, done: true, doneAt: "2026-10-12", createdAt: "2026-10-12" },
+        {
+          id: 1,
+          title: "A",
+          dueDate: null,
+          priority: "normal",
+          columnId: 1,
+          done: false,
+          doneAt: null,
+          createdAt: "2026-10-12",
+        },
+        {
+          id: 2,
+          title: "B",
+          dueDate: null,
+          priority: "normal",
+          columnId: 3,
+          done: true,
+          doneAt: "2026-10-12",
+          createdAt: "2026-10-12",
+        },
       ],
       standups: [{ day: "2026-10-12", yesterday: "", today: "- A", blockers: "" }],
     })
@@ -201,9 +228,7 @@ describe("SettingsView", () => {
     fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
 
     expect(getStoredSettings().profile.displayName).toBe("Tùng mới")
-    expect(getStoredSettings().profile.greeting).toBe(
-      originalGreeting.replace("Tungnh2k1", "Tùng mới")
-    )
+    expect(getStoredSettings().profile.greeting).toBe(originalGreeting.replace("Tungnh2k1", "Tùng mới"))
     expect(screen.getByLabelText("Tên hiển thị", { exact: false })).toHaveValue("Tùng mới")
   })
 })

@@ -12,12 +12,7 @@ import {
 } from "@/lib/finance/finance-storage"
 import type { CreditCard } from "@/lib/finance/types"
 import { getCarGoalFundName, setCarGoalFundName } from "@/lib/goals/car-goal-storage"
-import {
-  BUDGET_STORAGE_KEY,
-  DEFAULT_BUDGET_STATE,
-  getStoredBudget,
-  setStoredBudget,
-} from "@/lib/budget/budget-storage"
+import { BUDGET_STORAGE_KEY, DEFAULT_BUDGET_STATE, getStoredBudget, setStoredBudget } from "@/lib/budget/budget-storage"
 import { totalExpensesForMonth } from "@/lib/budget/budget-calculations"
 import type { Expense } from "@/lib/budget/types"
 import { useBudget } from "@/lib/budget/use-budget"
@@ -597,9 +592,7 @@ describe("useFinance toast notifications", () => {
     })
     spy.mockRestore()
 
-    expect(toast.error).toHaveBeenCalledWith(
-      'Không thể thêm quỹ tiết kiệm "Quỹ dự phòng". Vui lòng thử lại.'
-    )
+    expect(toast.error).toHaveBeenCalledWith('Không thể thêm quỹ tiết kiệm "Quỹ dự phòng". Vui lòng thử lại.')
     expect(result.current.savings).toEqual([])
   })
 
@@ -642,9 +635,7 @@ describe("useFinance toast notifications", () => {
     })
     spy.mockRestore()
 
-    expect(toast.error).toHaveBeenCalledWith(
-      'Không thể cập nhật quỹ tiết kiệm "Quỹ khẩn cấp". Vui lòng thử lại.'
-    )
+    expect(toast.error).toHaveBeenCalledWith('Không thể cập nhật quỹ tiết kiệm "Quỹ khẩn cấp". Vui lòng thử lại.')
     expect(result.current.savings[0].name).toBe("Quỹ dự phòng")
   })
 
@@ -679,9 +670,7 @@ describe("useFinance toast notifications", () => {
     })
     spy.mockRestore()
 
-    expect(toast.error).toHaveBeenCalledWith(
-      'Không thể xoá quỹ tiết kiệm "Quỹ A". Vui lòng thử lại.'
-    )
+    expect(toast.error).toHaveBeenCalledWith('Không thể xoá quỹ tiết kiệm "Quỹ A". Vui lòng thử lại.')
     expect(result.current.savings).toHaveLength(1)
   })
 
@@ -709,9 +698,7 @@ describe("useFinance toast notifications", () => {
     })
     spy.mockRestore()
 
-    expect(toast.error).toHaveBeenCalledWith(
-      'Không thể thêm thẻ tín dụng "Thẻ A". Vui lòng thử lại.'
-    )
+    expect(toast.error).toHaveBeenCalledWith('Không thể thêm thẻ tín dụng "Thẻ A". Vui lòng thử lại.')
     expect(result.current.cards).toEqual([])
   })
 
@@ -758,9 +745,7 @@ describe("useFinance toast notifications", () => {
     })
     spy.mockRestore()
 
-    expect(toast.error).toHaveBeenCalledWith(
-      'Không thể cập nhật thẻ tín dụng "Thẻ A Visa". Vui lòng thử lại.'
-    )
+    expect(toast.error).toHaveBeenCalledWith('Không thể cập nhật thẻ tín dụng "Thẻ A Visa". Vui lòng thử lại.')
     expect(result.current.cards[0].name).toBe("Thẻ A")
   })
 
@@ -830,9 +815,7 @@ describe("useFinance toast notifications", () => {
     })
     spy.mockRestore()
 
-    expect(toast.error).toHaveBeenCalledWith(
-      'Không thể xoá thẻ tín dụng "Thẻ A". Vui lòng thử lại.'
-    )
+    expect(toast.error).toHaveBeenCalledWith('Không thể xoá thẻ tín dụng "Thẻ A". Vui lòng thử lại.')
     expect(result.current.cards).toHaveLength(1)
   })
 
@@ -1228,9 +1211,7 @@ describe("useFinance toast notifications", () => {
       result.current.removeGoldStore("SJC")
     })
 
-    expect(toast.error).toHaveBeenCalledWith(
-      'Không thể xoá "SJC" vì vẫn còn giao dịch mua vàng gắn với cửa hàng này.'
-    )
+    expect(toast.error).toHaveBeenCalledWith('Không thể xoá "SJC" vì vẫn còn giao dịch mua vàng gắn với cửa hàng này.')
   })
 })
 
@@ -1915,11 +1896,7 @@ describe("useFinance — thẻ gắn với khoản chi", () => {
       applyCardBalanceDelta("Visa", 500_000)
     })
     act(() =>
-      finance.current.updateCard(
-        "Visa",
-        { name: "Visa", balance: 900_000, min: 0, limit: 50_000_000, due: "20" },
-        true
-      )
+      finance.current.updateCard("Visa", { name: "Visa", balance: 900_000, min: 0, limit: 50_000_000, due: "20" }, true)
     )
 
     expect(debt("Visa")).toBe(900_000)

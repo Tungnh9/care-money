@@ -26,16 +26,7 @@ const NO_GIFTS = new Map<number, number>()
 // Lần tặng trỏ tới lần mua theo id — xoá lần mua đã có lần tặng thì lịch sử tặng mồ côi (hook cũng chặn).
 const REMOVE_BLOCKED_TITLE = "Không thể xoá — lần mua này đã có lần tặng. Huỷ các lần tặng trước."
 
-const HEADERS = [
-  "Ngày mua",
-  "Cửa hàng",
-  "Khối lượng",
-  "Giá mua",
-  "Giá vốn",
-  "Giá hiện tại",
-  "Lãi lỗ",
-  "",
-]
+const HEADERS = ["Ngày mua", "Cửa hàng", "Khối lượng", "Giá mua", "Giá vốn", "Giá hiện tại", "Lãi lỗ", ""]
 
 function MetalTransactionsTable<P extends MetalPurchaseBase>({
   metal,
@@ -111,9 +102,7 @@ function MetalTransactionsTable<P extends MetalPurchaseBase>({
                 >
                   {purchase.date}
                 </td>
-                <td className="whitespace-nowrap py-[10px] px-[12px] text-left text-[13px]">
-                  {purchase.store}
-                </td>
+                <td className="whitespace-nowrap py-[10px] px-[12px] text-left text-[13px]">{purchase.store}</td>
                 <td className="whitespace-nowrap py-[10px] px-[12px] text-right text-[13px] [font-family:var(--ob-font-num)] tabular-nums">
                   {metal.formatQuantity(qty)}
                   {giftedQty > 0 ? (

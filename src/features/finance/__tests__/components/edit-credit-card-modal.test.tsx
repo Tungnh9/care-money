@@ -92,7 +92,13 @@ describe("EditCreditCardModal", () => {
   })
 
   it("reseeds fields when switching to a different card while already open", () => {
-    const OTHER: CreditCard = { name: "Vietcombank Visa", balance: 1_000_000, min: 100_000, limit: 10_000_000, due: "5 hàng tháng" }
+    const OTHER: CreditCard = {
+      name: "Vietcombank Visa",
+      balance: 1_000_000,
+      min: 100_000,
+      limit: 10_000_000,
+      due: "5 hàng tháng",
+    }
     const { rerender } = render(<EditCreditCardModal card={CARD} onOpenChange={vi.fn()} onSave={vi.fn()} />)
 
     rerender(<EditCreditCardModal card={OTHER} onOpenChange={vi.fn()} onSave={vi.fn()} />)

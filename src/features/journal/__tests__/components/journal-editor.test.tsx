@@ -121,7 +121,7 @@ describe("JournalEditor", () => {
     render(<JournalEditor selectedMood={null} onSave={onSave} />)
 
     const editor = screen.getByRole("textbox")
-    editor.innerHTML = '<b>Đậm</b> và <script>alert(1)</script> chữ thường'
+    editor.innerHTML = "<b>Đậm</b> và <script>alert(1)</script> chữ thường"
     editor.innerText = "Đậm và  chữ thường"
     fireEvent.input(editor)
 
@@ -197,14 +197,7 @@ describe("JournalEditor", () => {
       words: 3,
       mood: null,
     }
-    render(
-      <JournalEditor
-        selectedMood={null}
-        onSave={vi.fn()}
-        editingEntry={entry}
-        onCancelEdit={onCancelEdit}
-      />
-    )
+    render(<JournalEditor selectedMood={null} onSave={vi.fn()} editingEntry={entry} onCancelEdit={onCancelEdit} />)
 
     fireEvent.click(screen.getByRole("button", { name: "Huỷ sửa" }))
 

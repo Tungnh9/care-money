@@ -73,8 +73,7 @@ function CalculatorModal({ open, onOpenChange }: CalculatorModalProps) {
   const previouslyFocusedRef = useRef<HTMLElement | null>(null)
   const histRef = useRef<HTMLDivElement>(null)
 
-  const { expr, out, error, history, push, back, clear, equals, restoreFromHistory, insertParen } =
-    useCalculator()
+  const { expr, out, error, history, push, back, clear, equals, restoreFromHistory, insertParen } = useCalculator()
 
   // Dòng mới nhất nối vào CUỐI danh sách, nhưng khung lịch sử chỉ cao 74px (ob-calc-hist trong
   // globals.css) nên cuộn xuống đáy mỗi khi có dòng mới — nếu không, dòng vừa tính bị khuất dưới
@@ -222,9 +221,7 @@ function CalculatorModal({ open, onOpenChange }: CalculatorModalProps) {
           <Monkey pose="calc" size={46} />
           <div>
             <div className="text-[15px] font-bold text-[var(--ob-color-text)]">Máy tính</div>
-            <div className="text-[12px] text-[var(--ob-color-text-muted)]">
-              Gõ bàn phím cũng được · Esc để đóng
-            </div>
+            <div className="text-[12px] text-[var(--ob-color-text-muted)]">Gõ bàn phím cũng được · Esc để đóng</div>
           </div>
           <button
             type="button"
@@ -267,10 +264,7 @@ function CalculatorModal({ open, onOpenChange }: CalculatorModalProps) {
             error && "ob-calc-shake"
           )}
         >
-          <div
-            dir="rtl"
-            className="truncate text-[12.5px] text-[var(--ob-vo-300)]"
-          >
+          <div dir="rtl" className="truncate text-[12.5px] text-[var(--ob-vo-300)]">
             <span dir="ltr" data-testid="calculator-expr">
               {expr || " "}
             </span>

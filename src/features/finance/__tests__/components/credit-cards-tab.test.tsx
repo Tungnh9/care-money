@@ -170,12 +170,8 @@ describe("CreditCardsTab", () => {
     fireEvent.click(screen.getByRole("button", { name: `Sửa thẻ ${CARD.name}` }))
 
     expect(screen.getByLabelText("Tên thẻ", { exact: false })).toHaveValue(CARD.name)
-    expect(screen.getByLabelText("Dư nợ hiện tại", { exact: false })).toHaveValue(
-      groupVN(CARD.balance)
-    )
-    expect(screen.getByLabelText("Số tiền tối thiểu", { exact: false })).toHaveValue(
-      groupVN(CARD.min)
-    )
+    expect(screen.getByLabelText("Dư nợ hiện tại", { exact: false })).toHaveValue(groupVN(CARD.balance))
+    expect(screen.getByLabelText("Số tiền tối thiểu", { exact: false })).toHaveValue(groupVN(CARD.min))
     expect(screen.getByLabelText("Hạn mức", { exact: false })).toHaveValue(groupVN(CARD.limit))
     expect(screen.getByLabelText("Ngày đến hạn", { exact: false })).toHaveValue(CARD.due)
 
@@ -362,7 +358,6 @@ describe("CreditCardsTab", () => {
       false
     )
   })
-
 })
 
 describe("AddCreditCardForm", () => {

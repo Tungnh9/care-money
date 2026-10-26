@@ -101,16 +101,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   dismissedInsights: [],
 }
 
-const TINT_PALETTE = [
-  "#FFF0B8",
-  "#FFE0C7",
-  "#E7F6EF",
-  "#EAF1FE",
-  "#F0ECFE",
-  "#FDEBF2",
-  "#F2E9DC",
-  "#E4E9F2",
-]
+const TINT_PALETTE = ["#FFF0B8", "#FFE0C7", "#E7F6EF", "#EAF1FE", "#F0ECFE", "#FDEBF2", "#F2E9DC", "#E4E9F2"]
 
 const EMOJI_PICKER = ["😄", "🙂", "😌", "😐", "😴", "😟", "😔", "😣", "🥳", "🤯", "🤒", "😍"]
 

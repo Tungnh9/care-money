@@ -92,9 +92,7 @@ function FinanceView() {
 
   return (
     <div>
-      <h1 className="mb-1 [font:var(--ob-text-h2)] tracking-[var(--ob-track-heading)]">
-        Tài chính
-      </h1>
+      <h1 className="mb-1 [font:var(--ob-text-h2)] tracking-[var(--ob-track-heading)]">Tài chính</h1>
       <p className="mb-5 text-sm text-[var(--ob-color-text-subtle)]">
         Tài sản ròng {formatMoney(summary.net, hidden)} · cập nhật {longDate()}
       </p>

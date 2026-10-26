@@ -51,22 +51,15 @@ describe("GoalsSummarySection", () => {
   it("shows the empty-state message when there are no savings funds", () => {
     render(<GoalsSummarySection goals={GOALS} savings={[]} />)
 
-    expect(
-      screen.getByText("Chưa có quỹ tiết kiệm nào. Thêm ở màn Tài chính.")
-    ).toBeInTheDocument()
+    expect(screen.getByText("Chưa có quỹ tiết kiệm nào. Thêm ở màn Tài chính.")).toBeInTheDocument()
   })
 
   it("lists real savings funds with their progress toward target", () => {
     render(
-      <GoalsSummarySection
-        goals={GOALS}
-        savings={[{ name: "Quỹ dự phòng", amount: 5_000_000, target: 20_000_000 }]}
-      />
+      <GoalsSummarySection goals={GOALS} savings={[{ name: "Quỹ dự phòng", amount: 5_000_000, target: 20_000_000 }]} />
     )
 
     expect(screen.getByText("Quỹ dự phòng")).toBeInTheDocument()
-    expect(
-      screen.getByText(`${formatMoney(5_000_000)} / ${formatMoney(20_000_000)}`)
-    ).toBeInTheDocument()
+    expect(screen.getByText(`${formatMoney(5_000_000)} / ${formatMoney(20_000_000)}`)).toBeInTheDocument()
   })
 })

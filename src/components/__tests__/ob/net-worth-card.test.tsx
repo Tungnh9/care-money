@@ -87,11 +87,7 @@ describe("NetWorthCard", () => {
   })
 
   it("renders a neutral empty bar instead of dividing by zero when every total is 0", () => {
-    render(
-      <NetWorthCard
-        summary={buildSummary({ savingsTotal: 0, goldValue: 0, investValue: 0, debtTotal: 0 })}
-      />
-    )
+    render(<NetWorthCard summary={buildSummary({ savingsTotal: 0, goldValue: 0, investValue: 0, debtTotal: 0 })} />)
 
     expect(screen.queryByTestId("segment-savings")).not.toBeInTheDocument()
     expect(screen.queryByTestId("segment-gold")).not.toBeInTheDocument()

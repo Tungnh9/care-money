@@ -27,9 +27,7 @@ describe("InsightsSection", () => {
 
   it("calls onDismiss with the right id when its dismiss button is clicked", () => {
     const onDismiss = vi.fn()
-    render(
-      <InsightsSection insights={[{ id: "a", text: "Insight A" }]} onDismiss={onDismiss} />
-    )
+    render(<InsightsSection insights={[{ id: "a", text: "Insight A" }]} onDismiss={onDismiss} />)
 
     fireEvent.click(screen.getByRole("button", { name: "Ẩn gợi ý này" }))
 

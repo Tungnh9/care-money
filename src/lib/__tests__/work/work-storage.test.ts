@@ -40,7 +40,10 @@ describe("getStoredWork", () => {
   })
 
   it("round-trips columns, tasks and standups through setStoredWork", () => {
-    const columns = [{ id: 1, title: "Việc mới" }, { id: 5, title: "Xong" }]
+    const columns = [
+      { id: 1, title: "Việc mới" },
+      { id: 5, title: "Xong" },
+    ]
     const done = { ...TASK, id: 2, columnId: 5, done: true, doneAt: "2026-10-13" }
     setStoredWork({ columns, tasks: [TASK, done], standups: [STANDUP] })
 
@@ -61,7 +64,10 @@ describe("getStoredWork", () => {
   })
 
   it("falls back to an empty list when a field holding a list is not an array at all", () => {
-    window.localStorage.setItem(WORK_STORAGE_KEY, JSON.stringify({ columns: DEFAULT_COLUMNS, tasks: "nope", standups: [STANDUP] }))
+    window.localStorage.setItem(
+      WORK_STORAGE_KEY,
+      JSON.stringify({ columns: DEFAULT_COLUMNS, tasks: "nope", standups: [STANDUP] })
+    )
 
     expect(getStoredWork()).toEqual({ columns: DEFAULT_COLUMNS, tasks: [], standups: [STANDUP] })
   })
@@ -70,7 +76,16 @@ describe("getStoredWork", () => {
 describe("parseWorkState", () => {
   it("puts tasks saved before the board existed into the first column, or the last one if they were done", () => {
     // Bản lưu thời chưa có bảng: không có columns/columnId, còn field project cũ.
-    const old = { id: 1, title: "Gửi báo cáo", dueDate: "2026-10-13", priority: "high", project: "Báo cáo", done: false, doneAt: null, createdAt: "2026-10-12" }
+    const old = {
+      id: 1,
+      title: "Gửi báo cáo",
+      dueDate: "2026-10-13",
+      priority: "high",
+      project: "Báo cáo",
+      done: false,
+      doneAt: null,
+      createdAt: "2026-10-12",
+    }
     const finished = { ...old, id: 2, done: true, doneAt: "2026-10-12" }
 
     const state = parseWorkState({ tasks: [old, finished], standups: [] })

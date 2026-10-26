@@ -39,11 +39,7 @@ describe("JournalSummarySection", () => {
   })
 
   it("strips formatting HTML from the preview, showing clean text instead of raw markup", () => {
-    render(
-      <JournalSummarySection
-        entries={[{ ...ENTRY, text: "<b>Hôm nay</b> mình đã <i>đi bộ</i>" }]}
-      />
-    )
+    render(<JournalSummarySection entries={[{ ...ENTRY, text: "<b>Hôm nay</b> mình đã <i>đi bộ</i>" }]} />)
 
     expect(screen.getByText("Hôm nay mình đã đi bộ")).toBeInTheDocument()
     expect(screen.queryByText(/<b>/)).not.toBeInTheDocument()

@@ -7,12 +7,7 @@ import { SavingsTab } from "../../components/savings-tab"
 describe("SavingsTab", () => {
   it("renders the empty-state message when there are no funds", () => {
     render(
-      <SavingsTab
-        savings={[]}
-        onAddSavingsFund={vi.fn()}
-        onUpdateSavingsFund={vi.fn()}
-        onRemoveSavingsFund={vi.fn()}
-      />
+      <SavingsTab savings={[]} onAddSavingsFund={vi.fn()} onUpdateSavingsFund={vi.fn()} onRemoveSavingsFund={vi.fn()} />
     )
 
     expect(screen.getByText(/Chưa có quỹ tiết kiệm nào/)).toBeInTheDocument()
@@ -43,9 +38,7 @@ describe("SavingsTab", () => {
     expect(screen.getByText(formatMoney(2_000_000))).toBeInTheDocument()
     expect(screen.getByText(`trên ${formatMoney(10_000_000)}`)).toBeInTheDocument()
     expect(screen.getByText("Đi Đà Lạt cuối năm")).toBeInTheDocument()
-    expect(
-      screen.getByText(`Tiết kiệm · ${formatMoney(7_000_000)}`)
-    ).toBeInTheDocument()
+    expect(screen.getByText(`Tiết kiệm · ${formatMoney(7_000_000)}`)).toBeInTheDocument()
   })
 
   it("opens the add-fund form and reports the new fund on submit", () => {
@@ -103,13 +96,9 @@ describe("SavingsTab", () => {
     fireEvent.click(screen.getByRole("button", { name: "Sửa Quỹ du lịch" }))
 
     expect(screen.getByLabelText("Tên quỹ")).toHaveValue("Quỹ du lịch")
-    expect(screen.getByLabelText("Số tiền hiện có", { exact: false })).toHaveValue(
-      "2.000.000"
-    )
+    expect(screen.getByLabelText("Số tiền hiện có", { exact: false })).toHaveValue("2.000.000")
     expect(screen.getByLabelText("Mục tiêu", { exact: false })).toHaveValue("10.000.000")
-    expect(screen.getByLabelText("Ghi chú", { exact: false })).toHaveValue(
-      "Đi Đà Lạt cuối năm"
-    )
+    expect(screen.getByLabelText("Ghi chú", { exact: false })).toHaveValue("Đi Đà Lạt cuối năm")
 
     fireEvent.change(screen.getByLabelText("Số tiền hiện có", { exact: false }), {
       target: { value: "3000000" },

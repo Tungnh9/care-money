@@ -43,7 +43,13 @@ describe("WorkSummarySection", () => {
 
   it("ticks a task by its id", () => {
     const onToggleTask = vi.fn()
-    render(<WorkSummarySection tasks={[task({ id: 9, title: "Gửi báo cáo", dueDate: TODAY })]} today={TODAY} onToggleTask={onToggleTask} />)
+    render(
+      <WorkSummarySection
+        tasks={[task({ id: 9, title: "Gửi báo cáo", dueDate: TODAY })]}
+        today={TODAY}
+        onToggleTask={onToggleTask}
+      />
+    )
 
     fireEvent.click(screen.getByRole("checkbox", { name: "Gửi báo cáo" }))
 

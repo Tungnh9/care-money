@@ -145,9 +145,7 @@ describe("summarizeFinance", () => {
     expect(summary.investValue).toBe(12_000_000)
     expect(summary.investPL).toBe(2_000_000)
     expect(summary.investPct).toBeCloseTo(20)
-    expect(summary.net).toBe(
-      5_000_000 + 10 * 950_000 + 12_000_000 - 1_000_000
-    )
+    expect(summary.net).toBe(5_000_000 + 10 * 950_000 + 12_000_000 - 1_000_000)
     expect(summary.netPct).toBeCloseTo(
       ((summary.goldPL + summary.investPL) / (summary.goldCost + summary.investCost)) * 100
     )

@@ -103,7 +103,9 @@ function EditExpenseModal({ expense, tags, cards = NO_CARDS, onOpenChange, onSav
 
       {link ? (
         <div className="mt-3 text-[13px]">
-          {currentExpense.tag && <div className="font-semibold">{`${currentExpense.tag.emoji} ${currentExpense.tag.label}`}</div>}
+          {currentExpense.tag && (
+            <div className="font-semibold">{`${currentExpense.tag.emoji} ${currentExpense.tag.label}`}</div>
+          )}
           <div className="mt-1 text-[var(--ob-color-text-subtle)]">
             {link.cardName ? `Thẻ ${link.cardName}` : "Thẻ đã xoá"}
           </div>

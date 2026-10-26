@@ -91,9 +91,7 @@ describe("/api/sync", () => {
   })
 
   it("rejects an invalid payload with 400 and does not write to Blob", async () => {
-    const response = await POST(
-      requestWith("POST", { auth: `Bearer ${SECRET}`, body: { not: "a snapshot" } })
-    )
+    const response = await POST(requestWith("POST", { auth: `Bearer ${SECRET}`, body: { not: "a snapshot" } }))
 
     expect(response.status).toBe(400)
     expect(put).not.toHaveBeenCalled()
@@ -102,14 +100,14 @@ describe("/api/sync", () => {
   it("stores a valid payload with allowOverwrite and reports the summary", async () => {
     vi.mocked(put).mockResolvedValue({} as never)
 
-    const response = await POST(
-      requestWith("POST", { auth: `Bearer ${SECRET}`, body: VALID_PAYLOAD })
-    )
+    const response = await POST(requestWith("POST", { auth: `Bearer ${SECRET}`, body: VALID_PAYLOAD }))
     const json = await response.json()
 
     expect(response.status).toBe(200)
     expect(json.ok).toBe(true)
-    expect(json.summary).toBe("0 bài nhật ký · 0 lần mua vàng · 0 lần mua bạc · 0 từ đã học · đã tải lên tiết kiệm, nợ thẻ, mục tiêu")
+    expect(json.summary).toBe(
+      "0 bài nhật ký · 0 lần mua vàng · 0 lần mua bạc · 0 từ đã học · đã tải lên tiết kiệm, nợ thẻ, mục tiêu"
+    )
     expect(put).toHaveBeenCalledWith(
       "sync/snapshot.json",
       JSON.stringify(VALID_PAYLOAD),

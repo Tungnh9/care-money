@@ -43,7 +43,13 @@ function StandupCard({ state, today, onSave, className }: StandupCardProps) {
     if (onSave(day, fields)) setDraft(null)
   }
 
-  const status = draft ? (saved ? "Có thay đổi chưa lưu" : "Chưa lưu bản hôm nay") : saved ? "Đã lưu bản hôm nay" : "Chưa lưu bản hôm nay"
+  const status = draft
+    ? saved
+      ? "Có thay đổi chưa lưu"
+      : "Chưa lưu bản hôm nay"
+    : saved
+      ? "Đã lưu bản hôm nay"
+      : "Chưa lưu bản hôm nay"
   const recent = state.standups
     .filter((s) => s.day !== day)
     .sort((a, b) => b.day.localeCompare(a.day))
@@ -52,7 +58,12 @@ function StandupCard({ state, today, onSave, className }: StandupCardProps) {
   return (
     <Card label={`Standup · ${formatDayKey(day)}`} className={className}>
       <div className="flex flex-col gap-3">
-        <Textarea label="Hôm qua" rows={4} value={fields.yesterday} onChange={(e) => edit("yesterday", e.target.value)} />
+        <Textarea
+          label="Hôm qua"
+          rows={4}
+          value={fields.yesterday}
+          onChange={(e) => edit("yesterday", e.target.value)}
+        />
         <Textarea label="Hôm nay" rows={4} value={fields.today} onChange={(e) => edit("today", e.target.value)} />
         <Textarea
           label="Vướng mắc"
@@ -63,13 +74,21 @@ function StandupCard({ state, today, onSave, className }: StandupCardProps) {
         />
       </div>
       <div className="mt-4 flex flex-wrap items-center justify-end gap-[10px]">
-        <span className="mr-auto text-xs text-[var(--ob-color-text-subtle)]">
-          {status}
-        </span>
-        <Button variant="ghost" size="sm" type="button" onClick={() => setDraft({ day, fields: suggestStandup(state, day) })}>
+        <span className="mr-auto text-xs text-[var(--ob-color-text-subtle)]">{status}</span>
+        <Button
+          variant="ghost"
+          size="sm"
+          type="button"
+          onClick={() => setDraft({ day, fields: suggestStandup(state, day) })}
+        >
           Gợi ý lại
         </Button>
-        <Button variant="outline" size="sm" type="button" onClick={() => void copyText(formatStandup({ day, ...fields }))}>
+        <Button
+          variant="outline"
+          size="sm"
+          type="button"
+          onClick={() => void copyText(formatStandup({ day, ...fields }))}
+        >
           Copy
         </Button>
         <Button variant="primary" size="sm" type="button" onClick={handleSave}>
@@ -84,10 +103,15 @@ function StandupCard({ state, today, onSave, className }: StandupCardProps) {
           </span>
           <ul className="flex flex-col gap-2">
             {recent.map((s) => (
-              <li key={s.day} className="flex items-start gap-2 rounded-[var(--ob-radius-md)] bg-[var(--ob-vo-100)] p-3">
+              <li
+                key={s.day}
+                className="flex items-start gap-2 rounded-[var(--ob-radius-md)] bg-[var(--ob-vo-100)] p-3"
+              >
                 <div className="min-w-0 flex-1 text-[13px] leading-[1.5]">
                   <div className="mb-1 font-bold">{formatDayKey(s.day)}</div>
-                  <div className="whitespace-pre-line text-[var(--ob-color-text-muted)] wrap-anywhere">{s.today.trim() || "—"}</div>
+                  <div className="whitespace-pre-line text-[var(--ob-color-text-muted)] wrap-anywhere">
+                    {s.today.trim() || "—"}
+                  </div>
                 </div>
                 <button
                   type="button"

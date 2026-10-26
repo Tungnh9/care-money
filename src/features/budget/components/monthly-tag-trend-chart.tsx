@@ -64,10 +64,7 @@ function MonthlyTagTrendChart({ months, series, colors, swiped }: MonthlyTagTren
                 <span>{t.emoji}</span>
                 <span>{t.label}</span>
               </span>
-              <span
-                className="[font-family:var(--ob-font-num)]"
-                style={{ color: "var(--ob-color-text-muted)" }}
-              >
+              <span className="[font-family:var(--ob-font-num)]" style={{ color: "var(--ob-color-text-muted)" }}>
                 {formatMoney(t.total, hidden)}
               </span>
             </div>
@@ -100,10 +97,7 @@ function MonthlyTagTrendChart({ months, series, colors, swiped }: MonthlyTagTren
 
           <div className="mt-1 flex items-center justify-between gap-3 border-t border-[var(--ob-color-border)] pt-3 text-[13.5px] font-bold">
             <span>Tổng cộng</span>
-            <span
-              className="[font-family:var(--ob-font-num)]"
-              style={{ color: "var(--ob-color-action-strong)" }}
-            >
+            <span className="[font-family:var(--ob-font-num)]" style={{ color: "var(--ob-color-action-strong)" }}>
               {formatMoney(grandTotal, hidden)}
             </span>
           </div>

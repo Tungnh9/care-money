@@ -1,11 +1,6 @@
 import type { CSSProperties } from "react"
 
-const FIREWORK_COLORS = [
-  "var(--ob-cam-500)",
-  "var(--ob-chuoi-400)",
-  "var(--ob-la-500)",
-  "var(--ob-cam-300)",
-]
+const FIREWORK_COLORS = ["var(--ob-cam-500)", "var(--ob-chuoi-400)", "var(--ob-la-500)", "var(--ob-cam-300)"]
 
 const BURSTS = [
   { left: "20%", top: "22%", delay: 0 },
@@ -19,10 +14,7 @@ interface FireworksProps {
 
 function Fireworks({ sparksPerBurst = 8 }: FireworksProps) {
   return (
-    <div
-      aria-hidden="true"
-      className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]"
-    >
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]">
       {BURSTS.map((burst, burstIndex) =>
         Array.from({ length: sparksPerBurst }, (_, i) => {
           const angle = (i / sparksPerBurst) * Math.PI * 2

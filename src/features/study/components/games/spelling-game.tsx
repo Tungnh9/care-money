@@ -48,7 +48,15 @@ interface RoundState {
 }
 
 function initialRound(): RoundState {
-  return { fallingWords: [], queueIndex: 0, lastSpawnAt: -SPAWN_GAP_MS, lives: MAX_LIVES, destroyed: 0, missed: 0, lastMissedIds: [] }
+  return {
+    fallingWords: [],
+    queueIndex: 0,
+    lastSpawnAt: -SPAWN_GAP_MS,
+    lives: MAX_LIVES,
+    destroyed: 0,
+    missed: 0,
+    lastMissedIds: [],
+  }
 }
 
 function SpellingGame({ vocab, onFinish, onWordReviewed }: SpellingGameProps) {
@@ -98,7 +106,9 @@ function SpellingGame({ vocab, onFinish, onWordReviewed }: SpellingGameProps) {
         // round.fallingWords (vd. effect xoá buffer gõ dở) không chạy lại một cách vô ích.
         if (!missedNow.length && !canSpawn) return prev
 
-        let fallingWords = missedNow.length ? prev.fallingWords.filter((w) => !missedNow.includes(w)) : prev.fallingWords
+        let fallingWords = missedNow.length
+          ? prev.fallingWords.filter((w) => !missedNow.includes(w))
+          : prev.fallingWords
         let queueIndex = prev.queueIndex
         let lastSpawnAt = prev.lastSpawnAt
 

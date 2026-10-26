@@ -126,7 +126,13 @@ function ExpenseEntryForm({ tags, cards = NO_CARDS, cardsReady = true, onAdd }: 
         onChange={(e) => setNote(e.target.value)}
       />
       <div className="mt-4">
-        <Button variant="primary" size="sm" type="button" disabled={!amountNumber || tooLarge || overDebt || needsPick || cardsPending} onClick={handleSubmit}>
+        <Button
+          variant="primary"
+          size="sm"
+          type="button"
+          disabled={!amountNumber || tooLarge || overDebt || needsPick || cardsPending}
+          onClick={handleSubmit}
+        >
           Ghi khoản chi
         </Button>
       </div>

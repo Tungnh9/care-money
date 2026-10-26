@@ -47,8 +47,7 @@ function exportFileName(exportedAt: string): string {
 // exportedAt: thời điểm bản sao được tạo (null nếu file sửa tay không có) — để hộp xác nhận cho
 // người dùng thấy bản sắp thay dữ liệu trên máy cũ hay mới.
 type ImportResult =
-  | { ok: true; data: ImportedSnapshot; summary: string; exportedAt: string | null }
-  | { ok: false; error: string }
+  { ok: true; data: ImportedSnapshot; summary: string; exportedAt: string | null } | { ok: false; error: string }
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null

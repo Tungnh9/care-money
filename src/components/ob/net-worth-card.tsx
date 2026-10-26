@@ -21,9 +21,7 @@ function NetWorthCard({ summary }: NetWorthCardProps) {
     { key: "gold", label: "Vàng", value: goldValue, color: "var(--ob-color-reward)" },
     // Bạc, như Đầu tư, chỉ có mặt khi đang giữ — người không tích lũy bạc không thấy 1 mục "Bạc" trống.
     ...(silverValue > 0 ? [{ key: "silver", label: "Bạc", value: silverValue, color: "var(--ob-bac-300)" }] : []),
-    ...(investValue > 0
-      ? [{ key: "invest", label: "Đầu tư", value: investValue, color: "var(--ob-xanh-500)" }]
-      : []),
+    ...(investValue > 0 ? [{ key: "invest", label: "Đầu tư", value: investValue, color: "var(--ob-xanh-500)" }] : []),
     { key: "debt", label: "Nợ thẻ", value: debtTotal, color: "var(--ob-do-300)" },
   ]
 

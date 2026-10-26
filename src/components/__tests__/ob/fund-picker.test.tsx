@@ -18,9 +18,7 @@ describe("FundPicker", () => {
   it("shows a fallback message and no buttons when there are no savings funds", () => {
     render(<FundPicker savings={[]} selected={null} onSelect={vi.fn()} />)
 
-    expect(
-      screen.getByText("Chưa có quỹ tiết kiệm nào. Tạo 1 quỹ ở màn Tài chính để gắn vào đây.")
-    ).toBeInTheDocument()
+    expect(screen.getByText("Chưa có quỹ tiết kiệm nào. Tạo 1 quỹ ở màn Tài chính để gắn vào đây.")).toBeInTheDocument()
     expect(screen.queryAllByRole("button")).toHaveLength(0)
   })
 
