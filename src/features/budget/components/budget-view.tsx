@@ -28,7 +28,7 @@ import {
   remainingToSettle,
   salaryForMonth,
   settlementsMadeInMonth,
-  giftsMadeInMonth,
+  metalMovesMadeInMonth,
   swipedTotal,
   totalExpensesForMonth,
   unsettledPastMonths,
@@ -59,7 +59,7 @@ function BudgetView() {
     removeExpense,
     confirmSettlement,
   } = useBudget()
-  const { savings, cards, goldGifts, silverGifts, hydrated: cardsReady } = useFinance()
+  const { savings, cards, goldGifts, silverGifts, goldSales, silverSales, hydrated: cardsReady } = useFinance()
   const { settings } = useSettings()
   // null = modal tất toán đang đóng; ngược lại là tháng đang tất toán (tháng này, hoặc 1 tháng đã qua còn lệch).
   const [settleMonth, setSettleMonth] = useState<string | null>(null)
@@ -90,9 +90,10 @@ function BudgetView() {
     currentMonth,
     savings.map((f) => f.name)
   )
-  // Lần tặng vàng/bạc trong tháng: chỉ để xem (khối "Quà tặng từ tích lũy"), không phải khoản chi — tiền mua đã
-  // tính lúc mua, nên không vào monthExpenses, "đã chi" hay số còn phải tất toán.
-  const monthGifts = giftsMadeInMonth(goldGifts, silverGifts, currentMonth)
+  // Lần tặng và bán vàng/bạc trong tháng: chỉ để xem (khối "Vàng/bạc tháng này"), không phải khoản chi — tiền
+  // mua đã tính lúc mua, tiền bán đã vào sổ tiết kiệm, nên không vào monthExpenses, "đã chi" hay số còn phải
+  // tất toán.
+  const monthMetalMoves = metalMovesMadeInMonth({ goldGifts, silverGifts, goldSales, silverSales }, currentMonth)
   const remaining = remainingToSettle(salaries, expenses, settlements, currentMonth)
   const tagBreakdown = breakdownByTag(expenses, currentMonth)
   const pastUnsettled = unsettledPastMonths(salaries, expenses, settlements, currentMonth)
@@ -249,7 +250,7 @@ function BudgetView() {
         <ExpenseListCard
           expenses={monthExpenses}
           settlements={monthSettlements}
-          gifts={monthGifts}
+          metalMoves={monthMetalMoves}
           onRemove={removeExpense}
           onEdit={setEditingExpense}
         />

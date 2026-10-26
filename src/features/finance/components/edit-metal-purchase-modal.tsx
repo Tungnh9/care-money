@@ -16,9 +16,11 @@ interface EditMetalPurchaseModalProps<P extends MetalPurchaseBase> {
   stores: MetalStore[]
   onOpenChange: (open: boolean) => void
   onSave: (id: number, purchase: Omit<P, "id">) => void
-  // Tổng đã tặng từ lần mua này: số lượng không được sửa xuống thấp hơn (số còn lại sẽ âm).
+  // Tổng đã tặng và đã bán từ lần mua này: số lượng không được sửa xuống thấp hơn (số còn lại sẽ âm).
   minQuantity?: number
-  // Ngày tặng sớm nhất từ lần mua này (dd/mm/yyyy): ngày mua không được dời qua mốc đó.
+  // Câu báo khi số lượng < minQuantity, dựng sẵn ở nơi biết đã tặng/bán bao nhiêu; không có thì nói "Đã tặng …".
+  minQuantityHint?: string
+  // Ngày tặng/bán sớm nhất từ lần mua này (dd/mm/yyyy): ngày mua không được dời qua mốc đó.
   latestDate?: string
 }
 
@@ -29,6 +31,7 @@ function EditMetalPurchaseModal<P extends MetalPurchaseBase>({
   onOpenChange,
   onSave,
   minQuantity = 0,
+  minQuantityHint,
   latestDate,
 }: EditMetalPurchaseModalProps<P>) {
   const titleId = useId()
@@ -101,7 +104,7 @@ function EditMetalPurchaseModal<P extends MetalPurchaseBase>({
             dateInvalid
               ? normalizedDate === null
                 ? "Nhập ngày dạng dd/mm/yyyy, vd: 10/08/2026"
-                : `Ngày mua không được sau ngày tặng sớm nhất (${latestDate})`
+                : `Ngày mua không được sau lần tặng hoặc bán sớm nhất (${latestDate})`
               : undefined
           }
         />
@@ -115,7 +118,8 @@ function EditMetalPurchaseModal<P extends MetalPurchaseBase>({
           invalid={quantityInvalid}
           hint={
             belowGifted
-              ? `Đã tặng ${metal.formatQuantity(minQuantity)} từ lần mua này — số lượng không được nhỏ hơn.`
+              ? (minQuantityHint ??
+                `Đã tặng ${metal.formatQuantity(minQuantity)} từ lần mua này — số lượng không được nhỏ hơn.`)
               : quantityInvalid
                 ? metal.quantityError
                 : metal.quantityHint

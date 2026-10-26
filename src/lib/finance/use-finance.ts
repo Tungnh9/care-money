@@ -9,8 +9,13 @@ import {
   setStoredFinance,
   type FinanceState,
 } from "@/lib/finance/finance-storage"
-import { earliestGiftDate, giftedByPurchase, parsePurchaseDate } from "@/lib/finance/metal-calculations"
-import { GOLD_NAMING, SILVER_NAMING, type MetalNaming } from "@/lib/finance/metal-naming"
+import {
+  earliestTakeoutDate,
+  parsePurchaseDate,
+  saleUndoBlockedReason,
+  takenOutByPurchase,
+} from "@/lib/finance/metal-calculations"
+import { GOLD_NAMING, SILVER_NAMING, formatTakenOut, type MetalNaming } from "@/lib/finance/metal-naming"
 import type {
   CreditCard,
   GoldPurchase,
@@ -18,6 +23,8 @@ import type {
   MetalGift,
   MetalGiftInput,
   MetalPurchaseBase,
+  MetalSale,
+  MetalSaleInput,
   MetalStore,
   SavingsFund,
   SilverPurchase,
@@ -25,11 +32,12 @@ import type {
 import { toast } from "sonner"
 import { getCarGoalFundName, setCarGoalFundName } from "@/lib/goals/car-goal-storage"
 import { detachCardFromExpenses, renameCardInExpenses, renameFundInSettlements } from "@/lib/budget/budget-storage"
+import { MAX_BUDGET_AMOUNT } from "@/lib/budget/budget-calculations"
 import { nextId } from "@/lib/next-id"
 import { useStorageSync } from "@/lib/use-storage-sync"
 
-// Cách 1 kim loại (vàng/bạc) nằm trong FinanceState: mảng lần mua, mảng cửa hàng, mảng lần tặng, khối
-// lượng của 1 lần mua, và tên gọi dùng trong toast. `withId` gắn id cho lần mua mới/đã sửa — ở đây biết
+// Cách 1 kim loại (vàng/bạc) nằm trong FinanceState: mảng lần mua, mảng cửa hàng, mảng lần tặng, mảng lần
+// bán, khối lượng của 1 lần mua, và tên gọi dùng trong toast. `withId` gắn id cho lần mua mới/đã sửa — ở đây biết
 // kiểu cụ thể nên không cần ép kiểu.
 interface MetalLens<P extends MetalPurchaseBase> {
   naming: MetalNaming
@@ -37,9 +45,11 @@ interface MetalLens<P extends MetalPurchaseBase> {
   purchases: (state: FinanceState) => P[]
   stores: (state: FinanceState) => MetalStore[]
   gifts: (state: FinanceState) => MetalGift[]
+  sales: (state: FinanceState) => MetalSale[]
   withPurchases: (state: FinanceState, purchases: P[]) => FinanceState
   withStores: (state: FinanceState, stores: MetalStore[]) => FinanceState
   withGifts: (state: FinanceState, gifts: MetalGift[]) => FinanceState
+  withSales: (state: FinanceState, sales: MetalSale[]) => FinanceState
   withId: (purchase: Omit<P, "id">, id: number) => P
 }
 
@@ -49,9 +59,11 @@ const GOLD_LENS: MetalLens<GoldPurchase> = {
   purchases: (state) => state.gold,
   stores: (state) => state.goldStores,
   gifts: (state) => state.goldGifts,
+  sales: (state) => state.goldSales,
   withPurchases: (state, gold) => ({ ...state, gold }),
   withStores: (state, goldStores) => ({ ...state, goldStores }),
   withGifts: (state, goldGifts) => ({ ...state, goldGifts }),
+  withSales: (state, goldSales) => ({ ...state, goldSales }),
   withId: (purchase, id) => ({ ...purchase, id }),
 }
 
@@ -61,21 +73,61 @@ const SILVER_LENS: MetalLens<SilverPurchase> = {
   purchases: (state) => state.silver,
   stores: (state) => state.silverStores,
   gifts: (state) => state.silverGifts,
+  sales: (state) => state.silverSales,
   withPurchases: (state, silver) => ({ ...state, silver }),
   withStores: (state, silverStores) => ({ ...state, silverStores }),
   withGifts: (state, silverGifts) => ({ ...state, silverGifts }),
+  withSales: (state, silverSales) => ({ ...state, silverSales }),
   withId: (purchase, id) => ({ ...purchase, id }),
 }
 
-// Số lượng 1 lần tặng phải là số nguyên dương và không vượt `available` (phần còn lại tặng được). Form đã
-// chặn trước, đây là chốt cuối trên dữ liệu đọc tươi — tab khác có thể vừa tặng bớt từ cùng lần mua.
-function giftQuantityError(qty: number, available: number, naming: MetalNaming): string | null {
-  if (!Number.isInteger(qty) || qty <= 0) return "Số lượng tặng phải là số nguyên lớn hơn 0."
+// Phần đã lấy ra khỏi 1 lần mua, đọc từ bản đọc tươi `state`: tổng đã tặng và tổng đã bán.
+function takenOutOf<P extends MetalPurchaseBase>(lens: MetalLens<P>, state: FinanceState, purchaseId: number) {
+  return {
+    gifted: takenOutByPurchase(lens.gifts(state)).get(purchaseId) ?? 0,
+    sold: takenOutByPurchase(lens.sales(state)).get(purchaseId) ?? 0,
+  }
+}
+
+// Số lượng 1 lần tặng/bán phải là số nguyên dương và không vượt `available` (phần còn lại của lần mua). Form
+// đã chặn trước, đây là chốt cuối trên dữ liệu đọc tươi — tab khác có thể vừa tặng/bán bớt từ cùng lần mua.
+function takeoutQuantityError(
+  qty: number,
+  available: number,
+  naming: MetalNaming,
+  verb: "tặng" | "bán"
+): string | null {
+  if (!Number.isInteger(qty) || qty <= 0) return `Số lượng ${verb} phải là số nguyên lớn hơn 0.`
   if (qty > available) {
-    return `Lần mua này chỉ còn ${naming.formatQuantity(available)} — không đủ để tặng ${naming.formatQuantity(qty)}.`
+    return `Lần mua này chỉ còn ${naming.formatQuantity(available)} — không đủ để ${verb} ${naming.formatQuantity(qty)}.`
   }
   return null
 }
+
+// Tiền nhận của 1 lần bán: đồng nguyên, cùng mức trần với số tiền ở Chi tiêu.
+function receivedError(received: number): string | null {
+  return Number.isInteger(received) && received >= 1 && received <= MAX_BUDGET_AMOUNT
+    ? null
+    : `Số tiền nhận phải là số nguyên từ 1 đến ${MAX_BUDGET_AMOUNT.toLocaleString("vi-VN")} đ.`
+}
+
+// Cộng `delta` (âm = rút) vào đúng sổ tên `name`.
+function withFundDelta(state: FinanceState, name: string, delta: number): FinanceState {
+  return {
+    ...state,
+    savings: state.savings.map((fund) => (fund.name === name ? { ...fund, amount: fund.amount + delta } : fund)),
+  }
+}
+
+// Lần bán trỏ tới sổ nhận tiền theo tên, ở cả vàng lẫn bạc. Lần bán đã gắn cờ `fundRemoved` thuộc về 1 sổ đã
+// xoá — chỉ trùng tên với sổ đang có — nên không bao giờ bị đổi theo sổ đang có.
+function updateSalesOfFund(state: FinanceState, name: string, update: (sale: MetalSale) => MetalSale): FinanceState {
+  const apply = (sales: MetalSale[]) =>
+    sales.map((sale) => (!sale.fundRemoved && sale.fundName === name ? update(sale) : sale))
+  return { ...state, goldSales: apply(state.goldSales), silverSales: apply(state.silverSales) }
+}
+
+const markFundRemoved = (sale: MetalSale): MetalSale => ({ ...sale, fundRemoved: true })
 
 // Chỉ lấy đúng 4 trường gốc từ `base` (có thể là cả lần tặng cũ): ghi chú cũ không được sống sót khi người
 // dùng đã xoá nó. Ghi chú trống thì không có key `note` — giống lần tặng chưa từng có ghi chú.
@@ -84,8 +136,16 @@ function giftRecord(base: Pick<MetalGift, "id" | "purchaseId" | "store" | "buy">
   return { id, purchaseId, store, buy, date: input.date, qty: input.qty, ...(input.note ? { note: input.note } : {}) }
 }
 
+// Như giftRecord: `store` và `buy` chụp từ lần mua lúc bán; ghi chú trống thì không có key `note`.
+function saleRecord(base: Pick<MetalSale, "id" | "purchaseId" | "store" | "buy">, input: MetalSaleInput): MetalSale {
+  const { id, purchaseId, store, buy } = base
+  const { date, qty, received, fundName, note } = input
+  return { id, purchaseId, store, buy, date, qty, received, fundName, ...(note ? { note } : {}) }
+}
+
 // Các thao tác ghi của 1 kim loại — vàng và bạc dùng chung, mỗi kim loại chỉ đụng tới mảng của chính nó
-// (trùng tên, đổi tên lan sang lần mua, chặn xoá cửa hàng còn lần mua, lần tặng đều xét trong kim loại đó).
+// (trùng tên, đổi tên lan sang lần mua, chặn xoá cửa hàng còn lần mua, lần tặng, lần bán đều xét trong kim loại
+// đó; chỉ lần bán chạm thêm sổ tiết kiệm nhận tiền).
 // `lens` là hằng cấp module nên các hàm trả ra ổn định như useCallback thường.
 function useMetalActions<P extends MetalPurchaseBase>(lens: MetalLens<P>, persist: (next: FinanceState) => void) {
   const addStore = useCallback(
@@ -184,9 +244,10 @@ function useMetalActions<P extends MetalPurchaseBase>(lens: MetalLens<P>, persis
       const current = getStoredFinance()
       try {
         const purchases = lens.purchases(current)
-        // Tính cả id mà lần tặng còn trỏ tới (lần tặng mồ côi từ file sửa tay): lần mua mới lấy lại id đó sẽ
-        // âm thầm bị trừ phần "đã tặng" không phải của nó.
-        const takenIds = [...purchases, ...lens.gifts(current).map((gift) => ({ id: gift.purchaseId }))]
+        // Tính cả id mà lần tặng/bán còn trỏ tới (lần tặng/bán mồ côi từ file sửa tay): lần mua mới lấy lại id
+        // đó sẽ âm thầm bị trừ phần "đã tặng"/"đã bán" không phải của nó.
+        const takeouts = [...lens.gifts(current), ...lens.sales(current)]
+        const takenIds = [...purchases, ...takeouts.map((takeout) => ({ id: takeout.purchaseId }))]
         persist(lens.withPurchases(current, [lens.withId(purchase, nextId(takenIds)), ...purchases]))
         toast.success(`Đã thêm lần mua ${lens.naming.noun} ngày ${purchase.date}`)
       } catch {
@@ -199,16 +260,17 @@ function useMetalActions<P extends MetalPurchaseBase>(lens: MetalLens<P>, persis
   const updatePurchase = useCallback(
     (id: number, purchase: Omit<P, "id">) => {
       const current = getStoredFinance()
-      // Số còn lại = số đã mua − đã tặng: hạ số đã mua xuống dưới phần đã tặng thì số còn lại âm.
-      const gifted = giftedByPurchase(lens.gifts(current)).get(id) ?? 0
-      if (lens.quantityOf(lens.withId(purchase, id)) < gifted) {
-        toast.error(`Lần mua này đã tặng ${lens.naming.formatQuantity(gifted)} — không sửa số lượng xuống thấp hơn.`)
+      // Số còn lại = số đã mua − đã tặng − đã bán: hạ số đã mua xuống dưới phần đã lấy ra thì số còn lại âm.
+      const { gifted, sold } = takenOutOf(lens, current, id)
+      const takenOut = formatTakenOut(lens.naming, gifted, sold)
+      if (takenOut && lens.quantityOf(lens.withId(purchase, id)) < gifted + sold) {
+        toast.error(`Lần mua này ${takenOut} — không sửa số lượng xuống thấp hơn.`)
         return
       }
-      // Không tặng được trước khi mua: ngày mua không được dời qua ngày tặng sớm nhất của chính lần mua này.
-      const earliestGift = earliestGiftDate(lens.gifts(current), id)
-      if (earliestGift && parsePurchaseDate(purchase.date) > parsePurchaseDate(earliestGift)) {
-        toast.error(`Ngày mua không được sau ngày tặng sớm nhất (${earliestGift}).`)
+      // Không tặng/bán được trước khi mua: ngày mua không được dời qua lần tặng hay bán sớm nhất của lần mua này.
+      const earliest = earliestTakeoutDate([...lens.gifts(current), ...lens.sales(current)], id)
+      if (earliest && parsePurchaseDate(purchase.date) > parsePurchaseDate(earliest)) {
+        toast.error(`Ngày mua không được sau lần tặng hoặc bán sớm nhất (${earliest}).`)
         return
       }
       try {
@@ -233,6 +295,10 @@ function useMetalActions<P extends MetalPurchaseBase>(lens: MetalLens<P>, persis
       // lần mới thì lần mới lấy lại đúng id đó, và lần tặng cũ gắn nhầm vào nó. Phải huỷ các lần tặng trước.
       if (lens.gifts(current).some((gift) => gift.purchaseId === id)) {
         toast.error("Không thể xoá lần mua này vì đã có lần tặng lấy từ đây. Huỷ các lần tặng trước.")
+        return
+      }
+      if (lens.sales(current).some((sale) => sale.purchaseId === id)) {
+        toast.error("Không thể xoá lần mua này vì đã có lần bán lấy từ đây. Huỷ các lần bán trước.")
         return
       }
       const purchases = lens.purchases(current)
@@ -264,8 +330,8 @@ function useMetalActions<P extends MetalPurchaseBase>(lens: MetalLens<P>, persis
         return false
       }
       const gifts = lens.gifts(current)
-      const left = lens.quantityOf(purchase) - (giftedByPurchase(gifts).get(purchaseId) ?? 0)
-      const error = giftQuantityError(input.qty, left, lens.naming)
+      const { gifted, sold } = takenOutOf(lens, current, purchaseId)
+      const error = takeoutQuantityError(input.qty, lens.quantityOf(purchase) - gifted - sold, lens.naming, "tặng")
       if (error) {
         toast.error(error)
         return false
@@ -284,7 +350,7 @@ function useMetalActions<P extends MetalPurchaseBase>(lens: MetalLens<P>, persis
   )
 
   // Sửa ngày/số lượng/ghi chú; giữ nguyên lần mua và bản chụp cửa hàng + giá mua. Giới hạn số lượng là phần
-  // còn lại của lần mua cộng lại chính số của lần tặng này.
+  // còn lại của lần mua (sau mọi lần tặng và bán) cộng lại chính số của lần tặng này.
   const updateGift = useCallback(
     (id: number, input: MetalGiftInput): boolean => {
       const current = getStoredFinance()
@@ -296,10 +362,9 @@ function useMetalActions<P extends MetalPurchaseBase>(lens: MetalLens<P>, persis
       }
       const purchase = lens.purchases(current).find((p) => p.id === gift.purchaseId)
       // Lần mua đã mất (chỉ có từ file sửa tay) thì không cho tặng thêm — chỉ giữ hoặc giảm số đã tặng.
-      const available = purchase
-        ? lens.quantityOf(purchase) - (giftedByPurchase(gifts).get(gift.purchaseId) ?? 0) + gift.qty
-        : gift.qty
-      const error = giftQuantityError(input.qty, available, lens.naming)
+      const { gifted, sold } = takenOutOf(lens, current, gift.purchaseId)
+      const available = purchase ? lens.quantityOf(purchase) - gifted - sold + gift.qty : gift.qty
+      const error = takeoutQuantityError(input.qty, available, lens.naming, "tặng")
       if (error) {
         toast.error(error)
         return false
@@ -342,6 +407,75 @@ function useMetalActions<P extends MetalPurchaseBase>(lens: MetalLens<P>, persis
     [lens, persist]
   )
 
+  // Trả true khi đã ghi — modal Bán chỉ đóng khi true. Tiền nhận cộng vào sổ trong CÙNG 1 lần ghi với lần bán:
+  // không bao giờ có sổ đã cộng tiền mà lần bán chưa ghi, hay ngược lại.
+  const addSale = useCallback(
+    (purchaseId: number, input: MetalSaleInput): boolean => {
+      const current = getStoredFinance()
+      const purchase = lens.purchases(current).find((p) => p.id === purchaseId)
+      if (!purchase) {
+        toast.error("Không tìm thấy lần mua này nữa.")
+        return false
+      }
+      const { gifted, sold } = takenOutOf(lens, current, purchaseId)
+      const left = lens.quantityOf(purchase) - gifted - sold
+      const error = takeoutQuantityError(input.qty, left, lens.naming, "bán") ?? receivedError(input.received)
+      if (error) {
+        toast.error(error)
+        return false
+      }
+      if (!current.savings.some((fund) => fund.name === input.fundName)) {
+        toast.error(`Không tìm thấy sổ "${input.fundName}".`)
+        return false
+      }
+      try {
+        const sales = lens.sales(current)
+        const sale = saleRecord({ id: nextId(sales), purchaseId, store: purchase.store, buy: purchase.buy }, input)
+        persist(lens.withSales(withFundDelta(current, input.fundName, input.received), [sale, ...sales]))
+        toast.success(
+          `Đã ghi lần bán ${lens.naming.formatQuantity(input.qty)} ${lens.naming.noun} ngày ${input.date} vào sổ "${input.fundName}"`
+        )
+        return true
+      } catch {
+        toast.error(`Không thể ghi lần bán ${lens.naming.noun}. Vui lòng thử lại.`)
+        return false
+      }
+    },
+    [lens, persist]
+  )
+
+  // Huỷ = xoá bản ghi bán (số còn lại của lần mua tự về) và rút lại đúng số đã nhận khỏi sổ đã nhận, trong
+  // cùng 1 lần ghi. Sổ đã xoá (cờ fundRemoved, hay không còn sổ tên đó) hoặc không còn đủ tiền thì không huỷ:
+  // rút từ 1 sổ khác hay để sổ âm đều làm sai số dư.
+  const removeSale = useCallback(
+    (id: number) => {
+      const current = getStoredFinance()
+      const sales = lens.sales(current)
+      const sale = sales.find((s) => s.id === id)
+      if (!sale) {
+        toast.error("Không tìm thấy lần bán này nữa.")
+        return
+      }
+      const blocked = saleUndoBlockedReason(sale, current.savings)
+      if (blocked) {
+        toast.error(blocked)
+        return
+      }
+      try {
+        persist(
+          lens.withSales(
+            withFundDelta(current, sale.fundName, -sale.received),
+            sales.filter((s) => s.id !== id)
+          )
+        )
+        toast.success(`Đã huỷ lần bán ${lens.naming.noun} ngày ${sale.date}`)
+      } catch {
+        toast.error(`Không thể huỷ lần bán ${lens.naming.noun}. Vui lòng thử lại.`)
+      }
+    },
+    [lens, persist]
+  )
+
   return {
     addStore,
     setStorePrice,
@@ -353,6 +487,8 @@ function useMetalActions<P extends MetalPurchaseBase>(lens: MetalLens<P>, persis
     addGift,
     updateGift,
     removeGift,
+    addSale,
+    removeSale,
   }
 }
 
@@ -390,7 +526,9 @@ function useFinance() {
         return
       }
       try {
-        persist({ ...current, savings: [...current.savings, fund] })
+        // Chưa sổ nào mang tên này nên lần bán còn trỏ đúng tên này (chưa gắn cờ — chỉ có từ file sửa tay) là
+        // lần bán mồ côi của 1 sổ đã xoá: gắn cờ luôn, không để huỷ nó rút tiền từ sổ mới.
+        persist(updateSalesOfFund({ ...current, savings: [...current.savings, fund] }, fund.name, markFundRemoved))
         // Chưa quỹ nào mang tên này (vừa chặn ở trên) nên liên kết mục tiêu "mua xe" đang trỏ đúng
         // tên này chỉ có thể là liên kết mồ côi của 1 quỹ đã xoá — gỡ đi, không để quỹ mới âm thầm
         // bị gắn vào mục tiêu mà người dùng không hề chọn.
@@ -411,10 +549,17 @@ function useFinance() {
         return
       }
       try {
-        persist({
-          ...current,
-          savings: current.savings.map((f) => (f.name === originalName ? fund : f)),
-        })
+        const next = { ...current, savings: current.savings.map((f) => (f.name === originalName ? fund : f)) }
+        // Lần bán trỏ sổ nhận tiền theo tên — đổi tên thì đổi theo trong cùng lần ghi, nếu không lúc huỷ sẽ
+        // không tìm thấy sổ. Lần bán còn trỏ tên mới (mồ côi, như ở addSavingsFund) được gắn cờ trước.
+        persist(
+          fund.name !== originalName
+            ? updateSalesOfFund(updateSalesOfFund(next, fund.name, markFundRemoved), originalName, (sale) => ({
+                ...sale,
+                fundName: fund.name,
+              }))
+            : next
+        )
         // Mục tiêu "mua xe" link theo tên quỹ (không có id) — đổi tên quỹ đang link
         // thì phải đổi luôn tên lưu ở car-goal-storage, nếu không link sẽ bị mồ côi.
         if (fund.name !== originalName && getCarGoalFundName() === originalName) {
@@ -441,7 +586,15 @@ function useFinance() {
     (name: string) => {
       const current = getStoredFinance()
       try {
-        persist({ ...current, savings: current.savings.filter((f) => f.name !== name) })
+        // Lần bán đã gửi vào sổ này được gắn cờ fundRemoved trong cùng lần ghi (như xoá thẻ gỡ liên kết khỏi
+        // khoản chi): 1 sổ mới trùng tên tạo sau không bao giờ bị rút tiền khi huỷ các lần bán cũ.
+        persist(
+          updateSalesOfFund(
+            { ...current, savings: current.savings.filter((f) => f.name !== name) },
+            name,
+            markFundRemoved
+          )
+        )
         // Mục tiêu "mua xe" đang gắn đúng quỹ này thì gỡ luôn — nếu không, 1 quỹ tạo sau trùng tên
         // sẽ âm thầm bị gắn vào mục tiêu (đổi tên đã cascade tương tự ở updateSavingsFund).
         // Settlement giữ nguyên tên cũ: chỉ là lịch sử đã đóng băng (xem budget-storage.ts).
@@ -626,9 +779,11 @@ function useFinance() {
     gold: state.gold,
     goldStores: state.goldStores,
     goldGifts: state.goldGifts,
+    goldSales: state.goldSales,
     silver: state.silver,
     silverStores: state.silverStores,
     silverGifts: state.silverGifts,
+    silverSales: state.silverSales,
     invests: state.invests,
     hydrated,
     addSavingsFund,
@@ -648,6 +803,8 @@ function useFinance() {
     addGoldGift: goldActions.addGift,
     updateGoldGift: goldActions.updateGift,
     removeGoldGift: goldActions.removeGift,
+    addGoldSale: goldActions.addSale,
+    removeGoldSale: goldActions.removeSale,
     addSilverStore: silverActions.addStore,
     updateSilverStore: silverActions.updateStore,
     removeSilverStore: silverActions.removeStore,
@@ -658,6 +815,8 @@ function useFinance() {
     addSilverGift: silverActions.addGift,
     updateSilverGift: silverActions.updateGift,
     removeSilverGift: silverActions.removeGift,
+    addSilverSale: silverActions.addSale,
+    removeSilverSale: silverActions.removeSale,
     addInvest,
     updateInvest,
     removeInvest,

@@ -2,6 +2,7 @@ import { Minus, TrendingDown, TrendingUp } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { formatMoney } from "@/lib/format"
+import { signedMoney } from "@/lib/finance/finance-calculations"
 import { metalPLTone, type MetalPLTone } from "@/lib/finance/metal-calculations"
 
 interface MetalPLIndicatorProps {
@@ -71,4 +72,24 @@ function MetalPLBox({ pl, hidden }: MetalPLIndicatorProps) {
   )
 }
 
-export { MetalPLBadge, MetalPLBox }
+interface MetalPLLineProps extends MetalPLIndicatorProps {
+  label: string
+  className?: string
+}
+
+// Dòng "nhãn: ± số tiền" tô màu theo lãi/lỗ — xem trước ở modal Bán, tổng ở Lịch sử bán. Hoà vốn thì "0 ₫"
+// trơn, màu chữ thường: "+ 0 ₫" màu xanh là báo lãi không có thật.
+function MetalPLLine({ label, pl, hidden, className }: MetalPLLineProps) {
+  const tone = metalPLTone(pl)
+  return (
+    <p
+      data-tone={tone}
+      className={cn("font-semibold [font-family:var(--ob-font-num)] tabular-nums", className)}
+      style={{ color: tone === "even" ? undefined : TONE_COLOR[tone] }}
+    >
+      {`${label}: ${tone === "even" ? formatMoney(0, hidden) : signedMoney(pl, hidden)}`}
+    </p>
+  )
+}
+
+export { MetalPLBadge, MetalPLBox, MetalPLLine }

@@ -336,3 +336,30 @@ describe("summarizeFinance — đã tặng", () => {
     expect(summary.net).toBe(13_000_000)
   })
 })
+
+describe("summarizeFinance — đã bán", () => {
+  it("holds only what is left after both gifts and sales", () => {
+    const summary = summarizeFinance({
+      ...DEFAULT_FINANCE_STATE,
+      gold: [{ id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" }],
+      goldStores: [{ name: "SJC", price: "1.000.000" }],
+      goldGifts: [{ id: 1, purchaseId: 1, date: "12/10/2026", qty: 1, store: "SJC", buy: 900_000 }],
+      goldSales: [
+        {
+          id: 1,
+          purchaseId: 1,
+          date: "15/10/2026",
+          qty: 2,
+          store: "SJC",
+          buy: 900_000,
+          received: 1_900_000,
+          fundName: "Quỹ A",
+        },
+      ],
+    })
+
+    expect(summary.goldPhan).toBe(7)
+    expect(summary.goldCost).toBe(6_300_000)
+    expect(summary.goldValue).toBe(7_000_000)
+  })
+})

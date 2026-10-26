@@ -2,19 +2,22 @@ import { describe, it, expect } from "vitest"
 
 import { phanToChi, summarizeFinance } from "@/lib/finance/finance-calculations"
 import {
-  giftedByPurchase,
-  giftsInMonth,
+  earliestTakeoutDate,
+  takenOutByPurchase,
+  takeoutsInMonth,
   heldQuantityOf,
   metalMarketPrice,
   metalPLTone,
   metalPurchaseLabels,
   metalPurchasePL,
+  metalSalePL,
   metalStorePrice,
   normalizePurchaseDate,
   parseMetalPrice,
   parsePurchaseDate,
   parseWholeQuantity,
   purchaseDateToDayKey,
+  saleUndoBlockedReason,
   sortByPurchaseDate,
   summarizeMetalByStore,
   summarizeMetalHolding,
@@ -371,9 +374,9 @@ describe("parseWholeQuantity", () => {
   })
 })
 
-describe("giftedByPurchase", () => {
+describe("takenOutByPurchase", () => {
   it("adds up the quantity given away from each purchase", () => {
-    const gifted = giftedByPurchase([
+    const gifted = takenOutByPurchase([
       { purchaseId: 1, qty: 1 },
       { purchaseId: 2, qty: 3 },
       { purchaseId: 1, qty: 2 },
@@ -413,7 +416,7 @@ describe("toPurchaseDate", () => {
   })
 })
 
-describe("giftsInMonth", () => {
+describe("takeoutsInMonth", () => {
   const gift = (id: number, date: string): MetalGift => ({
     id,
     purchaseId: 1,
@@ -432,7 +435,7 @@ describe("giftsInMonth", () => {
       gift(5, "02/09/2026"),
     ]
 
-    expect(giftsInMonth(gifts, "2026-09")).toEqual([
+    expect(takeoutsInMonth(gifts, "2026-09")).toEqual([
       { ...gift(2, "15/09/2026"), dayKey: "2026-09-15" },
       { ...gift(5, "02/09/2026"), dayKey: "2026-09-02" },
       { ...gift(1, "02/09/2026"), dayKey: "2026-09-02" },
@@ -445,5 +448,57 @@ describe("normalizePurchaseDate — năm", () => {
     expect(normalizePurchaseDate("01/01/0999")).toBeNull()
     expect(normalizePurchaseDate("0100-01-01")).toBeNull()
     expect(normalizePurchaseDate("01/01/1000")).toBe("01/01/1000")
+  })
+})
+
+describe("metalSalePL", () => {
+  it("is what was received minus what that quantity cost at its purchase price", () => {
+    expect(metalSalePL({ qty: 2, buy: 900_000, received: 1_900_000 })).toBe(100_000)
+    expect(metalSalePL({ qty: 2, buy: 900_000, received: 1_700_000 })).toBe(-100_000)
+  })
+})
+
+describe("earliestTakeoutDate", () => {
+  it("takes the earliest date among a purchase's gifts and sales, ignoring other purchases and unreadable dates", () => {
+    const takeouts = [
+      { purchaseId: 1, date: "12/10/2026" },
+      { purchaseId: 1, date: "05/10/2026" },
+      { purchaseId: 2, date: "01/10/2026" },
+      { purchaseId: 1, date: "abc" },
+    ]
+
+    expect(earliestTakeoutDate(takeouts, 1)).toBe("05/10/2026")
+    expect(earliestTakeoutDate(takeouts, 3)).toBeNull()
+  })
+})
+
+describe("takeoutsInMonth — lần bán", () => {
+  it("keeps sales dated in the month, newest first", () => {
+    const sale = (id: number, date: string) => ({ id, date, qty: 1, received: 900_000 })
+
+    expect(takeoutsInMonth([sale(1, "02/09/2026"), sale(2, "31/08/2026"), sale(3, "20/09/2026")], "2026-09")).toEqual([
+      { ...sale(3, "20/09/2026"), dayKey: "2026-09-20" },
+      { ...sale(1, "02/09/2026"), dayKey: "2026-09-02" },
+    ])
+  })
+})
+
+describe("saleUndoBlockedReason", () => {
+  const SALE = { fundName: "Quỹ A", received: 1_900_000 }
+
+  it("lets a sale be undone while its fund still holds what was received, down to the last đồng", () => {
+    expect(saleUndoBlockedReason(SALE, [{ name: "Quỹ A", amount: 1_900_000 }])).toBeNull()
+  })
+
+  it("refuses when the fund no longer holds what was received", () => {
+    expect(saleUndoBlockedReason(SALE, [{ name: "Quỹ A", amount: 1_899_999 }])).toBe(
+      'Sổ "Quỹ A" không còn đủ tiền để rút lại số đã nhận — không huỷ được lần bán này.'
+    )
+  })
+
+  it("refuses when the fund is gone, or was deleted even though a new fund took its name", () => {
+    const deleted = 'Sổ "Quỹ A" đã bị xoá — không huỷ được lần bán này.'
+    expect(saleUndoBlockedReason(SALE, [])).toBe(deleted)
+    expect(saleUndoBlockedReason({ ...SALE, fundRemoved: true }, [{ name: "Quỹ A", amount: 9_000_000 }])).toBe(deleted)
   })
 })

@@ -15,9 +15,13 @@ interface MetalStoresCardProps {
   metal: MetalDisplay
   stores: MetalStore[]
   purchases: Pick<MetalPurchaseBase, "store">[]
-  // Các lần mua còn giữ (chưa tặng hết). Cửa hàng chỉ còn lần mua đã tặng hết vẫn không xoá được — lịch sử
-  // tặng còn trỏ tới — nhưng tooltip nói rõ lý do đó. Không truyền thì coi như mọi lần mua đều còn giữ.
+  // Các lần mua còn giữ (chưa tặng/bán hết). Cửa hàng chỉ còn lần mua đã tặng/bán hết vẫn không xoá được —
+  // lịch sử còn trỏ tới — nhưng tooltip nói rõ lý do đó. Không truyền thì coi như mọi lần mua đều còn giữ.
   heldPurchases?: Pick<MetalPurchaseBase, "store">[]
+  // Các lần mua đã có lần bán: cửa hàng chỉ còn lần mua đã lấy ra hết thì tooltip nhắc đúng Lịch sử bán.
+  soldPurchases?: Pick<MetalPurchaseBase, "store">[]
+  // Các lần mua đã có lần tặng; không truyền thì coi như lần mua đã lấy ra hết là do tặng.
+  giftedPurchases?: Pick<MetalPurchaseBase, "store">[]
   onAdd: (store: MetalStore) => void
   onUpdate: (originalName: string, store: MetalStore) => void
   onRemove: (name: string) => void
@@ -29,6 +33,8 @@ function MetalStoresCard({
   stores,
   purchases,
   heldPurchases = purchases,
+  soldPurchases = [],
+  giftedPurchases = purchases,
   onAdd,
   onUpdate,
   onRemove,
@@ -43,9 +49,17 @@ function MetalStoresCard({
   }
 
   function removeBlockedTitle(name: string) {
-    return heldPurchases.some((p) => p.store === name)
-      ? `Không thể xoá — vẫn còn giao dịch mua ${metal.noun} gắn với cửa hàng này.`
-      : `Không thể xoá — các lần mua ${metal.noun} ở cửa hàng này đã tặng hết nhưng vẫn còn trong Lịch sử tặng.`
+    if (heldPurchases.some((p) => p.store === name)) {
+      return `Không thể xoá — vẫn còn giao dịch mua ${metal.noun} gắn với cửa hàng này.`
+    }
+    const sold = soldPurchases.some((p) => p.store === name)
+    const gifted = giftedPurchases.some((p) => p.store === name)
+    const [verb, history] = !sold
+      ? ["tặng", "Lịch sử tặng"]
+      : gifted
+        ? ["tặng và bán", "Lịch sử tặng và Lịch sử bán"]
+        : ["bán", "Lịch sử bán"]
+    return `Không thể xoá — các lần mua ${metal.noun} ở cửa hàng này đã ${verb} hết nhưng vẫn còn trong ${history}.`
   }
 
   return (

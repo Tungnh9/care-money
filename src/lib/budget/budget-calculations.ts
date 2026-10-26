@@ -1,8 +1,8 @@
 import { dayKeyFromIso, isMonthKey, monthKeyFromDayKey } from "@/lib/date"
 import type { Expense, MonthlySalary, Settlement } from "@/lib/budget/types"
-import { giftsInMonth } from "@/lib/finance/metal-calculations"
+import { takeoutsInMonth } from "@/lib/finance/metal-calculations"
 import { GOLD_NAMING, SILVER_NAMING, type MetalNaming } from "@/lib/finance/metal-naming"
-import type { MetalGift } from "@/lib/finance/types"
+import type { MetalGift, MetalSale } from "@/lib/finance/types"
 
 const UNTAGGED_LABEL = "Không gắn thẻ"
 const UNTAGGED_EMOJI = "🏷️"
@@ -112,16 +112,32 @@ function settlementsMadeInMonth(settlements: Settlement[], month: string, fundNa
   return items.sort((a, b) => Date.parse(b.at) - Date.parse(a.at) || b.id - a.id)
 }
 
-type GiftListItem = MetalGift & { dayKey: string; naming: MetalNaming }
+type MetalMonthItem =
+  | (MetalGift & { kind: "gift"; dayKey: string; naming: MetalNaming })
+  | (MetalSale & { kind: "sale"; dayKey: string; naming: MetalNaming })
 
-// Các lần tặng vàng/bạc có ngày tặng thuộc `month` — chỉ để vẽ khối "Quà tặng từ tích lũy" trong danh sách
-// khoản chi, KHÔNG phải khoản chi: tiền mua đã tính lúc mua, nên lần tặng không cộng vào "đã chi" hay chốt
-// sổ. Gộp vàng + bạc, mới nhất trước; cùng ngày thì vàng trước bạc, rồi id cao (ghi sau) trước.
-function giftsMadeInMonth(goldGifts: MetalGift[], silverGifts: MetalGift[], month: string): GiftListItem[] {
-  return [
-    ...giftsInMonth(goldGifts, month).map((gift) => ({ ...gift, naming: GOLD_NAMING })),
-    ...giftsInMonth(silverGifts, month).map((gift) => ({ ...gift, naming: SILVER_NAMING })),
-  ].sort((a, b) => b.dayKey.localeCompare(a.dayKey))
+interface MetalMoves {
+  goldGifts: MetalGift[]
+  silverGifts: MetalGift[]
+  goldSales: MetalSale[]
+  silverSales: MetalSale[]
+}
+
+// Các lần tặng và bán vàng/bạc có ngày thuộc `month` — chỉ để vẽ khối "Vàng/bạc tháng này" trong danh sách
+// khoản chi, KHÔNG phải khoản chi: tiền mua đã tính lúc mua, tiền bán đã vào sổ tiết kiệm, nên không cộng vào
+// "đã chi" hay chốt sổ. Mới nhất trước; cùng ngày thì vàng tặng, bạc tặng, vàng bán, bạc bán (sort ổn định),
+// trong mỗi nhóm id cao (ghi sau) trước.
+function metalMovesMadeInMonth(
+  { goldGifts, silverGifts, goldSales, silverSales }: MetalMoves,
+  month: string
+): MetalMonthItem[] {
+  const items: MetalMonthItem[] = [
+    ...takeoutsInMonth(goldGifts, month).map((gift) => ({ ...gift, kind: "gift" as const, naming: GOLD_NAMING })),
+    ...takeoutsInMonth(silverGifts, month).map((gift) => ({ ...gift, kind: "gift" as const, naming: SILVER_NAMING })),
+    ...takeoutsInMonth(goldSales, month).map((sale) => ({ ...sale, kind: "sale" as const, naming: GOLD_NAMING })),
+    ...takeoutsInMonth(silverSales, month).map((sale) => ({ ...sale, kind: "sale" as const, naming: SILVER_NAMING })),
+  ]
+  return items.sort((a, b) => b.dayKey.localeCompare(a.dayKey))
 }
 
 interface TagBreakdownEntry {
@@ -268,7 +284,7 @@ export {
   remainingToSettle,
   unsettledPastMonths,
   settlementsMadeInMonth,
-  giftsMadeInMonth,
+  metalMovesMadeInMonth,
   breakdownByTag,
   groupExpensesByDay,
   monthlyExpenseTotals,
@@ -284,7 +300,7 @@ export {
   type TagBreakdownEntry,
   type UnsettledMonth,
   type SettlementListItem,
-  type GiftListItem,
+  type MetalMonthItem,
   type DayGroup,
   type MonthlyExpensePoint,
   type MonthlyTagSeries,
