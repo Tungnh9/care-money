@@ -5,7 +5,7 @@ import { useId, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Field } from "@/components/ui/field"
 import { Modal } from "@/components/ui/modal"
-import { normalizePurchaseDate, parseWholeQuantity } from "@/lib/finance/metal-calculations"
+import { normalizePurchaseDate, parsePurchaseDate, parseWholeQuantity } from "@/lib/finance/metal-calculations"
 import type { MetalPurchaseBase, MetalStore } from "@/lib/finance/types"
 import type { MetalConfig } from "../metal-config"
 import { MetalStorePicker } from "./metal-store-picker"
@@ -18,6 +18,8 @@ interface EditMetalPurchaseModalProps<P extends MetalPurchaseBase> {
   onSave: (id: number, purchase: Omit<P, "id">) => void
   // Tổng đã tặng từ lần mua này: số lượng không được sửa xuống thấp hơn (số còn lại sẽ âm).
   minQuantity?: number
+  // Ngày tặng sớm nhất từ lần mua này (dd/mm/yyyy): ngày mua không được dời qua mốc đó.
+  latestDate?: string
 }
 
 function EditMetalPurchaseModal<P extends MetalPurchaseBase>({
@@ -27,6 +29,7 @@ function EditMetalPurchaseModal<P extends MetalPurchaseBase>({
   onOpenChange,
   onSave,
   minQuantity = 0,
+  latestDate,
 }: EditMetalPurchaseModalProps<P>) {
   const titleId = useId()
   const [date, setDate] = useState("")
@@ -50,8 +53,12 @@ function EditMetalPurchaseModal<P extends MetalPurchaseBase>({
 
   const currentId = purchase.id
   const normalizedDate = normalizePurchaseDate(date)
+  const afterLatest =
+    latestDate !== undefined &&
+    normalizedDate !== null &&
+    parsePurchaseDate(normalizedDate) > parsePurchaseDate(latestDate)
   // Lần mua cũ đã lưu sai dạng (vd. "10/08/26") hiện đỏ ngay khi mở — phải sửa ngày mới lưu được.
-  const dateInvalid = date.trim() !== "" && normalizedDate === null
+  const dateInvalid = date.trim() !== "" && (normalizedDate === null || afterLatest)
   const quantityValue = parseWholeQuantity(quantity)
   const belowGifted = quantityValue !== null && quantityValue < minQuantity
   const quantityValid = quantityValue !== null && !belowGifted
@@ -60,7 +67,7 @@ function EditMetalPurchaseModal<P extends MetalPurchaseBase>({
   // mở — chỉ coi là đã chọn khi tên đó vẫn còn trong danh sách, giống AddMetalPurchaseForm, để không ghi đè
   // lại tên cũ lên lần mua (huỷ mất phần đổi tên đã cascade) và trỏ vào cửa hàng không tồn tại.
   const selectedStore = stores.some((s) => s.name === store) ? store : ""
-  const disabled = !normalizedDate || !quantityValid || !buy.trim() || !selectedStore
+  const disabled = !normalizedDate || afterLatest || !quantityValid || !buy.trim() || !selectedStore
 
   function handleSave() {
     if (!normalizedDate || !selectedStore) return
@@ -90,7 +97,13 @@ function EditMetalPurchaseModal<P extends MetalPurchaseBase>({
           value={date}
           onChange={(e) => setDate(e.target.value)}
           invalid={dateInvalid}
-          hint={dateInvalid ? "Nhập ngày dạng dd/mm/yyyy, vd: 10/08/2026" : undefined}
+          hint={
+            dateInvalid
+              ? normalizedDate === null
+                ? "Nhập ngày dạng dd/mm/yyyy, vd: 10/08/2026"
+                : `Ngày mua không được sau ngày tặng sớm nhất (${latestDate})`
+              : undefined
+          }
         />
         <Field
           className="min-w-0 flex-[1_1_220px]"

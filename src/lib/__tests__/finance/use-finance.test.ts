@@ -2134,4 +2134,47 @@ describe("useFinance — tặng vàng/bạc", () => {
     expect(result.current.goldGifts).toEqual([])
     expect(toast.success).toHaveBeenCalledWith("Đã ghi lần tặng 1 lượng bạc ngày 12/10/2026")
   })
+  it("never reuses for a new purchase an id that a gift still points at", async () => {
+    // Lần tặng (từ file sửa tay) trỏ tới lần mua 5 không còn: lần mua mới không được lấy id 5.
+    const { result } = await renderWithGold([{ ...GIFT, purchaseId: 5 }])
+
+    act(() => {
+      result.current.addGold({ date: "11/08/2026", phan: 3, buy: 900_000, store: "SJC" })
+    })
+
+    expect(result.current.gold[0].id).toBe(6)
+  })
+
+  it("lets a gift whose purchase is gone be kept or lowered, never raised", async () => {
+    const { result } = await renderWithGold([{ ...GIFT, purchaseId: 99, qty: 2 }])
+
+    let saved = true
+    act(() => {
+      saved = result.current.updateGoldGift(1, { date: "12/10/2026", qty: 3 })
+    })
+    expect(saved).toBe(false)
+    expect(toast.error).toHaveBeenCalledWith("Lần mua này chỉ còn 2 phân — không đủ để tặng 3 phân.")
+
+    act(() => {
+      saved = result.current.updateGoldGift(1, { date: "12/10/2026", qty: 1 })
+    })
+    expect(saved).toBe(true)
+    expect(result.current.goldGifts[0].qty).toBe(1)
+  })
+
+  it("blocks moving a purchase's date past the earliest gift taken out of it", async () => {
+    const { result } = await renderWithGold([GIFT, { ...GIFT, id: 2, date: "01/10/2026" }])
+    const fields = { date: PURCHASE.date, phan: PURCHASE.phan, buy: PURCHASE.buy, store: PURCHASE.store }
+
+    act(() => {
+      result.current.updateGold(1, { ...fields, date: "05/10/2026" })
+    })
+    expect(result.current.gold).toEqual([PURCHASE])
+    expect(toast.error).toHaveBeenCalledWith("Ngày mua không được sau ngày tặng sớm nhất (01/10/2026).")
+
+    act(() => {
+      result.current.updateGold(1, { ...fields, date: "01/10/2026" })
+    })
+    expect(result.current.gold[0].date).toBe("01/10/2026")
+  })
 })

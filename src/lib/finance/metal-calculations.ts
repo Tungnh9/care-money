@@ -49,8 +49,9 @@ function unpricedMetalStores(purchases: Pick<MetalPurchaseBase, "store">[], stor
 }
 
 // Ngày mua là ô chữ: nhận d/m/yyyy hoặc dd/mm/yyyy (ngăn bằng "/", "-" hoặc ".", cùng 1 loại trong 1
-// ngày) và yyyy-mm-dd; năm đủ 4 chữ số (new Date(26, …) là năm 1926); ngày phải có thật (new Date tự
-// trôi 31/02 sang 03/03). Trả dạng chuẩn dd/mm/yyyy, hoặc null nếu không đọc được.
+// ngày) và yyyy-mm-dd; năm đủ 4 chữ số và từ 1000 trở đi (new Date(26, …) là năm 1926, còn "0100" trước
+// đây ra "01/01/100" — tự trượt dạng dd/mm/yyyy của chính nó); ngày phải có thật (new Date tự trôi 31/02
+// sang 03/03). Trả dạng chuẩn dd/mm/yyyy, hoặc null nếu không đọc được.
 function normalizePurchaseDate(input: string): string | null {
   const text = input.trim()
   const dmy = /^(\d{1,2})([/.-])(\d{1,2})\2(\d{4})$/.exec(text)
@@ -58,6 +59,7 @@ function normalizePurchaseDate(input: string): string | null {
   const parts = dmy ? [dmy[1], dmy[3], dmy[4]] : ymd ? [ymd[3], ymd[2], ymd[1]] : null
   if (!parts) return null
   const [day, month, year] = parts.map(Number)
+  if (year < 1000) return null
   const date = new Date(year, month - 1, day)
   if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null
   return `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}/${year}`
@@ -85,6 +87,20 @@ function purchaseDateToDayKey(date: string): string | null {
 // Ngày máy → dd/mm/yyyy, dạng gõ ở ô ngày mua/ngày tặng.
 function toPurchaseDate(d: Date): string {
   return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`
+}
+
+// Ngày tặng sớm nhất (dd/mm/yyyy) trong các lần tặng lấy từ 1 lần mua — ngày mua không được dời qua mốc này.
+// Ngày không đọc được (chỉ có từ file sửa tay) thì bỏ qua; không có lần tặng nào → null.
+function earliestGiftDate(gifts: Pick<MetalGift, "purchaseId" | "date">[], purchaseId: number): string | null {
+  let earliest: string | null = null
+  for (const gift of gifts) {
+    if (gift.purchaseId !== purchaseId) continue
+    const date = normalizePurchaseDate(gift.date)
+    if (date !== null && (earliest === null || parsePurchaseDate(date) < parsePurchaseDate(earliest))) {
+      earliest = date
+    }
+  }
+  return earliest
 }
 
 // Tổng đã tặng của từng lần mua (theo id lần mua).
@@ -230,6 +246,7 @@ export {
   purchaseDateToDayKey,
   toPurchaseDate,
   giftedByPurchase,
+  earliestGiftDate,
   heldQuantityOf,
   giftsInMonth,
   parseWholeQuantity,

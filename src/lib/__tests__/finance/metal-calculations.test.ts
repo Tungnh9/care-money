@@ -439,3 +439,11 @@ describe("giftsInMonth", () => {
     ])
   })
 })
+
+describe("normalizePurchaseDate — năm", () => {
+  it("rejects a year before 1000 instead of writing it back unpadded", () => {
+    expect(normalizePurchaseDate("01/01/0999")).toBeNull()
+    expect(normalizePurchaseDate("0100-01-01")).toBeNull()
+    expect(normalizePurchaseDate("01/01/1000")).toBe("01/01/1000")
+  })
+})

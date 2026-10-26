@@ -9,7 +9,7 @@ import {
   setStoredFinance,
   type FinanceState,
 } from "@/lib/finance/finance-storage"
-import { giftedByPurchase } from "@/lib/finance/metal-calculations"
+import { earliestGiftDate, giftedByPurchase, parsePurchaseDate } from "@/lib/finance/metal-calculations"
 import { GOLD_NAMING, SILVER_NAMING, type MetalNaming } from "@/lib/finance/metal-naming"
 import type {
   CreditCard,
@@ -184,7 +184,10 @@ function useMetalActions<P extends MetalPurchaseBase>(lens: MetalLens<P>, persis
       const current = getStoredFinance()
       try {
         const purchases = lens.purchases(current)
-        persist(lens.withPurchases(current, [lens.withId(purchase, nextId(purchases)), ...purchases]))
+        // Tính cả id mà lần tặng còn trỏ tới (lần tặng mồ côi từ file sửa tay): lần mua mới lấy lại id đó sẽ
+        // âm thầm bị trừ phần "đã tặng" không phải của nó.
+        const takenIds = [...purchases, ...lens.gifts(current).map((gift) => ({ id: gift.purchaseId }))]
+        persist(lens.withPurchases(current, [lens.withId(purchase, nextId(takenIds)), ...purchases]))
         toast.success(`Đã thêm lần mua ${lens.naming.noun} ngày ${purchase.date}`)
       } catch {
         toast.error(`Không thể thêm lần mua ${lens.naming.noun}. Vui lòng thử lại.`)
@@ -200,6 +203,12 @@ function useMetalActions<P extends MetalPurchaseBase>(lens: MetalLens<P>, persis
       const gifted = giftedByPurchase(lens.gifts(current)).get(id) ?? 0
       if (lens.quantityOf(lens.withId(purchase, id)) < gifted) {
         toast.error(`Lần mua này đã tặng ${lens.naming.formatQuantity(gifted)} — không sửa số lượng xuống thấp hơn.`)
+        return
+      }
+      // Không tặng được trước khi mua: ngày mua không được dời qua ngày tặng sớm nhất của chính lần mua này.
+      const earliestGift = earliestGiftDate(lens.gifts(current), id)
+      if (earliestGift && parsePurchaseDate(purchase.date) > parsePurchaseDate(earliestGift)) {
+        toast.error(`Ngày mua không được sau ngày tặng sớm nhất (${earliestGift}).`)
         return
       }
       try {
