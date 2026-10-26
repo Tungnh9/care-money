@@ -1019,13 +1019,22 @@ describe("GoldTab — bán", () => {
     expect(screen.queryByRole("dialog", { name: "Bán vàng" })).not.toBeInTheDocument()
   })
 
-  it("locks the sell button until there is a savings fund to receive the money", () => {
-    renderGold({ savings: [] })
+  it("locks the sell button until there is a savings fund to receive the money, saying so on screen", () => {
+    const { unmount } = renderGold({ savings: [] })
+
+    // Màn cảm ứng không hiện title của nút bị khoá — lý do nằm ngay trên thẻ.
+    expect(
+      screen.getByText("Nút Bán đang khoá vì chưa có sổ tiết kiệm nào để nhận tiền — tạo 1 sổ ở tab Tiết kiệm trước.")
+    ).toBeInTheDocument()
 
     for (const button of screen.getAllByRole("button", { name: "Bán từ lần mua vàng 10/08/2026" })) {
       expect(button).toBeDisabled()
       expect(button).toHaveAttribute("title", "Chưa có sổ tiết kiệm nào để nhận tiền — tạo 1 sổ ở tab Tiết kiệm trước.")
     }
+    unmount()
+
+    renderGold()
+    expect(screen.queryByText(/Nút Bán đang khoá/)).not.toBeInTheDocument()
   })
 
   it("locks the sell button when less than one phân is left of a purchase", () => {

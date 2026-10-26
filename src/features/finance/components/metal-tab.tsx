@@ -337,6 +337,12 @@ function MetalTab<P extends MetalPurchaseBase>({
             </div>
           </div>
         ) : null}
+        {heldPurchases.length && !savings.length ? (
+          // Nút Bán bị khoá chỉ giải thích qua title — màn cảm ứng không hiện, nên nói ngay trên thẻ.
+          <p className="mb-3 text-[12.5px] leading-[1.5] text-[var(--ob-color-text-subtle)]">
+            Nút Bán đang khoá vì chưa có sổ tiết kiệm nào để nhận tiền — tạo 1 sổ ở tab Tiết kiệm trước.
+          </p>
+        ) : null}
         {allTakenOut ? (
           <p className="text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)]">{allTakenOutNote}</p>
         ) : (
