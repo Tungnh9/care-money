@@ -898,7 +898,7 @@ describe("GoldTab — bán", () => {
     fundName: "Quỹ A",
   }
   const STORES: GoldStore[] = [{ name: "SJC", price: "900.000" }]
-  const FUND: SavingsFund = { name: "Quỹ A", amount: 1_000_000, target: 0 }
+  const FUND: SavingsFund = { name: "Quỹ A", amount: 5_000_000, target: 0 }
 
   beforeEach(() => {
     vi.useFakeTimers({ shouldAdvanceTime: true })
@@ -954,7 +954,34 @@ describe("GoldTab — bán", () => {
     expect(cells[4]).toHaveTextContent(formatMoney(7 * 900_000))
     const heldBox = screen.getByText("Đang giữ").parentElement as HTMLElement
     expect(within(heldBox).getByText("7 phân")).toBeInTheDocument()
-    expect(screen.getAllByText("đã tặng 1 phân · đã bán 2 phân")).toHaveLength(2)
+    const notes = screen.getAllByTestId("taken-out-note")
+    expect(notes).toHaveLength(2)
+    for (const note of notes) expect(note).toHaveTextContent("đã tặng 1 phân · đã bán 2 phân")
+  })
+
+  it("lets the gift and sale note break only at the dot, so the table never widens for the whole line", () => {
+    renderGold({ gifts: [GIFT], sales: [SALE] })
+
+    // jsdom không dàn trang — chỉ khoá đúng các class mà việc xuống dòng dựa vào. Bảng: mỗi phần giữ nguyên
+    // (cột rộng bằng phần dài nhất, không bằng cả câu); thẻ: phần dài hơn cả ô vẫn được ngắt bên trong.
+    const [tableNote, cardNote] = screen.getAllByTestId("taken-out-note")
+    expect(tableNote.closest("td")).not.toBeNull()
+    expect(tableNote).toHaveClass("whitespace-normal")
+    const tableParts = Array.from(tableNote.children)
+    expect(tableParts.map((part) => part.textContent)).toEqual(["đã tặng 1 phân ·", "đã bán 2 phân"])
+    for (const part of tableParts) expect(part).toHaveClass("inline-block", "whitespace-nowrap")
+    for (const part of Array.from(cardNote.children)) {
+      expect(part).toHaveClass("inline-block")
+      expect(part).not.toHaveClass("whitespace-nowrap")
+    }
+  })
+
+  it("locks undo, saying why on screen, when the fund no longer holds what the sale brought in", () => {
+    renderGold({ sales: [SALE], savings: [{ ...FUND, amount: 1_000_000 }] })
+
+    const reason = 'Sổ "Quỹ A" không còn đủ tiền để rút lại số đã nhận — không huỷ được lần bán này.'
+    expect(screen.getByRole("button", { name: "Huỷ lần bán 15/10/2026" })).toBeDisabled()
+    expect(screen.getByText(reason)).toBeInTheDocument()
   })
 
   it("caps both the gift form and the sale form at what is left", () => {

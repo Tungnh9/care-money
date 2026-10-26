@@ -9,7 +9,12 @@ import {
   setStoredFinance,
   type FinanceState,
 } from "@/lib/finance/finance-storage"
-import { earliestTakeoutDate, parsePurchaseDate, takenOutByPurchase } from "@/lib/finance/metal-calculations"
+import {
+  earliestTakeoutDate,
+  parsePurchaseDate,
+  saleUndoBlockedReason,
+  takenOutByPurchase,
+} from "@/lib/finance/metal-calculations"
 import { GOLD_NAMING, SILVER_NAMING, formatTakenOut, type MetalNaming } from "@/lib/finance/metal-naming"
 import type {
   CreditCard,
@@ -451,13 +456,9 @@ function useMetalActions<P extends MetalPurchaseBase>(lens: MetalLens<P>, persis
         toast.error("Không tìm thấy lần bán này nữa.")
         return
       }
-      const fund = sale.fundRemoved ? undefined : current.savings.find((f) => f.name === sale.fundName)
-      if (!fund) {
-        toast.error(`Sổ "${sale.fundName}" đã bị xoá — không huỷ được lần bán này.`)
-        return
-      }
-      if (fund.amount < sale.received) {
-        toast.error(`Sổ "${sale.fundName}" không còn đủ tiền để rút lại số đã nhận — không huỷ được lần bán này.`)
+      const blocked = saleUndoBlockedReason(sale, current.savings)
+      if (blocked) {
+        toast.error(blocked)
         return
       }
       try {

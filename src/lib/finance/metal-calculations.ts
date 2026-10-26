@@ -1,5 +1,5 @@
 import { monthKeyFromDayKey } from "@/lib/date"
-import type { MetalGift, MetalPurchaseBase, MetalSale, MetalStore } from "@/lib/finance/types"
+import type { MetalGift, MetalPurchaseBase, MetalSale, MetalStore, SavingsFund } from "@/lib/finance/types"
 
 // Phép tính dùng chung cho tích lũy vàng và bạc. Hàm nào cần khối lượng thì nhận `quantityOf` để đọc
 // đúng field của từng kim loại (vàng: `phan`, bạc: `luong`); giá mua/giá hôm nay luôn tính theo đúng
@@ -142,6 +142,21 @@ function metalSalePL(sale: Pick<MetalSale, "qty" | "buy" | "received">): number 
   return sale.received - sale.qty * sale.buy
 }
 
+// Vì sao chưa huỷ được 1 lần bán — null là huỷ được. Huỷ phải rút lại đúng số đã nhận khỏi đúng sổ đã nhận: sổ
+// đó đã xoá (cờ fundRemoved, hay không còn sổ tên đó) hoặc không còn đủ tiền thì không huỷ. Nút Huỷ ở Lịch sử bán
+// và hook (chốt cuối, trên dữ liệu đọc tươi) dùng chung hàm này, nên nút khoá đúng khi hook sẽ từ chối.
+function saleUndoBlockedReason(
+  sale: Pick<MetalSale, "fundName" | "fundRemoved" | "received">,
+  savings: Pick<SavingsFund, "name" | "amount">[]
+): string | null {
+  const fund = sale.fundRemoved ? undefined : savings.find((f) => f.name === sale.fundName)
+  if (!fund) return `Sổ "${sale.fundName}" đã bị xoá — không huỷ được lần bán này.`
+  if (fund.amount < sale.received) {
+    return `Sổ "${sale.fundName}" không còn đủ tiền để rút lại số đã nhận — không huỷ được lần bán này.`
+  }
+  return null
+}
+
 // Ô khối lượng chỉ nhận số nguyên dương (phân với vàng, lượng với bạc): số lẻ thì hiện nhiễu số thực
 // ("1 chỉ 2.3000000000000007 phân"), còn "1,5" (dấu phẩy) là NaN. Number.isInteger(Infinity) = false
 // nên "1e400" cũng bị chặn (JSON.stringify lưu Infinity thành null, lần đọc sau lần mua bị bỏ).
@@ -260,6 +275,7 @@ export {
   heldQuantityOf,
   takeoutsInMonth,
   metalSalePL,
+  saleUndoBlockedReason,
   parseWholeQuantity,
   metalPurchaseLabels,
   summarizeMetalHolding,

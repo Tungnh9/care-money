@@ -17,6 +17,7 @@ import {
   parsePurchaseDate,
   parseWholeQuantity,
   purchaseDateToDayKey,
+  saleUndoBlockedReason,
   sortByPurchaseDate,
   summarizeMetalByStore,
   summarizeMetalHolding,
@@ -479,5 +480,25 @@ describe("takeoutsInMonth — lần bán", () => {
       { ...sale(3, "20/09/2026"), dayKey: "2026-09-20" },
       { ...sale(1, "02/09/2026"), dayKey: "2026-09-02" },
     ])
+  })
+})
+
+describe("saleUndoBlockedReason", () => {
+  const SALE = { fundName: "Quỹ A", received: 1_900_000 }
+
+  it("lets a sale be undone while its fund still holds what was received, down to the last đồng", () => {
+    expect(saleUndoBlockedReason(SALE, [{ name: "Quỹ A", amount: 1_900_000 }])).toBeNull()
+  })
+
+  it("refuses when the fund no longer holds what was received", () => {
+    expect(saleUndoBlockedReason(SALE, [{ name: "Quỹ A", amount: 1_899_999 }])).toBe(
+      'Sổ "Quỹ A" không còn đủ tiền để rút lại số đã nhận — không huỷ được lần bán này.'
+    )
+  })
+
+  it("refuses when the fund is gone, or was deleted even though a new fund took its name", () => {
+    const deleted = 'Sổ "Quỹ A" đã bị xoá — không huỷ được lần bán này.'
+    expect(saleUndoBlockedReason(SALE, [])).toBe(deleted)
+    expect(saleUndoBlockedReason({ ...SALE, fundRemoved: true }, [{ name: "Quỹ A", amount: 9_000_000 }])).toBe(deleted)
   })
 })

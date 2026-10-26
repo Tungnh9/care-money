@@ -5,10 +5,11 @@ import { Gift, HandCoins, Pencil, Trash2 } from "lucide-react"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import { metalMarketPrice, metalPurchaseLabels, metalPurchasePL } from "@/lib/finance/metal-calculations"
-import { formatTakenOut } from "@/lib/finance/metal-naming"
+import { takenOutParts } from "@/lib/finance/metal-naming"
 import type { MetalPurchaseBase, MetalStore } from "@/lib/finance/types"
 import type { MetalConfig } from "../metal-config"
 import { MetalPLBox } from "./metal-pl-indicator"
+import { TakenOutNote } from "./taken-out-note"
 
 interface MetalTransactionsCardsProps<P extends MetalPurchaseBase> {
   metal: MetalConfig<P>
@@ -62,7 +63,7 @@ function MetalTransactionsCards<P extends MetalPurchaseBase>({
         const giftedQty = gifted.get(purchase.id) ?? 0
         const soldQty = sold.get(purchase.id) ?? 0
         const qty = metal.quantityOf(purchase) - giftedQty - soldQty
-        const takenOut = formatTakenOut(metal, giftedQty, soldQty)
+        const takenOut = takenOutParts(metal, giftedQty, soldQty)
         const cost = qty * purchase.buy
         const value = qty * price
         const pl = metalPurchasePL(qty, purchase.buy, price)
@@ -131,11 +132,7 @@ function MetalTransactionsCards<P extends MetalPurchaseBase>({
                 </div>
                 <div className="text-[13px] [font-family:var(--ob-font-num)] tabular-nums">
                   {metal.formatQuantity(qty)}
-                  {takenOut ? (
-                    <div className="text-[11.5px] [font-family:var(--ob-font-text)] text-[var(--ob-color-text-subtle)]">
-                      {takenOut}
-                    </div>
-                  ) : null}
+                  <TakenOutNote parts={takenOut} />
                 </div>
               </div>
               <div>

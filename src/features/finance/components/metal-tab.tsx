@@ -411,7 +411,12 @@ function MetalTab<P extends MetalPurchaseBase>({
         onRemove={(gift) => setUndoingGiftId(gift.id)}
       />
 
-      <MetalSaleHistoryCard metal={metal} sales={sales} onRemove={(sale) => setUndoingSaleId(sale.id)} />
+      <MetalSaleHistoryCard
+        metal={metal}
+        sales={sales}
+        savings={savings}
+        onRemove={(sale) => setUndoingSaleId(sale.id)}
+      />
 
       <EditMetalPurchaseModal
         metal={metal}
