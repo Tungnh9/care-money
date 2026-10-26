@@ -8,25 +8,35 @@ import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
-import type { SavingsFund } from "@/lib/finance/types"
+import type { MetalSale, SavingsFund } from "@/lib/finance/types"
 import { AddSavingsFundForm } from "./add-savings-fund-form"
 import { AdjustSavingsFundModal } from "./adjust-savings-fund-modal"
 import { EditSavingsFundModal } from "./edit-savings-fund-modal"
 
 interface SavingsTabProps {
   savings: SavingsFund[]
+  // Mọi lần bán vàng/bạc: xoá 1 quỹ đã nhận tiền bán thì các lần bán đó không huỷ được nữa — hộp xác nhận báo trước.
+  sales?: Pick<MetalSale, "fundName" | "fundRemoved">[]
   onAddSavingsFund: (fund: SavingsFund) => void
-  onUpdateSavingsFund: (originalName: string, fund: SavingsFund) => void
+  onUpdateSavingsFund: (originalName: string, fund: SavingsFund, amountEdited?: boolean) => void
   onRemoveSavingsFund: (name: string) => void
 }
 
-function SavingsTab({ savings, onAddSavingsFund, onUpdateSavingsFund, onRemoveSavingsFund }: SavingsTabProps) {
+function SavingsTab({
+  savings,
+  sales = [],
+  onAddSavingsFund,
+  onUpdateSavingsFund,
+  onRemoveSavingsFund,
+}: SavingsTabProps) {
   const { hidden } = useMoneyVisibility()
   const [editingName, setEditingName] = useState<string | null>(null)
   const [deletingName, setDeletingName] = useState<string | null>(null)
   const [adjustingName, setAdjustingName] = useState<string | null>(null)
   const savingsTotal = savings.reduce((sum, fund) => sum + fund.amount, 0)
   const fundNames = savings.map((fund) => fund.name)
+  // Lần bán đã gắn cờ fundRemoved thuộc 1 quỹ cũ đã xoá (chỉ trùng tên) — không tính.
+  const deletingSales = sales.filter((sale) => !sale.fundRemoved && sale.fundName === deletingName).length
 
   return (
     <Card label={`Tiết kiệm · ${formatMoney(savingsTotal, hidden)}`}>
@@ -90,8 +100,8 @@ function SavingsTab({ savings, onAddSavingsFund, onUpdateSavingsFund, onRemoveSa
         fund={savings.find((f) => f.name === editingName) ?? null}
         existingNames={fundNames}
         onOpenChange={(open) => !open && setEditingName(null)}
-        onSave={(updated) => {
-          if (editingName) onUpdateSavingsFund(editingName, updated)
+        onSave={(updated, amountEdited) => {
+          if (editingName) onUpdateSavingsFund(editingName, updated, amountEdited)
           setEditingName(null)
         }}
       />
@@ -102,6 +112,9 @@ function SavingsTab({ savings, onAddSavingsFund, onUpdateSavingsFund, onRemoveSa
         description={
           <>
             Xoá &quot;<strong>{deletingName}</strong>&quot; sẽ không thể hoàn tác.
+            {deletingSales
+              ? ` Quỹ này đã nhận tiền từ ${deletingSales} lần bán vàng/bạc — xoá quỹ thì không huỷ được các lần bán đó nữa.`
+              : null}
           </>
         }
         confirmLabel="Xoá"

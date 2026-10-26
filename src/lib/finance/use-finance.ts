@@ -541,15 +541,23 @@ function useFinance() {
     [persist]
   )
 
+  // `amountEdited` false: người dùng không sửa ô "Số tiền hiện có" của "Sửa quỹ" — giữ số dư đọc tươi, vì trong
+  // lúc hộp mở có thể đã có tiền bán vàng/bạc hay tất toán ghi vào quỹ (tab khác), số chép lúc mở đã cũ (như
+  // `balanceEdited` của updateCard).
   const updateSavingsFund = useCallback(
-    (originalName: string, fund: SavingsFund) => {
+    (originalName: string, fund: SavingsFund, amountEdited = true) => {
       const current = getStoredFinance()
       if (fund.name !== originalName && current.savings.some((f) => f.name === fund.name)) {
         toast.error(`Đã có quỹ tiết kiệm tên "${fund.name}". Vui lòng chọn tên khác.`)
         return
       }
       try {
-        const next = { ...current, savings: current.savings.map((f) => (f.name === originalName ? fund : f)) }
+        const next = {
+          ...current,
+          savings: current.savings.map((f) =>
+            f.name === originalName ? { ...fund, amount: amountEdited ? fund.amount : f.amount } : f
+          ),
+        }
         // Lần bán trỏ sổ nhận tiền theo tên — đổi tên thì đổi theo trong cùng lần ghi, nếu không lúc huỷ sẽ
         // không tìm thấy sổ. Lần bán còn trỏ tên mới (mồ côi, như ở addSavingsFund) được gắn cờ trước.
         persist(

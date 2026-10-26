@@ -165,6 +165,7 @@ function FinanceView() {
           <SavingsTab
             savings={savings}
             onAddSavingsFund={addSavingsFund}
+            sales={[...goldSales, ...silverSales]}
             onUpdateSavingsFund={updateSavingsFund}
             onRemoveSavingsFund={removeSavingsFund}
           />

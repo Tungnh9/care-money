@@ -12,7 +12,9 @@ interface EditSavingsFundModalProps {
   // Tên mọi quỹ đang có (tên hiện tại của chính quỹ đang sửa luôn được giữ).
   existingNames?: string[]
   onOpenChange: (open: boolean) => void
-  onSave: (fund: SavingsFund) => void
+  // `amountEdited`: ô "Số tiền hiện có" khác số đã chép lúc mở hộp. false thì updateSavingsFund giữ số dư đang
+  // lưu, vì trong lúc hộp mở có thể đã có tiền bán vàng/bạc hay tất toán ghi vào quỹ (tab khác).
+  onSave: (fund: SavingsFund, amountEdited: boolean) => void
 }
 
 function EditSavingsFundModal({ fund, existingNames = [], onOpenChange, onSave }: EditSavingsFundModalProps) {
@@ -20,6 +22,9 @@ function EditSavingsFundModal({ fund, existingNames = [], onOpenChange, onSave }
   const [amount, setAmount] = useState("")
   const [target, setTarget] = useState("")
   const [note, setNote] = useState("")
+  // Số ở ô "Số tiền hiện có" lúc mở hộp — so với số này, không với prop `fund` đang sống (trang đọc lại
+  // finance-data thì `fund.amount` đổi nhưng ô vẫn giữ số cũ, người dùng chưa hề sửa).
+  const [openedAmount, setOpenedAmount] = useState("")
 
   // Modal ở lại mounted với fund=null giữa các lần mở — reseed field đúng lúc chuyển sang mở với
   // 1 fund (mới hoặc khác fund trước), giống pattern EditExpenseModal.
@@ -27,6 +32,7 @@ function EditSavingsFundModal({ fund, existingNames = [], onOpenChange, onSave }
   if (fund && fund.name !== prevFundName) {
     setName(fund.name)
     setAmount(String(fund.amount))
+    setOpenedAmount(String(fund.amount))
     setTarget(String(fund.target))
     setNote(fund.note ?? "")
     setPrevFundName(fund.name)
@@ -46,7 +52,7 @@ function EditSavingsFundModal({ fund, existingNames = [], onOpenChange, onSave }
       target: Number(target) || 0,
     }
     if (note.trim()) updated.note = note.trim()
-    onSave(updated)
+    onSave(updated, amount !== openedAmount)
     onOpenChange(false)
   }
 

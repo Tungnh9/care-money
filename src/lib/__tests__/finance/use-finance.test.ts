@@ -2605,3 +2605,51 @@ describe("useFinance — bán vàng/bạc", () => {
     expect(toast.success).toHaveBeenCalledWith("Đã huỷ lần bán bạc ngày 15/10/2026")
   })
 })
+
+describe("useFinance — Sửa quỹ giữ số dư vừa đổi ở nơi khác", () => {
+  const FUND = { name: "Quỹ A", amount: 1_000_000, target: 5_000_000 }
+
+  beforeEach(() => {
+    window.localStorage.clear()
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  async function renderWithFund() {
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [FUND] })
+    const hook = renderHook(() => useFinance())
+    await waitFor(() => expect(hook.result.current.savings).toHaveLength(1))
+    return hook
+  }
+
+  it("keeps money that came in meanwhile when the amount field was left alone", async () => {
+    const { result } = await renderWithFund()
+    // Tab khác vừa tất toán (hay bán vàng) 1.900.000 vào quỹ trong lúc hộp "Sửa quỹ" đang mở với số dư cũ.
+    act(() => {
+      applySavingsFundDelta("Quỹ A", "deposit", 1_900_000)
+    })
+
+    act(() => {
+      result.current.updateSavingsFund("Quỹ A", { ...FUND, name: "Quỹ A mới", target: 8_000_000 }, false)
+    })
+
+    expect(getStoredFinance().savings).toEqual([{ name: "Quỹ A mới", amount: 2_900_000, target: 8_000_000 }])
+    expect(result.current.savings[0].amount).toBe(2_900_000)
+  })
+
+  it("takes the typed amount when the amount field was edited", async () => {
+    const { result } = await renderWithFund()
+    act(() => {
+      applySavingsFundDelta("Quỹ A", "deposit", 1_900_000)
+    })
+
+    act(() => {
+      result.current.updateSavingsFund("Quỹ A", { ...FUND, amount: 4_000_000 }, true)
+    })
+
+    expect(getStoredFinance().savings[0].amount).toBe(4_000_000)
+  })
+})

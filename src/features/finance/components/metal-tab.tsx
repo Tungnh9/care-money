@@ -337,11 +337,20 @@ function MetalTab<P extends MetalPurchaseBase>({
             </div>
           </div>
         ) : null}
+        {heldPurchases.length && !savings.length ? (
+          // Nút Bán bị khoá chỉ giải thích qua title — màn cảm ứng không hiện, nên nói ngay trên thẻ.
+          <p className="mb-3 text-[12.5px] leading-[1.5] text-[var(--ob-color-text-subtle)]">
+            Nút Bán đang khoá vì chưa có sổ tiết kiệm nào để nhận tiền — tạo 1 sổ ở tab Tiết kiệm trước.
+          </p>
+        ) : null}
         {allTakenOut ? (
           <p className="text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)]">{allTakenOutNote}</p>
         ) : (
           <>
-            <div className="hidden lg:block">
+            {/* Bảng hay thẻ theo bề rộng của chính Card, không theo màn hình (CLAUDE.md §4): bảng cần ~1.105px
+                (đo trên bản build, tên cửa hàng dài) — Card hẹp hơn mà vẫn hiện bảng thì nút Sửa/Xoá trôi ra ngoài
+                khung cuộn ngang ở màn laptop 1280–1440px. */}
+            <div className="hidden @min-[1100px]:block">
               <MetalTransactionsTable
                 metal={metal}
                 purchases={visiblePurchases}
@@ -355,7 +364,7 @@ function MetalTab<P extends MetalPurchaseBase>({
                 sellBlockedReason={savings.length ? undefined : NO_FUND_TO_SELL_INTO}
               />
             </div>
-            <div className="lg:hidden">
+            <div className="@min-[1100px]:hidden">
               <MetalTransactionsCards
                 metal={metal}
                 purchases={visiblePurchases}
@@ -394,10 +403,11 @@ function MetalTab<P extends MetalPurchaseBase>({
             <div className="mb-3 [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
               Tổng hợp theo cửa hàng
             </div>
-            <div className="hidden lg:block">
+            {/* Như bảng giao dịch: bảng tổng hợp cần ~803px — Card hẹp hơn (màn 1024px) dùng dạng thẻ. */}
+            <div className="hidden @min-[820px]:block">
               <MetalStoreSummaryTable metal={metal} summaries={storeSummaries} total={storeTotal} />
             </div>
-            <div className="lg:hidden">
+            <div className="@min-[820px]:hidden">
               <MetalStoreSummaryCards metal={metal} summaries={storeSummaries} total={storeTotal} />
             </div>
           </div>
