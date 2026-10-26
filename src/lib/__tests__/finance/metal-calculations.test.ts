@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest"
 import { phanToChi, summarizeFinance } from "@/lib/finance/finance-calculations"
 import {
   earliestTakeoutDate,
-  giftedByPurchase,
+  takenOutByPurchase,
   takeoutsInMonth,
   heldQuantityOf,
   metalMarketPrice,
@@ -373,9 +373,9 @@ describe("parseWholeQuantity", () => {
   })
 })
 
-describe("giftedByPurchase", () => {
+describe("takenOutByPurchase", () => {
   it("adds up the quantity given away from each purchase", () => {
-    const gifted = giftedByPurchase([
+    const gifted = takenOutByPurchase([
       { purchaseId: 1, qty: 1 },
       { purchaseId: 2, qty: 3 },
       { purchaseId: 1, qty: 2 },

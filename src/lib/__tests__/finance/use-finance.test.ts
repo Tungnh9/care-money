@@ -9,6 +9,7 @@ import {
   applySavingsFundDelta,
   getStoredFinance,
   setStoredFinance,
+  type FinanceState,
 } from "@/lib/finance/finance-storage"
 import type { CreditCard } from "@/lib/finance/types"
 import { getCarGoalFundName, setCarGoalFundName } from "@/lib/goals/car-goal-storage"
@@ -2170,11 +2171,437 @@ describe("useFinance — tặng vàng/bạc", () => {
       result.current.updateGold(1, { ...fields, date: "05/10/2026" })
     })
     expect(result.current.gold).toEqual([PURCHASE])
-    expect(toast.error).toHaveBeenCalledWith("Ngày mua không được sau ngày tặng sớm nhất (01/10/2026).")
+    expect(toast.error).toHaveBeenCalledWith("Ngày mua không được sau lần tặng hoặc bán sớm nhất (01/10/2026).")
 
     act(() => {
       result.current.updateGold(1, { ...fields, date: "01/10/2026" })
     })
     expect(result.current.gold[0].date).toBe("01/10/2026")
+  })
+})
+
+describe("useFinance — bán vàng/bạc", () => {
+  const PURCHASE = { id: 1, date: "10/08/2026", phan: 10, buy: 900_000, store: "SJC" }
+  const SJC = { name: "SJC", price: "1.000.000" }
+  const FUND = { name: "Quỹ A", amount: 5_000_000, target: 20_000_000 }
+  const GIFT = { id: 1, purchaseId: 1, date: "12/10/2026", qty: 1, store: "SJC", buy: 900_000 }
+  const SALE = {
+    id: 1,
+    purchaseId: 1,
+    date: "15/10/2026",
+    qty: 2,
+    store: "SJC",
+    buy: 900_000,
+    received: 1_900_000,
+    fundName: "Quỹ A",
+  }
+  const SILVER_PURCHASE = { id: 1, date: "10/08/2026", luong: 3, buy: 1_800_000, store: "Phú Quý" }
+  const SILVER_SALE = { ...SALE, qty: 1, store: "Phú Quý", buy: 1_800_000, received: 2_000_000 }
+  const SELL_TWO = { date: "15/10/2026", qty: 2, received: 1_900_000, fundName: "Quỹ A" }
+
+  beforeEach(() => {
+    window.localStorage.clear()
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    vi.mocked(toast.success).mockClear()
+    vi.mocked(toast.error).mockClear()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  async function renderWithGold(extra: Partial<FinanceState> = {}) {
+    setStoredFinance({ ...DEFAULT_FINANCE_STATE, savings: [FUND], gold: [PURCHASE], goldStores: [SJC], ...extra })
+    const hook = renderHook(() => useFinance())
+    await waitFor(() => expect(hook.result.current.gold).toHaveLength(1))
+    return hook
+  }
+
+  function financeWrites(spy: { mock: { calls: unknown[][] } }) {
+    return spy.mock.calls.filter(([key]) => key === FINANCE_STORAGE_KEY).length
+  }
+
+  it("records a sale with a snapshot of the purchase and puts the money into the fund in one write", async () => {
+    const { result } = await renderWithGold()
+
+    const spy = vi.spyOn(Storage.prototype, "setItem")
+    let saved = false
+    act(() => {
+      saved = result.current.addGoldSale(1, { ...SELL_TWO, note: "bán bớt" })
+    })
+    const writes = financeWrites(spy)
+    spy.mockRestore()
+
+    expect(saved).toBe(true)
+    expect(writes).toBe(1)
+    expect(result.current.goldSales).toEqual([{ ...SALE, note: "bán bớt" }])
+    expect(getStoredFinance().goldSales).toEqual([{ ...SALE, note: "bán bớt" }])
+    expect(result.current.savings).toEqual([{ ...FUND, amount: 6_900_000 }])
+    expect(getStoredFinance().savings).toEqual([{ ...FUND, amount: 6_900_000 }])
+    expect(getStoredFinance().gold).toEqual([PURCHASE])
+    expect(getStoredFinance().goldGifts).toEqual([])
+    expect(toast.success).toHaveBeenCalledWith('Đã ghi lần bán 2 phân vàng ngày 15/10/2026 vào sổ "Quỹ A"')
+  })
+
+  it("puts the newest sale first with the next id and leaves out an empty note", async () => {
+    const { result } = await renderWithGold({ goldSales: [SALE] })
+
+    act(() => {
+      result.current.addGoldSale(1, { ...SELL_TWO, date: "16/10/2026", note: "" })
+    })
+
+    expect(result.current.goldSales.map((sale) => sale.id)).toEqual([2, 1])
+    expect(result.current.goldSales[0]).not.toHaveProperty("note")
+  })
+
+  it("refuses a sale bigger than what is left after gifts and earlier sales", async () => {
+    const { result } = await renderWithGold({ goldGifts: [GIFT], goldSales: [SALE] })
+
+    let saved = true
+    act(() => {
+      saved = result.current.addGoldSale(1, { ...SELL_TWO, qty: 8 })
+    })
+
+    expect(saved).toBe(false)
+    expect(getStoredFinance().goldSales).toEqual([SALE])
+    expect(getStoredFinance().savings).toEqual([FUND])
+    expect(toast.error).toHaveBeenCalledWith("Lần mua này chỉ còn 7 phân — không đủ để bán 8 phân.")
+  })
+
+  it("refuses a sale quantity that is not a whole number above zero", async () => {
+    const { result } = await renderWithGold()
+
+    for (const qty of [0, -1, 1.5]) {
+      act(() => {
+        expect(result.current.addGoldSale(1, { ...SELL_TWO, qty })).toBe(false)
+      })
+    }
+
+    expect(getStoredFinance().goldSales).toEqual([])
+    expect(getStoredFinance().savings).toEqual([FUND])
+    expect(toast.error).toHaveBeenCalledWith("Số lượng bán phải là số nguyên lớn hơn 0.")
+  })
+
+  it("refuses an amount received that is not a whole number from 1 đ up to the cap", async () => {
+    const { result } = await renderWithGold()
+
+    for (const received of [0, -5, 1.5, 1_000_000_000_000]) {
+      act(() => {
+        expect(result.current.addGoldSale(1, { ...SELL_TWO, received })).toBe(false)
+      })
+    }
+    act(() => {
+      expect(result.current.addGoldSale(1, { ...SELL_TWO, qty: 1, received: 999_999_999_999 })).toBe(true)
+    })
+
+    expect(toast.error).toHaveBeenCalledTimes(4)
+    expect(toast.error).toHaveBeenCalledWith("Số tiền nhận phải là số nguyên từ 1 đến 999.999.999.999 đ.")
+    expect(getStoredFinance().goldSales).toHaveLength(1)
+  })
+
+  it("refuses a sale into a fund that does not exist", async () => {
+    const { result } = await renderWithGold()
+
+    let saved = true
+    act(() => {
+      saved = result.current.addGoldSale(1, { ...SELL_TWO, fundName: "Quỹ X" })
+    })
+
+    expect(saved).toBe(false)
+    expect(getStoredFinance().goldSales).toEqual([])
+    expect(toast.error).toHaveBeenCalledWith('Không tìm thấy sổ "Quỹ X".')
+  })
+
+  it("refuses a sale from a purchase that no longer exists", async () => {
+    const { result } = await renderWithGold()
+
+    let saved = true
+    act(() => {
+      saved = result.current.addGoldSale(99, SELL_TWO)
+    })
+
+    expect(saved).toBe(false)
+    expect(toast.error).toHaveBeenCalledWith("Không tìm thấy lần mua này nữa.")
+  })
+
+  it("checks what is left against the latest stored sales, even ones another tab just wrote", async () => {
+    const { result } = await renderWithGold()
+    // Tab khác vừa bán 9 phân từ cùng lần mua, ghi thẳng vào storage.
+    window.localStorage.setItem(
+      FINANCE_STORAGE_KEY,
+      JSON.stringify({ ...getStoredFinance(), goldSales: [{ ...SALE, qty: 9 }] })
+    )
+
+    let saved = true
+    act(() => {
+      saved = result.current.addGoldSale(1, SELL_TWO)
+    })
+
+    expect(saved).toBe(false)
+    expect(getStoredFinance().goldSales).toEqual([{ ...SALE, qty: 9 }])
+    expect(toast.error).toHaveBeenCalledWith("Lần mua này chỉ còn 1 phân — không đủ để bán 2 phân.")
+  })
+
+  it("says the sale was not saved and leaves the fund untouched when the storage write fails", async () => {
+    const { result } = await renderWithGold()
+
+    const spy = vi.spyOn(Storage.prototype, "setItem").mockImplementationOnce(() => {
+      throw new Error("QuotaExceededError")
+    })
+    let saved = true
+    act(() => {
+      saved = result.current.addGoldSale(1, SELL_TWO)
+    })
+    spy.mockRestore()
+
+    expect(saved).toBe(false)
+    expect(result.current.goldSales).toEqual([])
+    expect(result.current.savings).toEqual([FUND])
+    expect(getStoredFinance().savings).toEqual([FUND])
+    expect(toast.error).toHaveBeenCalledWith("Không thể ghi lần bán vàng. Vui lòng thử lại.")
+  })
+
+  it("undoes a sale: the quantity goes back and the money comes out of the fund in one write", async () => {
+    const { result } = await renderWithGold({ goldSales: [SALE], savings: [{ ...FUND, amount: 6_900_000 }] })
+
+    const spy = vi.spyOn(Storage.prototype, "setItem")
+    act(() => {
+      result.current.removeGoldSale(1)
+    })
+    const writes = financeWrites(spy)
+    spy.mockRestore()
+
+    expect(writes).toBe(1)
+    expect(result.current.goldSales).toEqual([])
+    expect(getStoredFinance().goldSales).toEqual([])
+    expect(getStoredFinance().savings).toEqual([FUND])
+    expect(toast.success).toHaveBeenCalledWith("Đã huỷ lần bán vàng ngày 15/10/2026")
+  })
+
+  it("refuses to undo a sale when the fund no longer holds what was received", async () => {
+    const { result } = await renderWithGold({ goldSales: [SALE], savings: [{ ...FUND, amount: 1_000_000 }] })
+
+    act(() => {
+      result.current.removeGoldSale(1)
+    })
+
+    expect(getStoredFinance().goldSales).toEqual([SALE])
+    expect(getStoredFinance().savings).toEqual([{ ...FUND, amount: 1_000_000 }])
+    expect(toast.error).toHaveBeenCalledWith(
+      'Sổ "Quỹ A" không còn đủ tiền để rút lại số đã nhận — không huỷ được lần bán này.'
+    )
+  })
+
+  it("refuses to undo a sale whose fund is gone, even without the removed mark", async () => {
+    const { result } = await renderWithGold({ goldSales: [{ ...SALE, fundName: "Quỹ Z" }] })
+
+    act(() => {
+      result.current.removeGoldSale(1)
+    })
+
+    expect(getStoredFinance().goldSales).toEqual([{ ...SALE, fundName: "Quỹ Z" }])
+    expect(toast.error).toHaveBeenCalledWith('Sổ "Quỹ Z" đã bị xoá — không huỷ được lần bán này.')
+  })
+
+  it("follows a fund rename in both metals, so undoing takes the money from the renamed fund", async () => {
+    const removedSale = { ...SALE, id: 2, fundRemoved: true }
+    const otherSale = { ...SALE, id: 3, fundName: "Quỹ C" }
+    const { result } = await renderWithGold({
+      savings: [{ ...FUND, amount: 6_900_000 }],
+      goldSales: [SALE, removedSale, otherSale],
+      silver: [SILVER_PURCHASE],
+      silverSales: [SILVER_SALE],
+    })
+
+    const spy = vi.spyOn(Storage.prototype, "setItem")
+    act(() => {
+      result.current.updateSavingsFund("Quỹ A", { ...FUND, name: "Quỹ B", amount: 6_900_000 })
+    })
+    const writes = financeWrites(spy)
+    spy.mockRestore()
+
+    expect(writes).toBe(1)
+    expect(getStoredFinance().goldSales).toEqual([{ ...SALE, fundName: "Quỹ B" }, removedSale, otherSale])
+    expect(getStoredFinance().silverSales).toEqual([{ ...SILVER_SALE, fundName: "Quỹ B" }])
+    expect(result.current.goldSales[0].fundName).toBe("Quỹ B")
+
+    act(() => {
+      result.current.removeGoldSale(1)
+    })
+
+    expect(getStoredFinance().savings).toEqual([{ ...FUND, name: "Quỹ B", amount: 5_000_000 }])
+    expect(getStoredFinance().goldSales).toEqual([removedSale, otherSale])
+  })
+
+  it("marks sales in both metals when their fund is deleted, so a new fund with the same name is never charged", async () => {
+    const otherSale = { ...SALE, id: 2, fundName: "Quỹ C" }
+    const { result } = await renderWithGold({
+      savings: [{ ...FUND, amount: 6_900_000 }],
+      goldSales: [SALE, otherSale],
+      silver: [SILVER_PURCHASE],
+      silverSales: [SILVER_SALE],
+    })
+
+    const spy = vi.spyOn(Storage.prototype, "setItem")
+    act(() => {
+      result.current.removeSavingsFund("Quỹ A")
+    })
+    const writes = financeWrites(spy)
+    spy.mockRestore()
+
+    expect(writes).toBe(1)
+    expect(getStoredFinance().goldSales).toEqual([{ ...SALE, fundRemoved: true }, otherSale])
+    expect(getStoredFinance().silverSales).toEqual([{ ...SILVER_SALE, fundRemoved: true }])
+
+    act(() => {
+      result.current.addSavingsFund({ ...FUND, amount: 3_000_000 })
+    })
+    act(() => {
+      result.current.removeGoldSale(1)
+    })
+
+    expect(getStoredFinance().goldSales).toEqual([{ ...SALE, fundRemoved: true }, otherSale])
+    expect(getStoredFinance().savings).toEqual([{ ...FUND, amount: 3_000_000 }])
+    expect(toast.error).toHaveBeenCalledWith('Sổ "Quỹ A" đã bị xoá — không huỷ được lần bán này.')
+
+    // Đổi tên sổ mới không kéo theo lần bán đã gắn cờ của sổ cũ trùng tên.
+    act(() => {
+      result.current.updateSavingsFund("Quỹ A", { ...FUND, name: "Quỹ D", amount: 3_000_000 })
+    })
+    expect(getStoredFinance().goldSales[0]).toEqual({ ...SALE, fundRemoved: true })
+  })
+
+  it("never lets a new or renamed fund pick up a sale left pointing at its name by a hand-edited file", async () => {
+    const orphanX = { ...SALE, fundName: "Quỹ X" }
+    const orphanY = { ...SALE, id: 2, fundName: "Quỹ Y" }
+    const { result } = await renderWithGold({ goldSales: [orphanX, orphanY, { ...SALE, id: 3 }] })
+
+    act(() => {
+      result.current.addSavingsFund({ name: "Quỹ X", amount: 5_000_000, target: 0 })
+    })
+    act(() => {
+      result.current.updateSavingsFund("Quỹ A", { ...FUND, name: "Quỹ Y" })
+    })
+
+    expect(getStoredFinance().goldSales).toEqual([
+      { ...orphanX, fundRemoved: true },
+      { ...orphanY, fundRemoved: true },
+      { ...SALE, id: 3, fundName: "Quỹ Y" },
+    ])
+
+    act(() => {
+      result.current.removeGoldSale(1)
+    })
+    expect(getStoredFinance().savings.find((fund) => fund.name === "Quỹ X")?.amount).toBe(5_000_000)
+    expect(toast.error).toHaveBeenCalledWith('Sổ "Quỹ X" đã bị xoá — không huỷ được lần bán này.')
+  })
+
+  it("blocks deleting a purchase that has sales taken out of it", async () => {
+    const { result } = await renderWithGold({ goldSales: [SALE] })
+
+    act(() => {
+      result.current.removeGold(1)
+    })
+
+    expect(result.current.gold).toEqual([PURCHASE])
+    expect(toast.error).toHaveBeenCalledWith(
+      "Không thể xoá lần mua này vì đã có lần bán lấy từ đây. Huỷ các lần bán trước."
+    )
+  })
+
+  it("blocks editing a purchase's quantity below what was given away and sold", async () => {
+    const { result } = await renderWithGold({ goldGifts: [GIFT], goldSales: [SALE] })
+    const fields = { date: PURCHASE.date, phan: PURCHASE.phan, buy: PURCHASE.buy, store: PURCHASE.store }
+
+    act(() => {
+      result.current.updateGold(1, { ...fields, phan: 2 })
+    })
+    expect(result.current.gold).toEqual([PURCHASE])
+    expect(toast.error).toHaveBeenCalledWith(
+      "Lần mua này đã tặng 1 phân · đã bán 2 phân — không sửa số lượng xuống thấp hơn."
+    )
+
+    act(() => {
+      result.current.updateGold(1, { ...fields, phan: 3 })
+    })
+    expect(result.current.gold).toEqual([{ ...PURCHASE, phan: 3 }])
+  })
+
+  it("blocks moving a purchase's date past the earliest sale taken out of it", async () => {
+    const { result } = await renderWithGold({ goldGifts: [GIFT], goldSales: [{ ...SALE, date: "01/10/2026" }] })
+    const fields = { date: PURCHASE.date, phan: PURCHASE.phan, buy: PURCHASE.buy, store: PURCHASE.store }
+
+    act(() => {
+      result.current.updateGold(1, { ...fields, date: "05/10/2026" })
+    })
+
+    expect(result.current.gold).toEqual([PURCHASE])
+    expect(toast.error).toHaveBeenCalledWith("Ngày mua không được sau lần tặng hoặc bán sớm nhất (01/10/2026).")
+  })
+
+  it("never reuses for a new purchase an id that a sale still points at", async () => {
+    const { result } = await renderWithGold({ goldSales: [{ ...SALE, purchaseId: 5 }] })
+
+    act(() => {
+      result.current.addGold({ date: "11/08/2026", phan: 3, buy: 900_000, store: "SJC" })
+    })
+
+    expect(result.current.gold[0].id).toBe(6)
+  })
+
+  it("refuses a gift bigger than what is left after sales", async () => {
+    const { result } = await renderWithGold({ goldSales: [{ ...SALE, qty: 9 }] })
+
+    let saved = true
+    act(() => {
+      saved = result.current.addGoldGift(1, { date: "16/10/2026", qty: 2 })
+    })
+
+    expect(saved).toBe(false)
+    expect(toast.error).toHaveBeenCalledWith("Lần mua này chỉ còn 1 phân — không đủ để tặng 2 phân.")
+  })
+
+  it("limits a gift edit to what is left after sales", async () => {
+    const { result } = await renderWithGold({ goldGifts: [{ ...GIFT, qty: 3 }], goldSales: [SALE] })
+
+    let saved = true
+    act(() => {
+      saved = result.current.updateGoldGift(1, { date: "12/10/2026", qty: 9 })
+    })
+    expect(saved).toBe(false)
+    expect(toast.error).toHaveBeenCalledWith("Lần mua này chỉ còn 8 phân — không đủ để tặng 9 phân.")
+
+    act(() => {
+      saved = result.current.updateGoldGift(1, { date: "12/10/2026", qty: 8 })
+    })
+    expect(saved).toBe(true)
+  })
+
+  it("records a silver sale in the silver list only, with silver wording", async () => {
+    setStoredFinance({
+      ...DEFAULT_FINANCE_STATE,
+      savings: [FUND],
+      silver: [SILVER_PURCHASE],
+      silverStores: [{ name: "Phú Quý", price: "2.000.000" }],
+    })
+    const { result } = renderHook(() => useFinance())
+    await waitFor(() => expect(result.current.silver).toHaveLength(1))
+
+    act(() => {
+      result.current.addSilverSale(1, { ...SELL_TWO, qty: 1, received: 2_000_000 })
+    })
+
+    expect(result.current.silverSales).toEqual([SILVER_SALE])
+    expect(result.current.goldSales).toEqual([])
+    expect(getStoredFinance().savings).toEqual([{ ...FUND, amount: 7_000_000 }])
+    expect(toast.success).toHaveBeenCalledWith('Đã ghi lần bán 1 lượng bạc ngày 15/10/2026 vào sổ "Quỹ A"')
+
+    act(() => {
+      result.current.removeSilverSale(1)
+    })
+
+    expect(result.current.silverSales).toEqual([])
+    expect(getStoredFinance().savings).toEqual([FUND])
+    expect(toast.success).toHaveBeenCalledWith("Đã huỷ lần bán bạc ngày 15/10/2026")
   })
 })

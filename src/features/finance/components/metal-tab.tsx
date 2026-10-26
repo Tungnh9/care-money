@@ -13,7 +13,7 @@ import { formatMoney } from "@/lib/format"
 import { pct1, signedMoney } from "@/lib/finance/finance-calculations"
 import {
   earliestTakeoutDate,
-  giftedByPurchase,
+  takenOutByPurchase,
   heldQuantityOf,
   metalMarketPrice,
   metalPLTone,
@@ -91,7 +91,7 @@ function MetalTab<P extends MetalPurchaseBase>({
   const plText = plTone === "even" ? formatMoney(0, hidden) : signedMoney(pl, hidden)
   // Mỗi lần mua chỉ còn phần chưa tặng; lần mua đã tặng hết không còn trong danh sách đang giữ (vẫn có trong
   // lịch sử tặng). Thẻ "Giá thị trường hôm nay" vẫn nhận mọi lần mua để giữ chặn xoá cửa hàng.
-  const gifted = giftedByPurchase(gifts)
+  const gifted = takenOutByPurchase(gifts)
   const heldQty = heldQuantityOf(metal.quantityOf, gifts)
   const heldPurchases = purchases.filter((p) => heldQty(p) > 0)
   const allGivenAway = purchases.length > 0 && heldPurchases.length === 0

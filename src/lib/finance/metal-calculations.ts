@@ -103,22 +103,24 @@ function earliestTakeoutDate(takeouts: Pick<MetalGift, "purchaseId" | "date">[],
   return earliest
 }
 
-// Tổng đã tặng của từng lần mua (theo id lần mua).
-function giftedByPurchase(gifts: Pick<MetalGift, "purchaseId" | "qty">[]): Map<number, number> {
-  const gifted = new Map<number, number>()
-  for (const gift of gifts) gifted.set(gift.purchaseId, (gifted.get(gift.purchaseId) ?? 0) + gift.qty)
-  return gifted
+// Tổng đã lấy ra (tặng, hoặc bán) của từng lần mua (theo id lần mua).
+function takenOutByPurchase(takeouts: Pick<MetalGift, "purchaseId" | "qty">[]): Map<number, number> {
+  const takenOut = new Map<number, number>()
+  for (const takeout of takeouts) {
+    takenOut.set(takeout.purchaseId, (takenOut.get(takeout.purchaseId) ?? 0) + takeout.qty)
+  }
+  return takenOut
 }
 
-// Số còn giữ của 1 lần mua = số đã mua − tổng đã tặng từ lần mua đó. Lần mua không lưu số còn lại — tính
-// ra từ đây, nên mọi chỗ định giá (tổng đang giữ, Tài sản ròng, bảng, tổng hợp) giảm theo cùng 1 cách.
-// Không có lần tặng nào thì trả đúng quantityOf(p) (x − 0 = x), số vàng giữ nguyên từng bit.
+// Số còn giữ của 1 lần mua = số đã mua − tổng đã lấy ra (tặng và bán) từ lần mua đó. Lần mua không lưu số
+// còn lại — tính ra từ đây, nên mọi chỗ định giá (tổng đang giữ, Tài sản ròng, bảng, tổng hợp) giảm theo cùng
+// 1 cách. Chưa lấy ra lần nào thì trả đúng quantityOf(p) (x − 0 = x), số vàng giữ nguyên từng bit.
 function heldQuantityOf<P extends MetalPurchaseBase>(
   quantityOf: (purchase: P) => number,
-  gifts: Pick<MetalGift, "purchaseId" | "qty">[]
+  takeouts: Pick<MetalGift, "purchaseId" | "qty">[]
 ): (purchase: P) => number {
-  const gifted = giftedByPurchase(gifts)
-  return (purchase) => quantityOf(purchase) - (gifted.get(purchase.id) ?? 0)
+  const takenOut = takenOutByPurchase(takeouts)
+  return (purchase) => quantityOf(purchase) - (takenOut.get(purchase.id) ?? 0)
 }
 
 // Các lần lấy ra (tặng, bán) có ngày thuộc `month` (YYYY-MM), mới nhất trước; cùng ngày thì id cao (ghi sau)
@@ -253,7 +255,7 @@ export {
   sortByPurchaseDate,
   purchaseDateToDayKey,
   toPurchaseDate,
-  giftedByPurchase,
+  takenOutByPurchase,
   earliestTakeoutDate,
   heldQuantityOf,
   takeoutsInMonth,
