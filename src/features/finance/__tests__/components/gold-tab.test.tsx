@@ -959,6 +959,27 @@ describe("GoldTab — bán", () => {
     for (const note of notes) expect(note).toHaveTextContent("đã tặng 1 phân · đã bán 2 phân")
   })
 
+  it("switches between tables and cards by the card's own width, never by the screen's", () => {
+    renderGold()
+
+    // jsdom không tính container query — chỉ khoá đúng các class. Ngưỡng là bề rộng tự nhiên đo được của 2 bảng
+    // (≈1.105px và ≈803px khi có tên cửa hàng dài): Card hẹp hơn thì dùng dạng thẻ, không bắt cuộn ngang.
+    const [purchasesTable, summaryTable] = Array.from(document.querySelectorAll("table"))
+    const purchasesWrapper = purchasesTable.parentElement?.parentElement as HTMLElement
+    const purchasesCards = purchasesWrapper.nextElementSibling as HTMLElement
+    expect(purchasesWrapper).toHaveClass("hidden", "@min-[1100px]:block")
+    expect(purchasesCards).toHaveClass("@min-[1100px]:hidden")
+    // Laptop (Card ~900–1.060px): thẻ đứng 2 cột thay vì 1 thẻ kéo dài cả hàng.
+    expect(purchasesCards.firstElementChild).toHaveClass("grid", "@min-[800px]:grid-cols-2")
+    const summaryWrapper = summaryTable.parentElement?.parentElement as HTMLElement
+    const summaryCards = summaryWrapper.nextElementSibling as HTMLElement
+    expect(summaryWrapper).toHaveClass("hidden", "@min-[820px]:block")
+    expect(summaryCards).toHaveClass("@min-[820px]:hidden")
+    for (const wrapper of [purchasesWrapper, purchasesCards, summaryWrapper, summaryCards]) {
+      expect(wrapper.className).not.toMatch(/(^|\s)lg:/)
+    }
+  })
+
   it("lets the gift and sale note break only at the dot, so the table never widens for the whole line", () => {
     renderGold({ gifts: [GIFT], sales: [SALE] })
 

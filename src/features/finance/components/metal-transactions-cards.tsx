@@ -57,7 +57,8 @@ function MetalTransactionsCards<P extends MetalPurchaseBase>({
   const labels = metalPurchaseLabels(purchases, (p) => metal.formatQuantity(metal.quantityOf(p)))
 
   return (
-    <div className="flex flex-col gap-3">
+    // Card rộng (laptop, ~900–1.100px — chưa đủ cho bảng) thì xếp 2 thẻ 1 hàng thay vì 1 thẻ kéo dài cả hàng.
+    <div className="grid gap-3 @min-[800px]:grid-cols-2">
       {purchases.map((purchase) => {
         const price = metalMarketPrice(stores, purchase)
         const giftedQty = gifted.get(purchase.id) ?? 0
