@@ -176,4 +176,18 @@ describe("getStoredStudy — từ đã gộp", () => {
     )
     expect(getStoredStudy().wordReviews).toEqual({ "v-0179": review("v-0179", 15) })
   })
+
+  it("moves the learned mark and review schedule of the removed duplicate 'friendly' (v-0236) onto v-0059", () => {
+    window.localStorage.setItem(
+      STUDY_STORAGE_KEY,
+      JSON.stringify({
+        ...DEFAULT_STUDY_STATE,
+        learned: ["v-0236", "v-0010"],
+        wordReviews: { "v-0236": review("v-0236", 6) },
+      })
+    )
+
+    expect(getStoredStudy().learned).toEqual(["v-0059", "v-0010"])
+    expect(getStoredStudy().wordReviews).toEqual({ "v-0059": review("v-0059", 6) })
+  })
 })

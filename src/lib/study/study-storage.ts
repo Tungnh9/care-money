@@ -88,6 +88,9 @@ function safeWordReviews(value: unknown): Record<string, WordReviewState> {
 const MERGED_WORD_IDS: Record<string, string> = {
   // "pay" (mức lương) lặp y nguyên ở chủ đề activities (v-0004) và jobs (v-0179) — giữ bản ở jobs.
   "v-0004": "v-0179",
+  // "friendly" (thân thiện) lặp y nguyên ở chủ đề countries (v-0059) và relationships (v-0236) — giữ bản ở
+  // countries: ảnh trẻ em cười chào là hình "thân thiện" rõ hơn ảnh nhóm bạn ngồi quán bia.
+  "v-0236": "v-0059",
 }
 
 function mergedWordId(id: string): string {
