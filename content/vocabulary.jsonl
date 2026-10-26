@@ -1,7 +1,6 @@
 {"id": "v-0001", "word": "offer ... (to ...)", "pos": "v.", "phonetic": "/ˈɒfə(r) tu/", "meaning": "cung cấp (cái gì) (cho ai đó)", "topic": "activities", "addedAt": "2026-08-11", "image": "/assets/vocab/v-0001.jpg"}
 {"id": "v-0002", "word": "exam", "pos": "n.", "phonetic": "/ɪɡˈzæm/", "meaning": "kỳ thi", "topic": "activities", "addedAt": "2026-08-11", "image": "/assets/vocab/v-0002.jpg"}
 {"id": "v-0003", "word": "for free", "pos": "phr.", "phonetic": "/fɔ:(r) ˈfriː/", "meaning": "miễn phí, không mất phí", "topic": "activities", "addedAt": "2026-08-11", "image": "/assets/vocab/v-0003.jpg"}
-{"id": "v-0004", "word": "pay", "pos": "n.", "phonetic": "/peɪ/", "meaning": "mức lương", "topic": "activities", "addedAt": "2026-08-11", "image": "/assets/vocab/v-0004.jpg"}
 {"id": "v-0005", "word": "talk about", "pos": "v. phr.", "phonetic": "/tɔːk əˈbaʊt/", "meaning": "nói về", "topic": "activities", "addedAt": "2026-08-11", "image": "/assets/vocab/v-0005.jpg"}
 {"id": "v-0006", "word": "learn to", "pos": "v. phr.", "phonetic": "/lɜːn tu/", "meaning": "học cách làm gì", "topic": "activities", "addedAt": "2026-08-11", "image": "/assets/vocab/v-0006.jpg"}
 {"id": "v-0007", "word": "work in ...", "pos": "v. phr.", "phonetic": "/wɜːk ɪn/", "meaning": "làm trong lĩnh vực nào đó", "topic": "activities", "addedAt": "2026-08-11", "image": "/assets/vocab/v-0007.jpg"}
@@ -233,7 +232,6 @@
 {"id": "v-0233", "word": "shy", "pos": "adj.", "phonetic": "/ʃaɪ/", "meaning": "rụt rè, nhút nhát", "topic": "relationships", "addedAt": "2026-08-11", "image": "/assets/vocab/v-0233.jpg"}
 {"id": "v-0234", "word": "hardworking", "pos": "adj.", "phonetic": "/ˌhɑːdˈwɜːkɪŋ/", "meaning": "chăm chỉ, siêng năng", "topic": "relationships", "addedAt": "2026-08-11", "image": "/assets/vocab/v-0234.jpg"}
 {"id": "v-0235", "word": "serious", "pos": "adj.", "phonetic": "/ˈsɪriəs/", "meaning": "nghiêm túc", "topic": "relationships", "addedAt": "2026-08-11", "image": "/assets/vocab/v-0235.jpg"}
-{"id": "v-0236", "word": "friendly", "pos": "adj.", "phonetic": "/ˈfrendli/", "meaning": "thân thiện", "topic": "relationships", "addedAt": "2026-08-11", "image": "/assets/vocab/v-0236.jpg"}
 {"id": "v-0237", "word": "tidy", "pos": "adj.", "phonetic": "/ˈtaɪdi/", "meaning": "gọn gàng, ngăn nắp", "topic": "relationships", "addedAt": "2026-08-11", "image": "/assets/vocab/v-0237.jpg"}
 {"id": "v-0238", "word": "relaxed", "pos": "adj.", "phonetic": "/rɪˈlækst/", "meaning": "thoải mái", "topic": "relationships", "addedAt": "2026-08-11", "image": "/assets/vocab/v-0238.jpg"}
 {"id": "v-0239", "word": "tall", "pos": "adj.", "phonetic": "/tɔːl/", "meaning": "cao", "topic": "relationships", "addedAt": "2026-08-11", "image": "/assets/vocab/v-0239.jpg"}

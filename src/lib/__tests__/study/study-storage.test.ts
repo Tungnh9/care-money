@@ -131,3 +131,63 @@ describe("tasksForDay", () => {
     expect(tasksForDay(ticked, null, "2026-09-29")).toEqual(unticked)
   })
 })
+
+describe("getStoredStudy — từ đã gộp", () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+
+  const review = (wordId: string, intervalDays: number) => ({
+    wordId,
+    easeFactor: 2.5,
+    intervalDays,
+    repetitions: 2,
+    dueAt: "2026-11-01",
+    lastReviewedAt: "2026-10-20",
+  })
+
+  it("moves a learned mark saved under the removed duplicate 'pay' (v-0004) onto the kept one (v-0179)", () => {
+    window.localStorage.setItem(
+      STUDY_STORAGE_KEY,
+      JSON.stringify({ ...DEFAULT_STUDY_STATE, learned: ["v-0004", "v-0010"] })
+    )
+    expect(getStoredStudy().learned).toEqual(["v-0179", "v-0010"])
+
+    window.localStorage.setItem(
+      STUDY_STORAGE_KEY,
+      JSON.stringify({ ...DEFAULT_STUDY_STATE, learned: ["v-0179", "v-0004"] })
+    )
+    expect(getStoredStudy().learned).toEqual(["v-0179"])
+  })
+
+  it("moves the review schedule of v-0004 onto v-0179, unless v-0179 already has its own", () => {
+    window.localStorage.setItem(
+      STUDY_STORAGE_KEY,
+      JSON.stringify({ ...DEFAULT_STUDY_STATE, wordReviews: { "v-0004": review("v-0004", 6) } })
+    )
+    expect(getStoredStudy().wordReviews).toEqual({ "v-0179": review("v-0179", 6) })
+
+    window.localStorage.setItem(
+      STUDY_STORAGE_KEY,
+      JSON.stringify({
+        ...DEFAULT_STUDY_STATE,
+        wordReviews: { "v-0004": review("v-0004", 6), "v-0179": review("v-0179", 15) },
+      })
+    )
+    expect(getStoredStudy().wordReviews).toEqual({ "v-0179": review("v-0179", 15) })
+  })
+
+  it("moves the learned mark and review schedule of the removed duplicate 'friendly' (v-0236) onto v-0059", () => {
+    window.localStorage.setItem(
+      STUDY_STORAGE_KEY,
+      JSON.stringify({
+        ...DEFAULT_STUDY_STATE,
+        learned: ["v-0236", "v-0010"],
+        wordReviews: { "v-0236": review("v-0236", 6) },
+      })
+    )
+
+    expect(getStoredStudy().learned).toEqual(["v-0059", "v-0010"])
+    expect(getStoredStudy().wordReviews).toEqual({ "v-0059": review("v-0059", 6) })
+  })
+})

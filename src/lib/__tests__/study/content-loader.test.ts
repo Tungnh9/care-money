@@ -50,6 +50,32 @@ describe("getVocab", () => {
     const ids = new Set(vocab.map((v) => v.id))
     expect(ids.size).toBe(vocab.length)
   })
+
+  it("keeps a single 'pay' (mức lương), the one in the jobs topic", () => {
+    const pay = getVocab().filter((v) => v.word.toLowerCase() === "pay")
+
+    expect(pay.map((v) => v.id)).toEqual(["v-0179"])
+  })
+
+  it("keeps a single 'friendly' (thân thiện), the one in the countries topic", () => {
+    const friendly = getVocab().filter((v) => v.word.toLowerCase() === "friendly")
+
+    expect(friendly.map((v) => v.id)).toEqual(["v-0059"])
+  })
+
+  it("never lists the same word twice with the same meaning", () => {
+    // Cùng chữ nhưng khác nghĩa thì vẫn được ("light": sáng / đèn) — chỉ chặn bản lặp y nguyên.
+    const firstId = new Map<string, string>()
+    const repeats: string[] = []
+    for (const v of getVocab()) {
+      const key = `${v.word.trim().toLowerCase()} — ${v.meaning.trim().toLowerCase()}`
+      const first = firstId.get(key)
+      if (first) repeats.push(`${key} (${first}, ${v.id})`)
+      else firstId.set(key, v.id)
+    }
+
+    expect(repeats).toEqual([])
+  })
 })
 
 describe("getGrammar", () => {
