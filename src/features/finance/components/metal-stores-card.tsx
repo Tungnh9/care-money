@@ -15,19 +15,37 @@ interface MetalStoresCardProps {
   metal: MetalDisplay
   stores: MetalStore[]
   purchases: Pick<MetalPurchaseBase, "store">[]
+  // Các lần mua còn giữ (chưa tặng hết). Cửa hàng chỉ còn lần mua đã tặng hết vẫn không xoá được — lịch sử
+  // tặng còn trỏ tới — nhưng tooltip nói rõ lý do đó. Không truyền thì coi như mọi lần mua đều còn giữ.
+  heldPurchases?: Pick<MetalPurchaseBase, "store">[]
   onAdd: (store: MetalStore) => void
   onUpdate: (originalName: string, store: MetalStore) => void
   onRemove: (name: string) => void
   onSetPrice: (name: string, price: string) => void
 }
 
-function MetalStoresCard({ metal, stores, purchases, onAdd, onUpdate, onRemove, onSetPrice }: MetalStoresCardProps) {
+function MetalStoresCard({
+  metal,
+  stores,
+  purchases,
+  heldPurchases = purchases,
+  onAdd,
+  onUpdate,
+  onRemove,
+  onSetPrice,
+}: MetalStoresCardProps) {
   const [editingName, setEditingName] = useState<string | null>(null)
   const [deletingName, setDeletingName] = useState<string | null>(null)
   const storeNames = stores.map((store) => store.name)
 
   function isInUse(name: string) {
     return purchases.some((p) => p.store === name)
+  }
+
+  function removeBlockedTitle(name: string) {
+    return heldPurchases.some((p) => p.store === name)
+      ? `Không thể xoá — vẫn còn giao dịch mua ${metal.noun} gắn với cửa hàng này.`
+      : `Không thể xoá — các lần mua ${metal.noun} ở cửa hàng này đã tặng hết nhưng vẫn còn trong Lịch sử tặng.`
   }
 
   return (
@@ -73,9 +91,7 @@ function MetalStoresCard({ metal, stores, purchases, onAdd, onUpdate, onRemove, 
                     type="button"
                     aria-label={`Xoá ${store.name}`}
                     disabled={inUse}
-                    title={
-                      inUse ? `Không thể xoá — vẫn còn giao dịch mua ${metal.noun} gắn với cửa hàng này.` : undefined
-                    }
+                    title={inUse ? removeBlockedTitle(store.name) : undefined}
                     onClick={() => setDeletingName(store.name)}
                     className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)] disabled:cursor-not-allowed disabled:opacity-45"
                   >

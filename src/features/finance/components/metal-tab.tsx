@@ -12,6 +12,7 @@ import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { formatMoney } from "@/lib/format"
 import { pct1, signedMoney } from "@/lib/finance/finance-calculations"
 import {
+  earliestGiftDate,
   giftedByPurchase,
   heldQuantityOf,
   metalMarketPrice,
@@ -142,12 +143,17 @@ function MetalTab<P extends MetalPurchaseBase>({
         }
       : editingGift && {
           purchaseDate: giftPurchase?.date ?? "",
-          store: editingGift.store,
+          // Tên cửa hàng hiện tại của lần mua (có thể đã đổi tên sau khi tặng); lịch sử vẫn giữ bản chụp.
+          store: giftPurchase?.store ?? editingGift.store,
           available: (giftPurchase ? heldQty(giftPurchase) : 0) + editingGift.qty,
           gift: editingGift,
         }
   const undoingGift = gifts.find((g) => g.id === undoingGiftId) ?? null
   const undoingPurchase = undoingGift ? purchases.find((p) => p.id === undoingGift.purchaseId) : undefined
+  // Bản ghi đang mở đã biến mất (tab khác vừa xoá/huỷ): bỏ luôn trạng thái "đang mở". Giữ lại thì 1 bản ghi
+  // mới lấy lại đúng id đó (nextId) sẽ tự bật modal/hộp xác nhận lên mà không ai bấm.
+  if (giftTarget && !giftModalTarget) setGiftTarget(null)
+  if (undoingGiftId !== null && !undoingGift) setUndoingGiftId(null)
 
   function saveGift(input: MetalGiftInput): boolean {
     if (!giftTarget) return false
@@ -249,6 +255,7 @@ function MetalTab<P extends MetalPurchaseBase>({
         metal={metal}
         stores={stores}
         purchases={purchases}
+        heldPurchases={heldPurchases}
         onAdd={onAddStore}
         onUpdate={onUpdateStore}
         onRemove={onRemoveStore}
@@ -355,6 +362,7 @@ function MetalTab<P extends MetalPurchaseBase>({
         purchase={purchases.find((p) => p.id === editingId) ?? null}
         stores={stores}
         minQuantity={editingId !== null ? (gifted.get(editingId) ?? 0) : 0}
+        latestDate={editingId !== null ? (earliestGiftDate(gifts, editingId) ?? undefined) : undefined}
         onOpenChange={(open) => !open && setEditingId(null)}
         onSave={(id, updated) => {
           onUpdatePurchase(id, updated)
@@ -389,11 +397,11 @@ function MetalTab<P extends MetalPurchaseBase>({
         onOpenChange={(open) => !open && setUndoingGiftId(null)}
         title="Huỷ lần tặng này?"
         description={
-          undoingGift
-            ? `${metal.formatQuantity(undoingGift.qty)} sẽ trả về lần mua ${
-                undoingPurchase ? `ngày ${undoingPurchase.date} ` : ""
-              }ở ${undoingGift.store}.`
-            : undefined
+          !undoingGift
+            ? undefined
+            : undoingPurchase
+              ? `${metal.formatQuantity(undoingGift.qty)} sẽ trả về lần mua ngày ${undoingPurchase.date} ở ${undoingPurchase.store}.`
+              : `Lần mua gốc không còn — huỷ chỉ xoá lần tặng ${metal.formatQuantity(undoingGift.qty)} khỏi lịch sử.`
         }
         confirmLabel="Huỷ lần tặng"
         cancelLabel="Giữ lại"

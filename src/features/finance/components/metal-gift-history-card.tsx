@@ -31,18 +31,20 @@ function MetalGiftHistoryCard({ metal, gifts, onEdit, onRemove }: MetalGiftHisto
         <div
           key={gift.id}
           data-testid="gift-history-row"
-          className="flex items-center gap-3 border-b border-[var(--ob-color-border)] py-[10px] last:border-b-0"
+          // Đo theo bề rộng của chính Card (container): hẹp (điện thoại) thì số tiền xuống dưới dòng chữ để cột chữ
+          // không bị 2 nút 44px và số tiền ép còn vài chục px; từ @xs trở lên mới đứng thành cột riêng.
+          className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 border-b border-[var(--ob-color-border)] py-[10px] last:border-b-0 [grid-template-areas:'text_actions'_'amount_actions'] @xs:grid-cols-[minmax(0,1fr)_auto_auto] @xs:[grid-template-areas:'text_amount_actions']"
         >
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 [grid-area:text]">
             <div className="text-[14px] font-bold">{`Tặng ${metal.formatQuantity(gift.qty)}`}</div>
             <div className="mt-0.5 text-[12.5px] text-[var(--ob-color-text-subtle)] wrap-anywhere">
               {`${gift.date} · ${gift.store}${gift.note ? ` · ${gift.note}` : ""}`}
             </div>
           </div>
-          <div className="flex-none whitespace-nowrap text-[13.5px] font-semibold [font-family:var(--ob-font-num)] tabular-nums">
+          <div className="mt-0.5 whitespace-nowrap text-[13.5px] font-semibold [font-family:var(--ob-font-num)] tabular-nums [grid-area:amount] @xs:mt-0">
             {formatMoney(gift.qty * gift.buy, hidden)}
           </div>
-          <div className="flex flex-none items-center gap-1">
+          <div className="flex items-center gap-1 [grid-area:actions]">
             <button
               type="button"
               aria-label={`Sửa lần tặng ${labels.get(gift.id)}`}

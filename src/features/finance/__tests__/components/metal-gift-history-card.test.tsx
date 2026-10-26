@@ -97,4 +97,13 @@ describe("MetalGiftHistoryCard", () => {
     await waitFor(() => expect(within(row).getByText("•••••••• ₫")).toBeInTheDocument())
     expect(row.textContent).not.toMatch(/\d{1,3}(\.\d{3})+/)
   })
+  it("lays each row out against the card's own width: amount under the text when narrow, beside it when wide", () => {
+    render(<MetalGiftHistoryCard metal={GOLD_METAL} gifts={[NEWER]} onEdit={vi.fn()} onRemove={vi.fn()} />)
+
+    // jsdom không tính được container query — chỉ khoá đúng các class mà bố cục 2 kiểu dựa vào.
+    const row = screen.getByTestId("gift-history-row")
+    expect(row).toHaveClass("[grid-template-areas:'text_actions'_'amount_actions']")
+    expect(row).toHaveClass("@xs:[grid-template-areas:'text_amount_actions']")
+    expect(within(row).getByText(formatMoney(12 * 950_000))).toHaveClass("[grid-area:amount]")
+  })
 })

@@ -804,4 +804,76 @@ describe("GoldTab — tặng", () => {
 
     expect(onRemoveGoldGift).toHaveBeenCalledWith(1)
   })
+  it("explains that a store is kept because its purchases were all given away", () => {
+    renderGold([{ ...GIFT, qty: 10 }])
+
+    expect(screen.getByRole("button", { name: "Xoá SJC" })).toHaveAttribute(
+      "title",
+      "Không thể xoá — các lần mua vàng ở cửa hàng này đã tặng hết nhưng vẫn còn trong Lịch sử tặng."
+    )
+  })
+
+  it("names the purchase's current store when undoing or editing a gift, after a store rename", () => {
+    renderGold([GIFT], [{ ...PURCHASE, store: "SJC Hà Nội" }])
+
+    // Lịch sử vẫn giữ bản chụp lúc tặng.
+    expect(screen.getByText("12/10/2026 · SJC")).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: "Huỷ lần tặng 12/10/2026" }))
+    expect(screen.getByRole("alertdialog")).toHaveTextContent("1 phân sẽ trả về lần mua ngày 10/08/2026 ở SJC Hà Nội.")
+    fireEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Giữ lại" }))
+
+    fireEvent.click(screen.getByRole("button", { name: "Sửa lần tặng 12/10/2026" }))
+    expect(
+      within(screen.getByRole("dialog", { name: "Sửa lần tặng vàng" })).getByText(
+        "Lần mua ngày 10/08/2026 ở SJC Hà Nội · tặng được tối đa 1 chỉ"
+      )
+    ).toBeInTheDocument()
+  })
+
+  it("says undoing only clears the history when the gift's purchase is gone", () => {
+    renderGold([{ ...GIFT, purchaseId: 99 }])
+
+    fireEvent.click(screen.getByRole("button", { name: "Huỷ lần tặng 12/10/2026" }))
+
+    expect(screen.getByRole("alertdialog")).toHaveTextContent(
+      "Lần mua gốc không còn — huỷ chỉ xoá lần tặng 1 phân khỏi lịch sử."
+    )
+  })
+
+  it("refuses to move a purchase's date past the earliest gift taken out of it", () => {
+    renderGold([GIFT])
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Sửa giao dịch vàng 10/08/2026" })[0])
+    const dialog = screen.getByRole("dialog", { name: "Sửa lần mua vàng" })
+    const dateBox = within(dialog).getByLabelText("Ngày mua", { exact: false })
+
+    fireEvent.change(dateBox, { target: { value: "13/10/2026" } })
+    expect(within(dialog).getByText("Ngày mua không được sau ngày tặng sớm nhất (12/10/2026)")).toBeInTheDocument()
+    expect(within(dialog).getByRole("button", { name: "Lưu" })).toBeDisabled()
+
+    fireEvent.change(dateBox, { target: { value: "12/10/2026" } })
+    expect(within(dialog).getByRole("button", { name: "Lưu" })).not.toBeDisabled()
+  })
+
+  it("does not reopen a gift dialog on its own when its gift vanished and a new one took the same id", () => {
+    function goldTab(goldGifts: MetalGift[]) {
+      const summary = summarizeFinance({ ...DEFAULT_FINANCE_STATE, gold: [PURCHASE], goldStores: STORES, goldGifts })
+      return <GoldTab summary={summary} stores={STORES} gold={[PURCHASE]} {...noopHandlers} goldGifts={goldGifts} />
+    }
+    const { rerender } = render(goldTab([GIFT]))
+
+    fireEvent.click(screen.getByRole("button", { name: "Huỷ lần tặng 12/10/2026" }))
+    expect(screen.getByRole("alertdialog")).toBeInTheDocument()
+    // Tab khác vừa huỷ lần tặng này, rồi 1 lần tặng mới lấy lại đúng id 1.
+    rerender(goldTab([]))
+    rerender(goldTab([{ ...GIFT, date: "15/10/2026" }]))
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: "Sửa lần tặng 15/10/2026" }))
+    expect(screen.getByRole("dialog", { name: "Sửa lần tặng vàng" })).toBeInTheDocument()
+    rerender(goldTab([]))
+    rerender(goldTab([GIFT]))
+    expect(screen.queryByRole("dialog", { name: "Sửa lần tặng vàng" })).not.toBeInTheDocument()
+  })
 })
