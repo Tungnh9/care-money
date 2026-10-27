@@ -24,6 +24,7 @@ import { AlertDialog } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Modal } from "@/components/ui/modal"
+import { ActionTooltip } from "@/components/ob/action-tooltip"
 import type { TaskInput } from "@/lib/work/use-work"
 import type { WorkColumn, WorkTask } from "@/lib/work/types"
 import { columnOf, dropIndex, listsOf, moveAcross, parseDndId, type Lists } from "../kanban-dnd"
@@ -246,14 +247,16 @@ function KanbanBoard({
                     <Button variant="primary" size="sm" type="submit" disabled={!newColumn.trim()}>
                       Thêm cột
                     </Button>
-                    <button
-                      type="button"
-                      aria-label="Đóng ô thêm cột"
-                      onClick={() => setNewColumn(null)}
-                      className="flex size-8 items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] hover:text-[var(--ob-color-text)]"
-                    >
-                      <X size={16} aria-hidden="true" />
-                    </button>
+                    <ActionTooltip label="Đóng">
+                      <button
+                        type="button"
+                        aria-label="Đóng ô thêm cột"
+                        onClick={() => setNewColumn(null)}
+                        className="flex size-8 items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] hover:text-[var(--ob-color-text)]"
+                      >
+                        <X size={16} aria-hidden="true" />
+                      </button>
+                    </ActionTooltip>
                   </div>
                 </form>
               ) : (

@@ -6,6 +6,7 @@ import { Copy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
+import { ActionTooltip } from "@/components/ob/action-tooltip"
 import { formatDayKey } from "@/lib/date"
 import { formatStandup, suggestStandup } from "@/lib/work/work-calculations"
 import type { StandupEntry, WorkState } from "@/lib/work/types"
@@ -113,14 +114,16 @@ function StandupCard({ state, today, onSave, className }: StandupCardProps) {
                     {s.today.trim() || "—"}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  aria-label={`Copy standup ${formatDayKey(s.day)}`}
-                  onClick={() => void copyText(formatStandup(s))}
-                  className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] hover:text-[var(--ob-color-action-strong)]"
-                >
-                  <Copy size={16} />
-                </button>
+                <ActionTooltip label="Copy standup">
+                  <button
+                    type="button"
+                    aria-label={`Copy standup ${formatDayKey(s.day)}`}
+                    onClick={() => void copyText(formatStandup(s))}
+                    className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] hover:text-[var(--ob-color-action-strong)]"
+                  >
+                    <Copy size={16} />
+                  </button>
+                </ActionTooltip>
               </li>
             ))}
           </ul>

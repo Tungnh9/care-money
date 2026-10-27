@@ -6,6 +6,7 @@ import { Trash2 } from "lucide-react"
 import { AlertDialog } from "@/components/ui/alert-dialog"
 import { Card } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
+import { ActionTooltip } from "@/components/ob/action-tooltip"
 import { AddMoodForm } from "./add-mood-form"
 import type { Mood } from "@/lib/settings/settings-storage"
 
@@ -56,14 +57,16 @@ function MoodsCard({ moods, onToggle, onRemove, onAdd }: MoodsCardProps) {
               aria-labelledby={`${idPrefix}-mood-${i}`}
               className="flex-none"
             />
-            <button
-              type="button"
-              aria-label={"Xoá " + m.label}
-              onClick={() => setDeleting(m.label)}
-              className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
-            >
-              <Trash2 size={17} />
-            </button>
+            <ActionTooltip label="Xoá">
+              <button
+                type="button"
+                aria-label={"Xoá " + m.label}
+                onClick={() => setDeleting(m.label)}
+                className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
+              >
+                <Trash2 size={17} />
+              </button>
+            </ActionTooltip>
           </div>
         ))}
         {!moods.length ? (

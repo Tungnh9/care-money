@@ -1,11 +1,12 @@
-import { describe, it, expect, vi } from "vitest"
-import { render, screen, fireEvent } from "@testing-library/react"
+import { describe, it, expect, vi, afterEach } from "vitest"
+import { act, render, screen, fireEvent } from "@testing-library/react"
 
 import { formatMoney } from "@/lib/format"
 import { phanToChi } from "@/lib/finance/finance-calculations"
 import { MetalTransactionsTable } from "../../components/metal-transactions-table"
 import { GOLD_METAL } from "../../metal-config"
 import type { GoldPurchase, GoldStore } from "@/lib/finance/types"
+import { TooltipProvider } from "@/components/ui/tooltip"
 
 const STORES: GoldStore[] = [{ name: "SJC", price: "850.000" }]
 
@@ -206,5 +207,67 @@ describe("MetalTransactionsTable", () => {
     // PNJ: 8*800.000 = 6.400.000 giá trị nay, lỗ −800.000 (8*(900.000-800.000))
     expect(screen.getByText(formatMoney(6_400_000))).toBeInTheDocument()
     expect(screen.getByText(formatMoney(800_000))).toBeInTheDocument()
+  })
+
+  describe("hover tooltips on the icon actions", () => {
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    function hover(target: Element) {
+      fireEvent.pointerEnter(target, { pointerType: "mouse" })
+      fireEvent.mouseEnter(target)
+      fireEvent.mouseMove(target)
+      act(() => {
+        vi.advanceTimersByTime(1000)
+      })
+    }
+
+    it("names each action of a purchase on hover", () => {
+      vi.useFakeTimers()
+      render(
+        <TooltipProvider>
+          <MetalTransactionsTable
+            metal={GOLD_METAL}
+            purchases={[PURCHASES[0]]}
+            stores={STORES}
+            onRemove={vi.fn()}
+            onEdit={vi.fn()}
+            onGift={vi.fn()}
+            onSell={vi.fn()}
+          />
+        </TooltipProvider>
+      )
+
+      hover(screen.getByRole("button", { name: /^Tặng từ lần mua vàng/ }))
+      expect(screen.getByText("Tặng quà")).toBeInTheDocument()
+      hover(screen.getByRole("button", { name: /^Bán từ lần mua vàng/ }))
+      expect(screen.getByText("Bán")).toBeInTheDocument()
+      hover(screen.getByRole("button", { name: /^Sửa giao dịch vàng/ }))
+      expect(screen.getByText("Sửa")).toBeInTheDocument()
+    })
+
+    it("explains on hover why deleting a purchase that has a gift is locked", () => {
+      vi.useFakeTimers()
+      render(
+        <TooltipProvider>
+          <MetalTransactionsTable
+            metal={GOLD_METAL}
+            purchases={[PURCHASES[0]]}
+            stores={STORES}
+            gifted={new Map([[1, 1]])}
+            onRemove={vi.fn()}
+            onEdit={vi.fn()}
+          />
+        </TooltipProvider>
+      )
+
+      const remove = screen.getByRole("button", { name: /^Xoá giao dịch vàng/ })
+      expect(remove).toBeDisabled()
+      hover(remove.parentElement as HTMLElement)
+      const reason = "Không thể xoá — lần mua này đã có lần tặng. Huỷ các lần tặng trước."
+      // 1 bản ẩn (hidden) gắn vào nút + 1 bản trong tooltip đang mở.
+      expect(screen.getAllByText(reason)).toHaveLength(2)
+    })
   })
 })

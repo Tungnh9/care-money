@@ -3,6 +3,7 @@
 import { X } from "lucide-react"
 
 import { Card } from "@/components/ui/card"
+import { ActionTooltip } from "@/components/ob/action-tooltip"
 import type { Insight } from "../insights-calculations"
 
 interface InsightsSectionProps {
@@ -23,14 +24,16 @@ function InsightsSection({ insights, onDismiss }: InsightsSectionProps) {
           >
             <span className="text-base leading-none">💡</span>
             <p className="min-w-0 flex-1 text-[13.5px] leading-[1.5] text-[var(--ob-color-text)]">{insight.text}</p>
-            <button
-              type="button"
-              aria-label="Ẩn gợi ý này"
-              onClick={() => onDismiss(insight.id)}
-              className="flex size-6 flex-none items-center justify-center rounded-full text-[var(--ob-color-text-subtle)] hover:bg-[var(--ob-color-border)]"
-            >
-              <X size={14} />
-            </button>
+            <ActionTooltip label="Ẩn gợi ý này">
+              <button
+                type="button"
+                aria-label="Ẩn gợi ý này"
+                onClick={() => onDismiss(insight.id)}
+                className="flex size-6 flex-none items-center justify-center rounded-full text-[var(--ob-color-text-subtle)] hover:bg-[var(--ob-color-border)]"
+              >
+                <X size={14} />
+              </button>
+            </ActionTooltip>
           </div>
         ))}
       </div>

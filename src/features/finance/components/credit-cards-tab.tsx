@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card"
 import { Figure } from "@/components/ob/figure"
 import { Progress } from "@/components/ui/progress"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
+import { ActionTooltip } from "@/components/ob/action-tooltip"
 import { formatMoney } from "@/lib/format"
 import { AddCreditCardForm } from "./add-credit-card-form"
 import { EditCreditCardModal } from "./edit-credit-card-modal"
@@ -78,22 +79,26 @@ function CreditCardsTab({ cards, onAddCard, onPayCard, onUpdateCard, onRemoveCar
                   <Button variant="secondary" size="sm" type="button" onClick={() => startPay(card.name)}>
                     Ghi một lần trả
                   </Button>
-                  <button
-                    type="button"
-                    aria-label={`Sửa thẻ ${card.name}`}
-                    onClick={() => startEdit(card)}
-                    className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-info)]"
-                  >
-                    <Pencil size={17} />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={`Xoá thẻ ${card.name}`}
-                    onClick={() => setDeletingCard(card.name)}
-                    className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
-                  >
-                    <Trash2 size={17} />
-                  </button>
+                  <ActionTooltip label="Sửa">
+                    <button
+                      type="button"
+                      aria-label={`Sửa thẻ ${card.name}`}
+                      onClick={() => startEdit(card)}
+                      className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-info)]"
+                    >
+                      <Pencil size={17} />
+                    </button>
+                  </ActionTooltip>
+                  <ActionTooltip label="Xoá">
+                    <button
+                      type="button"
+                      aria-label={`Xoá thẻ ${card.name}`}
+                      onClick={() => setDeletingCard(card.name)}
+                      className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
+                    >
+                      <Trash2 size={17} />
+                    </button>
+                  </ActionTooltip>
                 </div>
               </Card>
             )

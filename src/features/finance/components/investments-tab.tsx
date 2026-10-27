@@ -8,6 +8,7 @@ import { AlertDialog } from "@/components/ui/alert-dialog"
 import { Card } from "@/components/ui/card"
 import { Figure } from "@/components/ob/figure"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
+import { ActionTooltip } from "@/components/ob/action-tooltip"
 import { formatMoney } from "@/lib/format"
 import { pct1, signedMoney, type FinanceSummary } from "@/lib/finance/finance-calculations"
 import type { Investment } from "@/lib/finance/types"
@@ -78,22 +79,26 @@ function InvestmentsTab({ invests, summary, onAddInvest, onUpdateInvest, onRemov
                   {signedMoney(pl, hidden)}
                 </span>
                 <div className="flex flex-none items-center gap-1">
-                  <button
-                    type="button"
-                    aria-label={`Sửa ${investment.name}`}
-                    onClick={() => setEditingId(investment.id)}
-                    className="flex size-9 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-info)]"
-                  >
-                    <Pencil size={17} />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={`Xoá ${investment.name}`}
-                    onClick={() => setDeletingId(investment.id)}
-                    className="flex size-9 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
-                  >
-                    <Trash2 size={17} />
-                  </button>
+                  <ActionTooltip label="Sửa">
+                    <button
+                      type="button"
+                      aria-label={`Sửa ${investment.name}`}
+                      onClick={() => setEditingId(investment.id)}
+                      className="flex size-9 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-info)]"
+                    >
+                      <Pencil size={17} />
+                    </button>
+                  </ActionTooltip>
+                  <ActionTooltip label="Xoá">
+                    <button
+                      type="button"
+                      aria-label={`Xoá ${investment.name}`}
+                      onClick={() => setDeletingId(investment.id)}
+                      className="flex size-9 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
+                    >
+                      <Trash2 size={17} />
+                    </button>
+                  </ActionTooltip>
                 </div>
               </div>
             )

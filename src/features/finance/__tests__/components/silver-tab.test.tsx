@@ -150,8 +150,7 @@ describe("SilverTab", () => {
   it("explains why a store that still has silver purchases cannot be deleted", () => {
     render(<SilverTab summary={ZERO_SUMMARY} stores={[PHU_QUY]} silver={[PURCHASE]} {...noopHandlers} />)
 
-    expect(screen.getByRole("button", { name: "Xoá Phú Quý" })).toHaveAttribute(
-      "title",
+    expect(screen.getByRole("button", { name: "Xoá Phú Quý" })).toHaveAccessibleDescription(
       "Không thể xoá — vẫn còn giao dịch mua bạc gắn với cửa hàng này."
     )
   })

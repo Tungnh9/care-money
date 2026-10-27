@@ -6,6 +6,7 @@ import { Bold, Italic, List, ListOrdered, Quote, Underline, Heading2 } from "luc
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { ActionTooltip } from "@/components/ob/action-tooltip"
 import { cn } from "@/lib/utils"
 import { sanitizeJournalHtml } from "@/lib/journal/journal-html"
 import type { JournalEntry, MoodSnapshot } from "@/lib/journal/types"
@@ -126,16 +127,17 @@ function JournalEditor({
     <Card className="col-span-full">
       <div className="mb-[14px] flex flex-wrap gap-0.5 border-b border-[var(--ob-color-border)] pb-[10px]">
         {TOOLS.map(({ icon: ToolIcon, command, value, label }) => (
-          <button
-            key={label}
-            type="button"
-            aria-label={label}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => runCommand(command, value)}
-            className="flex size-11 items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-muted)] transition-[background-color,color] duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:bg-[var(--ob-color-action-soft)] hover:text-[var(--ob-color-action-strong)]"
-          >
-            <ToolIcon size={17} />
-          </button>
+          <ActionTooltip key={label} label={label}>
+            <button
+              type="button"
+              aria-label={label}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => runCommand(command, value)}
+              className="flex size-11 items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-muted)] transition-[background-color,color] duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:bg-[var(--ob-color-action-soft)] hover:text-[var(--ob-color-action-strong)]"
+            >
+              <ToolIcon size={17} />
+            </button>
+          </ActionTooltip>
         ))}
       </div>
       <div

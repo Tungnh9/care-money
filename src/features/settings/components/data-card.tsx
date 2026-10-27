@@ -7,6 +7,7 @@ import { AlertDialog } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Field } from "@/components/ui/field"
+import { ActionTooltip } from "@/components/ob/action-tooltip"
 import { onDataChanged } from "@/lib/data-change-bus"
 import { getSyncSecret, setSyncSecret } from "@/lib/sync-secret-storage"
 import type { ExportedInfo, ImportedInfo, PendingRestore, SyncResult } from "../hooks/use-data-management"
@@ -166,15 +167,17 @@ function DataCard({
           value={secret}
           onChange={(e) => handleSecretChange(e.target.value)}
           suffix={
-            <button
-              type="button"
-              onClick={handleCopySecret}
-              disabled={!secret}
-              aria-label={copied ? "Đã copy" : "Copy secret"}
-              className="flex items-center justify-center disabled:opacity-40"
-            >
-              {copied ? <Check size={16} /> : <Copy size={16} />}
-            </button>
+            <ActionTooltip label={copied ? "Đã copy" : "Copy secret"} disabledReason={"Chưa có secret để copy."}>
+              <button
+                type="button"
+                onClick={handleCopySecret}
+                disabled={!secret}
+                aria-label={copied ? "Đã copy" : "Copy secret"}
+                className="flex items-center justify-center disabled:opacity-40"
+              >
+                {copied ? <Check size={16} /> : <Copy size={16} />}
+              </button>
+            </ActionTooltip>
           }
         />
         <div className="mt-[10px] flex flex-wrap gap-[10px]">

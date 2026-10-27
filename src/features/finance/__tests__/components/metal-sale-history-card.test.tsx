@@ -81,7 +81,7 @@ describe("MetalSaleHistoryCard", () => {
 
     const locked = screen.getByRole("button", { name: "Huỷ lần bán 12/10/2026" })
     expect(locked).toBeDisabled()
-    expect(locked).toHaveAttribute("title", 'Sổ "Quỹ B" đã bị xoá — không huỷ được lần bán này.')
+    expect(locked).toHaveAccessibleDescription('Sổ "Quỹ B" đã bị xoá — không huỷ được lần bán này.')
   })
 
   it("locks undo, and says why on screen, when the fund no longer holds what was received", () => {
@@ -97,9 +97,12 @@ describe("MetalSaleHistoryCard", () => {
     const reason = 'Sổ "Quỹ A" không còn đủ tiền để rút lại số đã nhận — không huỷ được lần bán này.'
     const button = screen.getByRole("button", { name: "Huỷ lần bán 05/10/2026" })
     expect(button).toBeDisabled()
-    expect(button).toHaveAttribute("title", reason)
-    // Điện thoại không hiện title — lý do phải nằm ngay trên dòng.
-    expect(within(screen.getByTestId("sale-history-row")).getByText(reason)).toBeInTheDocument()
+    expect(button).toHaveAccessibleDescription(reason)
+    // Điện thoại không rê chuột được nên không thấy tooltip — lý do phải nằm ngay trên dòng (không tính bản ẩn (hidden)
+    // gắn vào nút cho trình đọc màn hình).
+    expect(
+      within(screen.getByTestId("sale-history-row")).getByText(reason, { ignore: "script, style, [hidden]" })
+    ).toBeInTheDocument()
   })
 
   it("names two sales of the same day apart for screen readers", () => {

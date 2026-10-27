@@ -5,6 +5,7 @@ import { createPortal } from "react-dom"
 import { cva } from "class-variance-authority"
 import { Delete, Eraser, X, type LucideIcon } from "lucide-react"
 
+import { ActionTooltip } from "@/components/ob/action-tooltip"
 import { Monkey } from "@/components/ob/monkey"
 import { cn } from "@/lib/utils"
 import { useCalculator, type HistoryItem } from "../hooks/use-calculator"
@@ -284,17 +285,27 @@ function CalculatorModal({ open, onOpenChange }: CalculatorModalProps) {
         </div>
 
         <div className="grid grid-cols-4 gap-2">
-          {KEYS.map(({ key, kind, icon: Icon, label }) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => hit(key)}
-              aria-label={label}
-              className={calcKeyVariants({ kind })}
-            >
-              {Icon ? <Icon className="h-5 w-5" aria-hidden="true" /> : key}
-            </button>
-          ))}
+          {KEYS.map(({ key, kind, icon: Icon, label }) => {
+            const button = (
+              <button
+                key={key}
+                type="button"
+                onClick={() => hit(key)}
+                aria-label={label}
+                className={calcKeyVariants({ kind })}
+              >
+                {Icon ? <Icon className="h-5 w-5" aria-hidden="true" /> : key}
+              </button>
+            )
+            // Phím icon (C = tẩy, ⌫ = xoá lùi) không có chữ để đọc — cần tooltip; phím còn lại hiện ký tự.
+            return Icon && label ? (
+              <ActionTooltip key={key} label={label}>
+                {button}
+              </ActionTooltip>
+            ) : (
+              button
+            )
+          })}
         </div>
       </div>
     </div>,

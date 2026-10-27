@@ -126,7 +126,7 @@ describe("MetalStoresCard", () => {
 
     const disabledButton = screen.getByRole("button", { name: "Xoá SJC" })
     expect(disabledButton).toBeDisabled()
-    expect(disabledButton).toHaveAttribute("title", expect.stringMatching(/vẫn còn giao dịch mua vàng/))
+    expect(disabledButton).toHaveAccessibleDescription(expect.stringMatching(/vẫn còn giao dịch mua vàng/))
     expect(screen.getByRole("button", { name: "Xoá PNJ" })).not.toBeDisabled()
   })
 

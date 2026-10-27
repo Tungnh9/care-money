@@ -6,6 +6,7 @@ import { Pencil, Trash2 } from "lucide-react"
 import { AlertDialog } from "@/components/ui/alert-dialog"
 import { Card } from "@/components/ui/card"
 import { Field } from "@/components/ui/field"
+import { ActionTooltip } from "@/components/ob/action-tooltip"
 import { AddMetalStoreForm } from "./add-metal-store-form"
 import { EditMetalStoreModal } from "./edit-metal-store-modal"
 import type { MetalPurchaseBase, MetalStore } from "@/lib/finance/types"
@@ -48,7 +49,7 @@ function MetalStoresCard({
     return purchases.some((p) => p.store === name)
   }
 
-  function removeBlockedTitle(name: string) {
+  function removeBlockedReason(name: string) {
     if (heldPurchases.some((p) => p.store === name)) {
       return `Không thể xoá — vẫn còn giao dịch mua ${metal.noun} gắn với cửa hàng này.`
     }
@@ -93,24 +94,27 @@ function MetalStoresCard({
                   aria-label={`Giá ${store.name} hôm nay (mỗi ${metal.unit})`}
                 />
                 <div className="flex flex-none items-center gap-1">
-                  <button
-                    type="button"
-                    aria-label={`Sửa ${store.name}`}
-                    onClick={() => setEditingName(store.name)}
-                    className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-info)]"
-                  >
-                    <Pencil size={17} />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={`Xoá ${store.name}`}
-                    disabled={inUse}
-                    title={inUse ? removeBlockedTitle(store.name) : undefined}
-                    onClick={() => setDeletingName(store.name)}
-                    className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)] disabled:cursor-not-allowed disabled:opacity-45"
-                  >
-                    <Trash2 size={17} />
-                  </button>
+                  <ActionTooltip label="Sửa">
+                    <button
+                      type="button"
+                      aria-label={`Sửa ${store.name}`}
+                      onClick={() => setEditingName(store.name)}
+                      className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-info)]"
+                    >
+                      <Pencil size={17} />
+                    </button>
+                  </ActionTooltip>
+                  <ActionTooltip label="Xoá" disabledReason={inUse ? removeBlockedReason(store.name) : undefined}>
+                    <button
+                      type="button"
+                      aria-label={`Xoá ${store.name}`}
+                      disabled={inUse}
+                      onClick={() => setDeletingName(store.name)}
+                      className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)] disabled:cursor-not-allowed disabled:opacity-45"
+                    >
+                      <Trash2 size={17} />
+                    </button>
+                  </ActionTooltip>
                 </div>
               </div>
             )

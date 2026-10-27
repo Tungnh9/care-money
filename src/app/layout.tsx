@@ -3,6 +3,7 @@ import { Be_Vietnam_Pro, Bricolage_Grotesque, JetBrains_Mono } from "next/font/g
 import "./globals.css"
 import { cn } from "@/lib/utils"
 import { AuthGuard } from "@/components/auth-guard"
+import { TooltipProvider } from "@/components/ui/tooltip"
 
 const obDisplay = Bricolage_Grotesque({
   variable: "--font-ob-display",
@@ -31,7 +32,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="vi" className={cn("h-full", "antialiased", obDisplay.variable, obText.variable, obNum.variable)}>
       <body className="min-h-full flex flex-col">
-        <AuthGuard>{children}</AuthGuard>
+        <TooltipProvider>
+          <AuthGuard>{children}</AuthGuard>
+        </TooltipProvider>
       </body>
     </html>
   )

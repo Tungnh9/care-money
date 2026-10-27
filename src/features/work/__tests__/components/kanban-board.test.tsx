@@ -190,6 +190,17 @@ describe("KanbanBoard", () => {
     expect(screen.getByRole("button", { name: 'Chuyển cột "Hoàn thành" sang phải' })).toBeDisabled()
   })
 
+  it("keeps 'Xoá cột' at the right end of the column menu, also when it is locked on the only column", () => {
+    renderBoard({ columns: [DEFAULT_COLUMNS[0]], tasks: [] })
+
+    fireEvent.click(screen.getByRole("button", { name: 'Tuỳ chọn cột "Bắt đầu"' }))
+    const remove = screen.getByRole("button", { name: 'Xoá cột "Bắt đầu"' })
+    expect(remove).toBeDisabled()
+    // ml-auto nằm ở ô bọc ngoài span của tooltip — đặt trên nút thì mất tác dụng khi nút bị bọc lúc khoá.
+    expect(remove.closest(".ml-auto")).not.toBeNull()
+    expect(remove).not.toHaveClass("ml-auto")
+  })
+
   it("deletes a column after a warning that says where its cards go", () => {
     const { onRemoveColumn } = renderBoard()
 

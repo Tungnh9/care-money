@@ -1,9 +1,10 @@
-import { describe, it, expect, beforeEach, vi } from "vitest"
-import { render, screen, fireEvent, within, waitFor } from "@testing-library/react"
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
+import { act, render, screen, fireEvent, within, waitFor } from "@testing-library/react"
 
 import { wholeText } from "@/test/whole-text"
 import { MoneyVisibilityProvider } from "@/components/money-visibility-provider"
 import { ExpenseListCard } from "../../components/expense-list-card"
+import { TooltipProvider } from "@/components/ui/tooltip"
 import { formatMoney } from "@/lib/format"
 import {
   UNTAGGED_EMOJI,
@@ -650,6 +651,35 @@ describe("ExpenseListCard", () => {
       for (const row of rows) {
         expect(within(row).getByText("•••••••• ₫")).toBeInTheDocument()
         expect(row.textContent).not.toMatch(/\d{1,3}(\.\d{3})+/)
+      }
+    })
+  })
+
+  describe("hover tooltips", () => {
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it("names the edit and delete icons on hover", () => {
+      vi.useFakeTimers()
+      render(
+        <TooltipProvider>
+          <ExpenseListCard expenses={EXPENSES} onRemove={vi.fn()} onEdit={vi.fn()} />
+        </TooltipProvider>
+      )
+
+      for (const [button, label] of [
+        [screen.getByRole("button", { name: "Sửa khoản chi Mua sắm" }), "Sửa"],
+        [screen.getByRole("button", { name: "Xoá khoản chi Mua sắm" }), "Xoá"],
+      ] as const) {
+        fireEvent.pointerEnter(button, { pointerType: "mouse" })
+        fireEvent.mouseEnter(button)
+        fireEvent.mouseMove(button)
+        act(() => {
+          vi.advanceTimersByTime(1000)
+        })
+        expect(screen.getByText(label)).toBeInTheDocument()
+        fireEvent.mouseLeave(button)
       }
     })
   })

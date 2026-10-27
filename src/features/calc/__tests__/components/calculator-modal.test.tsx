@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from "vitest"
-import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 
 import { CalculatorModal } from "../../components/calculator-modal"
+import { TooltipProvider } from "@/components/ui/tooltip"
 
 function click(name: string) {
   fireEvent.click(screen.getByRole("button", { name }))
@@ -399,5 +400,30 @@ describe("CalculatorModal", () => {
     fireEvent.keyDown(window, { key: "Enter" })
 
     expect(screen.getByTestId("calculator-result")).toHaveTextContent("10")
+  })
+
+  it("names the two icon keys (C and ⌫) in a tooltip on hover", () => {
+    vi.useFakeTimers()
+    try {
+      render(
+        <TooltipProvider>
+          <CalculatorModal open onOpenChange={vi.fn()} />
+        </TooltipProvider>
+      )
+
+      for (const name of ["Xoá hết", "Xoá một kí tự"]) {
+        const key = screen.getByRole("button", { name })
+        fireEvent.pointerEnter(key, { pointerType: "mouse" })
+        fireEvent.mouseEnter(key)
+        fireEvent.mouseMove(key)
+        act(() => {
+          vi.advanceTimersByTime(1000)
+        })
+        expect(screen.getByText(name)).toBeInTheDocument()
+        fireEvent.mouseLeave(key)
+      }
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

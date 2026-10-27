@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { buildVocabIndex } from "@/lib/study/highlight-vocab"
 import { HighlightedSentence } from "@/components/ob/highlighted-sentence"
+import { ActionTooltip } from "@/components/ob/action-tooltip"
 import type { GrammarEntry, VocabEntry } from "@/lib/study/types"
 
 interface ExampleSentenceProps {
@@ -22,15 +23,17 @@ function ExampleSentence({ sentence, translation, vocabIndex }: ExampleSentenceP
     <p className="text-sm leading-[1.6] italic">
       <HighlightedSentence sentence={sentence} vocabIndex={vocabIndex} />
       {translation ? (
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          aria-label={open ? "Ẩn bản dịch" : "Dịch sang tiếng Việt"}
-          aria-expanded={open}
-          className="ml-[6px] inline-flex size-6 flex-none items-center justify-center rounded-full bg-[var(--ob-color-action-soft)] text-[var(--ob-color-action-strong)] align-middle not-italic shadow-sm transition-colors duration-[var(--ob-dur-fast)] hover:bg-[var(--ob-color-action)] hover:text-white"
-        >
-          <Languages size={14} />
-        </button>
+        <ActionTooltip label={open ? "Ẩn bản dịch" : "Dịch sang tiếng Việt"}>
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            aria-label={open ? "Ẩn bản dịch" : "Dịch sang tiếng Việt"}
+            aria-expanded={open}
+            className="ml-[6px] inline-flex size-6 flex-none items-center justify-center rounded-full bg-[var(--ob-color-action-soft)] text-[var(--ob-color-action-strong)] align-middle not-italic shadow-sm transition-colors duration-[var(--ob-dur-fast)] hover:bg-[var(--ob-color-action)] hover:text-white"
+          >
+            <Languages size={14} />
+          </button>
+        </ActionTooltip>
       ) : null}
       {translation && open ? (
         <span className="block text-[var(--ob-color-text-subtle)] not-italic">{translation}</span>

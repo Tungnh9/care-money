@@ -4,6 +4,7 @@ import type { ReactNode } from "react"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { ChevronDown, GripVertical } from "lucide-react"
+import { ActionTooltip } from "@/components/ob/action-tooltip"
 
 import {
   DropdownMenu,
@@ -85,17 +86,19 @@ function KanbanCard({ task, columns, today, onOpen, onMoveTo }: KanbanCardProps)
         today={today}
         // Chỉ kéo được bằng tay cầm: bấm vào tên mở hộp sửa, chạm vào phần còn lại vẫn cuộn trang bình thường.
         handle={
-          <button
-            ref={setActivatorNodeRef}
-            type="button"
-            {...attributes}
-            {...listeners}
-            aria-roledescription="thẻ kéo được"
-            aria-label={`Kéo thẻ "${task.title}"`}
-            className={HANDLE_CLASS}
-          >
-            <GripVertical size={16} aria-hidden="true" />
-          </button>
+          <ActionTooltip label="Kéo để chuyển thẻ">
+            <button
+              ref={setActivatorNodeRef}
+              type="button"
+              {...attributes}
+              {...listeners}
+              aria-roledescription="thẻ kéo được"
+              aria-label={`Kéo thẻ "${task.title}"`}
+              className={HANDLE_CLASS}
+            >
+              <GripVertical size={16} aria-hidden="true" />
+            </button>
+          </ActionTooltip>
         }
         title={
           <button

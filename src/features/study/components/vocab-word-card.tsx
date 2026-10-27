@@ -5,6 +5,7 @@ import { Check, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ImageWithFallback } from "@/components/ob/image-with-fallback"
 import { SpeakButton } from "@/components/ob/speak-button"
+import { ActionTooltip } from "@/components/ob/action-tooltip"
 import type { VocabEntry } from "@/lib/study/types"
 
 interface VocabWordCardProps {
@@ -23,20 +24,22 @@ function VocabWordCard({ entry, learned, onToggleLearned }: VocabWordCardProps) 
         imageSizes="(max-width: 639px) 45vw, (max-width: 767px) 30vw, (max-width: 1023px) 22vw, 15vw"
       >
         <SpeakButton word={entry.word} size="md" className="absolute top-2 left-2" />
-        <button
-          type="button"
-          onClick={() => onToggleLearned(entry.id)}
-          aria-label={learned ? "Bỏ đánh dấu đã học" : "Đánh dấu đã học"}
-          aria-pressed={learned}
-          className={cn(
-            "absolute top-2 right-2 flex size-8 items-center justify-center rounded-full border-[1.5px] shadow-sm transition-colors duration-[var(--ob-dur-fast)]",
-            learned
-              ? "border-transparent bg-[var(--ob-color-income)] text-white"
-              : "border-transparent bg-[var(--ob-color-surface)]/90 text-[var(--ob-color-text-muted)]"
-          )}
-        >
-          {learned ? <Check size={16} /> : <Plus size={16} />}
-        </button>
+        <ActionTooltip label={learned ? "Bỏ đánh dấu đã học" : "Đánh dấu đã học"}>
+          <button
+            type="button"
+            onClick={() => onToggleLearned(entry.id)}
+            aria-label={learned ? "Bỏ đánh dấu đã học" : "Đánh dấu đã học"}
+            aria-pressed={learned}
+            className={cn(
+              "absolute top-2 right-2 flex size-8 items-center justify-center rounded-full border-[1.5px] shadow-sm transition-colors duration-[var(--ob-dur-fast)]",
+              learned
+                ? "border-transparent bg-[var(--ob-color-income)] text-white"
+                : "border-transparent bg-[var(--ob-color-surface)]/90 text-[var(--ob-color-text-muted)]"
+            )}
+          >
+            {learned ? <Check size={16} /> : <Plus size={16} />}
+          </button>
+        </ActionTooltip>
       </ImageWithFallback>
       <div className="flex flex-1 flex-col gap-1 p-[14px]">
         <div className="flex flex-wrap items-baseline gap-[7px]">

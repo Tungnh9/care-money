@@ -7,6 +7,7 @@ import { AlertDialog } from "@/components/ui/alert-dialog"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
+import { ActionTooltip } from "@/components/ob/action-tooltip"
 import { formatMoney } from "@/lib/format"
 import type { MetalSale, SavingsFund } from "@/lib/finance/types"
 import { AddSavingsFundForm } from "./add-savings-fund-form"
@@ -46,30 +47,36 @@ function SavingsTab({
             <div className="mb-2 flex items-center justify-between gap-3">
               <div className="text-[14px] font-bold">{fund.name}</div>
               <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  aria-label={`Điều chỉnh số dư ${fund.name}`}
-                  onClick={() => setAdjustingName(fund.name)}
-                  className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-action-strong)]"
-                >
-                  <Calculator size={17} />
-                </button>
-                <button
-                  type="button"
-                  aria-label={`Sửa ${fund.name}`}
-                  onClick={() => setEditingName(fund.name)}
-                  className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-info)]"
-                >
-                  <Pencil size={17} />
-                </button>
-                <button
-                  type="button"
-                  aria-label={`Xoá ${fund.name}`}
-                  onClick={() => setDeletingName(fund.name)}
-                  className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
-                >
-                  <Trash2 size={17} />
-                </button>
+                <ActionTooltip label="Điều chỉnh số dư">
+                  <button
+                    type="button"
+                    aria-label={`Điều chỉnh số dư ${fund.name}`}
+                    onClick={() => setAdjustingName(fund.name)}
+                    className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-action-strong)]"
+                  >
+                    <Calculator size={17} />
+                  </button>
+                </ActionTooltip>
+                <ActionTooltip label="Sửa">
+                  <button
+                    type="button"
+                    aria-label={`Sửa ${fund.name}`}
+                    onClick={() => setEditingName(fund.name)}
+                    className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-info)]"
+                  >
+                    <Pencil size={17} />
+                  </button>
+                </ActionTooltip>
+                <ActionTooltip label="Xoá">
+                  <button
+                    type="button"
+                    aria-label={`Xoá ${fund.name}`}
+                    onClick={() => setDeletingName(fund.name)}
+                    className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
+                  >
+                    <Trash2 size={17} />
+                  </button>
+                </ActionTooltip>
               </div>
             </div>
             <Progress

@@ -4,6 +4,7 @@ import { Gift, HandCoins, Pencil, Trash2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
+import { ActionTooltip } from "@/components/ob/action-tooltip"
 import { formatMoney } from "@/lib/format"
 import { metalMarketPrice, metalPLTone, metalPurchaseLabels, metalPurchasePL } from "@/lib/finance/metal-calculations"
 import { takenOutParts } from "@/lib/finance/metal-naming"
@@ -30,8 +31,8 @@ interface MetalTransactionsTableProps<P extends MetalPurchaseBase> {
 
 const NO_TAKEOUTS = new Map<number, number>()
 // Lần tặng/bán trỏ tới lần mua theo id — xoá lần mua đã có lần tặng/bán thì lịch sử mồ côi (hook cũng chặn).
-const REMOVE_BLOCKED_TITLE = "Không thể xoá — lần mua này đã có lần tặng. Huỷ các lần tặng trước."
-const REMOVE_BLOCKED_BY_SALE_TITLE = "Không thể xoá — lần mua này đã có lần tặng hoặc lần bán. Huỷ chúng trước."
+const REMOVE_BLOCKED_REASON = "Không thể xoá — lần mua này đã có lần tặng. Huỷ các lần tặng trước."
+const REMOVE_BLOCKED_BY_SALE_REASON = "Không thể xoá — lần mua này đã có lần tặng hoặc lần bán. Huỷ chúng trước."
 
 const HEADERS = ["Ngày mua", "Cửa hàng", "Khối lượng", "Giá mua", "Giá vốn", "Giá hiện tại", "Lãi lỗ", ""]
 
@@ -134,49 +135,63 @@ function MetalTransactionsTable<P extends MetalPurchaseBase>({
                 <td className="py-[10px] px-[12px] text-right">
                   <div className="flex items-center justify-end gap-1">
                     {onGift ? (
-                      <button
-                        type="button"
-                        aria-label={`Tặng từ lần mua ${metal.noun} ${labels.get(purchase.id)}`}
-                        disabled={qty < 1}
-                        title={qty < 1 ? `Còn dưới 1 ${metal.unit} — không tặng được.` : undefined}
-                        onClick={() => onGift(purchase)}
-                        className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-reward-text)] disabled:cursor-not-allowed disabled:opacity-45"
+                      <ActionTooltip
+                        label="Tặng quà"
+                        disabledReason={qty < 1 ? `Còn dưới 1 ${metal.unit} — không tặng được.` : undefined}
                       >
-                        <Gift size={17} />
-                      </button>
+                        <button
+                          type="button"
+                          aria-label={`Tặng từ lần mua ${metal.noun} ${labels.get(purchase.id)}`}
+                          disabled={qty < 1}
+                          onClick={() => onGift(purchase)}
+                          className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-reward-text)] disabled:cursor-not-allowed disabled:opacity-45"
+                        >
+                          <Gift size={17} />
+                        </button>
+                      </ActionTooltip>
                     ) : null}
                     {onSell ? (
+                      <ActionTooltip
+                        label="Bán"
+                        disabledReason={qty < 1 ? `Còn dưới 1 ${metal.unit} — không bán được.` : sellBlockedReason}
+                      >
+                        <button
+                          type="button"
+                          aria-label={`Bán từ lần mua ${metal.noun} ${labels.get(purchase.id)}`}
+                          disabled={qty < 1 || !!sellBlockedReason}
+                          onClick={() => onSell(purchase)}
+                          className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-income)] disabled:cursor-not-allowed disabled:opacity-45"
+                        >
+                          <HandCoins size={17} />
+                        </button>
+                      </ActionTooltip>
+                    ) : null}
+                    <ActionTooltip label="Sửa">
                       <button
                         type="button"
-                        aria-label={`Bán từ lần mua ${metal.noun} ${labels.get(purchase.id)}`}
-                        disabled={qty < 1 || !!sellBlockedReason}
-                        title={qty < 1 ? `Còn dưới 1 ${metal.unit} — không bán được.` : sellBlockedReason}
-                        onClick={() => onSell(purchase)}
-                        className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-income)] disabled:cursor-not-allowed disabled:opacity-45"
+                        aria-label={`Sửa giao dịch ${metal.noun} ${labels.get(purchase.id)}`}
+                        onClick={() => onEdit(purchase)}
+                        className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-info)]"
                       >
-                        <HandCoins size={17} />
+                        <Pencil size={17} />
                       </button>
-                    ) : null}
-                    <button
-                      type="button"
-                      aria-label={`Sửa giao dịch ${metal.noun} ${labels.get(purchase.id)}`}
-                      onClick={() => onEdit(purchase)}
-                      className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-info)]"
-                    >
-                      <Pencil size={17} />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label={`Xoá giao dịch ${metal.noun} ${labels.get(purchase.id)}`}
-                      disabled={giftedQty > 0 || soldQty > 0}
-                      title={
-                        soldQty > 0 ? REMOVE_BLOCKED_BY_SALE_TITLE : giftedQty > 0 ? REMOVE_BLOCKED_TITLE : undefined
+                    </ActionTooltip>
+                    <ActionTooltip
+                      label="Xoá"
+                      disabledReason={
+                        soldQty > 0 ? REMOVE_BLOCKED_BY_SALE_REASON : giftedQty > 0 ? REMOVE_BLOCKED_REASON : undefined
                       }
-                      onClick={() => onRemove(purchase.id)}
-                      className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)] disabled:cursor-not-allowed disabled:opacity-45"
                     >
-                      <Trash2 size={17} />
-                    </button>
+                      <button
+                        type="button"
+                        aria-label={`Xoá giao dịch ${metal.noun} ${labels.get(purchase.id)}`}
+                        disabled={giftedQty > 0 || soldQty > 0}
+                        onClick={() => onRemove(purchase.id)}
+                        className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)] disabled:cursor-not-allowed disabled:opacity-45"
+                      >
+                        <Trash2 size={17} />
+                      </button>
+                    </ActionTooltip>
                   </div>
                 </td>
               </tr>

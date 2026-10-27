@@ -7,6 +7,7 @@ import { CheckCircle2, ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Plus, 
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { ActionTooltip } from "@/components/ob/action-tooltip"
 import { cn } from "@/lib/utils"
 import type { WorkColumn, WorkTask } from "@/lib/work/types"
 import { columnDndId, taskDndId } from "../kanban-dnd"
@@ -114,61 +115,74 @@ function KanbanColumn({
             <span className="flex-none text-xs font-semibold text-[var(--ob-color-text-subtle)]">{tasks.length}</span>
           </h2>
         )}
-        <button
-          type="button"
-          aria-label={`Tuỳ chọn cột "${column.title}"`}
-          aria-expanded={menuOpen}
-          onClick={() => setMenuOpen((v) => !v)}
-          className={ICON_BUTTON}
-        >
-          <MoreHorizontal size={16} aria-hidden="true" />
-        </button>
+        <ActionTooltip label="Tuỳ chọn cột">
+          <button
+            type="button"
+            aria-label={`Tuỳ chọn cột "${column.title}"`}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((v) => !v)}
+            className={ICON_BUTTON}
+          >
+            <MoreHorizontal size={16} aria-hidden="true" />
+          </button>
+        </ActionTooltip>
       </div>
 
       {menuOpen ? (
         <div className="flex items-center gap-1 rounded-[var(--ob-radius-md)] bg-[var(--ob-color-surface)]/60 p-1">
-          <button
-            type="button"
-            aria-label={`Đổi tên cột "${column.title}"`}
-            onClick={() => {
-              cancelRename.current = false
-              setRenaming(column.title)
-              setMenuOpen(false)
-            }}
-            className={ICON_BUTTON}
-          >
-            <Pencil size={15} aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            aria-label={`Chuyển cột "${column.title}" sang trái`}
-            disabled={position === 0}
-            onClick={() => onMove(column.id, -1)}
-            className={ICON_BUTTON}
-          >
-            <ChevronLeft size={16} aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            aria-label={`Chuyển cột "${column.title}" sang phải`}
-            disabled={isDoneColumn}
-            onClick={() => onMove(column.id, 1)}
-            className={ICON_BUTTON}
-          >
-            <ChevronRight size={16} aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            aria-label={`Xoá cột "${column.title}"`}
-            disabled={columns.length <= 1}
-            onClick={() => {
-              setMenuOpen(false)
-              onRemove(column)
-            }}
-            className={cn(ICON_BUTTON, "ml-auto hover:text-[var(--ob-color-expense)]")}
-          >
-            <Trash2 size={15} aria-hidden="true" />
-          </button>
+          <ActionTooltip label="Đổi tên cột">
+            <button
+              type="button"
+              aria-label={`Đổi tên cột "${column.title}"`}
+              onClick={() => {
+                cancelRename.current = false
+                setRenaming(column.title)
+                setMenuOpen(false)
+              }}
+              className={ICON_BUTTON}
+            >
+              <Pencil size={15} aria-hidden="true" />
+            </button>
+          </ActionTooltip>
+          <ActionTooltip label="Chuyển sang trái">
+            <button
+              type="button"
+              aria-label={`Chuyển cột "${column.title}" sang trái`}
+              disabled={position === 0}
+              onClick={() => onMove(column.id, -1)}
+              className={ICON_BUTTON}
+            >
+              <ChevronLeft size={16} aria-hidden="true" />
+            </button>
+          </ActionTooltip>
+          <ActionTooltip label="Chuyển sang phải">
+            <button
+              type="button"
+              aria-label={`Chuyển cột "${column.title}" sang phải`}
+              disabled={isDoneColumn}
+              onClick={() => onMove(column.id, 1)}
+              className={ICON_BUTTON}
+            >
+              <ChevronRight size={16} aria-hidden="true" />
+            </button>
+          </ActionTooltip>
+          {/* ml-auto ở ô bọc ngoài: lúc khoá (bảng chỉ còn 1 cột), nút nằm trong span của tooltip nên ml-auto trên nút không còn tác dụng. */}
+          <div className="ml-auto flex">
+            <ActionTooltip label="Xoá cột">
+              <button
+                type="button"
+                aria-label={`Xoá cột "${column.title}"`}
+                disabled={columns.length <= 1}
+                onClick={() => {
+                  setMenuOpen(false)
+                  onRemove(column)
+                }}
+                className={cn(ICON_BUTTON, "hover:text-[var(--ob-color-expense)]")}
+              >
+                <Trash2 size={15} aria-hidden="true" />
+              </button>
+            </ActionTooltip>
+          </div>
         </div>
       ) : null}
 
@@ -202,9 +216,11 @@ function KanbanColumn({
             <Button variant="primary" size="sm" type="submit" disabled={!draft.trim()}>
               Thêm thẻ
             </Button>
-            <button type="button" aria-label="Đóng ô thêm thẻ" onClick={() => setDraft(null)} className={ICON_BUTTON}>
-              <X size={16} aria-hidden="true" />
-            </button>
+            <ActionTooltip label="Đóng">
+              <button type="button" aria-label="Đóng ô thêm thẻ" onClick={() => setDraft(null)} className={ICON_BUTTON}>
+                <X size={16} aria-hidden="true" />
+              </button>
+            </ActionTooltip>
           </div>
         </form>
       ) : (

@@ -6,6 +6,7 @@ import { Pencil, Trash2 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { AlertDialog } from "@/components/ui/alert-dialog"
 import { Empty } from "@/components/ob/empty"
+import { ActionTooltip } from "@/components/ob/action-tooltip"
 import { formatShortDate } from "@/lib/date"
 import { cn } from "@/lib/utils"
 import { sanitizeJournalHtml, stripHtmlToPlainText } from "@/lib/journal/journal-html"
@@ -114,22 +115,26 @@ function JournalEntriesCard({
                 ) : null}
               </div>
               <div className="flex flex-none items-start gap-1">
-                <button
-                  type="button"
-                  aria-label={`Sửa bài ${dateLabel} ${entry.time}`}
-                  onClick={() => onEdit(entry)}
-                  className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-info)]"
-                >
-                  <Pencil size={17} />
-                </button>
-                <button
-                  type="button"
-                  aria-label={`Xoá bài ${dateLabel} ${entry.time}`}
-                  onClick={() => setDeletingId(entry.id)}
-                  className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
-                >
-                  <Trash2 size={17} />
-                </button>
+                <ActionTooltip label="Sửa">
+                  <button
+                    type="button"
+                    aria-label={`Sửa bài ${dateLabel} ${entry.time}`}
+                    onClick={() => onEdit(entry)}
+                    className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-info)]"
+                  >
+                    <Pencil size={17} />
+                  </button>
+                </ActionTooltip>
+                <ActionTooltip label="Xoá">
+                  <button
+                    type="button"
+                    aria-label={`Xoá bài ${dateLabel} ${entry.time}`}
+                    onClick={() => setDeletingId(entry.id)}
+                    className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
+                  >
+                    <Trash2 size={17} />
+                  </button>
+                </ActionTooltip>
               </div>
             </div>
           )

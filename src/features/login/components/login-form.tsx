@@ -10,6 +10,7 @@ import { Eye, EyeOff, Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Field } from "@/components/ui/field"
+import { ActionTooltip } from "@/components/ob/action-tooltip"
 import { setStoredUser } from "@/lib/auth"
 import { login } from "../api"
 import { useLoginLockout, MAX_ATTEMPTS, LOCKOUT_MINUTES } from "../hooks/use-login-lockout"
@@ -97,14 +98,16 @@ function LoginForm() {
               invalid={!!errors.password}
               hint={errors.password?.message}
               suffix={
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-                  className="flex items-center justify-center"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
+                <ActionTooltip label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                    className="flex items-center justify-center"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </ActionTooltip>
               }
               name={field.name}
               value={field.value}

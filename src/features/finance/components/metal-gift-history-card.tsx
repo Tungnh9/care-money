@@ -4,6 +4,7 @@ import { Pencil, Undo2 } from "lucide-react"
 
 import { Card } from "@/components/ui/card"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
+import { ActionTooltip } from "@/components/ob/action-tooltip"
 import { formatMoney } from "@/lib/format"
 import { metalPurchaseLabels, sortByPurchaseDate } from "@/lib/finance/metal-calculations"
 import type { MetalGift } from "@/lib/finance/types"
@@ -45,22 +46,26 @@ function MetalGiftHistoryCard({ metal, gifts, onEdit, onRemove }: MetalGiftHisto
             {formatMoney(gift.qty * gift.buy, hidden)}
           </div>
           <div className="flex items-center gap-1 [grid-area:actions]">
-            <button
-              type="button"
-              aria-label={`Sửa lần tặng ${labels.get(gift.id)}`}
-              onClick={() => onEdit(gift)}
-              className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-info)]"
-            >
-              <Pencil size={17} />
-            </button>
-            <button
-              type="button"
-              aria-label={`Huỷ lần tặng ${labels.get(gift.id)}`}
-              onClick={() => onRemove(gift)}
-              className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
-            >
-              <Undo2 size={17} />
-            </button>
+            <ActionTooltip label="Sửa lần tặng">
+              <button
+                type="button"
+                aria-label={`Sửa lần tặng ${labels.get(gift.id)}`}
+                onClick={() => onEdit(gift)}
+                className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-info)]"
+              >
+                <Pencil size={17} />
+              </button>
+            </ActionTooltip>
+            <ActionTooltip label="Huỷ lần tặng">
+              <button
+                type="button"
+                aria-label={`Huỷ lần tặng ${labels.get(gift.id)}`}
+                onClick={() => onRemove(gift)}
+                className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)]"
+              >
+                <Undo2 size={17} />
+              </button>
+            </ActionTooltip>
           </div>
         </div>
       ))}

@@ -616,7 +616,7 @@ describe("GoldTab — chữ và luồng cửa hàng", () => {
 
     const remove = screen.getByRole("button", { name: "Xoá SJC" })
     expect(remove).toBeDisabled()
-    expect(remove).toHaveAttribute("title", "Không thể xoá — vẫn còn giao dịch mua vàng gắn với cửa hàng này.")
+    expect(remove).toHaveAccessibleDescription("Không thể xoá — vẫn còn giao dịch mua vàng gắn với cửa hàng này.")
   })
 
   it("reports a new store through onAddGoldStore", () => {
@@ -722,7 +722,7 @@ describe("GoldTab — tặng", () => {
 
     for (const button of screen.getAllByRole("button", { name: "Xoá giao dịch vàng 10/08/2026" })) {
       expect(button).toBeDisabled()
-      expect(button).toHaveAttribute("title", "Không thể xoá — lần mua này đã có lần tặng. Huỷ các lần tặng trước.")
+      expect(button).toHaveAccessibleDescription("Không thể xoá — lần mua này đã có lần tặng. Huỷ các lần tặng trước.")
     }
   })
 
@@ -764,7 +764,7 @@ describe("GoldTab — tặng", () => {
 
     for (const button of screen.getAllByRole("button", { name: "Tặng từ lần mua vàng 10/08/2026" })) {
       expect(button).toBeDisabled()
-      expect(button).toHaveAttribute("title", "Còn dưới 1 phân — không tặng được.")
+      expect(button).toHaveAccessibleDescription("Còn dưới 1 phân — không tặng được.")
     }
   })
 
@@ -811,8 +811,7 @@ describe("GoldTab — tặng", () => {
   it("explains that a store is kept because its purchases were all given away", () => {
     renderGold([{ ...GIFT, qty: 10 }])
 
-    expect(screen.getByRole("button", { name: "Xoá SJC" })).toHaveAttribute(
-      "title",
+    expect(screen.getByRole("button", { name: "Xoá SJC" })).toHaveAccessibleDescription(
       "Không thể xoá — các lần mua vàng ở cửa hàng này đã tặng hết nhưng vẫn còn trong Lịch sử tặng."
     )
   })
@@ -1002,7 +1001,7 @@ describe("GoldTab — bán", () => {
 
     const reason = 'Sổ "Quỹ A" không còn đủ tiền để rút lại số đã nhận — không huỷ được lần bán này.'
     expect(screen.getByRole("button", { name: "Huỷ lần bán 15/10/2026" })).toBeDisabled()
-    expect(screen.getByText(reason)).toBeInTheDocument()
+    expect(screen.getByText(reason, { ignore: "script, style, [hidden]" })).toBeInTheDocument()
   })
 
   it("caps both the gift form and the sale form at what is left", () => {
@@ -1050,7 +1049,9 @@ describe("GoldTab — bán", () => {
 
     for (const button of screen.getAllByRole("button", { name: "Bán từ lần mua vàng 10/08/2026" })) {
       expect(button).toBeDisabled()
-      expect(button).toHaveAttribute("title", "Chưa có sổ tiết kiệm nào để nhận tiền — tạo 1 sổ ở tab Tiết kiệm trước.")
+      expect(button).toHaveAccessibleDescription(
+        "Chưa có sổ tiết kiệm nào để nhận tiền — tạo 1 sổ ở tab Tiết kiệm trước."
+      )
     }
     unmount()
 
@@ -1063,7 +1064,7 @@ describe("GoldTab — bán", () => {
 
     for (const button of screen.getAllByRole("button", { name: "Bán từ lần mua vàng 10/08/2026" })) {
       expect(button).toBeDisabled()
-      expect(button).toHaveAttribute("title", "Còn dưới 1 phân — không bán được.")
+      expect(button).toHaveAccessibleDescription("Còn dưới 1 phân — không bán được.")
     }
   })
 
@@ -1072,8 +1073,7 @@ describe("GoldTab — bán", () => {
 
     for (const button of screen.getAllByRole("button", { name: "Xoá giao dịch vàng 10/08/2026" })) {
       expect(button).toBeDisabled()
-      expect(button).toHaveAttribute(
-        "title",
+      expect(button).toHaveAccessibleDescription(
         "Không thể xoá — lần mua này đã có lần tặng hoặc lần bán. Huỷ chúng trước."
       )
     }
@@ -1138,15 +1138,13 @@ describe("GoldTab — bán", () => {
 
   it("explains that a store is kept because its purchases were all sold, or given away and sold", () => {
     const { unmount } = renderGold({ sales: [{ ...SALE, qty: 10 }] })
-    expect(screen.getByRole("button", { name: "Xoá SJC" })).toHaveAttribute(
-      "title",
+    expect(screen.getByRole("button", { name: "Xoá SJC" })).toHaveAccessibleDescription(
       "Không thể xoá — các lần mua vàng ở cửa hàng này đã bán hết nhưng vẫn còn trong Lịch sử bán."
     )
     unmount()
 
     renderGold({ gifts: [GIFT], sales: [{ ...SALE, qty: 9 }] })
-    expect(screen.getByRole("button", { name: "Xoá SJC" })).toHaveAttribute(
-      "title",
+    expect(screen.getByRole("button", { name: "Xoá SJC" })).toHaveAccessibleDescription(
       "Không thể xoá — các lần mua vàng ở cửa hàng này đã tặng và bán hết nhưng vẫn còn trong Lịch sử tặng và Lịch sử bán."
     )
   })

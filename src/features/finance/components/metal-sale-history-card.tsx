@@ -4,6 +4,7 @@ import { Undo2 } from "lucide-react"
 
 import { Card } from "@/components/ui/card"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
+import { ActionTooltip } from "@/components/ob/action-tooltip"
 import { formatMoney } from "@/lib/format"
 import {
   metalPurchaseLabels,
@@ -53,7 +54,7 @@ function MetalSaleHistoryCard({ metal, sales, savings, onRemove }: MetalSaleHist
               <div className="mt-0.5 text-[12.5px] text-[var(--ob-color-text-subtle)] wrap-anywhere">
                 {`${sale.date} · ${sale.store} · vào ${sale.fundName}${sale.fundRemoved ? " (đã xoá)" : ""}${sale.note ? ` · ${sale.note}` : ""}`}
               </div>
-              {/* Điện thoại không hiện title của nút bị khoá — nói lý do ngay trên dòng. Sổ đã gắn cờ xoá thì
+              {/* Điện thoại không rê chuột được nên không thấy tooltip của nút bị khoá — nói lý do ngay trên dòng. Sổ đã gắn cờ xoá thì
                   "(đã xoá)" ở trên đã nói đủ. */}
               {undoBlocked && !sale.fundRemoved ? (
                 <div className="mt-0.5 text-[12px] text-[var(--ob-color-expense)] wrap-anywhere">{undoBlocked}</div>
@@ -68,16 +69,17 @@ function MetalSaleHistoryCard({ metal, sales, savings, onRemove }: MetalSaleHist
               </span>
             </div>
             <div className="flex items-center [grid-area:actions]">
-              <button
-                type="button"
-                aria-label={`Huỷ lần bán ${labels.get(sale.id)}`}
-                disabled={undoBlocked !== null}
-                title={undoBlocked ?? undefined}
-                onClick={() => onRemove(sale)}
-                className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)] disabled:cursor-not-allowed disabled:opacity-45"
-              >
-                <Undo2 size={17} />
-              </button>
+              <ActionTooltip label="Huỷ lần bán" disabledReason={undoBlocked ?? undefined}>
+                <button
+                  type="button"
+                  aria-label={`Huỷ lần bán ${labels.get(sale.id)}`}
+                  disabled={undoBlocked !== null}
+                  onClick={() => onRemove(sale)}
+                  className="flex size-11 flex-none items-center justify-center rounded-[var(--ob-radius-sm)] text-[var(--ob-color-text-subtle)] transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:text-[var(--ob-color-expense)] disabled:cursor-not-allowed disabled:opacity-45"
+                >
+                  <Undo2 size={17} />
+                </button>
+              </ActionTooltip>
             </div>
           </div>
         )
