@@ -12,7 +12,7 @@
 | react-hook-form + Zod (`@hookform/resolvers`) | Form & validation |
 | Zustand | State |
 | dnd-kit (`@dnd-kit/core` + `@dnd-kit/sortable`) | Kéo thả thẻ trên bảng Kanban trang Làm việc |
-| ESLint 9 + Prettier | Lint & format (`src/` đúng định dạng Prettier: không chấm phẩy, dòng 120 ký tự) |
+| ESLint 9 + Prettier | Lint & format (`src/` đúng định dạng Prettier: không chấm phẩy, dòng 120 ký tự; `endOfLine: auto` vì Git trên Windows bật `core.autocrlf` checkout ra CRLF — repo vẫn lưu LF) |
 | Husky | Git hooks (pre-commit chạy lint + kiểm định dạng, pre-push chạy toàn bộ test) |
 
 ## 2. Cấu trúc thư mục
