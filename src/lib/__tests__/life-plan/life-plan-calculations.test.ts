@@ -107,6 +107,15 @@ describe("buildTimeline", () => {
     expect(buildTimeline({ notes: [], plans: [] }, null, TODAY)).toEqual([{ kind: "today", day: TODAY }])
   })
 
+  it("leaves an overdue plan not reached yet at its own target day, below the marker, not moved up to today", () => {
+    const overdue = plan({ id: 1, targetYear: 2026, targetMonth: 9, status: "doing" })
+    const entries = buildTimeline({ notes: [note({ id: 2, day: "2026-09-15" })], plans: [overdue] }, null, TODAY)
+
+    expect(isPlanOverdue(overdue, TODAY)).toBe(true)
+    expect(entries.map(label)).toEqual(["today", "plan 1", "note 2"])
+    expect(entries[1].day).toBe("2026-09-30")
+  })
+
   it("keeps only the chosen plan and the notes attached to it, still with the marker", () => {
     const state = {
       notes: [

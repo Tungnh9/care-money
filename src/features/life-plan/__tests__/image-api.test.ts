@@ -101,6 +101,15 @@ describe("fetchLifePlanImage", () => {
     expect(authorization(init)).toBe(`Bearer ${SECRET}`)
   })
 
+  it("keeps the private photo out of the browser's HTTP cache, which Bắt đầu lại cannot clear", async () => {
+    fetchMock.mockResolvedValue(new Response("RIFF-webp-bytes", { headers: { "Content-Type": "image/webp" } }))
+
+    await fetchLifePlanImage(PHOTO.id, SECRET)
+
+    // Bản trên máy nằm ở IndexedDB (image-cache) — "Bắt đầu lại" xoá được nơi đó, còn HTTP cache thì không.
+    expect(call().init.cache).toBe("no-store")
+  })
+
   it("rejects with the server's own sentence", async () => {
     fetchMock.mockResolvedValue(jsonResponse({ error: "Không tìm thấy ảnh." }, 404))
 

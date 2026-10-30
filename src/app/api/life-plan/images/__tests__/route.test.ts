@@ -69,6 +69,13 @@ function uploadResult(publicId: string, folder: string) {
   }
 }
 
+// Mọi dòng server đã ghi ra console.error, gộp thành chữ — để kiểm có lý do của Cloudinary mà không có API secret.
+function serverLog(spy: { mock: { calls: unknown[][] } }): string {
+  return spy.mock.calls
+    .map((args) => args.map((arg) => (arg instanceof Error ? arg.message : String(arg))).join(" "))
+    .join("\n")
+}
+
 describe("/api/life-plan/images", () => {
   const fetchMock = vi.fn()
 
@@ -209,6 +216,18 @@ describe("/api/life-plan/images", () => {
       expect(response.status).toBe(502)
       expect(await response.json()).toEqual({ error: "Không tải được ảnh lên. Vui lòng thử lại." })
     })
+
+    it("logs Cloudinary's own reason on the server when the upload fails, never the API secret", async () => {
+      const log = vi.spyOn(console, "error").mockImplementation(() => {})
+      fetchMock.mockResolvedValue(Response.json({ error: { message: "Invalid Signature" } }, { status: 401 }))
+
+      await POST(requestWith("POST", { auth: AUTH, form: formWith(webp()) }))
+
+      expect(serverLog(log)).toContain("Invalid Signature")
+      expect(serverLog(log)).toContain("401")
+      expect(serverLog(log)).not.toContain("abcd")
+      log.mockRestore()
+    })
   })
 
   describe("GET — view", () => {
@@ -244,6 +263,20 @@ describe("/api/life-plan/images", () => {
       expect(refused.status).toBe(502)
       expect(unreachable.status).toBe(502)
     })
+
+    it("logs on the server why a photo could not be fetched from Cloudinary", async () => {
+      const log = vi.spyOn(console, "error").mockImplementation(() => {})
+      fetchMock.mockResolvedValueOnce(new Response("Unauthorized", { status: 401 }))
+      fetchMock.mockRejectedValueOnce(new TypeError("fetch failed"))
+
+      await GET(requestWith("GET", { auth: AUTH, id: PHOTO_ID }))
+      await GET(requestWith("GET", { auth: AUTH, id: PHOTO_ID }))
+
+      expect(log).toHaveBeenCalledTimes(2)
+      expect(serverLog(log)).toContain("401")
+      expect(serverLog(log)).toContain("fetch failed")
+      log.mockRestore()
+    })
   })
 
   describe("DELETE — delete", () => {
@@ -275,6 +308,20 @@ describe("/api/life-plan/images", () => {
 
       expect(response.status).toBe(502)
       expect(await response.json()).toMatchObject({ ok: false })
+    })
+
+    it("logs on the server why Cloudinary did not delete a photo", async () => {
+      const log = vi.spyOn(console, "error").mockImplementation(() => {})
+      fetchMock.mockResolvedValueOnce(Response.json({ error: { message: "Invalid Signature" } }, { status: 401 }))
+      fetchMock.mockRejectedValueOnce(new TypeError("fetch failed"))
+
+      await DELETE(requestWith("DELETE", { auth: AUTH, id: PHOTO_ID }))
+      await DELETE(requestWith("DELETE", { auth: AUTH, id: PHOTO_ID }))
+
+      expect(serverLog(log)).toContain("Invalid Signature")
+      expect(serverLog(log)).toContain("fetch failed")
+      expect(serverLog(log)).not.toContain("abcd")
+      log.mockRestore()
     })
   })
 })

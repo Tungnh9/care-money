@@ -131,7 +131,7 @@ function uploadedSummary(snapshot: ImportedSnapshot): string {
 // Dùng trong hộp xác nhận trước khi thay dữ liệu: đặt số liệu của bản sắp nạp cạnh số liệu trên
 // máy, gồm cả khoản chi và quỹ tiết kiệm (2 thứ hay đổi nhất) mà snapshotCounts không đếm, và lần mua
 // bạc — bản sao lưu từ trước khi có bạc sẽ hiện "0 lần mua bạc", để không lỡ tay xoá bạc đang có. Ghi chép
-// Plan cuộc đời cũng vậy: bản sao từ trước khi có trang này hiện "0 ghi chép Plan cuộc đời".
+// và kế hoạch Plan cuộc đời cũng vậy: bản sao từ trước khi có trang này hiện "0 ghi chép Plan cuộc đời · 0 kế hoạch".
 function restoreCounts(snapshot: ImportedSnapshot): string {
   return [
     `${snapshot.journal.entries.length} bài nhật ký`,
@@ -142,6 +142,7 @@ function restoreCounts(snapshot: ImportedSnapshot): string {
     `${snapshot.study.learned.length} từ đã học`,
     `${snapshot.work.tasks.length} việc`,
     `${snapshot.lifePlan.notes.length} ghi chép Plan cuộc đời`,
+    `${snapshot.lifePlan.plans.length} kế hoạch`,
   ].join(" · ")
 }
 

@@ -720,7 +720,7 @@ describe("restoreCounts", () => {
     expect(result.ok).toBe(true)
     if (result.ok) {
       expect(restoreCounts(result.data)).toBe(
-        "1 bài nhật ký · 2 khoản chi · 1 quỹ tiết kiệm · 0 lần mua vàng · 0 lần mua bạc · 3 từ đã học · 0 việc · 0 ghi chép Plan cuộc đời"
+        "1 bài nhật ký · 2 khoản chi · 1 quỹ tiết kiệm · 0 lần mua vàng · 0 lần mua bạc · 3 từ đã học · 0 việc · 0 ghi chép Plan cuộc đời · 0 kế hoạch"
       )
     }
   })
@@ -751,7 +751,25 @@ describe("restoreCounts", () => {
     )
 
     expect(result.ok).toBe(true)
-    if (result.ok) expect(restoreCounts(result.data)).toMatch(/ · 1 việc · 2 ghi chép Plan cuộc đời$/)
+    if (result.ok) expect(restoreCounts(result.data)).toMatch(/ · 1 việc · 2 ghi chép Plan cuộc đời · 1 kế hoạch$/)
+  })
+
+  it("counts life plan plans too, so restoring a copy without them warns before the plans on this device go", () => {
+    const result = parseImportPayload(
+      JSON.stringify({
+        version: EXPORT_VERSION,
+        lifePlan: {
+          notes: [],
+          plans: [
+            { id: 1, title: "Mua nhà", targetYear: 2030, status: "planned" },
+            { id: 2, title: "Đi Nhật", targetYear: 2027, targetMonth: 4, status: "doing" },
+          ],
+        },
+      })
+    )
+
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(restoreCounts(result.data)).toMatch(/ · 0 ghi chép Plan cuộc đời · 2 kế hoạch$/)
   })
 })
 

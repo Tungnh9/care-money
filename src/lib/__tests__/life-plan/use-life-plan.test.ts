@@ -208,22 +208,23 @@ describe("useLifePlan — ghi chép", () => {
   it("addNote keeps the plan link only to a plan that exists, so a stray id never lands in storage", async () => {
     seed({ plans: [storedPlan({ id: 2 })] })
     const { result } = await renderLifePlan()
+    // Đọc chuỗi thô ngay sau TỪNG lần thêm: lần ghi sau đọc lại storage qua parseLifePlanState (tự bỏ mã lạ), nên chỉ
+    // bản thô của đúng lần đó cho thấy mã lạ có bị ghi xuống không.
+    const rawNewest = () =>
+      (JSON.parse(window.localStorage.getItem(LIFE_PLAN_STORAGE_KEY) ?? "{}") as { notes: LifeNote[] }).notes[0]
+
+    for (const planId of [9, 0, Number.NaN]) {
+      act(() => {
+        result.current.addNote({ ...NOTE_INPUT, title: `Mã ${planId}`, planId })
+      })
+      expect(rawNewest()).toMatchObject({ title: `Mã ${planId}` })
+      expect(rawNewest()).not.toHaveProperty("planId")
+    }
 
     act(() => {
-      result.current.addNote({ ...NOTE_INPUT, title: "Không có kế hoạch 9", planId: 9 })
-      result.current.addNote({ ...NOTE_INPUT, title: "Mã 0", planId: 0 })
-      result.current.addNote({ ...NOTE_INPUT, title: "Mã NaN", planId: Number.NaN })
       result.current.addNote({ ...NOTE_INPUT, title: "Gắn kế hoạch 2", planId: 2 })
     })
-
-    // Đọc chuỗi thô: getStoredLifePlan tự bỏ gắn khi đọc, nên chỉ chuỗi thô cho thấy mã lạ có bị ghi xuống không.
-    const raw = JSON.parse(window.localStorage.getItem(LIFE_PLAN_STORAGE_KEY) ?? "{}") as { notes: LifeNote[] }
-    expect(raw.notes.map((note) => [note.title, "planId" in note ? note.planId : "none"])).toEqual([
-      ["Gắn kế hoạch 2", 2],
-      ["Mã NaN", "none"],
-      ["Mã 0", "none"],
-      ["Không có kế hoạch 9", "none"],
-    ])
+    expect(rawNewest()).toMatchObject({ title: "Gắn kế hoạch 2", planId: 2 })
     expect(result.current.notes.map((note) => note.planId)).toEqual([2, undefined, undefined, undefined])
     // NaN từng thành null trong JSON, và schema bỏ cả ghi chép mang planId null ở lần đọc sau.
     expect(getStoredLifePlan().notes).toHaveLength(4)

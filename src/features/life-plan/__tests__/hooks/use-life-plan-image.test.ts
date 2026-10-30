@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import { cleanup, renderHook, waitFor } from "@testing-library/react"
+import { act, cleanup, renderHook, waitFor } from "@testing-library/react"
 
 import { getCachedImage, putCachedImage } from "@/lib/life-plan/image-cache"
 import { setSyncSecret } from "@/lib/sync-secret-storage"
@@ -58,6 +58,15 @@ afterEach(() => {
 })
 
 describe("useLifePlanImage", () => {
+  it("loads nothing while no photo is asked for yet (a thumbnail still far below the screen)", async () => {
+    const { result } = renderHook(() => useLifePlanImage(null))
+
+    await act(async () => {})
+    expect(result.current).toEqual({ url: null, failed: false })
+    expect(getCachedImage).not.toHaveBeenCalled()
+    expect(fetchLifePlanImage).not.toHaveBeenCalled()
+  })
+
   it("shows the photo kept on this device without downloading it again", async () => {
     const cached = photoBlob("cached")
     vi.mocked(getCachedImage).mockResolvedValue(cached)

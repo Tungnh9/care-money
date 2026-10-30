@@ -6,14 +6,17 @@ import { setStoredUser } from "@/lib/auth"
 import { setSyncSecret } from "@/lib/sync-secret-storage"
 import { Sidebar } from "../sidebar"
 
+const navigation = vi.hoisted(() => ({ pathname: "/overview" }))
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
-  usePathname: () => "/overview",
+  usePathname: () => navigation.pathname,
 }))
 
 describe("Sidebar", () => {
   beforeEach(() => {
     window.localStorage.clear()
+    navigation.pathname = "/overview"
   })
 
   it("shows a Chi tiêu nav link pointing at /budget", () => {
@@ -239,6 +242,20 @@ describe("Sidebar", () => {
       .getAllByRole("link")
       .map((link) => link.getAttribute("aria-label"))
     expect(names.indexOf("Plan cuộc đời")).toBe(names.indexOf("Mục tiêu") + 1)
+  })
+
+  it("labels the open Plan cuộc đời page as Cuộc đời on the phone bar, where the full name would cover the next icons", () => {
+    navigation.pathname = "/life-plan"
+    render(<Sidebar />)
+
+    const link = within(screen.getByRole("navigation")).getByRole("link", { name: "Plan cuộc đời" })
+    const [full, short] = Array.from(link.querySelectorAll("span"))
+    // Ô ~35–45px trên thanh dưới không chứa nổi "Plan cuộc đời" (~72px) — nhãn ngắn chỉ ở điện thoại, lg vẫn đủ tên.
+    expect(short).toHaveTextContent("Cuộc đời")
+    expect(short).toHaveClass("whitespace-nowrap", "md:hidden")
+    expect(short).not.toHaveClass("lg:inline")
+    expect(full).toHaveTextContent("Plan cuộc đời")
+    expect(full).toHaveClass("hidden", "lg:inline")
   })
 
   it("hides the Plan cuộc đời link when its module is turned off in Cài đặt", () => {

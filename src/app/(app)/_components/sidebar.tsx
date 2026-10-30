@@ -70,7 +70,9 @@ const NAV = [
   { label: "Nhật ký", href: "/journal", icon: BookOpen, moduleKey: "nhatky" },
   { label: "Học tập", href: "/study", icon: GraduationCap, moduleKey: "hoctap" },
   { label: "Mục tiêu", href: "/goals", icon: Target, moduleKey: "muctieu" },
-  { label: "Plan cuộc đời", href: "/life-plan", icon: Route, moduleKey: "kehoach" },
+  // Thanh dưới điện thoại chỉ có ~35–45px mỗi ô: "Plan cuộc đời" (~72px) tràn đè lên icon 2 ô bên cạnh, nên ở đó
+  // trang đang mở hiện nhãn ngắn; sidebar lg và aria-label vẫn đủ tên.
+  { label: "Plan cuộc đời", phoneLabel: "Cuộc đời", href: "/life-plan", icon: Route, moduleKey: "kehoach" },
   { label: "Làm việc", href: "/work", icon: Briefcase, moduleKey: "lamviec" },
   { label: "Cài đặt", href: "/settings", icon: Settings, moduleKey: null },
 ] as const
@@ -161,7 +163,9 @@ function Sidebar() {
             trang có chữ hay không. Không khe giữa các mục, nên "Cài đặt" không bị đẩy ra ngoài thanh cố
             định (không cuộn tới được). Từ md trở lên giữ nguyên cột dọc. */}
         <nav className="flex min-w-0 flex-1 items-center justify-around md:flex-none md:flex-col md:items-stretch md:justify-start md:gap-1">
-          {nav.map(({ label, href, icon: ItemIcon }) => {
+          {nav.map((item) => {
+            const { label, href, icon: ItemIcon } = item
+            const phoneLabel = "phoneLabel" in item ? item.phoneLabel : null
             const active = pathname === href
             return (
               <Link
@@ -178,9 +182,13 @@ function Sidebar() {
                 )}
               >
                 <ItemIcon size={18} />
-                {/* Ô ~40px hẹp hơn "Tổng quan" hay "Plan cuộc đời": nhãn trang đang mở tràn nhẹ ra 2 bên (ô cạnh
-                    chỉ có icon nên còn chỗ) thay vì cắt "Tổng …"; ô min-w-0 basis-0 nên chữ tràn không làm ô phình. */}
-                <span className={active ? "whitespace-nowrap md:hidden lg:inline" : "hidden lg:inline"}>{label}</span>
+                {/* Ô ~40px hẹp hơn "Tổng quan": nhãn trang đang mở tràn nhẹ ra 2 bên (ô cạnh chỉ có icon nên
+                    còn chỗ; nhãn dài hơn nữa thì dùng phoneLabel) thay vì cắt "Tổng …"; ô min-w-0 basis-0 nên chữ
+                    tràn không làm ô phình. */}
+                <span className={active && !phoneLabel ? "whitespace-nowrap md:hidden lg:inline" : "hidden lg:inline"}>
+                  {label}
+                </span>
+                {active && phoneLabel ? <span className="whitespace-nowrap md:hidden">{phoneLabel}</span> : null}
               </Link>
             )
           })}

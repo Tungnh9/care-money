@@ -222,9 +222,9 @@ describe("useDataManagement", () => {
       fileName: "backup.json",
       exportedAt: "2026-09-20T02:00:00.000Z",
       incomingCounts:
-        "1 bài nhật ký · 0 khoản chi · 1 quỹ tiết kiệm · 0 lần mua vàng · 0 lần mua bạc · 0 từ đã học · 1 việc · 2 ghi chép Plan cuộc đời",
+        "1 bài nhật ký · 0 khoản chi · 1 quỹ tiết kiệm · 0 lần mua vàng · 0 lần mua bạc · 0 từ đã học · 1 việc · 2 ghi chép Plan cuộc đời · 1 kế hoạch",
       localCounts:
-        "1 bài nhật ký · 0 khoản chi · 0 quỹ tiết kiệm · 0 lần mua vàng · 0 lần mua bạc · 0 từ đã học · 0 việc · 1 ghi chép Plan cuộc đời",
+        "1 bài nhật ký · 0 khoản chi · 0 quỹ tiết kiệm · 0 lần mua vàng · 0 lần mua bạc · 0 từ đã học · 0 việc · 1 ghi chép Plan cuộc đời · 0 kế hoạch",
     })
 
     act(() => {

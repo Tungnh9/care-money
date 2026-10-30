@@ -147,6 +147,7 @@ function LifePlanView() {
 
       {noteForm ? (
         <NoteFormModal
+          key={noteForm.note?.id ?? "new"}
           note={noteForm.note}
           plans={plans}
           today={today}
@@ -158,6 +159,7 @@ function LifePlanView() {
 
       {planForm ? (
         <PlanFormModal
+          key={planForm.plan?.id ?? "new"}
           plan={planForm.plan}
           onSubmit={(input) => (planForm.plan ? lifePlan.updatePlan(planForm.plan.id, input) : lifePlan.addPlan(input))}
           onClose={() => setPlanForm(null)}

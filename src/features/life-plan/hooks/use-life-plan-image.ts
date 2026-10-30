@@ -27,11 +27,13 @@ async function loadImageBlob(id: string): Promise<Blob> {
 }
 
 // Object URL để hiện 1 ảnh của ghi chép; `failed` khi không lấy được ảnh (chưa nhập khoá đồng bộ, ảnh không còn trên
-// cloud, mất mạng…). Link bị thu hồi khi unmount hay khi đổi sang ảnh khác.
-function useLifePlanImage(id: string): LifePlanImageView {
+// cloud, mất mạng…). Link bị thu hồi khi unmount hay khi đổi sang ảnh khác. `id` null = chưa cần ảnh (ảnh nhỏ còn xa
+// màn hình): chưa đọc cache, chưa tải gì.
+function useLifePlanImage(id: string | null): LifePlanImageView {
   const [loaded, setLoaded] = useState<(LifePlanImageView & { id: string }) | null>(null)
 
   useEffect(() => {
+    if (id === null) return
     let active = true
     let objectUrl: string | null = null
     loadImageBlob(id).then(
@@ -56,7 +58,7 @@ function useLifePlanImage(id: string): LifePlanImageView {
   }, [id])
 
   // Vừa đổi sang ảnh khác mà ảnh mới chưa xong: chưa có gì để hiện — không trả link của ảnh cũ (đã thu hồi).
-  if (loaded?.id !== id) return LOADING
+  if (id === null || loaded?.id !== id) return LOADING
   return { url: loaded.url, failed: loaded.failed }
 }
 

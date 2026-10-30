@@ -52,7 +52,9 @@ async function POST(request: NextRequest) {
   try {
     const image = await uploadToCloudinary(file, lifePlanImageFolder(), config)
     return NextResponse.json(image, { status: 201 })
-  } catch {
+  } catch (error) {
+    // Lý do thật (vd. câu lỗi của Cloudinary) chỉ nằm trong log server; trình duyệt nhận câu chung.
+    console.error("[life-plan images] upload failed:", error)
     return errorResponse("Không tải được ảnh lên. Vui lòng thử lại.", 502)
   }
 }
@@ -66,11 +68,15 @@ async function GET(request: NextRequest) {
   let upstream: Response
   try {
     upstream = await fetch(signedDeliveryUrl(checked.id, checked.config), { cache: "no-store" })
-  } catch {
+  } catch (error) {
+    console.error("[life-plan images] download failed:", error)
     return errorResponse("Không tải được ảnh về. Vui lòng thử lại.", 502)
   }
   if (upstream.status === 404) return errorResponse("Không tìm thấy ảnh.", 404)
-  if (!upstream.ok || !upstream.body) return errorResponse("Không tải được ảnh về. Vui lòng thử lại.", 502)
+  if (!upstream.ok || !upstream.body) {
+    console.error(`[life-plan images] Cloudinary answered ${upstream.status} for ${checked.id}`)
+    return errorResponse("Không tải được ảnh về. Vui lòng thử lại.", 502)
+  }
 
   return new NextResponse(upstream.body, {
     status: 200,
@@ -88,7 +94,8 @@ async function DELETE(request: NextRequest) {
 
   try {
     return NextResponse.json({ ok: await destroyOnCloudinary(checked.id, checked.config) })
-  } catch {
+  } catch (error) {
+    console.error("[life-plan images] delete failed:", error)
     return NextResponse.json(
       { ok: false, error: "Không xoá được ảnh trên Cloudinary. Vui lòng thử lại." },
       { status: 502 }

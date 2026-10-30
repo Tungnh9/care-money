@@ -32,6 +32,15 @@ const uploadResultSchema = z.object({
 
 const destroyResultSchema = z.object({ result: z.string() })
 
+// Body lỗi của Cloudinary: `{ error: { message } }`. Câu đó không chứa API secret (chuỗi ký không có secret).
+const cloudinaryErrorSchema = z.object({ error: z.object({ message: z.string() }) })
+
+// Lý do Cloudinary từ chối, đọc từ body lỗi; body lạ thì null.
+async function cloudinaryReason(response: Response): Promise<string | null> {
+  const parsed = cloudinaryErrorSchema.safeParse(await response.json().catch(() => null))
+  return parsed.success ? parsed.data.error.message : null
+}
+
 function isLifePlanImageId(id: string): boolean {
   return LIFE_PLAN_IMAGE_ID.test(id)
 }
@@ -109,21 +118,33 @@ async function uploadToCloudinary(file: Blob, folder: string, config: Cloudinary
   form.append("file", file)
 
   const response = await fetch(apiUrl("upload", config), { method: "POST", body: form })
-  if (!response.ok) throw new Error(`Cloudinary upload failed with status ${response.status}`)
+  if (!response.ok) {
+    const reason = await cloudinaryReason(response)
+    throw new Error(`Cloudinary upload failed with status ${response.status}${reason ? `: ${reason}` : ""}`)
+  }
   const result = uploadResultSchema.parse(await response.json())
   // Kết quả còn có link có chữ ký (url, secure_url) — chỉ giữ mã ảnh và kích thước.
   return { id: result.public_id, bytes: result.bytes, width: result.width, height: result.height }
 }
 
 // "not found" cũng tính là xoá được: ảnh đã không còn trên Cloudinary. Cloudinary từ chối thì trả false — body lỗi
-// của nó là `{ error: { message } }`, không có `result`. Không gọi được Cloudinary (lỗi mạng) thì lỗi của fetch
-// ném ra nơi gọi.
+// của nó là `{ error: { message } }`, không có `result` — và ghi lý do vào log server. Không gọi được Cloudinary
+// (lỗi mạng) thì lỗi của fetch ném ra nơi gọi.
 async function destroyOnCloudinary(publicId: string, config: CloudinaryConfig): Promise<boolean> {
   const form = signedForm({ public_id: publicId, type: "authenticated" }, config)
 
   const response = await fetch(apiUrl("destroy", config), { method: "POST", body: form })
-  const parsed = destroyResultSchema.safeParse(await response.json().catch(() => null))
-  return parsed.success && (parsed.data.result === "ok" || parsed.data.result === "not found")
+  const body: unknown = await response.json().catch(() => null)
+  const parsed = destroyResultSchema.safeParse(body)
+  if (parsed.success && (parsed.data.result === "ok" || parsed.data.result === "not found")) return true
+  const refused = cloudinaryErrorSchema.safeParse(body)
+  const reason = refused.success
+    ? refused.data.error.message
+    : parsed.success
+      ? parsed.data.result
+      : "unreadable answer"
+  console.error(`[life-plan images] Cloudinary did not delete ${publicId} (status ${response.status}): ${reason}`)
+  return false
 }
 
 export {
