@@ -120,6 +120,25 @@ describe("getStoredLifePlan", () => {
     ])
   })
 
+  it("keeps a note whose plan link is not a number, reading it as linked to no plan", () => {
+    // NaN đi qua JSON thành null; bản sao sửa tay có thể mang chuỗi. Chữ của ghi chép không được mất vì 1 mã kế hoạch.
+    const { id, day, title, content, images } = NOTE
+    store({
+      notes: [
+        { ...NOTE, planId: null },
+        { ...NOTE, id: 2, planId: "3" },
+      ],
+      plans: [PLAN],
+    })
+
+    const notes = getStoredLifePlan().notes
+    expect(notes).toEqual([
+      { id, day, title, content, images },
+      { id: 2, day, title, content, images },
+    ])
+    expect(notes.some((note) => "planId" in note)).toBe(false)
+  })
+
   it("reads an empty life plan when nothing is stored, the JSON is broken or the stored value is null", () => {
     expect(getStoredLifePlan()).toEqual({ notes: [], plans: [] })
 

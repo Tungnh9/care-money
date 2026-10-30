@@ -38,12 +38,16 @@ function planInputError(input: LifePlanInput): string | null {
   return null
 }
 
-// Tiêu đề và nội dung cắt khoảng trắng 2 đầu (xuống dòng bên trong giữ nguyên); không gắn kế hoạch thì không
-// có key `planId`.
-function noteRecord(id: number, input: LifeNoteInput): LifeNote {
-  const { day, images, planId } = input
+// Tiêu đề và nội dung cắt khoảng trắng 2 đầu (xuống dòng bên trong giữ nguyên). Chỉ giữ gắn kế hoạch khi kế hoạch đó
+// còn trong bản đọc tươi `plans` — mã lạ (NaN, 0, kế hoạch vừa bị xoá ở tab khác) thì không gắn, không có key
+// `planId`: NaN qua JSON thành null và cả ghi chép sẽ bị bỏ ở lần đọc sau. Mỗi ảnh chỉ lưu đúng 4 field của
+// LifePlanImage — form có thể kèm thêm thứ khác (link xem trước) không được lọt vào storage.
+function noteRecord(id: number, input: LifeNoteInput, plans: LifePlan[]): LifeNote {
+  const { day, planId } = input
   const title = input.title.trim()
-  return { id, day, title, content: input.content.trim(), images, ...(planId !== undefined ? { planId } : {}) }
+  const images = input.images.map(({ id: imageId, bytes, width, height }) => ({ id: imageId, bytes, width, height }))
+  const linked = planId !== undefined && plans.some((plan) => plan.id === planId)
+  return { id, day, title, content: input.content.trim(), images, ...(linked ? { planId } : {}) }
 }
 
 // Đã đạt thì có ngày đạt: giữ ngày cũ nếu kế hoạch vốn đã đạt (sửa tên 1 kế hoạch đã đạt không dời nó trên dòng
@@ -105,7 +109,7 @@ function useLifePlan() {
       }
       const current = getStoredLifePlan()
       try {
-        const note = noteRecord(nextId(current.notes), input)
+        const note = noteRecord(nextId(current.notes), input, current.plans)
         persist({ ...current, notes: [note, ...current.notes] })
         toast.success(`Đã thêm ghi chép "${note.title}"`)
         return true
@@ -131,7 +135,7 @@ function useLifePlan() {
         return false
       }
       try {
-        const updated = noteRecord(id, input)
+        const updated = noteRecord(id, input, current.plans)
         persist({ ...current, notes: current.notes.map((note) => (note.id === id ? updated : note)) })
         toast.success(`Đã cập nhật ghi chép "${updated.title}"`)
         return true

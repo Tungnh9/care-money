@@ -205,6 +205,59 @@ describe("useLifePlan — ghi chép", () => {
     expect(toast.success).toHaveBeenCalledWith('Đã cập nhật ghi chép "Xem nhà lần 2"')
   })
 
+  it("addNote keeps the plan link only to a plan that exists, so a stray id never lands in storage", async () => {
+    seed({ plans: [storedPlan({ id: 2 })] })
+    const { result } = await renderLifePlan()
+
+    act(() => {
+      result.current.addNote({ ...NOTE_INPUT, title: "Không có kế hoạch 9", planId: 9 })
+      result.current.addNote({ ...NOTE_INPUT, title: "Mã 0", planId: 0 })
+      result.current.addNote({ ...NOTE_INPUT, title: "Mã NaN", planId: Number.NaN })
+      result.current.addNote({ ...NOTE_INPUT, title: "Gắn kế hoạch 2", planId: 2 })
+    })
+
+    // Đọc chuỗi thô: getStoredLifePlan tự bỏ gắn khi đọc, nên chỉ chuỗi thô cho thấy mã lạ có bị ghi xuống không.
+    const raw = JSON.parse(window.localStorage.getItem(LIFE_PLAN_STORAGE_KEY) ?? "{}") as { notes: LifeNote[] }
+    expect(raw.notes.map((note) => [note.title, "planId" in note ? note.planId : "none"])).toEqual([
+      ["Gắn kế hoạch 2", 2],
+      ["Mã NaN", "none"],
+      ["Mã 0", "none"],
+      ["Không có kế hoạch 9", "none"],
+    ])
+    expect(result.current.notes.map((note) => note.planId)).toEqual([2, undefined, undefined, undefined])
+    // NaN từng thành null trong JSON, và schema bỏ cả ghi chép mang planId null ở lần đọc sau.
+    expect(getStoredLifePlan().notes).toHaveLength(4)
+  })
+
+  it("updateNote drops the link to a plan another tab deleted while the form was open", async () => {
+    seed({ notes: [storedNote({ id: 1, planId: 2 })], plans: [storedPlan({ id: 2 })] })
+    const { result } = await renderLifePlan()
+    // Tab khác vừa xoá kế hoạch 2 (và bỏ gắn ghi chép) — ghi thẳng, chưa kịp đọc lại.
+    window.localStorage.setItem(LIFE_PLAN_STORAGE_KEY, JSON.stringify({ notes: [storedNote({ id: 1 })], plans: [] }))
+
+    act(() => {
+      result.current.updateNote(1, { ...NOTE_INPUT, planId: 2 })
+    })
+
+    const raw = JSON.parse(window.localStorage.getItem(LIFE_PLAN_STORAGE_KEY) ?? "{}") as { notes: LifeNote[] }
+    expect(raw.notes[0]).not.toHaveProperty("planId")
+    expect(result.current.notes[0]).not.toHaveProperty("planId")
+  })
+
+  it("stores only the id, size and dimensions of each photo, not whatever else the form carried", async () => {
+    const { result } = await renderLifePlan()
+    const withPreview = { ...PHOTO, url: "blob:http://localhost/preview", file: "IMG_0001.HEIC" } as LifePlanImage
+
+    act(() => {
+      result.current.addNote({ ...NOTE_INPUT, images: [withPreview] })
+    })
+
+    const raw = JSON.parse(window.localStorage.getItem(LIFE_PLAN_STORAGE_KEY) ?? "{}") as { notes: LifeNote[] }
+    expect(raw.notes[0].images).toEqual([PHOTO])
+    expect(Object.keys(raw.notes[0].images[0]).sort()).toEqual(["bytes", "height", "id", "width"])
+    expect(Object.keys(result.current.notes[0].images[0]).sort()).toEqual(["bytes", "height", "id", "width"])
+  })
+
   it("updateNote refuses 11 photos and keeps the note as it was", async () => {
     seed({ notes: [storedNote({ id: 1 })] })
     const { result } = await renderLifePlan()

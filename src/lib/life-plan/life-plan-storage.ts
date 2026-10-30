@@ -51,7 +51,9 @@ const lifeNoteSchema: z.ZodType<LifeNote> = z.object({
     .unknown()
     .optional()
     .transform((value) => safeArray(lifePlanImageSchema, value)),
-  planId: z.number().optional(),
+  // Mã kế hoạch không phải số (NaN đi qua JSON thành null, bản sao sửa tay mang chuỗi) đọc ra như không gắn — 1 mã
+  // kế hoạch hỏng không bao giờ được kéo mất cả ghi chép.
+  planId: z.number().optional().catch(undefined),
 })
 
 const lifePlanSchema: z.ZodType<LifePlan> = z.object({
@@ -79,8 +81,9 @@ function parseLifePlanState(value: unknown): LifePlanState {
   const parsed = (typeof value === "object" && value !== null ? value : {}) as Record<string, unknown>
   const plans = safeArray(lifePlanSchema, parsed.plans)
   const planIds = new Set(plans.map((plan) => plan.id))
+  // Mã kế hoạch hỏng đọc ra `planId: undefined` (key vẫn còn) — withoutPlan bỏ hẳn key đó.
   const notes = safeArray(lifeNoteSchema, parsed.notes).map((note) =>
-    note.planId === undefined || planIds.has(note.planId) ? note : withoutPlan(note)
+    note.planId !== undefined && planIds.has(note.planId) ? note : withoutPlan(note)
   )
   return { notes, plans }
 }
