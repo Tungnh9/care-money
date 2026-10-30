@@ -30,6 +30,8 @@ function isTargetMonth(month: number): boolean {
   return Number.isInteger(month) && month >= 1 && month <= 12
 }
 
+// Dùng chung cho ảnh trong ghi chép đã lưu và ảnh server trả về sau khi tải lên — ảnh nào form nhận được thì lúc
+// đọc lại storage cũng giữ được.
 const lifePlanImageSchema: z.ZodType<LifePlanImage> = z.object({
   id: z.string(),
   bytes: z.number(),
@@ -106,6 +108,7 @@ export {
   isDayKey,
   isTargetMonth,
   isTargetYear,
+  lifePlanImageSchema,
   parseLifePlanState,
   setStoredLifePlan,
   withoutPlan,
