@@ -46,7 +46,12 @@ function useLifePlanImage(id: string): LifePlanImageView {
     )
     return () => {
       active = false
-      if (objectUrl) URL.revokeObjectURL(objectUrl)
+      if (!objectUrl) return
+      // Bỏ link khỏi state trước khi thu hồi: đổi A → B rồi quay lại A trước khi B xong thì state vẫn còn link
+      // của A (đã thu hồi), và lần render đó sẽ trả về đúng cái link chết ấy.
+      const revoked = objectUrl
+      setLoaded((current) => (current?.url === revoked ? null : current))
+      URL.revokeObjectURL(revoked)
     }
   }, [id])
 

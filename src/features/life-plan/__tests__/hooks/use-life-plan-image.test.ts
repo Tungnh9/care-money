@@ -154,4 +154,23 @@ describe("useLifePlanImage", () => {
     await waitFor(() => expect(result.current).toEqual({ url: "blob:photo-2", failed: false }))
     expect(getCachedImage).toHaveBeenLastCalledWith(OTHER_ID)
   })
+
+  it("never hands back the first photo's revoked URL when going back to it before the second one is ready", async () => {
+    vi.mocked(getCachedImage).mockResolvedValueOnce(photoBlob("first"))
+    const { result, rerender } = renderHook(({ id }) => useLifePlanImage(id), { initialProps: { id: PHOTO_ID } })
+    await waitFor(() => expect(result.current.url).toBe("blob:photo-1"))
+    // Ảnh B chưa bao giờ xong; quay lại A thì A tải lại từ đầu.
+    vi.mocked(getCachedImage).mockReturnValueOnce(new Promise(() => {}))
+    rerender({ id: OTHER_ID })
+    const again = deferred<Blob | null>()
+    vi.mocked(getCachedImage).mockReturnValueOnce(again.promise)
+
+    rerender({ id: PHOTO_ID })
+
+    const revoked = vi.mocked(URL.revokeObjectURL).mock.calls.map(([url]) => url)
+    expect(revoked).toEqual(["blob:photo-1"])
+    expect(result.current).toEqual({ url: null, failed: false })
+    again.resolve(photoBlob("first again"))
+    await waitFor(() => expect(result.current).toEqual({ url: "blob:photo-2", failed: false }))
+  })
 })
