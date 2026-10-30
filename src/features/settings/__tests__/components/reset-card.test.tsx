@@ -24,7 +24,7 @@ describe("ResetCard", () => {
 
     expect(
       screen.getByText(
-        "Xoá sạch tài chính, chi tiêu (cả lương và tất toán), nhật ký, học tập, công việc, lịch sử tài sản, quỹ gắn mục tiêu mua xe và secret đồng bộ trên máy này — chỉ giữ lại cài đặt và danh sách cửa hàng vàng và bạc. Không khôi phục được."
+        "Xoá sạch tài chính, chi tiêu (cả lương và tất toán), nhật ký, học tập, công việc, Plan cuộc đời, lịch sử tài sản, quỹ gắn mục tiêu mua xe và secret đồng bộ trên máy này — chỉ giữ lại cài đặt và danh sách cửa hàng vàng và bạc. Không khôi phục được."
       )
     ).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Xoá toàn bộ dữ liệu" })).toBeInTheDocument()
@@ -81,7 +81,7 @@ describe("ResetCard", () => {
     expect(screen.getByText("Đã xoá sạch.")).toBeInTheDocument()
     expect(
       screen.getByText(
-        "Tài chính, chi tiêu, nhật ký, học tập, công việc và lịch sử tài sản đều về 0 — chỉ còn cài đặt và danh sách cửa hàng vàng và bạc. Bắt đầu lại từ Tổng quan.",
+        "Tài chính, chi tiêu, nhật ký, học tập, công việc, Plan cuộc đời và lịch sử tài sản đều về 0 — chỉ còn cài đặt và danh sách cửa hàng vàng và bạc. Bắt đầu lại từ Tổng quan.",
         { exact: false }
       )
     ).toBeInTheDocument()

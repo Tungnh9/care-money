@@ -5,6 +5,7 @@ import { parseBudgetState, type BudgetState } from "@/lib/budget/budget-storage"
 import { parseNetWorthHistory, type NetWorthHistory } from "@/lib/net-worth/net-worth-history-storage"
 import { parseAppSettings, type AppSettings } from "@/lib/settings/settings-storage"
 import { parseWorkState, type WorkState } from "@/lib/work/work-storage"
+import { parseLifePlanState, type LifePlanState } from "@/lib/life-plan/life-plan-storage"
 import { dayKey } from "@/lib/date"
 
 const EXPORT_VERSION = 1
@@ -17,6 +18,7 @@ interface ExportSnapshot {
   budget: BudgetState
   netWorthHistory: NetWorthHistory
   work: WorkState
+  lifePlan: LifePlanState
   goals: GoalsSnapshot
 }
 
@@ -93,9 +95,14 @@ function parseImportPayload(raw: string): ImportResult {
   // Thêm sau (v1 chưa có) — bản sao cũ không có "work" thì về trống, giống budget/netWorthHistory.
   const work: WorkState = parseWorkState(parsed.work)
 
+  // Cũng thêm sau như "work": bản sao cũ không có "lifePlan" thì về trống. Cùng 1 bộ parse với
+  // getStoredLifePlan — ghi chép hay ảnh hỏng chỉ bị bỏ riêng nó, ghi chép trỏ tới kế hoạch không có trong
+  // bản sao thì bỏ gắn. Bản sao chỉ mang mã ảnh; ảnh nằm trên Cloudinary nên khôi phục ở máy khác vẫn xem được.
+  const lifePlan: LifePlanState = parseLifePlanState(parsed.lifePlan)
+
   const goals = parseGoalsSnapshot(parsed.goals)
 
-  const data: ImportedSnapshot = { journal, finance, study, settings, budget, netWorthHistory, work, goals }
+  const data: ImportedSnapshot = { journal, finance, study, settings, budget, netWorthHistory, work, lifePlan, goals }
   const exportedAt = typeof parsed.exportedAt === "string" ? parsed.exportedAt : null
   return { ok: true, data, summary: restoredSummary(data), exportedAt }
 }
@@ -123,7 +130,8 @@ function uploadedSummary(snapshot: ImportedSnapshot): string {
 
 // Dùng trong hộp xác nhận trước khi thay dữ liệu: đặt số liệu của bản sắp nạp cạnh số liệu trên
 // máy, gồm cả khoản chi và quỹ tiết kiệm (2 thứ hay đổi nhất) mà snapshotCounts không đếm, và lần mua
-// bạc — bản sao lưu từ trước khi có bạc sẽ hiện "0 lần mua bạc", để không lỡ tay xoá bạc đang có.
+// bạc — bản sao lưu từ trước khi có bạc sẽ hiện "0 lần mua bạc", để không lỡ tay xoá bạc đang có. Ghi chép
+// Plan cuộc đời cũng vậy: bản sao từ trước khi có trang này hiện "0 ghi chép Plan cuộc đời".
 function restoreCounts(snapshot: ImportedSnapshot): string {
   return [
     `${snapshot.journal.entries.length} bài nhật ký`,
@@ -133,6 +141,7 @@ function restoreCounts(snapshot: ImportedSnapshot): string {
     `${snapshot.finance.silver.length} lần mua bạc`,
     `${snapshot.study.learned.length} từ đã học`,
     `${snapshot.work.tasks.length} việc`,
+    `${snapshot.lifePlan.notes.length} ghi chép Plan cuộc đời`,
   ].join(" · ")
 }
 
