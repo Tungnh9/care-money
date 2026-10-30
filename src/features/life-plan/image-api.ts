@@ -2,11 +2,13 @@ import { z } from "zod"
 
 import { lifePlanImageSchema } from "@/lib/life-plan/life-plan-storage"
 import type { LifePlanImage } from "@/lib/life-plan/types"
+import { hasUnsendableChar, SECRET_CHARSET_ERROR } from "@/lib/sync-secret-storage"
 
 // Ảnh đi qua API của app (/api/life-plan/images), trình duyệt không bao giờ gọi thẳng Cloudinary: server giữ API
 // secret và link có chữ ký. Tải lên, xem và xoá đều kèm khoá đồng bộ (`Authorization: Bearer`).
 // Lỗi ném Error mang câu tiếng Việt để báo thẳng cho người dùng: câu `error` server trả về (vd. "Sai secret đồng
-// bộ."), không có thì câu chung của thao tác đó — kể cả khi không gọi được server.
+// bộ."), không có thì câu chung của thao tác đó — kể cả khi không gọi được server. Riêng khoá có ký tự header không
+// mang được thì ném SECRET_CHARSET_ERROR, không gọi server.
 
 const IMAGES_API = "/api/life-plan/images"
 
@@ -19,7 +21,11 @@ const errorBodySchema = z.object({ error: z.string().min(1) })
 const statusBodySchema = z.object({ configured: z.boolean() })
 const deleteBodySchema = z.object({ ok: z.boolean() })
 
+// Khoá có ký tự mã > 255 (đ, ư, ậ… gõ khi bộ gõ tiếng Việt đang bật) làm fetch ném TypeError lúc dựng header, mà
+// callImagesApi gộp lỗi đó với lỗi mạng thành câu "Vui lòng thử lại" — thử mấy cũng không được. Báo đúng lỗi khoá
+// ngay tại đây: ném ra thì hàm gọi bearer() reject trước khi kịp gọi fetch.
 function bearer(secret: string): HeadersInit {
+  if (hasUnsendableChar(secret)) throw new Error(SECRET_CHARSET_ERROR)
   return { Authorization: `Bearer ${secret}` }
 }
 

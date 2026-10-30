@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 
 import { deleteLifePlanImage, fetchImagesConfigured, fetchLifePlanImage, uploadLifePlanImage } from "../image-api"
 import type { LifePlanImage } from "@/lib/life-plan/types"
+import { SECRET_CHARSET_ERROR } from "@/lib/sync-secret-storage"
 
 const SECRET = "test-secret"
 const PHOTO: LifePlanImage = {
@@ -143,6 +144,40 @@ describe("deleteLifePlanImage", () => {
     await expect(deleteLifePlanImage(PHOTO.id, SECRET)).rejects.toThrow(
       "Không xoá được ảnh trên Cloudinary. Vui lòng thử lại."
     )
+  })
+})
+
+describe("a sync secret with characters outside Latin-1", () => {
+  const shrunk = new Blob(["webp-bytes"], { type: "image/webp" })
+  // Gõ lại khoá khi bộ gõ tiếng Việt đang bật.
+  const UNSENDABLE_SECRET = "bí mật đồng bộ"
+  const LATIN1_SECRET = "café-secret"
+
+  it.each([
+    ["uploadLifePlanImage", () => uploadLifePlanImage(shrunk, UNSENDABLE_SECRET)],
+    ["fetchLifePlanImage", () => fetchLifePlanImage(PHOTO.id, UNSENDABLE_SECRET)],
+    ["deleteLifePlanImage", () => deleteLifePlanImage(PHOTO.id, UNSENDABLE_SECRET)],
+  ])("%s explains the secret problem instead of asking to retry, without calling fetch", async (_name, send) => {
+    // Như fetch thật: header có ký tự mã > 255 thì ném TypeError lúc dựng request, trước khi gửi.
+    fetchMock.mockRejectedValue(new TypeError("Cannot convert argument to a ByteString"))
+
+    await expect(send()).rejects.toThrow(SECRET_CHARSET_ERROR)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it("still sends a secret whose characters all fit in a header (Latin-1, vd. 'é')", async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse(PHOTO, 201))
+      .mockResolvedValueOnce(new Response("RIFF-webp-bytes", { headers: { "Content-Type": "image/webp" } }))
+      .mockResolvedValueOnce(jsonResponse({ ok: true }))
+
+    await expect(uploadLifePlanImage(shrunk, LATIN1_SECRET)).resolves.toEqual(PHOTO)
+    await expect(fetchLifePlanImage(PHOTO.id, LATIN1_SECRET)).resolves.toBeDefined()
+    await expect(deleteLifePlanImage(PHOTO.id, LATIN1_SECRET)).resolves.toBe(true)
+
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+    // new Headers kiểm giá trị header như fetch thật: khoá không gửi được thì đã ném lỗi ở đây.
+    for (const index of [0, 1, 2]) expect(authorization(call(index).init)).toBe(`Bearer ${LATIN1_SECRET}`)
   })
 })
 
