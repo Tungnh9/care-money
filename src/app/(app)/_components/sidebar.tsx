@@ -14,6 +14,7 @@ import {
   LayoutDashboard,
   LogOut,
   Receipt,
+  Route,
   Settings,
   Target,
   Wallet,
@@ -69,6 +70,7 @@ const NAV = [
   { label: "Nhật ký", href: "/journal", icon: BookOpen, moduleKey: "nhatky" },
   { label: "Học tập", href: "/study", icon: GraduationCap, moduleKey: "hoctap" },
   { label: "Mục tiêu", href: "/goals", icon: Target, moduleKey: "muctieu" },
+  { label: "Plan cuộc đời", href: "/life-plan", icon: Route, moduleKey: "kehoach" },
   { label: "Làm việc", href: "/work", icon: Briefcase, moduleKey: "lamviec" },
   { label: "Cài đặt", href: "/settings", icon: Settings, moduleKey: null },
 ] as const
@@ -153,8 +155,8 @@ function Sidebar() {
           </span>
         </div>
 
-        {/* Điện thoại: 8 mục chia đều bề rộng thanh (flex-1 basis-0), chỉ hiện icon — riêng trang đang mở
-            hiện thêm chữ dưới icon (8 nhãn cùng lúc ở ~45px/mục thì mục nào cũng bị cắt "…"). Ô đều nhau
+        {/* Điện thoại: 9 mục chia đều bề rộng thanh (flex-1 basis-0), chỉ hiện icon — riêng trang đang mở
+            hiện thêm chữ dưới icon (9 nhãn cùng lúc ở ~40px/mục thì mục nào cũng bị cắt "…"). Ô đều nhau
             nên mục có chữ không phình ra làm icon khác xô lệch; min-h-12 giữ thanh cao như nhau dù đang ở
             trang có chữ hay không. Không khe giữa các mục, nên "Cài đặt" không bị đẩy ra ngoài thanh cố
             định (không cuộn tới được). Từ md trở lên giữ nguyên cột dọc. */}
@@ -176,8 +178,8 @@ function Sidebar() {
                 )}
               >
                 <ItemIcon size={18} />
-                {/* Ô ~45px hẹp hơn "Tổng quan": nhãn trang đang mở tràn nhẹ ra 2 bên (ô cạnh chỉ có icon nên
-                    còn chỗ) thay vì cắt "Tổng …"; ô min-w-0 basis-0 nên chữ tràn không làm ô phình. */}
+                {/* Ô ~40px hẹp hơn "Tổng quan" hay "Plan cuộc đời": nhãn trang đang mở tràn nhẹ ra 2 bên (ô cạnh
+                    chỉ có icon nên còn chỗ) thay vì cắt "Tổng …"; ô min-w-0 basis-0 nên chữ tràn không làm ô phình. */}
                 <span className={active ? "whitespace-nowrap md:hidden lg:inline" : "hidden lg:inline"}>{label}</span>
               </Link>
             )
