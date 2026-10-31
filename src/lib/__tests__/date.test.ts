@@ -16,7 +16,6 @@ import {
   monthKeyFromDayKey,
   parseDayInput,
   monthsFrom,
-  monthsThroughYearEnd,
   shiftDay,
   shiftMonth,
 } from "../date"
@@ -106,21 +105,6 @@ describe("formatMonthKey", () => {
   it("formats a yyyy-mm key as 'Tháng M, YYYY'", () => {
     expect(formatMonthKey("2026-09")).toBe("Tháng 9, 2026")
     expect(formatMonthKey("2026-01")).toBe("Tháng 1, 2026")
-  })
-})
-
-describe("monthsThroughYearEnd", () => {
-  it("generates every month from the given month through December of the same year", () => {
-    expect(monthsThroughYearEnd("2026-09")).toEqual(["2026-09", "2026-10", "2026-11", "2026-12"])
-  })
-
-  it("returns all 12 months when starting in January", () => {
-    expect(monthsThroughYearEnd("2026-01")).toHaveLength(12)
-    expect(monthsThroughYearEnd("2026-01")[11]).toBe("2026-12")
-  })
-
-  it("returns just December itself when starting in December", () => {
-    expect(monthsThroughYearEnd("2026-12")).toEqual(["2026-12"])
   })
 })
 

@@ -16,6 +16,25 @@ import { BudgetView } from "../../components/budget-view"
 import { CHART_PALETTE } from "@/lib/budget/budget-calculations"
 import type { Settlement } from "@/lib/budget/types"
 
+interface ApexProps {
+  series: { name: string; data: number[] }[]
+  options: { xaxis?: { categories?: string[] } }
+}
+
+// jsdom không vẽ được ApexCharts thật — ghi lại props mỗi lần 1 chart được vẽ, để đọc tháng và số của chart.
+const apex = vi.hoisted(() => ({ calls: [] as ApexProps[] }))
+vi.mock("react-apexcharts", () => ({
+  default: (props: ApexProps) => {
+    apex.calls.push(props)
+    return null
+  },
+}))
+
+// Props lần vẽ gần nhất của chart "Chi tiêu theo tháng" (series đầu tên "Đã chi").
+function monthlyChart(): ApexProps | undefined {
+  return apex.calls.filter((props) => props.series[0]?.name === "Đã chi").at(-1)
+}
+
 function settlement(overrides: Partial<Settlement>): Settlement {
   return {
     id: 1,
@@ -99,6 +118,42 @@ describe("BudgetView", () => {
 
     await waitFor(() => expect(screen.getAllByText("Lương tháng này").length).toBeGreaterThan(0))
     expect(screen.getByText("Chi tiêu theo tháng")).toBeInTheDocument()
+  })
+
+  it("compares last month with this month in the monthly chart, drawing no month still to come", async () => {
+    // Hôm nay 15/09/2026: chart chỉ có tháng 8 và tháng 9 — khoản chi tháng 7 và khoản ghi trước cho tháng 10 nằm ngoài.
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      expenses: [
+        { id: 1, dayKey: "2026-07-20", amount: 100_000, tag: null },
+        { id: 2, dayKey: "2026-08-10", amount: 300_000, tag: null },
+        { id: 3, dayKey: "2026-09-01", amount: 200_000, tag: null },
+        { id: 4, dayKey: "2026-10-05", amount: 400_000, tag: null },
+      ],
+    })
+    apex.calls.length = 0
+
+    render(<BudgetView />)
+
+    await waitFor(() => expect(monthlyChart()?.series[0].data).toEqual([300_000, 200_000]))
+    expect(monthlyChart()?.options.xaxis?.categories).toEqual(["Tháng 8", "Tháng 9"])
+  })
+
+  it("puts December of last year before January in the monthly chart", async () => {
+    vi.setSystemTime(new Date(2027, 0, 10))
+    setStoredBudget({
+      ...DEFAULT_BUDGET_STATE,
+      expenses: [
+        { id: 1, dayKey: "2026-12-28", amount: 500_000, tag: null },
+        { id: 2, dayKey: "2027-01-03", amount: 150_000, tag: null },
+      ],
+    })
+    apex.calls.length = 0
+
+    render(<BudgetView />)
+
+    await waitFor(() => expect(monthlyChart()?.series[0].data).toEqual([500_000, 150_000]))
+    expect(monthlyChart()?.options.xaxis?.categories).toEqual(["Tháng 12", "Tháng 1"])
   })
 
   it("renders the 6-month tag trend chart", async () => {

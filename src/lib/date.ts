@@ -61,11 +61,6 @@ function shiftDay(day: string, delta: number): string {
   return dayKey(new Date(y, m - 1, d + delta))
 }
 
-function monthsThroughYearEnd(fromMonth: string): string[] {
-  const [, m] = fromMonth.split("-").map(Number)
-  return monthsFrom(fromMonth, 12 - m + 1)
-}
-
 function formatMonthKey(month: string): string {
   const [y, m] = month.split("-").map(Number)
   return `Tháng ${m}, ${y}`
@@ -134,7 +129,6 @@ export {
   monthKey,
   monthKeyFromDayKey,
   monthsFrom,
-  monthsThroughYearEnd,
   parseDayInput,
   shiftDay,
   shiftMonth,

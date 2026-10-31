@@ -8,15 +8,7 @@ import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { useFinance } from "@/lib/finance/use-finance"
 import { useSettings } from "@/lib/settings/use-settings"
 import { formatMoney } from "@/lib/format"
-import {
-  dayKey,
-  formatMonthKey,
-  monthKey,
-  monthKeyFromDayKey,
-  monthsFrom,
-  monthsThroughYearEnd,
-  shiftMonth,
-} from "@/lib/date"
+import { dayKey, formatMonthKey, monthKey, monthKeyFromDayKey, monthsFrom, shiftMonth } from "@/lib/date"
 import { useBudget } from "@/lib/budget/use-budget"
 import { CARD_SWIPE_TAG_EMOJI, CARD_SWIPE_TAG_LABEL } from "@/lib/budget/card-link"
 import {
@@ -127,16 +119,12 @@ function BudgetView() {
     target?.focus()
   })
 
-  // Chart "Chi tiêu theo tháng" bắt đầu từ tháng hiện tại, kéo dài tới hết tháng 12 cùng năm —
-  // sang năm mới, currentMonth tự đổi theo giờ hệ thống nên chart tự cập nhật lại đúng từ tháng 1
-  // tới tháng 12 của năm mới, không cần sửa gì thêm. Chỉ tô màu phân biệt tháng hiện tại (có dữ
-  // liệu thật) với các tháng sau (chưa tới, không thể biết trước sẽ chi gì) — không có tương tác
-  // bấm-để-xem-tháng-khác nào (đã bỏ: không có cách hợp lệ nào để xem trước 1 tháng chưa xảy ra).
-  const upcomingMonths = monthsThroughYearEnd(currentMonth)
-  const monthlyExpenses = monthlyExpenseTotals(expenses, upcomingMonths)
+  // Chart "Chi tiêu theo tháng" đặt tháng trước cạnh tháng hiện tại để so — chỉ tháng đã có chi tiêu thật, không
+  // vẽ tháng chưa tới (chưa thể biết sẽ chi gì). Sang tháng 1 thì tháng trước là tháng 12 năm ngoái.
+  const comparedMonths = monthsFrom(shiftMonth(currentMonth, -1), 2)
+  const monthlyExpenses = monthlyExpenseTotals(expenses, comparedMonths)
 
-  // "Xu hướng chi tiêu" nhìn về 6 tháng gần nhất TÍNH ĐẾN tháng hiện tại (bao gồm cả tháng này) —
-  // ngược hướng với chart dự báo ở trên, vì đây là lịch sử thật đã xảy ra, không phải ước tính.
+  // "Xu hướng chi tiêu" nhìn về 6 tháng gần nhất TÍNH ĐẾN tháng hiện tại (bao gồm cả tháng này), chia theo nhãn.
   const trendMonths = monthsFrom(shiftMonth(currentMonth, -5), 6)
   const tagTrend = monthlyTagBreakdown(expenses, trendMonths)
   // 1 bảng màu cho cả donut lẫn chart 6 tháng, theo vị trí nhãn trong Cài đặt — cùng 1 nhãn luôn
@@ -256,7 +244,7 @@ function BudgetView() {
         />
 
         <Card label="Chi tiêu theo tháng" className="min-w-0 w-full">
-          <MonthlyTrendChart data={monthlyExpenses} currentMonth={currentMonth} />
+          <MonthlyTrendChart data={monthlyExpenses} />
         </Card>
 
         <Card label="Xu hướng chi tiêu (6 tháng gần nhất)" className="min-w-0 w-full">

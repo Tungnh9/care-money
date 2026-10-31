@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
+import { describe, it, beforeEach, afterEach, vi } from "vitest"
 import { render } from "@testing-library/react"
 
-import { MonthlyTrendChart, isConfirmedMonth } from "../../components/monthly-trend-chart"
+import { MonthlyTrendChart } from "../../components/monthly-trend-chart"
 
 function stubChartMeasurement() {
   vi.stubGlobal(
@@ -62,25 +62,5 @@ describe("MonthlyTrendChart", () => {
 
   it("renders without throwing when a total exceeds the fixed 35tr axis max", () => {
     render(<MonthlyTrendChart data={[{ month: "2026-10", total: 50_000_000 }]} />)
-  })
-
-  it("renders without throwing when currentMonth is provided", () => {
-    render(<MonthlyTrendChart data={[{ month: "2026-10", total: 20_000_000 }]} currentMonth="2026-09" />)
-  })
-})
-
-// Tháng tương lai chưa có dữ liệu thật — dùng để tô màu phân biệt trực quan với tháng hiện
-// tại/đã qua trong chart dự báo.
-describe("isConfirmedMonth", () => {
-  it("confirms the current month", () => {
-    expect(isConfirmedMonth("2026-09", "2026-09")).toBe(true)
-  })
-
-  it("confirms a past month", () => {
-    expect(isConfirmedMonth("2026-08", "2026-09")).toBe(true)
-  })
-
-  it("does not confirm a future month", () => {
-    expect(isConfirmedMonth("2026-10", "2026-09")).toBe(false)
   })
 })
