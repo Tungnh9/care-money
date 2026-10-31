@@ -74,7 +74,7 @@ function SettingsView() {
     netWorthHistory.length ? `${netWorthHistory.length} ngày lịch sử tài sản` : null,
     workTasks.length ? `${workTasks.length} việc` : null,
     standups.length ? `${standups.length} bản standup` : null,
-    lifeNotes.length ? `${lifeNotes.length} ghi chép Plan cuộc đời` : null,
+    lifeNotes.length ? `${lifeNotes.length} ghi chép Plan` : null,
     lifePlans.length ? `${lifePlans.length} kế hoạch` : null,
   ].filter((count): count is string => count !== null)
 

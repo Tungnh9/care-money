@@ -609,7 +609,7 @@ describe("parseImportPayload — work", () => {
   })
 })
 
-describe("parseImportPayload — Plan cuộc đời", () => {
+describe("parseImportPayload — Plan", () => {
   // Required<...>: mọi field tuỳ chọn đều có mặt — field nào rơi mất khi xuất rồi nhập lại thì test đỏ.
   const PLAN: Required<LifePlan> = {
     id: 3,
@@ -656,7 +656,7 @@ describe("parseImportPayload — Plan cuộc đời", () => {
     if (result.ok) expect(result.data.lifePlan).toEqual(LIFE_PLAN)
   })
 
-  it("reads an empty Plan cuộc đời from a backup made before the page existed", () => {
+  it("reads an empty Plan from a backup made before the page existed", () => {
     const older = exportedWith(LIFE_PLAN)
     delete older.lifePlan
 
@@ -665,7 +665,7 @@ describe("parseImportPayload — Plan cuộc đời", () => {
     expect(result.ok).toBe(true)
     if (result.ok) {
       expect(result.data.lifePlan).toEqual(DEFAULT_LIFE_PLAN_STATE)
-      expect(restoreCounts(result.data)).toContain("0 ghi chép Plan cuộc đời")
+      expect(restoreCounts(result.data)).toContain("0 ghi chép Plan")
     }
   })
 
@@ -690,7 +690,7 @@ describe("parseImportPayload — Plan cuộc đời", () => {
     if (result.ok) expect(result.data.lifePlan).toEqual({ notes: [{ id, day, title, content, images }], plans: [] })
   })
 
-  it("falls back to an empty Plan cuộc đời when the section is wrong-typed", () => {
+  it("falls back to an empty Plan when the section is wrong-typed", () => {
     for (const lifePlan of ["x", null, 42, { notes: "x", plans: {} }]) {
       const result = parseImportPayload(JSON.stringify({ version: EXPORT_VERSION, lifePlan }))
 
@@ -701,7 +701,7 @@ describe("parseImportPayload — Plan cuộc đời", () => {
 })
 
 describe("restoreCounts", () => {
-  it("lists journal entries, expenses, savings funds, gold and silver purchases, learned words, work tasks and Plan cuộc đời notes", () => {
+  it("lists journal entries, expenses, savings funds, gold and silver purchases, learned words, work tasks and Plan notes", () => {
     const result = parseImportPayload(
       JSON.stringify({
         version: EXPORT_VERSION,
@@ -720,12 +720,12 @@ describe("restoreCounts", () => {
     expect(result.ok).toBe(true)
     if (result.ok) {
       expect(restoreCounts(result.data)).toBe(
-        "1 bài nhật ký · 2 khoản chi · 1 quỹ tiết kiệm · 0 lần mua vàng · 0 lần mua bạc · 3 từ đã học · 0 việc · 0 ghi chép Plan cuộc đời · 0 kế hoạch"
+        "1 bài nhật ký · 2 khoản chi · 1 quỹ tiết kiệm · 0 lần mua vàng · 0 lần mua bạc · 3 từ đã học · 0 việc · 0 ghi chép Plan · 0 kế hoạch"
       )
     }
   })
 
-  it("counts the Plan cuộc đời notes right after the work tasks", () => {
+  it("counts the Plan notes right after the work tasks", () => {
     const note = { day: "2026-10-29", title: "Ghi chép", content: "", images: [] }
     const task = {
       id: 1,
@@ -751,7 +751,7 @@ describe("restoreCounts", () => {
     )
 
     expect(result.ok).toBe(true)
-    if (result.ok) expect(restoreCounts(result.data)).toMatch(/ · 1 việc · 2 ghi chép Plan cuộc đời · 1 kế hoạch$/)
+    if (result.ok) expect(restoreCounts(result.data)).toMatch(/ · 1 việc · 2 ghi chép Plan · 1 kế hoạch$/)
   })
 
   it("counts life plan plans too, so restoring a copy without them warns before the plans on this device go", () => {
@@ -769,7 +769,7 @@ describe("restoreCounts", () => {
     )
 
     expect(result.ok).toBe(true)
-    if (result.ok) expect(restoreCounts(result.data)).toMatch(/ · 0 ghi chép Plan cuộc đời · 2 kế hoạch$/)
+    if (result.ok) expect(restoreCounts(result.data)).toMatch(/ · 0 ghi chép Plan · 2 kế hoạch$/)
   })
 })
 

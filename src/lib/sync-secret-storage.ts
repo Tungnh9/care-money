@@ -2,7 +2,7 @@ import { notifyDataChanged } from "./data-change-bus"
 
 const SYNC_SECRET_STORAGE_KEY = "sync-secret"
 
-// Secret đi trong header `Authorization: Bearer` (đồng bộ cloud, ảnh Plan cuộc đời), mà header HTTP chỉ nhận ký tự có
+// Secret đi trong header `Authorization: Bearer` (đồng bộ cloud, ảnh trang Plan), mà header HTTP chỉ nhận ký tự có
 // mã ≤ 255 (Latin-1): secret có "ậ", "ồ", "đ"... (gõ khi bộ gõ tiếng Việt đang bật) làm fetch ném TypeError trước khi
 // kịp gửi. Nơi gửi secret kiểm trước bằng hasUnsendableChar rồi báo câu này — lỗi đó từng bị báo nhầm thành lỗi mạng
 // ("Không kết nối được máy chủ đồng bộ.", "Không tải được ảnh lên. Vui lòng thử lại."), thử lại mấy cũng không được.

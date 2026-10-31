@@ -126,7 +126,7 @@ describe("LifePlanView — đầu trang", () => {
   it("shows the title, the add buttons and the empty timeline sentence", async () => {
     render(<LifePlanView />)
 
-    expect(screen.getByRole("heading", { level: 1, name: "Plan cuộc đời" })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { level: 1, name: "Plan" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Thêm ghi chép" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Thêm kế hoạch" })).toBeInTheDocument()
     expect(await screen.findByText(EMPTY)).toBeInTheDocument()

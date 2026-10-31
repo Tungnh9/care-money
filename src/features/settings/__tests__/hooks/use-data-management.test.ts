@@ -222,9 +222,9 @@ describe("useDataManagement", () => {
       fileName: "backup.json",
       exportedAt: "2026-09-20T02:00:00.000Z",
       incomingCounts:
-        "1 bài nhật ký · 0 khoản chi · 1 quỹ tiết kiệm · 0 lần mua vàng · 0 lần mua bạc · 0 từ đã học · 1 việc · 2 ghi chép Plan cuộc đời · 1 kế hoạch",
+        "1 bài nhật ký · 0 khoản chi · 1 quỹ tiết kiệm · 0 lần mua vàng · 0 lần mua bạc · 0 từ đã học · 1 việc · 2 ghi chép Plan · 1 kế hoạch",
       localCounts:
-        "1 bài nhật ký · 0 khoản chi · 0 quỹ tiết kiệm · 0 lần mua vàng · 0 lần mua bạc · 0 từ đã học · 0 việc · 1 ghi chép Plan cuộc đời · 0 kế hoạch",
+        "1 bài nhật ký · 0 khoản chi · 0 quỹ tiết kiệm · 0 lần mua vàng · 0 lần mua bạc · 0 từ đã học · 0 việc · 1 ghi chép Plan · 0 kế hoạch",
     })
 
     act(() => {
@@ -934,7 +934,7 @@ describe("useDataManagement", () => {
     })
   })
 
-  describe("Plan cuộc đời", () => {
+  describe("Plan", () => {
     it("exportData writes this device's notes and plans into the exported file", async () => {
       setStoredLifePlan(RESTORED_LIFE_PLAN)
       const { result } = renderDataManagement()
@@ -962,7 +962,7 @@ describe("useDataManagement", () => {
       )
     })
 
-    it("importData shows that a backup made before Plan cuộc đời has no notes, and empties it only on confirm", async () => {
+    it("importData shows that a backup made before Plan has no notes, and empties it only on confirm", async () => {
       setStoredLifePlan(LOCAL_LIFE_PLAN)
       const { result, onReplaceLifePlan } = renderDataManagement()
 
@@ -970,8 +970,8 @@ describe("useDataManagement", () => {
         await result.current.importData(backupFile({}))
       })
 
-      expect(result.current.pendingRestore?.incomingCounts).toContain("0 ghi chép Plan cuộc đời")
-      expect(result.current.pendingRestore?.localCounts).toContain("1 ghi chép Plan cuộc đời")
+      expect(result.current.pendingRestore?.incomingCounts).toContain("0 ghi chép Plan")
+      expect(result.current.pendingRestore?.localCounts).toContain("1 ghi chép Plan")
       expect(onReplaceLifePlan).not.toHaveBeenCalled()
 
       act(() => {
@@ -996,7 +996,7 @@ describe("useDataManagement", () => {
       expect(result.current.imported).toEqual({ ok: false, error: WRITE_FAILED })
     })
 
-    it("wipeData empties Plan cuộc đời and the photo cache on this device, leaving the photos on Cloudinary", () => {
+    it("wipeData empties Plan and the photo cache on this device, leaving the photos on Cloudinary", () => {
       const fetchMock = vi.fn()
       vi.stubGlobal("fetch", fetchMock)
       vi.mocked(clearImageCache).mockClear()

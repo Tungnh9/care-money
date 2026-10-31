@@ -294,7 +294,7 @@ function useDataManagement({
     onReplaceNetWorthHistory(DEFAULT_NET_WORTH_HISTORY)
     onReplaceWork(DEFAULT_WORK_STATE)
     onReplaceLifePlan(DEFAULT_LIFE_PLAN_STATE)
-    // Ảnh Plan cuộc đời đã tải về máy này cũng dọn theo. Ảnh trên Cloudinary giữ nguyên (dọn ảnh mồ côi trên cloud
+    // Ảnh trang Plan đã tải về máy này cũng dọn theo. Ảnh trên Cloudinary giữ nguyên (dọn ảnh mồ côi trên cloud
     // nằm ngoài phạm vi): nạp lại 1 bản sao lưu thì các ghi chép vẫn trỏ đúng ảnh cũ trên cloud. Không chờ:
     // clearImageCache không bao giờ lỗi.
     void clearImageCache()

@@ -132,7 +132,7 @@ describe("Sidebar", () => {
       "Nhật ký",
       "Học tập",
       "Mục tiêu",
-      "Plan cuộc đời",
+      "Plan",
       "Làm việc",
       "Cài đặt",
     ])
@@ -157,16 +157,7 @@ describe("Sidebar", () => {
     expect(activeLabel).toHaveClass("whitespace-nowrap", "md:hidden", "lg:inline")
     expect(activeLabel).not.toHaveClass("truncate")
 
-    for (const name of [
-      "Tài chính",
-      "Chi tiêu",
-      "Nhật ký",
-      "Học tập",
-      "Mục tiêu",
-      "Plan cuộc đời",
-      "Làm việc",
-      "Cài đặt",
-    ]) {
+    for (const name of ["Tài chính", "Chi tiêu", "Nhật ký", "Học tập", "Mục tiêu", "Plan", "Làm việc", "Cài đặt"]) {
       const label = within(nav).getByRole("link", { name }).querySelector("span") as HTMLElement
       // Ẩn ở điện thoại và md, hiện lại ở lg (sidebar có chữ) — tên đọc lên vẫn từ aria-label.
       expect(label).toHaveClass("hidden", "lg:inline")
@@ -205,7 +196,7 @@ describe("Sidebar", () => {
       "Nhật ký",
       "Học tập",
       "Mục tiêu",
-      "Plan cuộc đời",
+      "Plan",
       "Làm việc",
       "Cài đặt",
     ]) {
@@ -233,41 +224,39 @@ describe("Sidebar", () => {
     expect(within(screen.getByRole("navigation")).queryByRole("link", { name: "Làm việc" })).not.toBeInTheDocument()
   })
 
-  it("shows a Plan cuộc đời nav link pointing at /life-plan, right after Mục tiêu", () => {
+  it("shows a Plan nav link pointing at /life-plan, right after Mục tiêu", () => {
     render(<Sidebar />)
 
     const nav = screen.getByRole("navigation")
-    expect(within(nav).getByRole("link", { name: "Plan cuộc đời" })).toHaveAttribute("href", "/life-plan")
+    expect(within(nav).getByRole("link", { name: "Plan" })).toHaveAttribute("href", "/life-plan")
     const names = within(nav)
       .getAllByRole("link")
       .map((link) => link.getAttribute("aria-label"))
-    expect(names.indexOf("Plan cuộc đời")).toBe(names.indexOf("Mục tiêu") + 1)
+    expect(names.indexOf("Plan")).toBe(names.indexOf("Mục tiêu") + 1)
   })
 
-  it("labels the open Plan cuộc đời page as Cuộc đời on the phone bar, where the full name would cover the next icons", () => {
+  it("shows the open Plan page's label under its icon on the phone bar, like every other page", () => {
     navigation.pathname = "/life-plan"
     render(<Sidebar />)
 
-    const link = within(screen.getByRole("navigation")).getByRole("link", { name: "Plan cuộc đời" })
-    const [full, short] = Array.from(link.querySelectorAll("span"))
-    // Ô ~35–45px trên thanh dưới không chứa nổi "Plan cuộc đời" (~72px) — nhãn ngắn chỉ ở điện thoại, lg vẫn đủ tên.
-    expect(short).toHaveTextContent("Cuộc đời")
-    expect(short).toHaveClass("whitespace-nowrap", "md:hidden")
-    expect(short).not.toHaveClass("lg:inline")
-    expect(full).toHaveTextContent("Plan cuộc đời")
-    expect(full).toHaveClass("hidden", "lg:inline")
+    const link = within(screen.getByRole("navigation")).getByRole("link", { name: "Plan" })
+    // "Plan" vừa ô ~40px của thanh dưới — 1 nhãn duy nhất, dùng chung cho điện thoại và lg.
+    const labels = link.querySelectorAll("span")
+    expect(labels).toHaveLength(1)
+    expect(labels[0]).toHaveTextContent("Plan")
+    expect(labels[0]).toHaveClass("whitespace-nowrap", "md:hidden", "lg:inline")
   })
 
-  it("hides the Plan cuộc đời link when its module is turned off in Cài đặt", () => {
+  it("hides the Plan link when its module is turned off in Cài đặt", () => {
     window.localStorage.setItem(
       "app-settings",
-      JSON.stringify({ modules: [{ key: "kehoach", label: "Plan cuộc đời", hint: "", on: false }] })
+      JSON.stringify({ modules: [{ key: "kehoach", label: "Plan", hint: "", on: false }] })
     )
 
     render(<Sidebar />)
 
     const nav = screen.getByRole("navigation")
-    expect(within(nav).queryByRole("link", { name: "Plan cuộc đời" })).not.toBeInTheDocument()
+    expect(within(nav).queryByRole("link", { name: "Plan" })).not.toBeInTheDocument()
     expect(within(nav).getByRole("link", { name: "Mục tiêu" })).toBeInTheDocument()
   })
 })

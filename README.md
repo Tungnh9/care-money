@@ -21,10 +21,10 @@ Tính năng đồng bộ dữ liệu qua nhiều máy (`/api/sync`, backend Verc
 - `BLOB_READ_WRITE_TOKEN` — token của 1 Vercel Blob private store (`vercel link` + `vercel env pull` sau khi tạo store).
 - `SYNC_SECRET` — chuỗi bí mật tự sinh (vd. `openssl rand -hex 32`), đặt cùng giá trị ở đây và ở Vercel dashboard khi deploy thật, dùng để chặn người lạ gọi `/api/sync`.
 
-Ảnh của trang Plan cuộc đời (`/api/life-plan/images`) lưu trên Cloudinary gói miễn phí, tách khỏi Vercel Blob, nên cần thêm 3 biến (mẫu cũng ở `.env.example`). Thiếu biến nào thì ghi chép bằng chữ vẫn chạy, chỉ nút thêm ảnh bị khoá kèm lời giải thích. Tải lên, xem và xoá ảnh còn cần nhập khoá đồng bộ (cùng giá trị `SYNC_SECRET`) ở Cài đặt:
+Ảnh của trang Plan (`/api/life-plan/images`) lưu trên Cloudinary gói miễn phí, tách khỏi Vercel Blob, nên cần thêm 3 biến (mẫu cũng ở `.env.example`). Thiếu biến nào thì ghi chép bằng chữ vẫn chạy, chỉ nút thêm ảnh bị khoá kèm lời giải thích. Tải lên, xem và xoá ảnh còn cần nhập khoá đồng bộ (cùng giá trị `SYNC_SECRET`) ở Cài đặt:
 
 - `CLOUDINARY_CLOUD_NAME` · `CLOUDINARY_API_KEY` · `CLOUDINARY_API_SECRET` — đăng ký tài khoản Free ở [cloudinary.com](https://cloudinary.com), mở Console, trang **API Keys** có đủ Cloud name, API Key và API Secret; đặt cả 3 vào `.env.local` và Vercel dashboard (Production). Chỉ server đọc 3 biến này (không có tiền tố `NEXT_PUBLIC_`), link ảnh có chữ ký không bao giờ tới trình duyệt.
-- Ảnh lưu dạng `authenticated` (riêng tư) trong thư mục `life-plan/production` khi `VERCEL_ENV=production`, mọi môi trường khác (máy dev, preview) vào `life-plan/development` — `.env.local` mang khoá thật nên ảnh tải lên từ `npm run dev` vào thẳng tài khoản thật, chỉ khác thư mục. Gói Free có 25 credit/tháng dùng chung (1 credit = 1GB lưu trữ, hoặc 1GB tải về, hoặc 1.000 lần xử lý ảnh); đầu trang Plan cuộc đời hiện tổng dung lượng ảnh đã dùng để tự theo dõi.
+- Ảnh lưu dạng `authenticated` (riêng tư) trong thư mục `life-plan/production` khi `VERCEL_ENV=production`, mọi môi trường khác (máy dev, preview) vào `life-plan/development` — `.env.local` mang khoá thật nên ảnh tải lên từ `npm run dev` vào thẳng tài khoản thật, chỉ khác thư mục. Gói Free có 25 credit/tháng dùng chung (1 credit = 1GB lưu trữ, hoặc 1GB tải về, hoặc 1.000 lần xử lý ảnh); đầu trang Plan hiện tổng dung lượng ảnh đã dùng để tự theo dõi.
 
 ## Stack chính
 
@@ -40,7 +40,7 @@ Tính năng đồng bộ dữ liệu qua nhiều máy (`/api/sync`, backend Verc
 | Rich text / an toàn | `dompurify` — sanitize nội dung nhật ký (HTML do người dùng nhập) |
 | Thông báo / icon | `sonner` (toast), `lucide-react` (icon) |
 | Backend đồng bộ | `@vercel/blob` — lưu 1 file snapshot JSON cho `/api/sync` |
-| Lưu ảnh | Cloudinary (gói Free) — ảnh Plan cuộc đời, gọi thẳng REST API bằng `fetch` + chữ ký SHA-1 (`node:crypto`), không thêm thư viện |
+| Lưu ảnh | Cloudinary (gói Free) — ảnh trang Plan, gọi thẳng REST API bằng `fetch` + chữ ký SHA-1 (`node:crypto`), không thêm thư viện |
 | Test | Vitest 3 + React Testing Library + jsdom (không dùng Jest) |
 | Lint / format / git hook | ESLint 9 + Prettier, Husky (script `prepare`) chạy lint ở pre-commit |
 
@@ -54,7 +54,7 @@ src/
 │   ├── login/page.tsx          # "/login" — ngoài route group (app), không có sidebar
 │   ├── sandbox/page.tsx        # "/sandbox" — xem trực quan component ui/ob, không phải feature
 │   ├── api/sync/route.ts       # "/api/sync" — GET/POST, backup/restore qua Vercel Blob (bearer SYNC_SECRET)
-│   ├── api/life-plan/images/   # "/api/life-plan/images" — POST/GET/DELETE ảnh Plan cuộc đời qua Cloudinary (bearer SYNC_SECRET); status/ báo server đã cấu hình Cloudinary chưa
+│   ├── api/life-plan/images/   # "/api/life-plan/images" — POST/GET/DELETE ảnh trang Plan qua Cloudinary (bearer SYNC_SECRET); status/ báo server đã cấu hình Cloudinary chưa
 │   └── (app)/                  # route group — shell cho user đã đăng nhập
 │       ├── layout.tsx          # bọc <MoneyVisibilityProvider>, render Sidebar + <Toaster>
 │       ├── _components/sidebar.tsx   # topbar mobile + sidebar desktop, nav lọc theo module bật/tắt trong Cài đặt
@@ -64,7 +64,7 @@ src/
 │       ├── journal/page.tsx    # "/journal"  — Nhật ký
 │       ├── study/page.tsx      # "/study"    — Học tập
 │       ├── goals/page.tsx      # "/goals"    — Mục tiêu
-│       ├── life-plan/page.tsx  # "/life-plan" — Plan cuộc đời (ghi chép, kế hoạch và ảnh trên 1 dòng thời gian)
+│       ├── life-plan/page.tsx  # "/life-plan" — Plan (ghi chép, kế hoạch và ảnh trên 1 dòng thời gian)
 │       ├── work/page.tsx       # "/work"     — Làm việc (bảng Kanban, standup, báo cáo tuần)
 │       └── settings/page.tsx   # "/settings" — Cài đặt
 ├── features/             # business logic theo feature — xem CLAUDE.md mục Feature Rules
@@ -92,7 +92,7 @@ public/assets/             # logo, app-icon, avatar, icons/ (13 icon module dùn
 | `/journal` | `journal` | Nhật ký — ghi chú rich-text hàng ngày (sanitize qua `dompurify`) kèm mood (danh sách mood tuỳ biến ở Cài đặt), có card "On this day" gợi lại bài viết cùng ngày các năm trước |
 | `/study` | `study` | Học tập — 4 tab: **Hôm nay** (task hàng ngày + Pomodoro + pick ngẫu nhiên-nhưng-cố-định-theo-ngày 5 từ vựng/1 điểm ngữ pháp) · **Từ vựng** · **Ngữ pháp** (2 tab sau đọc từ `content/*.jsonl`) · **Trò chơi** (3 mini-game ôn từ vựng — xem chi tiết bên dưới) |
 | `/goals` | `goals` | Mục tiêu — 3 mục tiêu tính từ dữ liệu Tài chính thật, riêng mục "mua xe" có thể gắn thủ công vào 1 quỹ tiết kiệm cụ thể |
-| `/life-plan` | `life-plan` | Plan cuộc đời — 1 dòng thời gian (mới nhất ở trên, vạch "Hôm nay" chia phần sắp tới và phần đã qua, hiện dần 20 mục mỗi đợt) gồm **ghi chép** (ngày, tiêu đề, nội dung giữ xuống dòng, tối đa 10 ảnh, gắn hoặc không gắn 1 kế hoạch) và **kế hoạch** (tên, năm muốn đạt — tháng tuỳ chọn, trạng thái Dự định/Đang làm/Đã đạt, nhãn "Quá hạn" khi chưa đạt mà trễ hạn); bấm 1 kế hoạch ở dải nút đầu trang để chỉ xem kế hoạch đó và các ghi chép đã gắn, xoá kế hoạch thì ghi chép chỉ bị bỏ gắn. Ảnh thu nhỏ ngay trên trình duyệt (cạnh dài ≤ 1600px, WebP 0,8) rồi lưu riêng tư trên Cloudinary qua `/api/life-plan/images`, mỗi máy chỉ tải về 1 lần rồi giữ trong IndexedDB; đầu trang hiện tổng dung lượng ảnh đã dùng. Chữ nằm trong localStorage `life-plan-data` và đi cùng sao lưu/đồng bộ (bản sao chỉ mang mã ảnh) |
+| `/life-plan` | `life-plan` | Plan — 1 dòng thời gian (mới nhất ở trên, vạch "Hôm nay" chia phần sắp tới và phần đã qua, hiện dần 20 mục mỗi đợt) gồm **ghi chép** (ngày, tiêu đề, nội dung giữ xuống dòng, tối đa 10 ảnh, gắn hoặc không gắn 1 kế hoạch) và **kế hoạch** (tên, năm muốn đạt — tháng tuỳ chọn, trạng thái Dự định/Đang làm/Đã đạt, nhãn "Quá hạn" khi chưa đạt mà trễ hạn); bấm 1 kế hoạch ở dải nút đầu trang để chỉ xem kế hoạch đó và các ghi chép đã gắn, xoá kế hoạch thì ghi chép chỉ bị bỏ gắn. Ảnh thu nhỏ ngay trên trình duyệt (cạnh dài ≤ 1600px, WebP 0,8) rồi lưu riêng tư trên Cloudinary qua `/api/life-plan/images`, mỗi máy chỉ tải về 1 lần rồi giữ trong IndexedDB; đầu trang hiện tổng dung lượng ảnh đã dùng. Chữ nằm trong localStorage `life-plan-data` và đi cùng sao lưu/đồng bộ (bản sao chỉ mang mã ảnh) |
 | `/work` | `work` | Làm việc — 3 tab: **Việc cần làm** (bảng Kanban kiểu Trello: cột tuỳ biến — mặc định Bắt đầu / Đang làm / Hoàn thành, đổi tên/thêm/xoá/đổi chỗ được, cột cuối luôn là cột "đã xong"; kéo thả thẻ giữa các cột và trong cột, hoặc chọn "Chuyển sang…"; "+ Thêm thẻ" cuối mỗi cột; bấm thẻ để sửa hạn, ưu tiên Cao/Thường/Thấp, xoá) · **Standup** (Hôm qua / Hôm nay / Vướng mắc, tự điền gợi ý từ danh sách việc, nút Copy) · **Báo cáo tuần** (việc đã xong, việc còn dở, vướng mắc, nút Copy). Thẻ "Việc hôm nay" ở Tổng quan |
 | `/settings` | `settings` | Cài đặt — hồ sơ, danh sách mood, danh sách tag chi tiêu, bật/tắt module (điều khiển sidebar + Tổng quan), xuất/nhập dữ liệu (JSON), đồng bộ 2 chiều qua cloud (bấm tay "Tải lên"/"Tải xuống"), xoá toàn bộ dữ liệu |
 | _(modal, không có route)_ | `calc` | Máy tính bỏ túi — mở từ sidebar, gõ biểu thức trực tiếp (sanitize trước khi `Function()` eval), xem trước kết quả, lưu 4 phép tính gần nhất |

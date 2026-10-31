@@ -1,4 +1,4 @@
-// Ảnh Plan cuộc đời đã tải về được giữ lại trong IndexedDB của trình duyệt, để mỗi ảnh chỉ tải từ Cloudinary 1 lần
+// Ảnh trang Plan đã tải về được giữ lại trong IndexedDB của trình duyệt, để mỗi ảnh chỉ tải từ Cloudinary 1 lần
 // trên mỗi máy — tiết kiệm credit tải về của gói miễn phí. Mỗi lần tải lên là 1 mã ảnh mới, nội dung sau 1 mã không
 // bao giờ đổi, nên bản trong cache không bao giờ cũ.
 // Cache chỉ là phần thêm: không có IndexedDB (lúc SSR, jsdom, trình duyệt chặn lưu trữ) hay IndexedDB lỗi thì đọc ra

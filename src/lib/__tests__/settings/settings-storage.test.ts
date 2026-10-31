@@ -81,18 +81,18 @@ describe("getStoredSettings", () => {
     expect(chitieu?.on).toBe(true)
   })
 
-  it("registers a 'kehoach' module for Plan cuộc đời, on by default, right after Mục tiêu", () => {
+  it("registers a 'kehoach' module for Plan, on by default, right after Mục tiêu", () => {
     const keys = DEFAULT_MODULES.map((m) => m.key)
     expect(keys.indexOf("kehoach")).toBe(keys.indexOf("muctieu") + 1)
     expect(DEFAULT_MODULES.find((m) => m.key === "kehoach")).toEqual({
       key: "kehoach",
-      label: "Plan cuộc đời",
+      label: "Plan",
       hint: "Mục trên sidebar · ghi chép và kế hoạch cuộc sống",
       on: true,
     })
   })
 
-  it("turns Plan cuộc đời on for a device whose settings were saved before the page existed", () => {
+  it("turns Plan on for a device whose settings were saved before the page existed", () => {
     const oldModules = DEFAULT_MODULES.filter((m) => m.key !== "kehoach").map((m) => ({ ...m, on: false }))
     window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ ...DEFAULT_SETTINGS, modules: oldModules }))
 

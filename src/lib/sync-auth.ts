@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 
-// Khoá đồng bộ SYNC_SECRET chặn mọi API chạm tới dữ liệu riêng: bản đồng bộ (/api/sync) và ảnh Plan cuộc đời
+// Khoá đồng bộ SYNC_SECRET chặn mọi API chạm tới dữ liệu riêng: bản đồng bộ (/api/sync) và ảnh trang Plan
 // (/api/life-plan/images). Trả response lỗi để route trả thẳng, hoặc null khi request mang đúng khoá.
 function checkSyncSecret(request: NextRequest): NextResponse | null {
   const secret = process.env.SYNC_SECRET

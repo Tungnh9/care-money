@@ -154,7 +154,7 @@ describe("SettingsView", () => {
     expect(screen.getByText(/bản standup/)).toHaveTextContent("2 việc, 1 bản standup")
   })
 
-  it("counts Plan cuộc đời notes and plans before wiping, then empties them on this device", async () => {
+  it("counts Plan notes and plans before wiping, then empties them on this device", async () => {
     setStoredLifePlan({
       notes: [
         { id: 1, day: "2026-10-29", title: "Đi xem nhà", content: "", images: [] },
@@ -168,7 +168,7 @@ describe("SettingsView", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Xoá toàn bộ dữ liệu" }))
 
-    expect(screen.getByText(/ghi chép Plan cuộc đời/)).toHaveTextContent("2 ghi chép Plan cuộc đời, 1 kế hoạch")
+    expect(screen.getByText(/ghi chép Plan/)).toHaveTextContent("2 ghi chép Plan, 1 kế hoạch")
 
     fireEvent.click(screen.getByRole("button", { name: "Xoá vĩnh viễn" }))
     fireEvent.change(screen.getByLabelText("Mật khẩu", { exact: false }), {

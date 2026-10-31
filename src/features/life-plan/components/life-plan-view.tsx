@@ -93,7 +93,7 @@ function LifePlanView() {
     <div>
       <div className="mb-5 flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
         <div className="min-w-0">
-          <h1 className="mb-1 [font:var(--ob-text-h2)] tracking-[var(--ob-track-heading)]">Plan cuộc đời</h1>
+          <h1 className="mb-1 [font:var(--ob-text-h2)] tracking-[var(--ob-track-heading)]">Plan</h1>
           <p className="text-sm text-[var(--ob-color-text-subtle)]">
             {`${notes.length} ghi chép · ${plans.length} kế hoạch · `}
             <span className="whitespace-nowrap">{`Ảnh đã dùng: ${formatMegabytes(imageBytesUsed({ notes, plans }))} MB`}</span>
