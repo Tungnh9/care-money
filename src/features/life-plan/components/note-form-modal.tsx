@@ -10,13 +10,12 @@ import { Button } from "@/components/ui/button"
 import { Field } from "@/components/ui/field"
 import { Modal } from "@/components/ui/modal"
 import { Textarea } from "@/components/ui/textarea"
-import { parseDayInput } from "@/lib/date"
+import { formatDayInput, parseDayInput } from "@/lib/date"
 import { MAX_NOTE_IMAGES } from "@/lib/life-plan/life-plan-storage"
 import type { LifeNote, LifeNoteInput, LifePlan, LifePlanImage as LifePlanImageData } from "@/lib/life-plan/types"
 import { getSyncSecret } from "@/lib/sync-secret-storage"
 import { cn } from "@/lib/utils"
 import { compressImage } from "../compress-image"
-import { toInputDate } from "../labels"
 import { removePhoto, removePhotos, uploadPhoto } from "../note-photos"
 import { uploadNoteImages } from "../save-note-images"
 import { LifePlanImage } from "./life-plan-image"
@@ -60,7 +59,7 @@ const REMOVE_BUTTON =
 function NoteFormModal({ note, plans, today, photoLockReasons, onSubmit, onClose }: NoteFormModalProps) {
   const titleId = useId()
   const notesId = useId()
-  const [dayText, setDayText] = useState(toInputDate(note?.day ?? today))
+  const [dayText, setDayText] = useState(formatDayInput(note?.day ?? today))
   const [title, setTitle] = useState(note?.title ?? "")
   const [content, setContent] = useState(note?.content ?? "")
   const [planId, setPlanId] = useState<number | undefined>(note?.planId)
@@ -209,7 +208,7 @@ function NoteFormModal({ note, plans, today, photoLockReasons, onSubmit, onClose
               value={dayText}
               onChange={(e) => setDayText(e.target.value)}
               invalid={day === null}
-              hint={day === null ? `Nhập ngày dạng dd/mm/yyyy, vd: ${toInputDate(today)}` : undefined}
+              hint={day === null ? `Nhập ngày dạng dd/mm/yyyy, vd: ${formatDayInput(today)}` : undefined}
             />
             <Field
               className="min-w-0 flex-[3_1_220px]"

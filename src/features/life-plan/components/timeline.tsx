@@ -4,11 +4,11 @@ import { useState } from "react"
 import { Flag, Pencil, Route, Trash2 } from "lucide-react"
 
 import { ActionTooltip } from "@/components/ob/action-tooltip"
-import { formatDayKeyWithYear } from "@/lib/date"
+import { formatDayInput, formatDayKeyWithYear } from "@/lib/date"
 import { isPlanOverdue, type TimelineEntry } from "@/lib/life-plan/life-plan-calculations"
 import type { LifeNote, LifePlan } from "@/lib/life-plan/types"
 import { cn } from "@/lib/utils"
-import { PLAN_STATUS_LABEL, PLAN_STATUS_TONE, planTargetLabel, toInputDate } from "../labels"
+import { PLAN_STATUS_LABEL, PLAN_STATUS_TONE, planTargetLabel } from "../labels"
 import { LifePlanImage } from "./life-plan-image"
 
 // Dòng thời gian có thể rất dài (ghi chép hằng ngày, nhập bù kỷ niệm cũ) — hiện dần từng đợt như danh sách lần mua
@@ -47,8 +47,12 @@ function firstEntries(entries: TimelineEntry[], count: number): TimelineEntry[] 
   return shown
 }
 
+interface DotProps {
+  className: string
+}
+
 // Chấm trên đường dọc bên trái, mỗi mục 1 chấm.
-function Dot({ className }: { className: string }) {
+function Dot({ className }: DotProps) {
   return (
     <span
       aria-hidden="true"
@@ -57,7 +61,11 @@ function Dot({ className }: { className: string }) {
   )
 }
 
-function TodayLine({ day }: { day: string }) {
+interface TodayLineProps {
+  day: string
+}
+
+function TodayLine({ day }: TodayLineProps) {
   return (
     <li className="relative flex items-center gap-3 py-1 pl-9">
       <Dot className="top-1/2 -translate-y-1/2 border-[var(--ob-color-action)] bg-[var(--ob-color-action)]" />
@@ -139,7 +147,7 @@ function NoteItem({ note, planTitle, onEdit, onDelete, onOpenImage }: NoteItemPr
             ) : null}
           </div>
           <EntryActions
-            name={`ghi chép "${note.title}" ngày ${toInputDate(note.day)}`}
+            name={`ghi chép "${note.title}" ngày ${formatDayInput(note.day)}`}
             onEdit={onEdit}
             onDelete={onDelete}
           />
@@ -216,7 +224,7 @@ function PlanMilestone({ plan, overdue, onEdit, onDelete }: PlanMilestoneProps) 
         <h3 className="text-[15px] font-bold break-words">{plan.title}</h3>
         <p className="mt-0.5 text-[12.5px] text-[var(--ob-color-text-muted)] tabular-nums">
           Hạn {planTargetLabel(plan)}
-          {done && plan.doneDay ? ` · đạt ${toInputDate(plan.doneDay)}` : null}
+          {done && plan.doneDay ? ` · đạt ${formatDayInput(plan.doneDay)}` : null}
         </p>
         {plan.note ? (
           <p className="mt-1 text-sm leading-[1.6] break-words whitespace-pre-wrap text-[var(--ob-color-text-muted)]">

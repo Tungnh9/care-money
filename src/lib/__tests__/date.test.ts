@@ -5,6 +5,7 @@ import {
   dayKeyFromIso,
   daysBetween,
   daysInMonth,
+  formatDayInput,
   formatDayKey,
   formatDayKeyWithYear,
   formatMonthKey,
@@ -194,6 +195,14 @@ describe("formatShortDate", () => {
   it("adds the year for a date in another year", () => {
     expect(formatShortDate(new Date(2025, 8, 29, 8, 30), now)).toBe("29/09/2025")
     expect(formatShortDate(new Date(2027, 0, 5), now)).toBe("05/01/2027")
+  })
+})
+
+describe("formatDayInput", () => {
+  it("writes a dayKey as dd/mm/yyyy, which parseDayInput reads back to the same day", () => {
+    expect(formatDayInput("2026-10-20")).toBe("20/10/2026")
+    expect(formatDayInput("2026-01-03")).toBe("03/01/2026")
+    expect(parseDayInput(formatDayInput("2026-01-03"))).toBe("2026-01-03")
   })
 })
 

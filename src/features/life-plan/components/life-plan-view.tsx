@@ -7,13 +7,13 @@ import { toast } from "sonner"
 import { AlertDialog } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { dayKey } from "@/lib/date"
+import { dayKey, formatDayInput } from "@/lib/date"
 import { buildTimeline, imageBytesUsed } from "@/lib/life-plan/life-plan-calculations"
 import type { LifeNote, LifePlan, LifePlanImage as LifePlanImageData } from "@/lib/life-plan/types"
 import { useLifePlan } from "@/lib/life-plan/use-life-plan"
 import { getSyncSecret } from "@/lib/sync-secret-storage"
 import { usePhotoLock } from "../hooks/use-photo-lock"
-import { formatMegabytes, toInputDate } from "../labels"
+import { formatMegabytes } from "../labels"
 import { removePhotos } from "../note-photos"
 import { ImageViewer } from "./image-viewer"
 import { NoteFormModal } from "./note-form-modal"
@@ -182,7 +182,7 @@ function LifePlanView() {
         description={
           deletingNote ? (
             <>
-              Xoá ghi chép <strong>{`"${deletingNote.title}"`}</strong> ngày {toInputDate(deletingNote.day)}
+              Xoá ghi chép <strong>{`"${deletingNote.title}"`}</strong> ngày {formatDayInput(deletingNote.day)}
               {deletingNote.images.length ? ` cùng ${deletingNote.images.length} ảnh của nó trên Cloudinary` : ""} sẽ
               không thể hoàn tác.
             </>

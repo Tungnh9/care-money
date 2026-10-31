@@ -231,7 +231,7 @@ describe("/api/life-plan/images", () => {
   })
 
   describe("GET — view", () => {
-    it("serves the bytes behind the signed link with their content type and a long private cache", async () => {
+    it("serves the bytes behind the signed link with their content type, never kept in the HTTP cache", async () => {
       const bytes = new Uint8Array([82, 73, 70, 70, 1, 2, 3, 4])
       fetchMock.mockResolvedValue(new Response(bytes, { status: 200, headers: { "Content-Type": "image/webp" } }))
 
@@ -239,7 +239,7 @@ describe("/api/life-plan/images", () => {
 
       expect(response.status).toBe(200)
       expect(response.headers.get("content-type")).toBe("image/webp")
-      expect(response.headers.get("cache-control")).toBe("private, max-age=31536000, immutable")
+      expect(response.headers.get("cache-control")).toBe("private, no-store")
       expect(new Uint8Array(await response.arrayBuffer())).toEqual(bytes)
       expect(fetchMock).toHaveBeenCalledTimes(1)
       expect(fetchMock.mock.calls[0][0]).toMatch(SIGNED_PHOTO_URL)
@@ -290,6 +290,27 @@ describe("/api/life-plan/images", () => {
       expect(fetchMock).toHaveBeenCalledTimes(1)
       expect(fetchMock.mock.calls[0][0]).toBe("https://api.cloudinary.com/v1_1/demo/image/destroy")
       expect((fetchMock.mock.calls[0][1].body as FormData).get("public_id")).toBe(PHOTO_ID)
+    })
+
+    it("never deletes a photo from another environment's folder, but still serves it", async () => {
+      // Máy dev (và preview) dùng chung tài khoản thật: kéo bản đồng bộ production về rồi xoá ghi chép ở đó không được
+      // kéo mất ảnh production.
+      vi.stubEnv("VERCEL_ENV", "development")
+
+      const refused = await DELETE(requestWith("DELETE", { auth: AUTH, id: PHOTO_ID }))
+
+      expect(refused.status).toBe(403)
+      expect(await refused.json()).toEqual({ error: "Ảnh thuộc môi trường khác — chỉ xoá được ở nơi đã tải nó lên." })
+      expect(fetchMock).not.toHaveBeenCalled()
+
+      fetchMock.mockResolvedValue(Response.json({ result: "ok" }))
+      const ownPhoto = await DELETE(
+        requestWith("DELETE", { auth: AUTH, id: "life-plan/development/a1b2c3d4e5f6g7h8i9j0" })
+      )
+      expect(await ownPhoto.json()).toEqual({ ok: true })
+
+      fetchMock.mockResolvedValue(new Response(new Uint8Array([1]), { status: 200 }))
+      expect((await GET(requestWith("GET", { auth: AUTH, id: PHOTO_ID }))).status).toBe(200)
     })
 
     it("answers { ok: false } when Cloudinary doesn't delete the photo", async () => {

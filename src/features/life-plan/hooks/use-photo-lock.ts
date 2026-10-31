@@ -9,12 +9,11 @@ import {
   hasUnsendableChar,
 } from "@/lib/sync-secret-storage"
 import { useStorageSync } from "@/lib/use-storage-sync"
-import { fetchImagesConfigured } from "../image-api"
+import { STATUS_FAILED, fetchImagesConfigured } from "../image-api"
 
 const CHECKING = "Đang kiểm tra máy chủ ảnh…"
 const NOT_CONFIGURED = "Server chưa cấu hình Cloudinary — thêm ảnh tạm khoá."
 const NO_SECRET = "Thêm ảnh cần khoá đồng bộ — nhập ở Cài đặt."
-const STATUS_FAILED = "Không kiểm tra được máy chủ ảnh. Vui lòng thử lại."
 
 type ServerStatus =
   | { kind: "checking" }

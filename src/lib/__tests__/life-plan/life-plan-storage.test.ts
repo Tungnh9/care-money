@@ -94,12 +94,10 @@ describe("getStoredLifePlan", () => {
     expect(getStoredLifePlan().notes).toEqual([other])
   })
 
-  it("drops only the plan whose target month or year is out of range", () => {
+  it("drops only the plan whose target year is out of range", () => {
     store({
       notes: [],
       plans: [
-        { ...PLAN, id: 1, targetMonth: 13 },
-        { ...PLAN, id: 2, targetMonth: 0 },
         { ...PLAN, id: 4, targetYear: 999 },
         { ...PLAN, id: 5, targetYear: 10000 },
         { ...PLAN, id: 6, targetYear: 2030.5 },
@@ -108,6 +106,27 @@ describe("getStoredLifePlan", () => {
     })
 
     expect(getStoredLifePlan().plans).toEqual([PLAN])
+  })
+
+  it("keeps a plan and its notes when an optional field is broken, reading that field as absent", () => {
+    // Bản sao sửa tay: tháng ngoài 1–12 hay null, ngày đạt sai dạng, ghi chú không phải chữ. Bỏ cả kế hoạch thì mọi
+    // ghi chép gắn vào nó cũng bị bỏ gắn — không lấy lại được.
+    const { title, targetYear, status } = PLAN
+    store({
+      notes: [NOTE],
+      plans: [
+        { ...PLAN, targetMonth: 13 },
+        { ...PLAN, id: 4, targetMonth: null, doneDay: "01/05/2026", note: 42 },
+      ],
+    })
+
+    expect(getStoredLifePlan()).toEqual({
+      notes: [NOTE],
+      plans: [
+        { ...PLAN, targetMonth: undefined },
+        { id: 4, title, targetYear, status },
+      ],
+    })
   })
 
   it("unlinks a note from a plan that is no longer there, so a later plan cannot take it over", () => {

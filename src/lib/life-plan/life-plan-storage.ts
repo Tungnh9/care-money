@@ -56,14 +56,17 @@ const lifeNoteSchema: z.ZodType<LifeNote> = z.object({
   planId: z.number().optional().catch(undefined),
 })
 
+// Field tuỳ chọn hỏng (null từ bản sao sửa tay, tháng 13, ngày sai dạng) đọc ra như không có — không bao giờ kéo mất
+// cả kế hoạch, và theo đó bỏ gắn mọi ghi chép của nó. Không tháng thì hạn là cả năm; đã đạt mà không có ngày đạt thì
+// nằm ở hạn của nó.
 const lifePlanSchema: z.ZodType<LifePlan> = z.object({
   id: z.number(),
   title: z.string(),
   targetYear: z.number().refine(isTargetYear),
-  targetMonth: z.number().refine(isTargetMonth).optional(),
+  targetMonth: z.number().refine(isTargetMonth).optional().catch(undefined),
   status: z.enum(["planned", "doing", "done"]),
-  doneDay: z.string().refine(isDayKey).optional(),
-  note: z.string().optional(),
+  doneDay: z.string().refine(isDayKey).optional().catch(undefined),
+  note: z.string().optional().catch(undefined),
 })
 
 // Bỏ gắn kế hoạch khỏi 1 ghi chép — không để lại key planId.

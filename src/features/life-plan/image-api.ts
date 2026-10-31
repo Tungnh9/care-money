@@ -72,8 +72,8 @@ async function uploadLifePlanImage(blob: Blob, secret: string): Promise<LifePlan
   return readJson(response, lifePlanImageSchema, UPLOAD_FAILED)
 }
 
-// Không để trình duyệt giữ bản sao trong HTTP cache: bản trên máy đã nằm ở IndexedDB (image-cache), nơi "Bắt đầu lại"
-// xoá được — HTTP cache thì không, ảnh riêng tư sẽ còn lại trên máy tới 1 năm (route trả max-age 1 năm).
+// Không để trình duyệt giữ bản sao trong HTTP cache (route cũng trả no-store): bản trên máy đã nằm ở IndexedDB
+// (image-cache), nơi "Bắt đầu lại" xoá được — HTTP cache thì không.
 async function fetchLifePlanImage(id: string, secret: string): Promise<Blob> {
   const response = await callImagesApi(imageUrl(id), { headers: bearer(secret), cache: "no-store" }, DOWNLOAD_FAILED)
   try {
@@ -90,4 +90,11 @@ async function deleteLifePlanImage(id: string, secret: string): Promise<boolean>
   return ok
 }
 
-export { deleteLifePlanImage, fetchImagesConfigured, fetchLifePlanImage, uploadLifePlanImage }
+export {
+  STATUS_FAILED,
+  UPLOAD_FAILED,
+  deleteLifePlanImage,
+  fetchImagesConfigured,
+  fetchLifePlanImage,
+  uploadLifePlanImage,
+}

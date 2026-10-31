@@ -23,12 +23,6 @@ const PLAN_STATUS_DOT: Record<LifePlanStatus, string> = {
   done: "var(--ob-color-income)",
 }
 
-// dayKey "2026-10-20" → "20/10/2026": đúng dạng người dùng gõ vào ô Ngày, và dạng ngày trong tên nút Sửa/Xoá.
-function toInputDate(day: string): string {
-  const [y, m, d] = day.split("-")
-  return `${d}/${m}/${y}`
-}
-
 // Hạn của kế hoạch: "tháng 06/2030", chỉ có năm thì "năm 2030".
 function planTargetLabel(plan: Pick<LifePlan, "targetYear" | "targetMonth">): string {
   return plan.targetMonth === undefined
@@ -43,12 +37,4 @@ function formatMegabytes(bytes: number): string {
   return (bytes / BYTES_PER_MB).toLocaleString("vi-VN", { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 }
 
-export {
-  PLAN_STATUSES,
-  PLAN_STATUS_DOT,
-  PLAN_STATUS_LABEL,
-  PLAN_STATUS_TONE,
-  formatMegabytes,
-  planTargetLabel,
-  toInputDate,
-}
+export { PLAN_STATUSES, PLAN_STATUS_DOT, PLAN_STATUS_LABEL, PLAN_STATUS_TONE, formatMegabytes, planTargetLabel }

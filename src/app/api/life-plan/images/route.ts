@@ -59,8 +59,8 @@ async function POST(request: NextRequest) {
   }
 }
 
-// Server tự lấy ảnh qua link có chữ ký rồi trả bytes — link đó không bao giờ tới trình duyệt. Mỗi lần tải lên
-// là 1 mã ảnh mới, nội dung sau 1 mã không bao giờ đổi, nên trình duyệt được giữ ảnh lâu.
+// Server tự lấy ảnh qua link có chữ ký rồi trả bytes — link đó không bao giờ tới trình duyệt. Không cho trình duyệt
+// giữ bản sao trong HTTP cache: bản trên máy chỉ nằm ở IndexedDB (image-cache), nơi "Bắt đầu lại" xoá được.
 async function GET(request: NextRequest) {
   const checked = checkImageRequest(request)
   if ("error" in checked) return checked.error
@@ -82,15 +82,20 @@ async function GET(request: NextRequest) {
     status: 200,
     headers: {
       "Content-Type": upstream.headers.get("content-type") ?? "application/octet-stream",
-      "Cache-Control": "private, max-age=31536000, immutable",
+      "Cache-Control": "private, no-store",
     },
   })
 }
 
 // Cloudinary trả lời mà không xoá → { ok: false }. Không gọi được Cloudinary → 502, vẫn kèm ok: false.
+// Chỉ xoá ảnh trong thư mục của chính môi trường này: máy dev dùng chung tài khoản thật, kéo bản đồng bộ production
+// về rồi xoá 1 ghi chép thì không được kéo mất ảnh mà production vẫn đang dùng. Xem thì vẫn được mọi thư mục.
 async function DELETE(request: NextRequest) {
   const checked = checkImageRequest(request)
   if ("error" in checked) return checked.error
+  if (!checked.id.startsWith(`${lifePlanImageFolder()}/`)) {
+    return errorResponse("Ảnh thuộc môi trường khác — chỉ xoá được ở nơi đã tải nó lên.", 403)
+  }
 
   try {
     return NextResponse.json({ ok: await destroyOnCloudinary(checked.id, checked.config) })

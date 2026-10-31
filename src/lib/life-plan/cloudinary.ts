@@ -36,8 +36,8 @@ const destroyResultSchema = z.object({ result: z.string() })
 const cloudinaryErrorSchema = z.object({ error: z.object({ message: z.string() }) })
 
 // Lý do Cloudinary từ chối, đọc từ body lỗi; body lạ thì null.
-async function cloudinaryReason(response: Response): Promise<string | null> {
-  const parsed = cloudinaryErrorSchema.safeParse(await response.json().catch(() => null))
+function cloudinaryReason(body: unknown): string | null {
+  const parsed = cloudinaryErrorSchema.safeParse(body)
   return parsed.success ? parsed.data.error.message : null
 }
 
@@ -119,7 +119,7 @@ async function uploadToCloudinary(file: Blob, folder: string, config: Cloudinary
 
   const response = await fetch(apiUrl("upload", config), { method: "POST", body: form })
   if (!response.ok) {
-    const reason = await cloudinaryReason(response)
+    const reason = cloudinaryReason(await response.json().catch(() => null))
     throw new Error(`Cloudinary upload failed with status ${response.status}${reason ? `: ${reason}` : ""}`)
   }
   const result = uploadResultSchema.parse(await response.json())
@@ -137,12 +137,7 @@ async function destroyOnCloudinary(publicId: string, config: CloudinaryConfig): 
   const body: unknown = await response.json().catch(() => null)
   const parsed = destroyResultSchema.safeParse(body)
   if (parsed.success && (parsed.data.result === "ok" || parsed.data.result === "not found")) return true
-  const refused = cloudinaryErrorSchema.safeParse(body)
-  const reason = refused.success
-    ? refused.data.error.message
-    : parsed.success
-      ? parsed.data.result
-      : "unreadable answer"
+  const reason = cloudinaryReason(body) ?? (parsed.success ? parsed.data.result : "unreadable answer")
   console.error(`[life-plan images] Cloudinary did not delete ${publicId} (status ${response.status}): ${reason}`)
   return false
 }

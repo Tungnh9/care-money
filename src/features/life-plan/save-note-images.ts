@@ -1,6 +1,5 @@
 import type { LifePlanImage } from "@/lib/life-plan/types"
-
-const UPLOAD_FAILED = "Không tải được ảnh lên. Vui lòng thử lại."
+import { UPLOAD_FAILED } from "./image-api"
 
 type UploadNoteImagesResult = { ok: true; images: LifePlanImage[] } | { ok: false; error: string }
 
