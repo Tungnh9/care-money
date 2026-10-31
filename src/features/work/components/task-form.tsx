@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Field } from "@/components/ui/field"
-import { parseDayInput, shiftDay } from "@/lib/date"
+import { formatDayInput, parseDayInput, shiftDay } from "@/lib/date"
 import { cn } from "@/lib/utils"
 import { fridayOf } from "@/lib/work/work-calculations"
 import type { WorkPriority } from "@/lib/work/types"
@@ -25,15 +25,9 @@ interface TaskFormProps {
   onDelete: () => void
 }
 
-// dayKey "2026-10-20" → "20/10/2026", đúng dạng người dùng gõ vào ô Hạn.
-function toInputDate(day: string): string {
-  const [y, m, d] = day.split("-")
-  return `${d}/${m}/${y}`
-}
-
 function TaskForm({ today, initial, onSubmit, onCancel, onDelete }: TaskFormProps) {
   const [title, setTitle] = useState(initial.title)
-  const [dueText, setDueText] = useState(initial.dueDate ? toInputDate(initial.dueDate) : "")
+  const [dueText, setDueText] = useState(initial.dueDate ? formatDayInput(initial.dueDate) : "")
   const [priority, setPriority] = useState<WorkPriority>(initial.priority)
 
   const dueDate = parseDayInput(dueText)
@@ -67,7 +61,7 @@ function TaskForm({ today, initial, onSubmit, onCancel, onDelete }: TaskFormProp
               key={label}
               type="button"
               aria-pressed={dueDate === day}
-              onClick={() => setDueText(toInputDate(day))}
+              onClick={() => setDueText(formatDayInput(day))}
               className={cn(
                 "min-h-[var(--ob-hit-min)] rounded-[var(--ob-radius-pill)] border-[1.5px] px-[14px] text-[13px] font-semibold",
                 dueDate === day

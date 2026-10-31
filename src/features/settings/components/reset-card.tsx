@@ -70,8 +70,8 @@ function ResetCard({ counts, onWipe, onExport }: ResetCardProps) {
           <div className="text-[13.5px] leading-[1.6] text-[var(--ob-color-text-muted)]">
             <strong className="font-bold text-[var(--ob-color-text)]">Đã xoá sạch.</strong>
             <br />
-            Tài chính, chi tiêu, nhật ký, học tập, công việc và lịch sử tài sản đều về 0 — chỉ còn cài đặt và danh sách
-            cửa hàng vàng và bạc. Bắt đầu lại từ Tổng quan.
+            Tài chính, chi tiêu, nhật ký, học tập, công việc, Plan và lịch sử tài sản đều về 0 — chỉ còn cài đặt và danh
+            sách cửa hàng vàng và bạc. Bắt đầu lại từ Tổng quan.
           </div>
         </div>
       </Card>
@@ -138,9 +138,9 @@ function ResetCard({ counts, onWipe, onExport }: ResetCardProps) {
   return (
     <Card label="Bắt đầu lại" className="min-w-0 flex-[1_1_300px]">
       <p className="mb-[14px] text-[13.5px] leading-[1.55] text-[var(--ob-color-text-muted)]">
-        Xoá sạch tài chính, chi tiêu (cả lương và tất toán), nhật ký, học tập, công việc, lịch sử tài sản, quỹ gắn mục
-        tiêu mua xe và secret đồng bộ trên máy này — chỉ giữ lại cài đặt và danh sách cửa hàng vàng và bạc. Không khôi
-        phục được.
+        Xoá sạch tài chính, chi tiêu (cả lương và tất toán), nhật ký, học tập, công việc, Plan, lịch sử tài sản, quỹ gắn
+        mục tiêu mua xe và secret đồng bộ trên máy này — chỉ giữ lại cài đặt và danh sách cửa hàng vàng và bạc. Không
+        khôi phục được.
       </p>
       <p className="mb-[14px] text-[12.5px] leading-[1.5] text-[var(--ob-color-text-subtle)]">
         Cần nhập lại mật khẩu đăng nhập để xác nhận. Nhập sai quá {MAX_ATTEMPTS} lần sẽ khoá tính năng này trong{" "}

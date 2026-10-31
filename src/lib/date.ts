@@ -90,6 +90,12 @@ function daysInMonth(month: string): number {
   return new Date(y, m, 0).getDate()
 }
 
+// dayKey "2026-10-20" → "20/10/2026": đúng dạng người dùng gõ vào ô ngày (ngược lại của parseDayInput).
+function formatDayInput(key: string): string {
+  const [y, m, d] = key.split("-")
+  return `${d}/${m}/${y}`
+}
+
 // Ngày người dùng gõ tay (d/m/yyyy, dd-mm-yyyy, dd.mm.yyyy hoặc yyyy-mm-dd) → dayKey, ngày không tồn tại
 // (31/04, 29/02 năm thường) hay năm < 1000 → null.
 function parseDayInput(text: string): string | null {
@@ -120,6 +126,7 @@ export {
   daysInMonth,
   formatDayKey,
   formatShortDayKey,
+  formatDayInput,
   formatDayKeyWithYear,
   formatMonthKey,
   formatShortDate,

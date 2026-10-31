@@ -65,6 +65,7 @@ const DEFAULT_MODULES: ModuleToggle[] = [
   { key: "nhatky", label: "Nhật ký", hint: "Mục trên sidebar · thẻ nhật ký gần đây", on: true },
   { key: "hoctap", label: "Học tập", hint: "Mục trên sidebar · thẻ học hôm nay", on: true },
   { key: "muctieu", label: "Mục tiêu", hint: "Mục trên sidebar · thẻ mục tiêu tiết kiệm", on: true },
+  { key: "kehoach", label: "Plan", hint: "Mục trên sidebar · ghi chép và kế hoạch cuộc sống", on: true },
   { key: "lamviec", label: "Làm việc", hint: "Mục trên sidebar · thẻ việc hôm nay ở Tổng quan", on: true },
   { key: "tamtrang", label: "Tâm trạng", hint: "Chip tâm trạng trong màn Nhật ký", on: true },
 ]

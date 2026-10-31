@@ -6,6 +6,7 @@ import { useStudy } from "@/lib/study/use-study"
 import { useBudget } from "@/lib/budget/use-budget"
 import { useNetWorthHistory } from "@/lib/net-worth/use-net-worth-history"
 import { useWork } from "@/lib/work/use-work"
+import { useLifePlan } from "@/lib/life-plan/use-life-plan"
 import { splitGreeting } from "@/lib/settings/greeting"
 import { ProfileCard } from "./profile-card"
 import { ModulesCard } from "./modules-card"
@@ -26,6 +27,7 @@ function SettingsView() {
   const { history: netWorthHistory, replaceHistory: replaceNetWorthHistory } = useNetWorthHistory()
   // `tasks` đã là nhiệm vụ học hằng ngày của useStudy — việc của trang Làm việc đặt tên riêng.
   const { tasks: workTasks, standups, replaceWork } = useWork()
+  const { notes: lifeNotes, plans: lifePlans, replaceLifePlan } = useLifePlan()
   const {
     exported,
     imported,
@@ -47,6 +49,7 @@ function SettingsView() {
     onReplaceBudget: replaceBudget,
     onReplaceNetWorthHistory: replaceNetWorthHistory,
     onReplaceWork: replaceWork,
+    onReplaceLifePlan: replaceLifePlan,
   })
 
   // Đếm đủ mọi thứ wipeData sẽ xoá — thiếu mục nào thì ResetCard có thể báo như không còn gì trong khi
@@ -71,6 +74,8 @@ function SettingsView() {
     netWorthHistory.length ? `${netWorthHistory.length} ngày lịch sử tài sản` : null,
     workTasks.length ? `${workTasks.length} việc` : null,
     standups.length ? `${standups.length} bản standup` : null,
+    lifeNotes.length ? `${lifeNotes.length} ghi chép Plan` : null,
+    lifePlans.length ? `${lifePlans.length} kế hoạch` : null,
   ].filter((count): count is string => count !== null)
 
   function handleSaveDisplayName(name: string) {

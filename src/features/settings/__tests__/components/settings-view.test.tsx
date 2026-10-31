@@ -8,6 +8,7 @@ import { setStoredNetWorthHistory } from "@/lib/net-worth/net-worth-history-stor
 import { setStoredStudy, DEFAULT_STUDY_STATE } from "@/lib/study/study-storage"
 import { getStoredSettings } from "@/lib/settings/settings-storage"
 import { DEFAULT_WORK_STATE, setStoredWork } from "@/lib/work/work-storage"
+import { DEFAULT_LIFE_PLAN_STATE, getStoredLifePlan, setStoredLifePlan } from "@/lib/life-plan/life-plan-storage"
 import { MOCK_ACCOUNT } from "@/lib/mock-account"
 import { EXPORT_VERSION } from "@/lib/data-transfer"
 import { SettingsView } from "../../components/settings-view"
@@ -151,6 +152,32 @@ describe("SettingsView", () => {
     fireEvent.click(screen.getByRole("button", { name: "Xoá toàn bộ dữ liệu" }))
 
     expect(screen.getByText(/bản standup/)).toHaveTextContent("2 việc, 1 bản standup")
+  })
+
+  it("counts Plan notes and plans before wiping, then empties them on this device", async () => {
+    setStoredLifePlan({
+      notes: [
+        { id: 1, day: "2026-10-29", title: "Đi xem nhà", content: "", images: [] },
+        { id: 2, day: "2026-10-30", title: "Ký hợp đồng", content: "", images: [] },
+      ],
+      plans: [{ id: 1, title: "Mua nhà", targetYear: 2030, status: "planned" }],
+    })
+
+    render(<SettingsView />)
+    await waitFor(() => expect(screen.getByText("Module hiển thị")).toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole("button", { name: "Xoá toàn bộ dữ liệu" }))
+
+    expect(screen.getByText(/ghi chép Plan/)).toHaveTextContent("2 ghi chép Plan, 1 kế hoạch")
+
+    fireEvent.click(screen.getByRole("button", { name: "Xoá vĩnh viễn" }))
+    fireEvent.change(screen.getByLabelText("Mật khẩu", { exact: false }), {
+      target: { value: MOCK_ACCOUNT.password },
+    })
+    fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }))
+
+    expect(screen.getByText("Đã xoá sạch.")).toBeInTheDocument()
+    expect(getStoredLifePlan()).toEqual(DEFAULT_LIFE_PLAN_STATE)
   })
 
   it("counts silver purchases too, since wiping deletes them", async () => {

@@ -8,6 +8,7 @@ import { DEFAULT_STUDY_STATE } from "@/lib/study/study-storage"
 import { DEFAULT_NET_WORTH_HISTORY } from "@/lib/net-worth/net-worth-history-storage"
 import { DEFAULT_SETTINGS } from "@/lib/settings/settings-storage"
 import { DEFAULT_WORK_STATE } from "@/lib/work/work-storage"
+import { DEFAULT_LIFE_PLAN_STATE } from "@/lib/life-plan/life-plan-storage"
 import { clearSyncSecret, setSyncSecret } from "@/lib/sync-secret-storage"
 import type { PendingRestore } from "../../hooks/use-data-management"
 import { DataCard } from "../../components/data-card"
@@ -36,6 +37,7 @@ const PENDING_CLOUD_RESTORE: PendingRestore = {
     budget: DEFAULT_BUDGET_STATE,
     netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
     work: DEFAULT_WORK_STATE,
+    lifePlan: DEFAULT_LIFE_PLAN_STATE,
   },
   summary: "0 bài nhật ký",
   exportedAt: new Date(2026, 7, 14, 9, 5).toISOString(),

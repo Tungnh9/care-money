@@ -1,15 +1,7 @@
 import { parseImportPayload, type ExportPayload, type ImportResult } from "@/lib/data-transfer"
+import { hasUnsendableChar, SECRET_CHARSET_ERROR } from "@/lib/sync-secret-storage"
 
 type PushResult = { ok: true; summary: string } | { ok: false; error: string }
-
-// Header HTTP chỉ nhận ký tự có mã ≤ 255 (Latin-1): secret có "ậ", "ồ", "đ"... làm fetch ném TypeError
-// trước khi kịp gửi, và lỗi đó từng bị báo nhầm thành "Không kết nối được máy chủ đồng bộ.".
-const SECRET_CHARSET_ERROR =
-  "Secret đồng bộ có ký tự không gửi được (chữ có dấu như ậ, ồ, đ). Hãy dùng đúng chuỗi SYNC_SECRET đã đặt trên Vercel."
-
-function hasUnsendableChar(secret: string): boolean {
-  return Array.from(secret).some((char) => (char.codePointAt(0) ?? 0) > 255)
-}
 
 function mapErrorStatus(status: number, serverError?: string): string {
   if (status === 401) return "Sai secret đồng bộ."
@@ -57,4 +49,4 @@ async function pullSnapshot(secret: string): Promise<ImportResult> {
   }
 }
 
-export { pushSnapshot, pullSnapshot, SECRET_CHARSET_ERROR, type PushResult }
+export { pushSnapshot, pullSnapshot, type PushResult }

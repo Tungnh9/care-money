@@ -2,22 +2,12 @@ import { NextResponse, type NextRequest } from "next/server"
 import { get, put } from "@vercel/blob"
 
 import { parseImportPayload, uploadedSummary } from "@/lib/data-transfer"
+import { checkSyncSecret } from "@/lib/sync-auth"
 
 const SYNC_PATHNAME = "sync/snapshot.json"
 
-function checkAuth(request: NextRequest): NextResponse | null {
-  const secret = process.env.SYNC_SECRET
-  if (!secret) {
-    return NextResponse.json({ error: "Server chưa cấu hình SYNC_SECRET." }, { status: 500 })
-  }
-  if (request.headers.get("authorization") !== `Bearer ${secret}`) {
-    return NextResponse.json({ error: "Sai secret đồng bộ." }, { status: 401 })
-  }
-  return null
-}
-
 async function GET(request: NextRequest) {
-  const authError = checkAuth(request)
+  const authError = checkSyncSecret(request)
   if (authError) return authError
 
   const result = await get(SYNC_PATHNAME, { access: "private", useCache: false })
@@ -33,7 +23,7 @@ async function GET(request: NextRequest) {
 }
 
 async function POST(request: NextRequest) {
-  const authError = checkAuth(request)
+  const authError = checkSyncSecret(request)
   if (authError) return authError
 
   let body: unknown

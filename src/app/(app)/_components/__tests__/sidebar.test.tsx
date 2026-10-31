@@ -6,14 +6,17 @@ import { setStoredUser } from "@/lib/auth"
 import { setSyncSecret } from "@/lib/sync-secret-storage"
 import { Sidebar } from "../sidebar"
 
+const navigation = vi.hoisted(() => ({ pathname: "/overview" }))
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
-  usePathname: () => "/overview",
+  usePathname: () => navigation.pathname,
 }))
 
 describe("Sidebar", () => {
   beforeEach(() => {
     window.localStorage.clear()
+    navigation.pathname = "/overview"
   })
 
   it("shows a Chi tiêu nav link pointing at /budget", () => {
@@ -112,7 +115,7 @@ describe("Sidebar", () => {
     expect(window.localStorage.getItem("sync-secret")).toBeNull()
   })
 
-  it("lets the 8 bottom-nav links shrink to share a phone-width bar instead of pushing Cài đặt off screen", () => {
+  it("lets the 9 bottom-nav links shrink to share a phone-width bar instead of pushing Cài đặt off screen", () => {
     render(<Sidebar />)
 
     // Thanh dưới là position: fixed nên phần tràn không cuộn tới được: nav phải co về đúng bề rộng
@@ -129,11 +132,12 @@ describe("Sidebar", () => {
       "Nhật ký",
       "Học tập",
       "Mục tiêu",
+      "Plan",
       "Làm việc",
       "Cài đặt",
     ])
     for (const link of links) {
-      // 8 mục chia đều bề rộng thanh (flex 1 1 0) — mục đang chọn có chữ cũng không phình ra làm các
+      // 9 mục chia đều bề rộng thanh (flex 1 1 0) — mục đang chọn có chữ cũng không phình ra làm các
       // icon khác xô lệch khi chuyển trang; từ md trở lên không co giãn như cũ.
       expect(link).toHaveClass("min-w-0", "flex-1", "basis-0", "px-0.5", "md:flex-none")
       expect(link).not.toHaveClass("flex-auto")
@@ -153,7 +157,7 @@ describe("Sidebar", () => {
     expect(activeLabel).toHaveClass("whitespace-nowrap", "md:hidden", "lg:inline")
     expect(activeLabel).not.toHaveClass("truncate")
 
-    for (const name of ["Tài chính", "Chi tiêu", "Nhật ký", "Học tập", "Mục tiêu", "Làm việc", "Cài đặt"]) {
+    for (const name of ["Tài chính", "Chi tiêu", "Nhật ký", "Học tập", "Mục tiêu", "Plan", "Làm việc", "Cài đặt"]) {
       const label = within(nav).getByRole("link", { name }).querySelector("span") as HTMLElement
       // Ẩn ở điện thoại và md, hiện lại ở lg (sidebar có chữ) — tên đọc lên vẫn từ aria-label.
       expect(label).toHaveClass("hidden", "lg:inline")
@@ -192,6 +196,7 @@ describe("Sidebar", () => {
       "Nhật ký",
       "Học tập",
       "Mục tiêu",
+      "Plan",
       "Làm việc",
       "Cài đặt",
     ]) {
@@ -217,5 +222,41 @@ describe("Sidebar", () => {
     render(<Sidebar />)
 
     expect(within(screen.getByRole("navigation")).queryByRole("link", { name: "Làm việc" })).not.toBeInTheDocument()
+  })
+
+  it("shows a Plan nav link pointing at /life-plan, right after Mục tiêu", () => {
+    render(<Sidebar />)
+
+    const nav = screen.getByRole("navigation")
+    expect(within(nav).getByRole("link", { name: "Plan" })).toHaveAttribute("href", "/life-plan")
+    const names = within(nav)
+      .getAllByRole("link")
+      .map((link) => link.getAttribute("aria-label"))
+    expect(names.indexOf("Plan")).toBe(names.indexOf("Mục tiêu") + 1)
+  })
+
+  it("shows the open Plan page's label under its icon on the phone bar, like every other page", () => {
+    navigation.pathname = "/life-plan"
+    render(<Sidebar />)
+
+    const link = within(screen.getByRole("navigation")).getByRole("link", { name: "Plan" })
+    // "Plan" vừa ô ~40px của thanh dưới — 1 nhãn duy nhất, dùng chung cho điện thoại và lg.
+    const labels = link.querySelectorAll("span")
+    expect(labels).toHaveLength(1)
+    expect(labels[0]).toHaveTextContent("Plan")
+    expect(labels[0]).toHaveClass("whitespace-nowrap", "md:hidden", "lg:inline")
+  })
+
+  it("hides the Plan link when its module is turned off in Cài đặt", () => {
+    window.localStorage.setItem(
+      "app-settings",
+      JSON.stringify({ modules: [{ key: "kehoach", label: "Plan", hint: "", on: false }] })
+    )
+
+    render(<Sidebar />)
+
+    const nav = screen.getByRole("navigation")
+    expect(within(nav).queryByRole("link", { name: "Plan" })).not.toBeInTheDocument()
+    expect(within(nav).getByRole("link", { name: "Mục tiêu" })).toBeInTheDocument()
   })
 })

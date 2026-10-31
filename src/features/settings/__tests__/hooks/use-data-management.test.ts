@@ -13,6 +13,13 @@ import { BUDGET_STORAGE_KEY, DEFAULT_BUDGET_STATE } from "@/lib/budget/budget-st
 import { DEFAULT_NET_WORTH_HISTORY, NET_WORTH_HISTORY_KEY } from "@/lib/net-worth/net-worth-history-storage"
 import { DEFAULT_WORK_STATE, WORK_STORAGE_KEY } from "@/lib/work/work-storage"
 import type { WorkState } from "@/lib/work/types"
+import {
+  DEFAULT_LIFE_PLAN_STATE,
+  LIFE_PLAN_STORAGE_KEY,
+  getStoredLifePlan,
+  setStoredLifePlan,
+  type LifePlanState,
+} from "@/lib/life-plan/life-plan-storage"
 import { onDataChanged } from "@/lib/data-change-bus"
 import { DEFAULT_SETTINGS, SETTINGS_STORAGE_KEY } from "@/lib/settings/settings-storage"
 import { setSyncSecret } from "@/lib/sync-secret-storage"
@@ -25,10 +32,39 @@ vi.mock("../../api", () => ({
   pullSnapshot: vi.fn(),
 }))
 
+vi.mock("@/lib/life-plan/image-cache", () => ({
+  clearImageCache: vi.fn(() => Promise.resolve()),
+  deleteCachedImage: vi.fn(),
+  getCachedImage: vi.fn(),
+  putCachedImage: vi.fn(),
+}))
+
 import { pushSnapshot, pullSnapshot } from "../../api"
+import { clearImageCache } from "@/lib/life-plan/image-cache"
 
 const WRITE_FAILED =
   "Không ghi được dữ liệu vào máy (bộ nhớ trình duyệt có thể đã đầy). Dữ liệu trên máy vẫn giữ nguyên như trước."
+
+// Bản sao chỉ mang mã ảnh (ảnh nằm trên Cloudinary) — khôi phục ở máy khác vẫn xem được ảnh.
+const RESTORED_LIFE_PLAN: LifePlanState = {
+  notes: [
+    {
+      id: 1,
+      day: "2026-10-29",
+      title: "Đi xem nhà",
+      content: "Xem 2 căn ở Cầu Giấy.",
+      images: [{ id: "life-plan/production/a1b2c3d4e5f6g7h8i9j0", bytes: 245_000, width: 1600, height: 1200 }],
+      planId: 3,
+    },
+    { id: 2, day: "2026-10-30", title: "Ký hợp đồng", content: "", images: [] },
+  ],
+  plans: [{ id: 3, title: "Mua nhà", targetYear: 2030, status: "doing" }],
+}
+
+const LOCAL_LIFE_PLAN: LifePlanState = {
+  notes: [{ id: 7, day: "2026-10-01", title: "Ghi chép trên máy", content: "", images: [] }],
+  plans: [],
+}
 
 const RESTORED_WORK: WorkState = {
   columns: [
@@ -62,6 +98,7 @@ function renderDataManagement() {
   const onReplaceBudget = vi.fn()
   const onReplaceNetWorthHistory = vi.fn()
   const onReplaceWork = vi.fn()
+  const onReplaceLifePlan = vi.fn()
   const { result } = renderHook(() =>
     useDataManagement({
       onReplaceJournal,
@@ -71,6 +108,7 @@ function renderDataManagement() {
       onReplaceBudget,
       onReplaceNetWorthHistory,
       onReplaceWork,
+      onReplaceLifePlan,
     })
   )
   return {
@@ -82,10 +120,17 @@ function renderDataManagement() {
     onReplaceBudget,
     onReplaceNetWorthHistory,
     onReplaceWork,
+    onReplaceLifePlan,
   }
 }
 
 type DataManagementResult = ReturnType<typeof renderDataManagement>["result"]
+
+function backupFile(extra: Record<string, unknown>) {
+  return new File([JSON.stringify({ version: EXPORT_VERSION, ...extra })], "backup.json", {
+    type: "application/json",
+  })
+}
 
 // Nạp bản sao giờ gồm 2 bước: đọc + parse (xếp vào pendingRestore), rồi người dùng xác nhận.
 async function importAndConfirm(result: DataManagementResult, file: File) {
@@ -131,6 +176,7 @@ describe("useDataManagement", () => {
 
   it("importData stages a valid backup and replaces nothing until confirmRestore", async () => {
     setStoredJournal(LOCAL_JOURNAL)
+    setStoredLifePlan(LOCAL_LIFE_PLAN)
     const {
       result,
       onReplaceJournal,
@@ -140,6 +186,7 @@ describe("useDataManagement", () => {
       onReplaceBudget,
       onReplaceNetWorthHistory,
       onReplaceWork,
+      onReplaceLifePlan,
     } = renderDataManagement()
 
     const journal = {
@@ -159,6 +206,7 @@ describe("useDataManagement", () => {
       budget,
       netWorthHistory,
       work: RESTORED_WORK,
+      lifePlan: RESTORED_LIFE_PLAN,
     }
     const file = new File([JSON.stringify(payload)], "backup.json", { type: "application/json" })
 
@@ -167,15 +215,16 @@ describe("useDataManagement", () => {
     })
 
     expect(onReplaceJournal).not.toHaveBeenCalled()
+    expect(onReplaceLifePlan).not.toHaveBeenCalled()
     expect(result.current.imported).toBeNull()
     expect(result.current.pendingRestore).toMatchObject({
       source: "file",
       fileName: "backup.json",
       exportedAt: "2026-09-20T02:00:00.000Z",
       incomingCounts:
-        "1 bài nhật ký · 0 khoản chi · 1 quỹ tiết kiệm · 0 lần mua vàng · 0 lần mua bạc · 0 từ đã học · 1 việc",
+        "1 bài nhật ký · 0 khoản chi · 1 quỹ tiết kiệm · 0 lần mua vàng · 0 lần mua bạc · 0 từ đã học · 1 việc · 2 ghi chép Plan · 1 kế hoạch",
       localCounts:
-        "1 bài nhật ký · 0 khoản chi · 0 quỹ tiết kiệm · 0 lần mua vàng · 0 lần mua bạc · 0 từ đã học · 0 việc",
+        "1 bài nhật ký · 0 khoản chi · 0 quỹ tiết kiệm · 0 lần mua vàng · 0 lần mua bạc · 0 từ đã học · 0 việc · 1 ghi chép Plan · 0 kế hoạch",
     })
 
     act(() => {
@@ -189,6 +238,7 @@ describe("useDataManagement", () => {
     expect(onReplaceBudget).toHaveBeenCalledWith(budget)
     expect(onReplaceNetWorthHistory).toHaveBeenCalledWith(netWorthHistory)
     expect(onReplaceWork).toHaveBeenCalledWith(RESTORED_WORK)
+    expect(onReplaceLifePlan).toHaveBeenCalledWith(RESTORED_LIFE_PLAN)
     expect(result.current.pendingRestore).toBeNull()
     expect(result.current.imported).toEqual({
       ok: true,
@@ -223,6 +273,7 @@ describe("useDataManagement", () => {
       onReplaceBudget,
       onReplaceNetWorthHistory,
       onReplaceWork,
+      onReplaceLifePlan,
     } = renderDataManagement()
 
     const file = new File(["not json"], "bad.json", { type: "application/json" })
@@ -238,6 +289,7 @@ describe("useDataManagement", () => {
     expect(onReplaceBudget).not.toHaveBeenCalled()
     expect(onReplaceNetWorthHistory).not.toHaveBeenCalled()
     expect(onReplaceWork).not.toHaveBeenCalled()
+    expect(onReplaceLifePlan).not.toHaveBeenCalled()
   })
 
   it("importData clears an old result banner as soon as a new file is staged", async () => {
@@ -356,6 +408,7 @@ describe("useDataManagement", () => {
         budget: DEFAULT_BUDGET_STATE,
         netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
         work: DEFAULT_WORK_STATE,
+        lifePlan: DEFAULT_LIFE_PLAN_STATE,
         goals: { carFundName: null },
       })
     )
@@ -415,6 +468,7 @@ describe("useDataManagement", () => {
       onReplaceBudget,
       onReplaceNetWorthHistory,
       onReplaceWork,
+      onReplaceLifePlan,
     } = renderDataManagement()
 
     const journal = {
@@ -432,6 +486,7 @@ describe("useDataManagement", () => {
         budget,
         netWorthHistory,
         work: RESTORED_WORK,
+        lifePlan: RESTORED_LIFE_PLAN,
       },
       summary: "5 bài nhật ký",
       exportedAt: "2026-09-20T02:00:00.000Z",
@@ -457,6 +512,7 @@ describe("useDataManagement", () => {
     expect(onReplaceBudget).toHaveBeenCalledWith(budget)
     expect(onReplaceNetWorthHistory).toHaveBeenCalledWith(netWorthHistory)
     expect(onReplaceWork).toHaveBeenCalledWith(RESTORED_WORK)
+    expect(onReplaceLifePlan).toHaveBeenCalledWith(RESTORED_LIFE_PLAN)
     expect(result.current.syncResult).toEqual({ ok: true, summary: "5 bài nhật ký" })
   })
 
@@ -473,6 +529,7 @@ describe("useDataManagement", () => {
         onReplaceBudget: vi.fn(),
         onReplaceNetWorthHistory: vi.fn(),
         onReplaceWork: vi.fn(),
+        onReplaceLifePlan: vi.fn(),
       })
     )
 
@@ -492,6 +549,7 @@ describe("useDataManagement", () => {
           budget: DEFAULT_BUDGET_STATE,
           netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
           work: DEFAULT_WORK_STATE,
+          lifePlan: DEFAULT_LIFE_PLAN_STATE,
         },
         summary: "ok",
         exportedAt: null,
@@ -512,6 +570,7 @@ describe("useDataManagement", () => {
       onReplaceBudget,
       onReplaceNetWorthHistory,
       onReplaceWork,
+      onReplaceLifePlan,
     } = renderDataManagement()
     vi.mocked(pullSnapshot).mockResolvedValue({ ok: false, error: "Sai secret đồng bộ." })
 
@@ -527,6 +586,7 @@ describe("useDataManagement", () => {
     expect(onReplaceBudget).not.toHaveBeenCalled()
     expect(onReplaceNetWorthHistory).not.toHaveBeenCalled()
     expect(onReplaceWork).not.toHaveBeenCalled()
+    expect(onReplaceLifePlan).not.toHaveBeenCalled()
   })
 
   it("pullFromCloud clears an old sync result as soon as a new pull starts", async () => {
@@ -542,6 +602,7 @@ describe("useDataManagement", () => {
         budget: DEFAULT_BUDGET_STATE,
         netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
         work: DEFAULT_WORK_STATE,
+        lifePlan: DEFAULT_LIFE_PLAN_STATE,
       },
       summary: "ok",
       exportedAt: null,
@@ -634,6 +695,7 @@ describe("useDataManagement", () => {
         budget: DEFAULT_BUDGET_STATE,
         netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
         work: DEFAULT_WORK_STATE,
+        lifePlan: DEFAULT_LIFE_PLAN_STATE,
       },
       summary: "1 bài nhật ký",
       exportedAt: null,
@@ -656,6 +718,7 @@ describe("useDataManagement", () => {
       [SETTINGS_STORAGE_KEY]: '{ "seed" :  "settings" }',
       [NET_WORTH_HISTORY_KEY]: '{ "seed" :  "net-worth" }',
       [WORK_STORAGE_KEY]: '{ "seed" :  "work" }',
+      [LIFE_PLAN_STORAGE_KEY]: '{ "seed" :  "life-plan" }',
       [CAR_GOAL_FUND_KEY]: "Quỹ mua xe",
     }
     for (const [key, raw] of Object.entries(seeds)) window.localStorage.setItem(key, raw)
@@ -670,6 +733,7 @@ describe("useDataManagement", () => {
       onReplaceBudget,
       onReplaceNetWorthHistory,
       onReplaceWork,
+      onReplaceLifePlan,
     } = renderDataManagement()
     // Mỗi onReplace* ghi thẳng 1 chuỗi khác vào key của nó (không qua setStored* nên không notify);
     // net-worth ghi xong mới lỗi, như localStorage hết dung lượng ở lần ghi cuối. Liên kết quỹ mua xe
@@ -681,6 +745,7 @@ describe("useDataManagement", () => {
     onReplaceSettings.mockImplementation(writeOther(SETTINGS_STORAGE_KEY))
     onReplaceBudget.mockImplementation(writeOther(BUDGET_STORAGE_KEY))
     onReplaceWork.mockImplementation(writeOther(WORK_STORAGE_KEY))
+    onReplaceLifePlan.mockImplementation(writeOther(LIFE_PLAN_STORAGE_KEY))
     onReplaceNetWorthHistory.mockImplementation(() => {
       writeOther(NET_WORTH_HISTORY_KEY)()
       window.localStorage.setItem(CAR_GOAL_FUND_KEY, "Quỹ đã ghi")
@@ -711,12 +776,6 @@ describe("useDataManagement", () => {
   })
 
   describe("car-goal fund link", () => {
-    function backupFile(extra: Record<string, unknown>) {
-      return new File([JSON.stringify({ version: EXPORT_VERSION, ...extra })], "backup.json", {
-        type: "application/json",
-      })
-    }
-
     it("exportData writes the current car-goal link into the exported file", async () => {
       setCarGoalFundName("Quỹ mua xe")
       const { result } = renderDataManagement()
@@ -789,6 +848,7 @@ describe("useDataManagement", () => {
           budget: DEFAULT_BUDGET_STATE,
           netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
           work: DEFAULT_WORK_STATE,
+          lifePlan: DEFAULT_LIFE_PLAN_STATE,
           goals: { carFundName: "Quỹ mua xe" },
         },
         summary: "ok",
@@ -813,6 +873,7 @@ describe("useDataManagement", () => {
           budget: DEFAULT_BUDGET_STATE,
           netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
           work: DEFAULT_WORK_STATE,
+          lifePlan: DEFAULT_LIFE_PLAN_STATE,
           goals: { carFundName: null },
         },
         summary: "ok",
@@ -837,6 +898,7 @@ describe("useDataManagement", () => {
           budget: DEFAULT_BUDGET_STATE,
           netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
           work: DEFAULT_WORK_STATE,
+          lifePlan: DEFAULT_LIFE_PLAN_STATE,
         },
         summary: "ok",
         exportedAt: null,
@@ -869,6 +931,88 @@ describe("useDataManagement", () => {
       })
 
       expect(getCarGoalFundName()).toBeNull()
+    })
+  })
+
+  describe("Plan", () => {
+    it("exportData writes this device's notes and plans into the exported file", async () => {
+      setStoredLifePlan(RESTORED_LIFE_PLAN)
+      const { result } = renderDataManagement()
+
+      act(() => {
+        result.current.exportData()
+      })
+
+      const blob = vi.mocked(URL.createObjectURL).mock.calls[0][0] as Blob
+      expect(JSON.parse(await blob.text()).lifePlan).toEqual(RESTORED_LIFE_PLAN)
+    })
+
+    it("pushToCloud sends this device's notes and plans", async () => {
+      setStoredLifePlan(RESTORED_LIFE_PLAN)
+      vi.mocked(pushSnapshot).mockResolvedValue({ ok: true, summary: "ok" })
+      const { result } = renderDataManagement()
+
+      await act(async () => {
+        await result.current.pushToCloud("my-secret")
+      })
+
+      expect(pushSnapshot).toHaveBeenLastCalledWith(
+        "my-secret",
+        expect.objectContaining({ lifePlan: RESTORED_LIFE_PLAN })
+      )
+    })
+
+    it("importData shows that a backup made before Plan has no notes, and empties it only on confirm", async () => {
+      setStoredLifePlan(LOCAL_LIFE_PLAN)
+      const { result, onReplaceLifePlan } = renderDataManagement()
+
+      await act(async () => {
+        await result.current.importData(backupFile({}))
+      })
+
+      expect(result.current.pendingRestore?.incomingCounts).toContain("0 ghi chép Plan")
+      expect(result.current.pendingRestore?.localCounts).toContain("1 ghi chép Plan")
+      expect(onReplaceLifePlan).not.toHaveBeenCalled()
+
+      act(() => {
+        result.current.confirmRestore()
+      })
+
+      expect(onReplaceLifePlan).toHaveBeenCalledWith(DEFAULT_LIFE_PLAN_STATE)
+    })
+
+    it("puts life-plan-data back as it was when a later write fails half-way through a restore", async () => {
+      setStoredLifePlan(LOCAL_LIFE_PLAN)
+      const { result, onReplaceLifePlan, onReplaceNetWorthHistory } = renderDataManagement()
+      onReplaceLifePlan.mockImplementation((lifePlan: LifePlanState) => setStoredLifePlan(lifePlan))
+      onReplaceNetWorthHistory.mockImplementation(() => {
+        throw new Error("QuotaExceededError")
+      })
+
+      await importAndConfirm(result, backupFile({ lifePlan: RESTORED_LIFE_PLAN }))
+
+      expect(onReplaceLifePlan).toHaveBeenCalledWith(RESTORED_LIFE_PLAN)
+      expect(getStoredLifePlan()).toEqual(LOCAL_LIFE_PLAN)
+      expect(result.current.imported).toEqual({ ok: false, error: WRITE_FAILED })
+    })
+
+    it("wipeData empties Plan and the photo cache on this device, leaving the photos on Cloudinary", () => {
+      const fetchMock = vi.fn()
+      vi.stubGlobal("fetch", fetchMock)
+      vi.mocked(clearImageCache).mockClear()
+      const { result, onReplaceLifePlan } = renderDataManagement()
+
+      try {
+        act(() => {
+          result.current.wipeData()
+        })
+      } finally {
+        vi.unstubAllGlobals()
+      }
+
+      expect(onReplaceLifePlan).toHaveBeenCalledWith(DEFAULT_LIFE_PLAN_STATE)
+      expect(clearImageCache).toHaveBeenCalledTimes(1)
+      expect(fetchMock).not.toHaveBeenCalled()
     })
   })
 })

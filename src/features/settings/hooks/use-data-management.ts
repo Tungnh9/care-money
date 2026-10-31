@@ -31,6 +31,13 @@ import { CAR_GOAL_FUND_KEY, getCarGoalFundName, setCarGoalFundName } from "@/lib
 import { notifyDataChanged } from "@/lib/data-change-bus"
 import { SETTINGS_STORAGE_KEY, getStoredSettings, type AppSettings } from "@/lib/settings/settings-storage"
 import { DEFAULT_WORK_STATE, WORK_STORAGE_KEY, getStoredWork, type WorkState } from "@/lib/work/work-storage"
+import {
+  DEFAULT_LIFE_PLAN_STATE,
+  LIFE_PLAN_STORAGE_KEY,
+  getStoredLifePlan,
+  type LifePlanState,
+} from "@/lib/life-plan/life-plan-storage"
+import { clearImageCache } from "@/lib/life-plan/image-cache"
 import { clearSyncSecret } from "@/lib/sync-secret-storage"
 import { pushSnapshot, pullSnapshot } from "../api"
 import {
@@ -69,6 +76,7 @@ interface UseDataManagementOptions {
   onReplaceBudget: (budget: BudgetState) => void
   onReplaceNetWorthHistory: (history: NetWorthHistory) => void
   onReplaceWork: (work: WorkState) => void
+  onReplaceLifePlan: (lifePlan: LifePlanState) => void
 }
 
 // Mọi key mà 1 lần nạp bản sao ghi đè — chụp lại chuỗi thô trước khi ghi để trả về nguyên trạng
@@ -82,6 +90,7 @@ const RESTORE_KEYS = [
   BUDGET_STORAGE_KEY,
   NET_WORTH_HISTORY_KEY,
   WORK_STORAGE_KEY,
+  LIFE_PLAN_STORAGE_KEY,
   CAR_GOAL_FUND_KEY,
 ]
 
@@ -123,6 +132,7 @@ function readLocalSnapshot(): ExportSnapshot {
     budget: getStoredBudget(),
     netWorthHistory: getStoredNetWorthHistory(),
     work: getStoredWork(),
+    lifePlan: getStoredLifePlan(),
     goals: { carFundName: getCarGoalFundName() },
   }
 }
@@ -145,6 +155,7 @@ function useDataManagement({
   onReplaceBudget,
   onReplaceNetWorthHistory,
   onReplaceWork,
+  onReplaceLifePlan,
 }: UseDataManagementOptions) {
   const [exported, setExported] = useState<ExportedInfo | null>(null)
   const [imported, setImported] = useState<ImportedInfo | null>(null)
@@ -162,6 +173,7 @@ function useDataManagement({
         onReplaceSettings(data.settings)
         onReplaceBudget(data.budget)
         onReplaceWork(data.work)
+        onReplaceLifePlan(data.lifePlan)
         onReplaceNetWorthHistory(data.netWorthHistory)
         if (data.goals) setCarGoalFundName(data.goals.carFundName)
       } catch (error) {
@@ -177,6 +189,7 @@ function useDataManagement({
       onReplaceBudget,
       onReplaceNetWorthHistory,
       onReplaceWork,
+      onReplaceLifePlan,
     ]
   )
 
@@ -280,6 +293,11 @@ function useDataManagement({
     onReplaceBudget(DEFAULT_BUDGET_STATE)
     onReplaceNetWorthHistory(DEFAULT_NET_WORTH_HISTORY)
     onReplaceWork(DEFAULT_WORK_STATE)
+    onReplaceLifePlan(DEFAULT_LIFE_PLAN_STATE)
+    // Ảnh trang Plan đã tải về máy này cũng dọn theo. Ảnh trên Cloudinary giữ nguyên (dọn ảnh mồ côi trên cloud
+    // nằm ngoài phạm vi): nạp lại 1 bản sao lưu thì các ghi chép vẫn trỏ đúng ảnh cũ trên cloud. Không chờ:
+    // clearImageCache không bao giờ lỗi.
+    void clearImageCache()
     setCarGoalFundName(null)
     // "Làm lại từ đầu" trên máy này — không giữ lại credential đồng bộ.
     clearSyncSecret()
@@ -288,7 +306,15 @@ function useDataManagement({
     setExported(null)
     setImported(null)
     setSyncResult(null)
-  }, [onReplaceJournal, onReplaceFinance, onReplaceStudy, onReplaceBudget, onReplaceNetWorthHistory, onReplaceWork])
+  }, [
+    onReplaceJournal,
+    onReplaceFinance,
+    onReplaceStudy,
+    onReplaceBudget,
+    onReplaceNetWorthHistory,
+    onReplaceWork,
+    onReplaceLifePlan,
+  ])
 
   return {
     exported,
