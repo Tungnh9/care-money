@@ -93,6 +93,25 @@ describe("FinanceSummarySection", () => {
     expect(screen.getByText(formatMoney(2_000_000))).toHaveStyle({ color: "var(--ob-color-expense)" })
   })
 
+  it("colours the savings total green like the Tài chính page, and leaves 0 ₫ in the plain text colour", () => {
+    const fund = { name: "Quỹ dự phòng", amount: 3_000_000, target: 20_000_000 }
+    const { unmount } = render(
+      <FinanceSummarySection
+        savings={[fund]}
+        cards={[]}
+        invests={[]}
+        summary={{ ...ZERO_SUMMARY, savingsTotal: 3_000_000, net: 3_000_000 }}
+      />
+    )
+
+    // Hint nằm ngay dưới số trong cùng ô Tiết kiệm.
+    expect(screen.getByText("1 quỹ").previousElementSibling).toHaveStyle({ color: "var(--ob-color-income)" })
+    unmount()
+
+    render(<FinanceSummarySection savings={[]} cards={[]} invests={[]} summary={ZERO_SUMMARY} />)
+    expect(screen.getByText("chưa có quỹ").previousElementSibling).toHaveStyle({ color: "var(--ob-color-text)" })
+  })
+
   it("calls a break-even gold position hoà vốn in a neutral colour", () => {
     const stores = [{ name: "SJC", price: "" }]
     const gold = [{ id: 1, date: "10/08/2026", phan: 10, buy: 8_000_000, store: "SJC" }]

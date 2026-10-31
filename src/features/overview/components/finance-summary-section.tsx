@@ -72,6 +72,8 @@ function FinanceSummarySection({ savings, cards, invests, summary }: FinanceSumm
             label="Tiết kiệm"
             value={formatMoney(summary.savingsTotal, hidden)}
             hint={savings.length ? `${savings.length} quỹ` : "chưa có quỹ"}
+            // Xanh như số Tiết kiệm ở trang Tài chính; chưa có đồng nào thì màu thường, như ô Nợ thẻ khi không nợ.
+            color={summary.savingsTotal > 0 ? "var(--ob-color-income)" : undefined}
           />
           <HoldingMiniStat
             icon="gold"
