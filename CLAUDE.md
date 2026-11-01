@@ -57,7 +57,7 @@ src/
 
 ## 4. Component Rules
 
-- **`src/components/ui/`**: component nền lấy từ shadcn/ui (`npx shadcn add ...`), sở hữu trực tiếp trong repo, custom qua CVA variant để khớp token `--ob-*` (màu, radius, spacing) — không dùng nguyên bản mặc định của shadcn.
+- **`src/components/ui/`**: component nền lấy từ shadcn/ui (`npx shadcn add ...`), sở hữu trực tiếp trong repo, custom qua CVA variant để khớp token `--ob-*` (màu, radius, spacing) — không dùng nguyên bản mặc định của shadcn. CLI shadcn 4.x cài thêm package npm `cn` và import `cn` từ đó: bỏ package (hoàn tác `package.json`/`package-lock.json`), đổi import về `@/lib/utils` như các component có sẵn.
 - **`src/components/ob/`**: component đặc thù của Orange Banana không có primitive shadcn tương ứng (`Figure`, `Streak`...) — viết từ đầu, style bằng token `--ob-*`.
 - Tên file kebab-case khớp tên component PascalCase — ví dụ `button.tsx` export `Button`.
 - Mọi `<button>` mặc định có `cursor: pointer` (reset global trong `src/app/globals.css`, đặt trong `@layer base` để `disabled:cursor-not-allowed` ở utilities layer vẫn override đúng) — không cần set `cursor-pointer` tay ở từng component.

@@ -8,101 +8,65 @@ import { CHART_PALETTE, type MonthlyTagSeries } from "@/lib/budget/budget-calcul
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false })
 
+// Nhãn tháng trên trục X: tháng đang xem ở thẻ "Tổng hợp chi tiêu tháng" màu cam đậm (--ob-cam-700, như
+// --ob-color-action-strong), các tháng khác màu chữ phụ (--ob-vo-500). ApexCharts tô nhãn bằng thuộc tính `fill`
+// của SVG nên cần mã màu thật, không dùng được var(--...).
+const LABEL_COLOR = "#7a6455"
+const SELECTED_LABEL_COLOR = "#a63a05"
+
 interface MonthlyTagTrendChartProps {
   months: string[]
   series: MonthlyTagSeries[]
   // Màu theo nhãn (tagChartColors) — cùng bảng với donut "Chi theo nhãn"; không truyền (hoặc thiếu
   // nhãn) thì tô theo thứ tự như trước.
   colors?: Map<string, string>
-  // Tổng đã quẹt thẻ trong các tháng — không phải chi tiêu nên không có cột/series và không cộng vào
-  // "Tổng cộng"; chỉ hiện thành 1 dòng riêng "0 ₫ / tổng quẹt". Dòng này không lấy màu từ `colors`.
-  swiped?: { label: string; emoji: string; total: number }
+  // Tháng đang xem ở thẻ "Tổng hợp chi tiêu tháng" — nhãn của nó trên trục X được tô nổi.
+  selectedMonth?: string
+  // Bấm 1 cột, hay nhãn tháng dưới cột (tháng không chi gì thì không có cột để bấm), để xem tháng đó.
+  onSelectMonth?: (month: string) => void
 }
 
-function MonthlyTagTrendChart({ months, series, colors, swiped }: MonthlyTagTrendChartProps) {
+function MonthlyTagTrendChart({ months, series, colors, selectedMonth, onSelectMonth }: MonthlyTagTrendChartProps) {
   const { hidden } = useMoneyVisibility()
 
-  // Giữ đúng thứ tự/màu như chart cột chồng ở trên (không sort theo tổng) để dòng tổng kết khớp
-  // trực quan với legend của ApexCharts ngay phía trên nó.
-  const totals = series.map((s, i) => ({
-    ...s,
-    color: colors?.get(s.label) ?? CHART_PALETTE[i % CHART_PALETTE.length],
-    total: s.data.reduce((sum, value) => sum + value, 0),
-  }))
-  const showSwiped = swiped !== undefined && swiped.total > 0
-  const grandTotal = totals.reduce((sum, t) => sum + t.total, 0)
+  function selectAt(index: number | undefined) {
+    if (index !== undefined && index >= 0 && index < months.length) onSelectMonth?.(months[index])
+  }
 
   return (
-    <div>
+    // Con trỏ tay trên cột và nhãn tháng: bấm được để xem tháng đó.
+    <div className="[&_.apexcharts-bar-area]:cursor-pointer [&_.apexcharts-xaxis-label]:cursor-pointer">
       <Chart
         type="bar"
         height={300}
         series={series.map((s) => ({ name: s.label, data: s.data }))}
         options={{
-          chart: { fontFamily: "inherit", toolbar: { show: false }, stacked: true },
-          colors: totals.map((t) => t.color),
+          chart: {
+            fontFamily: "inherit",
+            toolbar: { show: false },
+            stacked: true,
+            events: {
+              dataPointSelection: (_event, _chart, options) => selectAt(options?.dataPointIndex),
+              xAxisLabelClick: (_event, _chart, options) => selectAt(options?.labelIndex),
+            },
+          },
+          // Tháng đang xem đã hiện ở nhãn trục X và ở thẻ tổng hợp — không làm tối riêng đoạn cột vừa bấm.
+          states: { active: { filter: { type: "none" } } },
+          colors: series.map((s, i) => colors?.get(s.label) ?? CHART_PALETTE[i % CHART_PALETTE.length]),
           plotOptions: { bar: { columnWidth: "45%" } },
           dataLabels: { enabled: false },
           legend: { position: "bottom", fontFamily: "inherit" },
           grid: { strokeDashArray: 4 },
-          xaxis: { categories: months.map((month) => `Tháng ${Number(month.slice(5, 7))}`) },
+          xaxis: {
+            categories: months.map((month) => `Tháng ${Number(month.slice(5, 7))}`),
+            labels: {
+              style: { colors: months.map((month) => (month === selectedMonth ? SELECTED_LABEL_COLOR : LABEL_COLOR)) },
+            },
+          },
           yaxis: { labels: { formatter: (value: number) => formatMoney(value, hidden) } },
           tooltip: { y: { formatter: (value: number) => formatMoney(value, hidden) } },
         }}
       />
-
-      {(totals.length > 0 || showSwiped) && (
-        <div className="mt-4 flex flex-col gap-2 border-t border-[var(--ob-color-border)] pt-4">
-          {totals.map((t) => (
-            <div key={t.label} className="flex items-center justify-between gap-3 text-[13.5px]">
-              <span className="flex items-center gap-2 text-[var(--ob-color-text-muted)]">
-                <span
-                  data-testid="tag-trend-dot"
-                  className="h-2.5 w-2.5 shrink-0 rounded-full"
-                  style={{ backgroundColor: t.color }}
-                />
-                <span>{t.emoji}</span>
-                <span>{t.label}</span>
-              </span>
-              <span className="[font-family:var(--ob-font-num)]" style={{ color: "var(--ob-color-text-muted)" }}>
-                {formatMoney(t.total, hidden)}
-              </span>
-            </div>
-          ))}
-
-          {showSwiped ? (
-            <div data-testid="tag-trend-swiped" className="flex items-center justify-between gap-3 text-[13.5px]">
-              <span className="flex items-center gap-2 text-[var(--ob-color-text-muted)]">
-                {/* Chấm đỏ cùng token với số đã quẹt cuối dòng cho đồng bộ màu, không theo màu biểu đồ của nhãn
-                    "Quẹt thẻ": quẹt thẻ không có cột trên chart nên chấm không phải khớp với cột nào. */}
-                <span
-                  data-testid="tag-trend-dot"
-                  className="h-2.5 w-2.5 shrink-0 rounded-full"
-                  style={{ backgroundColor: "var(--ob-color-expense)" }}
-                />
-                <span>{swiped.emoji}</span>
-                <span>{swiped.label}</span>
-              </span>
-              {/* Tô giống ô quẹt thẻ trong "Khoản chi tháng này": "0 ₫ /" màu các tổng nhãn, phần đã quẹt màu đỏ
-                  (cùng màu chấm đầu dòng). */}
-              <span
-                className="min-w-0 text-right [font-family:var(--ob-font-num)]"
-                style={{ color: "var(--ob-color-text-muted)" }}
-              >
-                {`${formatMoney(0, hidden)} / `}
-                <span style={{ color: "var(--ob-color-expense)" }}>{formatMoney(swiped.total, hidden)}</span>
-              </span>
-            </div>
-          ) : null}
-
-          <div className="mt-1 flex items-center justify-between gap-3 border-t border-[var(--ob-color-border)] pt-3 text-[13.5px] font-bold">
-            <span>Tổng cộng</span>
-            <span className="[font-family:var(--ob-font-num)]" style={{ color: "var(--ob-color-action-strong)" }}>
-              {formatMoney(grandTotal, hidden)}
-            </span>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

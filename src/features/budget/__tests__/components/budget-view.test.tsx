@@ -17,11 +17,16 @@ import { CHART_PALETTE } from "@/lib/budget/budget-calculations"
 import type { Settlement } from "@/lib/budget/types"
 
 interface ApexProps {
-  series: { name: string; data: number[] }[]
-  options: { xaxis?: { categories?: string[] } }
+  options: {
+    chart?: {
+      stacked?: boolean
+      events?: { dataPointSelection?: (event: unknown, chart: unknown, options: { dataPointIndex: number }) => void }
+    }
+    xaxis?: { labels?: { style?: { colors?: string[] } } }
+  }
 }
 
-// jsdom không vẽ được ApexCharts thật — ghi lại props mỗi lần 1 chart được vẽ, để đọc tháng và số của chart.
+// jsdom không vẽ được ApexCharts thật — ghi lại props mỗi lần 1 chart được vẽ, để đọc và bấm thử chart.
 const apex = vi.hoisted(() => ({ calls: [] as ApexProps[] }))
 vi.mock("react-apexcharts", () => ({
   default: (props: ApexProps) => {
@@ -30,9 +35,9 @@ vi.mock("react-apexcharts", () => ({
   },
 }))
 
-// Props lần vẽ gần nhất của chart "Chi tiêu theo tháng" (series đầu tên "Đã chi").
-function monthlyChart(): ApexProps | undefined {
-  return apex.calls.filter((props) => props.series[0]?.name === "Đã chi").at(-1)
+// Props lần vẽ gần nhất của biểu đồ 6 tháng (cột chồng theo nhãn; donut thì không chồng).
+function tagTrendChart(): ApexProps | undefined {
+  return apex.calls.filter((props) => props.options.chart?.stacked).at(-1)
 }
 
 function settlement(overrides: Partial<Settlement>): Settlement {
@@ -83,9 +88,9 @@ function donutColor(label: string) {
   return badge?.getAttribute("fill")
 }
 
-// Chấm màu của 1 nhãn trong bảng tổng dưới chart 6 tháng: chấm nằm cùng hàng với tên nhãn.
-function trendDot(label: string): HTMLElement {
-  const dot = screen.getAllByTestId("tag-trend-dot").find((el) => el.parentElement?.textContent?.includes(label))
+// Chấm màu của 1 nhãn trong thẻ "Tổng hợp chi tiêu tháng": chấm nằm cùng hàng với tên nhãn.
+function summaryDot(label: string): HTMLElement {
+  const dot = screen.getAllByTestId("month-summary-dot").find((el) => el.parentElement?.textContent?.includes(label))
   if (!dot) throw new Error(`Không thấy chấm màu của nhãn "${label}"`)
   return dot
 }
@@ -113,47 +118,88 @@ describe("BudgetView", () => {
     expect(screen.getByText(/Chi theo nhãn/)).toBeInTheDocument()
   })
 
-  it("renders the monthly expense bar chart", async () => {
+  it("puts the monthly spending summary right after this month's expenses, then the 6-month chart", async () => {
     render(<BudgetView />)
 
-    await waitFor(() => expect(screen.getAllByText("Lương tháng này").length).toBeGreaterThan(0))
-    expect(screen.getByText("Chi tiêu theo tháng")).toBeInTheDocument()
+    const expenseList = await screen.findByText("Khoản chi tháng này")
+    const summary = screen.getByText(/^Tổng hợp chi tiêu tháng/)
+    const trend = screen.getByText("Xu hướng chi tiêu (6 tháng gần nhất)")
+    expect(expenseList.compareDocumentPosition(summary) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(summary.compareDocumentPosition(trend) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    // Biểu đồ "Chi tiêu theo tháng" cũ đã bỏ — thẻ tổng hợp thay chỗ nó.
+    expect(screen.queryByText("Chi tiêu theo tháng")).not.toBeInTheDocument()
   })
 
-  it("compares last month with this month in the monthly chart, drawing no month still to come", async () => {
-    // Hôm nay 15/09/2026: chart chỉ có tháng 8 và tháng 9 — khoản chi tháng 7 và khoản ghi trước cho tháng 10 nằm ngoài.
+  it("sums up this month by tag, and only the picked month once a past column is clicked", async () => {
+    // Hôm nay 15/09/2026: biểu đồ 6 tháng là tháng 4 → 9. Tháng 8 và tháng 9 cùng có Ăn uống — thẻ tổng hợp không
+    // được cộng dồn 2 tháng.
+    const food = { label: "Ăn uống", emoji: "🍔", tint: "#F0ECFE" }
+    const rent = { label: "Tiền trọ", emoji: "🏠", tint: "#FFF0B8" }
     setStoredBudget({
       ...DEFAULT_BUDGET_STATE,
       expenses: [
-        { id: 1, dayKey: "2026-07-20", amount: 100_000, tag: null },
-        { id: 2, dayKey: "2026-08-10", amount: 300_000, tag: null },
-        { id: 3, dayKey: "2026-09-01", amount: 200_000, tag: null },
-        { id: 4, dayKey: "2026-10-05", amount: 400_000, tag: null },
+        { id: 1, dayKey: "2026-08-10", amount: 300_000, tag: food },
+        { id: 2, dayKey: "2026-08-12", amount: 2_000_000, tag: rent },
+        { id: 3, dayKey: "2026-09-01", amount: 200_000, tag: food },
       ],
     })
     apex.calls.length = 0
 
     render(<BudgetView />)
 
-    await waitFor(() => expect(monthlyChart()?.series[0].data).toEqual([300_000, 200_000]))
-    expect(monthlyChart()?.options.xaxis?.categories).toEqual(["Tháng 8", "Tháng 9"])
+    const summary = (await screen.findByText(/^Tổng hợp chi tiêu tháng/)).closest("section") as HTMLElement
+    await waitFor(() =>
+      expect(within(summary).getByText("Ăn uống").closest("div")).toHaveTextContent(formatMoney(200_000))
+    )
+    expect(within(summary).getByText("Tổng hợp chi tiêu tháng 9, 2026")).toBeInTheDocument()
+    expect(within(summary).queryByText("Tiền trọ")).not.toBeInTheDocument()
+
+    await waitFor(() => expect(tagTrendChart()).toBeDefined())
+    act(() => tagTrendChart()?.options.chart?.events?.dataPointSelection?.(null, null, { dataPointIndex: 4 }))
+
+    expect(within(summary).getByText("Tổng hợp chi tiêu tháng 8, 2026")).toBeInTheDocument()
+    expect(within(summary).getByText("Ăn uống").closest("div")).toHaveTextContent(formatMoney(300_000))
+    expect(within(summary).getByText("Tiền trọ").closest("div")).toHaveTextContent(formatMoney(2_000_000))
+    expect(within(summary).getByText("Tổng cộng").parentElement).toHaveTextContent(formatMoney(2_300_000))
+    // Nhãn "Tháng 8" trên trục X được tô nổi theo tháng đang xem.
+    await waitFor(() => expect(tagTrendChart()?.options.xaxis?.labels?.style?.colors?.[4]).toBe("#a63a05"))
+
+    // Quay lại tháng 9 bằng lịch sau tiêu đề.
+    fireEvent.click(within(summary).getByRole("button", { name: "Chọn tháng để xem" }))
+    fireEvent.click(screen.getByRole("button", { name: "Tháng 9" }))
+    expect(within(summary).getByText("Tổng hợp chi tiêu tháng 9, 2026")).toBeInTheDocument()
+    expect(within(summary).getByText("Ăn uống").closest("div")).toHaveTextContent(formatMoney(200_000))
+    expect(within(summary).queryByText("Tiền trọ")).not.toBeInTheDocument()
   })
 
-  it("puts December of last year before January in the monthly chart", async () => {
-    vi.setSystemTime(new Date(2027, 0, 10))
+  it("reaches a month older than the 6-month chart from the calendar after the summary's title", async () => {
+    // Hôm nay 15/09/2026: biểu đồ 6 tháng là tháng 4 → 9/2026, tháng 12/2024 nằm ngoài từ lâu.
+    const food = { label: "Ăn uống", emoji: "🍔", tint: "#F0ECFE" }
     setStoredBudget({
       ...DEFAULT_BUDGET_STATE,
       expenses: [
-        { id: 1, dayKey: "2026-12-28", amount: 500_000, tag: null },
-        { id: 2, dayKey: "2027-01-03", amount: 150_000, tag: null },
+        { id: 1, dayKey: "2024-12-20", amount: 650_000, tag: food },
+        { id: 2, dayKey: "2026-09-01", amount: 200_000, tag: food },
       ],
     })
-    apex.calls.length = 0
 
     render(<BudgetView />)
 
-    await waitFor(() => expect(monthlyChart()?.series[0].data).toEqual([500_000, 150_000]))
-    expect(monthlyChart()?.options.xaxis?.categories).toEqual(["Tháng 12", "Tháng 1"])
+    const summary = (await screen.findByText(/^Tổng hợp chi tiêu tháng/)).closest("section") as HTMLElement
+    await waitFor(() =>
+      expect(within(summary).getByText("Ăn uống").closest("div")).toHaveTextContent(formatMoney(200_000))
+    )
+
+    fireEvent.click(within(summary).getByRole("button", { name: "Chọn tháng để xem" }))
+    // Lịch lùi được tới năm của khoản chi đầu tiên (2024), không xa hơn.
+    fireEvent.click(screen.getByRole("button", { name: "Năm trước" }))
+    fireEvent.click(screen.getByRole("button", { name: "Năm trước" }))
+    expect(screen.getByRole("button", { name: "Năm trước" })).toBeDisabled()
+    fireEvent.click(screen.getByRole("button", { name: "Tháng 12" }))
+
+    expect(within(summary).getByText("Tổng hợp chi tiêu tháng 12, 2024")).toBeInTheDocument()
+    expect(within(summary).getByText("Ăn uống").closest("div")).toHaveTextContent(formatMoney(650_000))
+    expect(within(summary).getByText("Tổng cộng").parentElement).toHaveTextContent(formatMoney(650_000))
   })
 
   it("renders the 6-month tag trend chart", async () => {
@@ -519,7 +565,7 @@ describe("BudgetView", () => {
     expect(consoleError).not.toHaveBeenCalled()
   })
 
-  it("gives the same tag the same colour in the donut and in the 6-month chart, by its place in Settings", async () => {
+  it("gives the same tag the same colour in the donut and in the month summary, by its place in Settings", async () => {
     // Donut xếp nhãn theo khoản chi tháng này (Ăn uống trước), chart 6 tháng xếp theo lần xuất hiện
     // đầu tiên (Tiền trọ từ tháng 5) — trước bản sửa 2 nhãn bị tráo màu cho nhau giữa 2 chart.
     setStoredBudget({
@@ -537,8 +583,8 @@ describe("BudgetView", () => {
     // Cài đặt mặc định: "Tiền trọ" là nhãn thứ 1, "Ăn uống" là nhãn thứ 6.
     expect(donutColor("Tiền trọ")).toBe(CHART_PALETTE[0])
     expect(donutColor("Ăn uống")).toBe(CHART_PALETTE[5])
-    expect(trendDot("Tiền trọ")).toHaveStyle({ backgroundColor: CHART_PALETTE[0] })
-    expect(trendDot("Ăn uống")).toHaveStyle({ backgroundColor: CHART_PALETTE[5] })
+    expect(summaryDot("Tiền trọ")).toHaveStyle({ backgroundColor: CHART_PALETTE[0] })
+    expect(summaryDot("Ăn uống")).toHaveStyle({ backgroundColor: CHART_PALETTE[5] })
   })
 
   it("shows a settlement in the 'Chốt sổ' block right after confirming it, without counting it as spent", async () => {
@@ -907,8 +953,8 @@ describe("BudgetView", () => {
     ).toBeInTheDocument()
     expect(screen.getByText(summaryLine(`Bạn đang dư ${formatMoney(9_000_000)} tháng này.`))).toBeInTheDocument()
     expect(screen.getAllByText(wholeText(`${formatMoney(0)} / ${formatMoney(500_000)}`)).length).toBeGreaterThan(0)
-    // Dòng "Quẹt thẻ" dưới chart 6 tháng: chấm đỏ như số đã quẹt, không phải màu biểu đồ của nhãn.
-    expect(trendDot("Quẹt thẻ")).toHaveStyle({ backgroundColor: "var(--ob-color-expense)" })
+    // Dòng "Quẹt thẻ" trong thẻ tổng hợp tháng: chấm đỏ như số đã quẹt, không phải màu biểu đồ của nhãn.
+    expect(summaryDot("Quẹt thẻ")).toHaveStyle({ backgroundColor: "var(--ob-color-expense)" })
   })
 
   it("lowers the card debt when a Trả nợ thẻ is recorded and counts it as spending", async () => {

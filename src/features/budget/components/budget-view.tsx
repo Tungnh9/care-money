@@ -14,7 +14,6 @@ import { CARD_SWIPE_TAG_EMOJI, CARD_SWIPE_TAG_LABEL } from "@/lib/budget/card-li
 import {
   breakdownByTag,
   hasSalaryRecord,
-  monthlyExpenseTotals,
   monthlyTagBreakdown,
   tagChartColors,
   remainingToSettle,
@@ -30,8 +29,8 @@ import { ExpenseEntryForm } from "./expense-entry-form"
 import { ExpenseListCard } from "./expense-list-card"
 import { EditExpenseModal } from "./edit-expense-modal"
 import { TagBreakdownChart } from "./tag-breakdown-chart"
-import { MonthlyTrendChart } from "./monthly-trend-chart"
 import { MonthlyTagTrendChart } from "./monthly-tag-trend-chart"
+import { MonthSpendingSummary } from "./month-spending-summary"
 import { SettleMonthModal } from "./settle-month-modal"
 import type { Expense } from "@/lib/budget/types"
 
@@ -56,6 +55,9 @@ function BudgetView() {
   // null = modal tất toán đang đóng; ngược lại là tháng đang tất toán (tháng này, hoặc 1 tháng đã qua còn lệch).
   const [settleMonth, setSettleMonth] = useState<string | null>(null)
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
+  // Tháng đang xem ở thẻ "Tổng hợp chi tiêu tháng" (chọn ở icon lịch sau tiêu đề, hay bấm 1 cột của biểu đồ 6
+  // tháng); null = tháng này.
+  const [pickedMonth, setPickedMonth] = useState<string | null>(null)
   const settleCardRef = useRef<HTMLElement>(null)
   const settleButtonRef = useRef<HTMLButtonElement>(null)
   // Tháng (tháng này hoặc tháng cũ) vừa tất toán xong qua hộp thoại, chờ effect bên dưới xem có phải chuyển
@@ -119,25 +121,26 @@ function BudgetView() {
     target?.focus()
   })
 
-  // Chart "Chi tiêu theo tháng" đặt tháng trước cạnh tháng hiện tại để so — chỉ tháng đã có chi tiêu thật, không
-  // vẽ tháng chưa tới (chưa thể biết sẽ chi gì). Sang tháng 1 thì tháng trước là tháng 12 năm ngoái.
-  const comparedMonths = monthsFrom(shiftMonth(currentMonth, -1), 2)
-  const monthlyExpenses = monthlyExpenseTotals(expenses, comparedMonths)
-
   // "Xu hướng chi tiêu" nhìn về 6 tháng gần nhất TÍNH ĐẾN tháng hiện tại (bao gồm cả tháng này), chia theo nhãn.
   const trendMonths = monthsFrom(shiftMonth(currentMonth, -5), 6)
   const tagTrend = monthlyTagBreakdown(expenses, trendMonths)
-  // 1 bảng màu cho cả donut lẫn chart 6 tháng, theo vị trí nhãn trong Cài đặt — cùng 1 nhãn luôn
-  // cùng 1 màu dù 2 chart xếp nhãn theo 2 thứ tự khác nhau.
+  // Thẻ "Tổng hợp chi tiêu tháng" chọn được mọi tháng từ tháng có khoản chi sớm nhất tới tháng này (chưa có khoản chi
+  // nào thì chỉ tháng này) — không giới hạn trong 6 tháng của biểu đồ.
+  const summaryMonth = pickedMonth !== null && pickedMonth <= currentMonth ? pickedMonth : currentMonth
+  const spendingMonths = new Set(expenses.map((e) => monthKeyFromDayKey(e.dayKey)))
+  const firstExpenseMonth = [...spendingMonths].reduce((first, month) => (month < first ? month : first), currentMonth)
+  const summaryEntries = breakdownByTag(expenses, summaryMonth)
+  // 1 bảng màu cho donut, chart 6 tháng và thẻ tổng hợp, theo vị trí nhãn trong Cài đặt — cùng 1 nhãn luôn cùng 1
+  // màu dù mỗi nơi xếp nhãn theo 1 thứ tự khác nhau.
   const tagColors = tagChartColors(
-    [...tagTrend.map((s) => s.label), ...tagBreakdown.map((e) => e.label)],
+    [...tagTrend.map((s) => s.label), ...tagBreakdown.map((e) => e.label), ...summaryEntries.map((e) => e.label)],
     settings.tags
   )
 
   const swiped = {
     label: CARD_SWIPE_TAG_LABEL,
     emoji: settings.tags.find((t) => t.label === CARD_SWIPE_TAG_LABEL)?.emoji ?? CARD_SWIPE_TAG_EMOJI,
-    total: swipedTotal(expenses, trendMonths),
+    total: swipedTotal(expenses, [summaryMonth]),
   }
 
   return (
@@ -243,12 +246,28 @@ function BudgetView() {
           onEdit={setEditingExpense}
         />
 
-        <Card label="Chi tiêu theo tháng" className="min-w-0 w-full">
-          <MonthlyTrendChart data={monthlyExpenses} />
+        {/* Tiêu đề (kèm icon lịch chọn tháng) do MonthSpendingSummary tự dựng. */}
+        <Card className="min-w-0 w-full">
+          <MonthSpendingSummary
+            month={summaryMonth}
+            firstMonth={firstExpenseMonth}
+            currentMonth={currentMonth}
+            monthsWithSpending={spendingMonths}
+            entries={summaryEntries}
+            colors={tagColors}
+            swiped={swiped}
+            onSelectMonth={setPickedMonth}
+          />
         </Card>
 
         <Card label="Xu hướng chi tiêu (6 tháng gần nhất)" className="min-w-0 w-full">
-          <MonthlyTagTrendChart months={trendMonths} series={tagTrend} colors={tagColors} swiped={swiped} />
+          <MonthlyTagTrendChart
+            months={trendMonths}
+            series={tagTrend}
+            colors={tagColors}
+            selectedMonth={summaryMonth}
+            onSelectMonth={setPickedMonth}
+          />
         </Card>
       </div>
 
