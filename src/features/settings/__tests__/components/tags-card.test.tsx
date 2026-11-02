@@ -18,6 +18,30 @@ describe("TagsCard", () => {
     expect(screen.getByText("Mua sắm")).toBeInTheDocument()
   })
 
+  it("shows the first half of a long list, all of it after Xem thêm, and the first half again after Thu gọn", () => {
+    const tags = Array.from({ length: 12 }, (_, i) => ({ ...TAGS[0], label: `Nhãn ${i + 1}` }))
+    const onToggle = vi.fn()
+    render(<TagsCard tags={tags} onToggle={onToggle} />)
+
+    expect(screen.getAllByRole("switch")).toHaveLength(6)
+    expect(screen.queryByText("Nhãn 7")).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: "Xem thêm" }))
+    expect(screen.getAllByRole("switch")).toHaveLength(12)
+    fireEvent.click(screen.getByRole("switch", { name: "Nhãn 10" }))
+    expect(onToggle).toHaveBeenCalledWith(9)
+
+    fireEvent.click(screen.getByRole("button", { name: "Thu gọn" }))
+    expect(screen.getAllByRole("switch")).toHaveLength(6)
+  })
+
+  it("shows a short list whole, with no Xem thêm", () => {
+    render(<TagsCard tags={TAGS} onToggle={vi.fn()} />)
+
+    expect(screen.getAllByRole("switch")).toHaveLength(2)
+    expect(screen.queryByRole("button", { name: "Xem thêm" })).not.toBeInTheDocument()
+  })
+
   it("shows the empty state when there are no tags", () => {
     render(<TagsCard tags={[]} onToggle={vi.fn()} />)
 

@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { ActionTooltip } from "@/components/ob/action-tooltip"
 import { AddMoodForm } from "./add-mood-form"
+import { ShowMoreButton, collapsedRowCount } from "./show-more-button"
 import type { Mood } from "@/lib/settings/settings-storage"
 
 interface MoodsCardProps {
@@ -24,6 +25,10 @@ function MoodsCard({ moods, onToggle, onRemove, onAdd }: MoodsCardProps) {
   const [deleting, setDeleting] = useState<string | null>(null)
   // Như TagsCard: công tắc lấy tên từ chữ tên tâm trạng đang hiện bên cạnh.
   const idPrefix = useId()
+  // Như TagsCard: thu gọn thì chỉ hiện nửa đầu. Cắt từ đầu danh sách nên `i` vẫn là chỉ số trong `moods`.
+  const [expanded, setExpanded] = useState(false)
+  const rowCount = collapsedRowCount(moods.length)
+  const visibleMoods = expanded ? moods : moods.slice(0, rowCount)
 
   return (
     <Card label="Tâm trạng dùng trong nhật ký" className="min-w-0 w-full">
@@ -31,12 +36,12 @@ function MoodsCard({ moods, onToggle, onRemove, onAdd }: MoodsCardProps) {
         Bật những trạng thái bạn hay dùng, thêm mới hoặc xoá bớt. Cái nào đang bật sẽ thành chip ở màn Nhật ký.
       </p>
       <div>
-        {moods.map((m, i) => (
+        {visibleMoods.map((m, i) => (
           <div
             key={m.label + i}
             className={
               "flex items-center gap-[14px] py-[10px] " +
-              (i < moods.length - 1 ? "border-b border-[var(--ob-color-border)]" : "")
+              (i < visibleMoods.length - 1 ? "border-b border-[var(--ob-color-border)]" : "")
             }
           >
             <span
@@ -73,7 +78,17 @@ function MoodsCard({ moods, onToggle, onRemove, onAdd }: MoodsCardProps) {
           <p className="text-[13.5px] text-[var(--ob-color-text-subtle)]">Chưa có tâm trạng nào.</p>
         ) : null}
       </div>
-      <AddMoodForm onAdd={onAdd} existingLabels={moods.map((m) => m.label)} />
+      {moods.length > rowCount ? (
+        <ShowMoreButton expanded={expanded} onToggle={() => setExpanded((value) => !value)} />
+      ) : null}
+      <AddMoodForm
+        onAdd={(mood) => {
+          onAdd(mood)
+          // Tâm trạng mới nằm cuối danh sách — mở hết để thấy ngay, không thì nó lọt vào nửa đang ẩn.
+          setExpanded(true)
+        }}
+        existingLabels={moods.map((m) => m.label)}
+      />
       <AlertDialog
         open={deleting !== null}
         onOpenChange={(open) => !open && setDeleting(null)}
