@@ -2,6 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { z } from "zod"
 
+import { CEFR_LEVELS } from "@/lib/study/cefr"
 import type { GrammarEntry, VocabEntry } from "@/lib/study/types"
 
 // Kiểm từng dòng ngay lúc build (trang /study, /overview gọi getVocab/getGrammar khi prerender):
@@ -14,6 +15,8 @@ const vocabEntrySchema: z.ZodType<VocabEntry> = z.object({
   phonetic: z.string().optional(),
   meaning: z.string(),
   topic: z.string().optional(),
+  // Bắt buộc: mỗi từ phải có cấp độ CEFR để tab Từ vựng chia nhóm — từ mới thiếu cấp làm build báo đúng dòng.
+  level: z.enum(CEFR_LEVELS),
   addedAt: z.string(),
   example: z.string().optional(),
   image: z.string().optional(),
@@ -63,4 +66,4 @@ function getGrammar(): GrammarEntry[] {
   return loadJsonl("grammar.jsonl", grammarEntrySchema)
 }
 
-export { getVocab, getGrammar, parseJsonl }
+export { getVocab, getGrammar, parseJsonl, vocabEntrySchema }

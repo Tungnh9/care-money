@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest"
 import { z } from "zod"
 
-import { getGrammar, getVocab, parseJsonl } from "@/lib/study/content-loader"
+import { CEFR_LEVELS } from "@/lib/study/cefr"
+import { getGrammar, getVocab, parseJsonl, vocabEntrySchema } from "@/lib/study/content-loader"
 
 const idSchema = z.object({ id: z.string() })
 
@@ -75,6 +76,24 @@ describe("getVocab", () => {
     }
 
     expect(repeats).toEqual([])
+  })
+
+  it("gives every entry a CEFR level from A1 to C2", () => {
+    const missing = getVocab()
+      .filter((v) => !v.level || !CEFR_LEVELS.includes(v.level))
+      .map((v) => v.id)
+
+    expect(missing).toEqual([])
+  })
+
+  it("refuses a vocabulary line without a level, or with a level outside A1–C2", () => {
+    const base = '{"id":"v-1","word":"exam","meaning":"kỳ thi","topic":"activities","addedAt":"2026-08-11"'
+
+    expect(() => parseJsonl(`${base}}`, "vocabulary.jsonl", vocabEntrySchema)).toThrow(/vocabulary\.jsonl:1: .*level/)
+    expect(() => parseJsonl(`${base},"level":"A3"}`, "vocabulary.jsonl", vocabEntrySchema)).toThrow(
+      /vocabulary\.jsonl:1: .*level/
+    )
+    expect(parseJsonl(`${base},"level":"A2"}`, "vocabulary.jsonl", vocabEntrySchema)[0].level).toBe("A2")
   })
 })
 
