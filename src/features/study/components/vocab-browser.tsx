@@ -1,6 +1,6 @@
 "use client"
 
-import { useId } from "react"
+import { useEffect, useId, useRef } from "react"
 import { ChevronLeft } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -35,6 +35,13 @@ interface VocabBrowserProps {
 const TOPIC_GRID = "grid grid-cols-2 gap-3 @xl:grid-cols-3 @4xl:grid-cols-4"
 const WORD_GRID = "grid grid-cols-2 gap-4 @md:grid-cols-3 @2xl:grid-cols-4 @4xl:grid-cols-6"
 const COUNT_TEXT = "text-[12.5px] text-[var(--ob-color-text-subtle)] tabular-nums"
+// Khoảng chừa khi cuộn tới Card hay 1 ô chủ đề: thanh trên (~64px) và thanh điều hướng dưới (~84px) của bản điện thoại
+// là fixed, cuộn sát mép thì bị chúng che. Trên máy tính chỉ là thêm chút khoảng thở.
+const SCROLL_MARGIN_TOP = "scroll-mt-[72px]"
+const SCROLL_MARGIN_BOTTOM = "scroll-mb-[96px]"
+
+// Lần chuyển màn vừa bấm: sau khi màn mới dựng xong mới biết đưa focus (và khung nhìn) tới đâu.
+type PendingMove = { kind: "open" } | { kind: "back"; topic: string }
 
 interface TopicTileProps {
   summary: TopicSummary
@@ -52,8 +59,9 @@ function TopicTile({ summary, statsId, onOpen }: TopicTileProps) {
       type="button"
       aria-label={summary.label}
       aria-describedby={statsId}
+      data-topic={summary.topic}
       onClick={onOpen}
-      className="flex min-w-0 flex-col gap-2 rounded-[var(--ob-radius-md)] border-[1.5px] border-[var(--ob-color-border)] bg-[var(--ob-color-surface)] p-[14px] text-left transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:border-[var(--ob-color-action)]"
+      className={`${SCROLL_MARGIN_TOP} ${SCROLL_MARGIN_BOTTOM} flex min-w-0 flex-col gap-2 rounded-[var(--ob-radius-md)] border-[1.5px] border-[var(--ob-color-border)] bg-[var(--ob-color-surface)] p-[14px] text-left transition-colors duration-[var(--ob-dur-fast)] ease-[var(--ob-ease-out)] hover:border-[var(--ob-color-action)]`}
     >
       <span className="text-[15px] font-bold break-words">{summary.label}</span>
       <span id={statsId} className={`flex flex-wrap gap-x-2 ${COUNT_TEXT}`}>
@@ -83,6 +91,42 @@ function VocabBrowser({
   onLevelChange,
 }: VocabBrowserProps) {
   const statsBaseId = useId()
+  const cardRef = useRef<HTMLElement>(null)
+  const backRef = useRef<HTMLButtonElement>(null)
+  const pendingMove = useRef<PendingMove | null>(null)
+
+  // Lưới chủ đề và màn 1 chủ đề dùng chung 1 Card: nút vừa bấm (ô chủ đề, "Tất cả chủ đề") biến mất khỏi trang, focus
+  // rơi về <body> và trang giữ nguyên chỗ cuộn. Sau khi màn mới dựng: mở chủ đề thì đầu Card đã bị cuộn khuất được kéo
+  // lên (trên điện thoại, ô ở dưới thấp mở ra giữa danh sách từ, không thấy tên chủ đề và nút quay lại) và focus vào
+  // "Tất cả chủ đề"; quay lại thì focus đúng ô vừa đóng, cuộn tới nó nếu đang khuất.
+  useEffect(() => {
+    const move = pendingMove.current
+    const card = cardRef.current
+    if (!move || !card) return
+    pendingMove.current = null
+    if (move.kind === "open") {
+      const marginTop = parseFloat(getComputedStyle(card).scrollMarginTop) || 0
+      if (card.getBoundingClientRect().top < marginTop) card.scrollIntoView({ block: "start" })
+      backRef.current?.focus({ preventScroll: true })
+      return
+    }
+    const tile = Array.from(card.querySelectorAll<HTMLElement>("[data-topic]")).find(
+      (element) => element.dataset.topic === move.topic
+    )
+    if (!tile) return
+    tile.focus({ preventScroll: true })
+    tile.scrollIntoView({ block: "nearest" })
+  })
+
+  function openTopic(next: string) {
+    pendingMove.current = { kind: "open" }
+    onTopicChange(next)
+  }
+
+  function backToTopics(current: string) {
+    pendingMove.current = { kind: "back", topic: current }
+    onTopicChange(null)
+  }
 
   if (topic === null) {
     const topics = summarizeTopics(vocab, learned, level)
@@ -92,6 +136,8 @@ function VocabBrowser({
 
     return (
       <Card
+        ref={cardRef}
+        className={SCROLL_MARGIN_TOP}
         label={`Chủ đề · ${topics.length}`}
         action={<span className={COUNT_TEXT}>{`Đã học ${learnedShown}/${shown.length}`}</span>}
       >
@@ -103,7 +149,7 @@ function VocabBrowser({
                 key={summary.topic}
                 summary={summary}
                 statsId={`${statsBaseId}-${index}`}
-                onOpen={() => onTopicChange(summary.topic)}
+                onOpen={() => openTopic(summary.topic)}
               />
             ))}
           </div>
@@ -119,9 +165,11 @@ function VocabBrowser({
 
   return (
     <Card
+      ref={cardRef}
+      className={SCROLL_MARGIN_TOP}
       label={`${topicLabel(topic)} · ${shown.length} từ`}
       action={
-        <Button variant="ghost" size="sm" type="button" onClick={() => onTopicChange(null)}>
+        <Button ref={backRef} variant="ghost" size="sm" type="button" onClick={() => backToTopics(topic)}>
           <ChevronLeft size={16} />
           Tất cả chủ đề
         </Button>

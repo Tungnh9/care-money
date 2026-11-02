@@ -1,4 +1,5 @@
-import { describe, it, expect, vi } from "vitest"
+import { useState } from "react"
+import { afterEach, describe, it, expect, vi } from "vitest"
 import { fireEvent, render, screen, within } from "@testing-library/react"
 
 import type { CefrLevel } from "@/lib/study/cefr"
@@ -42,6 +43,31 @@ function renderBrowser({ vocab = VOCAB, topic = null, level = null }: Overrides 
   )
   return { ...view, onTopicChange, onLevelChange, onToggleLearned }
 }
+
+// Giữ chủ đề và cấp như StudyView — để thấy focus và khung nhìn sau khi màn thật sự đổi.
+function StatefulBrowser() {
+  const [topic, setTopic] = useState<string | null>(null)
+  const [level, setLevel] = useState<CefrLevel | null>(null)
+  return (
+    <VocabBrowser
+      vocab={VOCAB}
+      learned={[]}
+      onToggleLearned={() => {}}
+      topic={topic}
+      level={level}
+      onTopicChange={setTopic}
+      onLevelChange={setLevel}
+    />
+  )
+}
+
+function rectAt(top: number): DOMRect {
+  return { top, bottom: top + 200, left: 0, right: 300, width: 300, height: 200, x: 0, y: top, toJSON: () => ({}) }
+}
+
+afterEach(() => {
+  vi.restoreAllMocks()
+})
 
 describe("VocabBrowser", () => {
   it("lists the topics with their word count and learned progress", () => {
@@ -157,6 +183,49 @@ describe("VocabBrowser", () => {
     fireEvent.click(screen.getAllByRole("button", { name: "Đánh dấu đã học" })[0])
 
     expect(onToggleLearned).toHaveBeenCalledWith("v-3")
+  })
+
+  it("moves keyboard focus into the opened topic, and back onto that topic's tile when leaving it", () => {
+    render(<StatefulBrowser />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Ăn uống" }))
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Tất cả chủ đề" }))
+
+    fireEvent.click(screen.getByRole("button", { name: "Tất cả chủ đề" }))
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Ăn uống" }))
+  })
+
+  it("scrolls the opened topic up to the top of the screen only when its title was scrolled out of view", () => {
+    const scroll = vi.spyOn(Element.prototype, "scrollIntoView")
+    render(<StatefulBrowser />)
+    const card = screen.getByText("Chủ đề · 3").closest("section") as HTMLElement
+
+    // Ô ở dưới thấp trên điện thoại: trang đã cuộn, đầu Card nằm khuất phía trên màn hình.
+    vi.spyOn(card, "getBoundingClientRect").mockReturnValue(rectAt(-400))
+    fireEvent.click(screen.getByRole("button", { name: "Nghề nghiệp" }))
+    expect(scroll).toHaveBeenCalledWith({ block: "start" })
+    expect(scroll.mock.contexts.at(-1)).toBe(card)
+
+    fireEvent.click(screen.getByRole("button", { name: "Tất cả chủ đề" }))
+    scroll.mockClear()
+    vi.spyOn(card, "getBoundingClientRect").mockReturnValue(rectAt(120))
+    fireEvent.click(screen.getByRole("button", { name: "Ăn uống" }))
+    expect(scroll).not.toHaveBeenCalledWith({ block: "start" })
+  })
+
+  it("brings the tile of the topic just closed back into view, keeping clear of the app's fixed bars", () => {
+    const scroll = vi.spyOn(Element.prototype, "scrollIntoView")
+    render(<StatefulBrowser />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Nghề nghiệp" }))
+    scroll.mockClear()
+    fireEvent.click(screen.getByRole("button", { name: "Tất cả chủ đề" }))
+
+    const tile = screen.getByRole("button", { name: "Nghề nghiệp" })
+    expect(scroll).toHaveBeenCalledWith({ block: "nearest" })
+    expect(scroll.mock.contexts.at(-1)).toBe(tile)
+    // Khoảng chừa cho thanh trên và thanh điều hướng dưới (fixed) của bản điện thoại — "nearest" tôn trọng khoảng này.
+    expect(tile).toHaveClass("scroll-mt-[72px]", "scroll-mb-[96px]")
   })
 
   it("lays the grids out by the card's own width, not the screen's", () => {
