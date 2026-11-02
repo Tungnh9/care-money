@@ -63,7 +63,7 @@ function TopicTile({ summary, statsId, onOpen }: TopicTileProps) {
       {/* Thanh tiến độ chỉ để nhìn — số đã học nằm ngay trên, đọc làm mô tả của nút. */}
       <span
         aria-hidden="true"
-        className="block h-2 overflow-hidden rounded-[var(--ob-radius-pill)] bg-[var(--ob-color-border)]"
+        className="mt-auto block h-2 overflow-hidden rounded-[var(--ob-radius-pill)] bg-[var(--ob-color-border)]"
       >
         <span className="block h-full bg-[var(--ob-color-action)]" style={{ width: `${percent}%` }} />
       </span>
