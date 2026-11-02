@@ -1,3 +1,5 @@
+import type { CefrLevel } from "@/lib/study/cefr"
+
 interface VocabEntry {
   id: string
   word: string
@@ -5,6 +7,8 @@ interface VocabEntry {
   phonetic?: string
   meaning: string
   topic?: string
+  // File nội dung bắt buộc có (content-loader kiểm lúc build); để tuỳ chọn ở kiểu cho dữ liệu test viết tay.
+  level?: CefrLevel
   addedAt: string
   example?: string
   image?: string

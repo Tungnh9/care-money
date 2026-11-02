@@ -54,6 +54,7 @@ describe("StudyView", () => {
     render(<StudyView vocab={VOCAB} grammar={GRAMMAR} />)
 
     fireEvent.click(screen.getByRole("button", { name: "Từ vựng" }))
+    fireEvent.click(screen.getByRole("button", { name: "Khác" }))
     const markButtons = screen.getAllByRole("button", { name: "Đánh dấu đã học" })
     fireEvent.click(markButtons[0])
 
@@ -78,13 +79,39 @@ describe("StudyView", () => {
     expect(pomodoroSection.parentElement?.parentElement).toHaveClass("ob-card-grid")
   })
 
-  it("lists every vocab word on the Từ vựng tab", () => {
+  it("opens a topic on the Từ vựng tab and lists its words", () => {
     render(<StudyView vocab={VOCAB} grammar={GRAMMAR} />)
 
     fireEvent.click(screen.getByRole("button", { name: "Từ vựng" }))
+    // Fixture không có chủ đề: cả 10 từ vào ô "Khác".
+    expect(screen.getByText("Chủ đề · 1")).toBeInTheDocument()
+    fireEvent.click(screen.getByRole("button", { name: "Khác" }))
 
-    expect(screen.getByText("Kho từ vựng giao tiếp · 10 từ")).toBeInTheDocument()
+    expect(screen.getByText("Khác · 10 từ")).toBeInTheDocument()
     VOCAB.forEach((v) => expect(screen.getByText(v.word)).toBeInTheDocument())
+  })
+
+  it("marking a word learned inside a topic updates that topic's progress", async () => {
+    render(<StudyView vocab={VOCAB} grammar={GRAMMAR} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Từ vựng" }))
+    fireEvent.click(screen.getByRole("button", { name: "Khác" }))
+    fireEvent.click(screen.getAllByRole("button", { name: "Đánh dấu đã học" })[0])
+    await waitFor(() => expect(screen.getAllByRole("button", { name: "Bỏ đánh dấu đã học" })).toHaveLength(1))
+    fireEvent.click(screen.getByRole("button", { name: "Tất cả chủ đề" }))
+
+    expect(screen.getByText("Đã học 1/10", { selector: "button *" })).toBeInTheDocument()
+  })
+
+  it("keeps the open topic when switching to another tab and back", () => {
+    render(<StudyView vocab={VOCAB} grammar={GRAMMAR} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Từ vựng" }))
+    fireEvent.click(screen.getByRole("button", { name: "Khác" }))
+    fireEvent.click(screen.getByRole("button", { name: "Ngữ pháp" }))
+    fireEvent.click(screen.getByRole("button", { name: "Từ vựng" }))
+
+    expect(screen.getByText("Khác · 10 từ")).toBeInTheDocument()
   })
 
   it("stagger-animates the Từ vựng tab content in on tab switch", () => {
@@ -92,7 +119,7 @@ describe("StudyView", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Từ vựng" }))
 
-    const vocabSection = screen.getByText("Kho từ vựng giao tiếp · 10 từ").closest("section") as HTMLElement
+    const vocabSection = screen.getByText("Chủ đề · 1").closest("section") as HTMLElement
     expect(vocabSection.parentElement).toHaveClass("ob-card-grid")
   })
 

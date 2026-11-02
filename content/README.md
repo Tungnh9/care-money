@@ -9,7 +9,7 @@ Mỗi dòng là 1 object JSON độc lập (không phải 1 array bao ngoài) �
 ### `vocabulary.jsonl`
 
 ```jsonc
-{"id": "v-0001", "word": "resilient", "pos": "adj.", "phonetic": "/rɪˈzɪliənt/", "meaning": "kiên cường, bền bỉ", "example": "She stayed resilient through the setback.", "topic": "tính cách", "addedAt": "2026-08-11"}
+{"id": "v-0001", "word": "resilient", "pos": "adj.", "phonetic": "/rɪˈzɪliənt/", "meaning": "kiên cường, bền bỉ", "example": "She stayed resilient through the setback.", "topic": "emotions", "level": "B2", "addedAt": "2026-08-11"}
 ```
 
 | Field | Bắt buộc | Ghi chú |
@@ -20,7 +20,8 @@ Mỗi dòng là 1 object JSON độc lập (không phải 1 array bao ngoài) �
 | `phonetic` | không | phiên âm IPA |
 | `meaning` | có | nghĩa tiếng Việt (không kèm loại từ, đã tách ra field `pos`) |
 | `example` | không | câu ví dụ |
-| `topic` | không | chủ đề (tự do, không cần danh sách cố định) |
+| `topic` | không | slug chủ đề tiếng Anh. 13 slug đang dùng có tên tiếng Việt trên tab Từ vựng (`src/features/study/vocab-catalog.ts`); slug mới vẫn hiện, dưới chính slug đó |
+| `level` | có | cấp độ CEFR: `A1`, `A2`, `B1`, `B2`, `C1` hoặc `C2`. Lấy theo danh sách Oxford 3000/5000 by CEFR level, theo đúng nghĩa của từ; không có trong danh sách thì ước lượng theo khung CEFR. Thiếu hay sai giá trị thì build báo lỗi đúng dòng |
 | `addedAt` | có | ngày xử lý ảnh, không phải ngày trong ảnh gốc |
 
 ### `grammar.jsonl`
@@ -39,4 +40,4 @@ Mỗi dòng là 1 object JSON độc lập (không phải 1 array bao ngoài) �
 
 ## Quy trình thêm mới
 
-Người dùng gửi ảnh (chụp/màn hình) → Claude đọc ảnh, trích nháp → **xác nhận với người dùng trước khi lưu** (ảnh dễ đọc sai, đặc biệt dấu tiếng Việt) → append vào file tương ứng.
+Người dùng gửi ảnh (chụp/màn hình) → Claude đọc ảnh, trích nháp → **xác nhận với người dùng trước khi lưu** (ảnh dễ đọc sai, đặc biệt dấu tiếng Việt) → append vào file tương ứng. Mỗi từ mới phải kèm `level`, xếp theo cách ở bảng field trên.

@@ -54,6 +54,14 @@ function VocabWordCard({ entry, learned, onToggleLearned }: VocabWordCardProps) 
               {entry.pos}
             </span>
           ) : null}
+          {entry.level ? (
+            <span
+              title={`Cấp độ ${entry.level}`}
+              className="rounded-[var(--ob-radius-pill)] bg-[var(--ob-color-action-soft)] px-2 py-[3px] text-[11px] font-bold text-[var(--ob-color-action-strong)]"
+            >
+              {entry.level}
+            </span>
+          ) : null}
         </div>
         <div className="text-sm font-medium">{entry.meaning}</div>
         {entry.example ? (
