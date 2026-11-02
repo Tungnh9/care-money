@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import { Tabs } from "@/components/ob/tabs"
 import { dayKey } from "@/lib/date"
 import { pickDaily } from "@/lib/study/daily-pick"
+import type { CefrLevel } from "@/lib/study/cefr"
 import { ensureReviewStates, getDueWords } from "@/lib/study/srs-calculations"
 import { useStudy } from "@/lib/study/use-study"
 import type { GrammarEntry, VocabEntry } from "@/lib/study/types"
@@ -14,7 +15,7 @@ import { LearnedProgressCard } from "./learned-progress-card"
 import { Pomodoro } from "./pomodoro"
 import { ReviewDueCard } from "./review-due-card"
 import { TasksCard } from "./tasks-card"
-import { VocabCard } from "./vocab-card"
+import { VocabBrowser } from "./vocab-browser"
 
 const TABS = ["Hôm nay", "Từ vựng", "Ngữ pháp", "Trò chơi"]
 
@@ -25,6 +26,9 @@ interface StudyViewProps {
 
 function StudyView({ vocab, grammar }: StudyViewProps) {
   const [tab, setTab] = useState(TABS[0])
+  // Chủ đề đang mở và cấp đang lọc ở tab Từ vựng — giữ ở đây để sang tab khác rồi quay lại vẫn còn.
+  const [vocabTopic, setVocabTopic] = useState<string | null>(null)
+  const [vocabLevel, setVocabLevel] = useState<CefrLevel | null>(null)
   const {
     tasks,
     learned,
@@ -95,12 +99,14 @@ function StudyView({ vocab, grammar }: StudyViewProps) {
       ) : (
         <div className="ob-card-grid">
           {tab === "Từ vựng" ? (
-            <VocabCard
-              label={`Kho từ vựng giao tiếp · ${vocab.length} từ`}
-              action={<span className="text-[12.5px] text-[var(--ob-color-text-subtle)]">Đã học {learned.length}</span>}
-              entries={vocab}
+            <VocabBrowser
+              vocab={vocab}
               learned={learned}
               onToggleLearned={toggleLearned}
+              topic={vocabTopic}
+              level={vocabLevel}
+              onTopicChange={setVocabTopic}
+              onLevelChange={setVocabLevel}
             />
           ) : (
             <GrammarListCard entries={grammar} vocab={vocab} />

@@ -48,6 +48,19 @@ describe("VocabWordCard", () => {
     expect(screen.getByText("trường đại học")).toBeInTheDocument()
   })
 
+  it("shows the word's CEFR level next to its part of speech, and nothing for a word without a level", () => {
+    const { rerender } = render(
+      <VocabWordCard entry={{ ...WITH_IMAGE, level: "A2" }} learned={false} onToggleLearned={vi.fn()} />
+    )
+
+    const level = screen.getByText("A2")
+    expect(level).toHaveAttribute("title", "Cấp độ A2")
+    expect(screen.getByText("n.").nextElementSibling).toBe(level)
+
+    rerender(<VocabWordCard entry={WITH_IMAGE} learned={false} onToggleLearned={vi.fn()} />)
+    expect(screen.queryByTitle(/^Cấp độ/)).not.toBeInTheDocument()
+  })
+
   it("renders the example sentence only when present", () => {
     const { rerender } = render(
       <VocabWordCard
