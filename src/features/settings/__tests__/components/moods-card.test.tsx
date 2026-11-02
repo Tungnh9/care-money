@@ -7,6 +7,46 @@ import { MoodsCard } from "../../components/moods-card"
 // "Tuyệt vời" (điểm 5) và "Vui" (điểm 4).
 const MOODS = DEFAULT_SETTINGS.moods.slice(0, 2)
 
+describe("MoodsCard — xem thêm", () => {
+  // 8 tâm trạng mặc định — thu gọn thì hiện 4 cái đầu.
+  const ALL_MOODS = DEFAULT_SETTINGS.moods
+
+  it("shows the first half of a long list, all of it after Xem thêm, and the first half again after Thu gọn", () => {
+    expect(ALL_MOODS).toHaveLength(8)
+    const onToggle = vi.fn()
+    render(<MoodsCard moods={ALL_MOODS} onToggle={onToggle} onRemove={vi.fn()} onAdd={vi.fn()} />)
+
+    expect(screen.getAllByRole("switch")).toHaveLength(4)
+    expect(screen.queryByText(ALL_MOODS[4].label)).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: "Xem thêm" }))
+    expect(screen.getAllByRole("switch")).toHaveLength(8)
+    fireEvent.click(screen.getByRole("switch", { name: ALL_MOODS[5].label }))
+    expect(onToggle).toHaveBeenCalledWith(5)
+
+    fireEvent.click(screen.getByRole("button", { name: "Thu gọn" }))
+    expect(screen.getAllByRole("switch")).toHaveLength(4)
+  })
+
+  it("shows a short list whole, with no Xem thêm", () => {
+    render(<MoodsCard moods={MOODS} onToggle={vi.fn()} onRemove={vi.fn()} onAdd={vi.fn()} />)
+
+    expect(screen.getAllByRole("switch")).toHaveLength(2)
+    expect(screen.queryByRole("button", { name: "Xem thêm" })).not.toBeInTheDocument()
+  })
+
+  it("opens the whole list after adding a mood, so the new one at the bottom is not hidden", () => {
+    render(<MoodsCard moods={ALL_MOODS} onToggle={vi.fn()} onRemove={vi.fn()} onAdd={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Thêm tâm trạng" }))
+    fireEvent.change(screen.getByLabelText("Tên", { exact: false }), { target: { value: "Hào hứng" } })
+    fireEvent.click(screen.getByRole("button", { name: "Thêm" }))
+
+    expect(screen.getAllByRole("switch")).toHaveLength(8)
+    expect(screen.getByRole("button", { name: "Thu gọn" })).toBeInTheDocument()
+  })
+})
+
 describe("MoodsCard — thêm tâm trạng", () => {
   it("blocks adding a mood whose name is already taken (ignoring case) and keeps what was typed", () => {
     const onAdd = vi.fn()
