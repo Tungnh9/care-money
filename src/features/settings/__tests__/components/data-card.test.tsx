@@ -58,6 +58,16 @@ describe("DataCard", () => {
     expect(screen.queryByText("kiểm tra thư mục Tải xuống", { exact: false })).not.toBeInTheDocument()
   })
 
+  it("opens with how much browser storage the data uses, above the file backup", () => {
+    window.localStorage.setItem("k", "a".repeat(420 * 512 - 1))
+
+    render(<DataCard {...BASE_PROPS} />)
+
+    const usage = screen.getByText(/^Dữ liệu đang dùng/)
+    expect(usage).toHaveTextContent("Dữ liệu đang dùng 420 KB / 5 MB")
+    expect(usage.compareDocumentPosition(screen.getByText("Sao lưu file"))).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+  })
+
   it("calls onExport when the export button is clicked", () => {
     const onExport = vi.fn()
     render(<DataCard {...BASE_PROPS} onExport={onExport} />)

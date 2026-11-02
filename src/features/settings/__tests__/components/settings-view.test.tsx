@@ -62,6 +62,27 @@ describe("SettingsView", () => {
     expect(screen.getByText("Đã xoá sạch.")).toBeInTheDocument()
   })
 
+  it("shrinks the storage usage line right after the data is wiped", async () => {
+    setStoredJournal({
+      entries: [{ id: 1, text: "a".repeat(300_000), time: "09:00", date: "13/08", words: 1, mood: null }],
+    })
+    const usageKb = () => Number(/(\d+) KB/.exec(screen.getByText(/^Dữ liệu đang dùng/).textContent ?? "")?.[1])
+
+    render(<SettingsView />)
+    await waitFor(() => expect(screen.getByText("Module hiển thị")).toBeInTheDocument())
+    expect(usageKb()).toBeGreaterThan(580)
+
+    fireEvent.click(screen.getByRole("button", { name: "Xoá toàn bộ dữ liệu" }))
+    fireEvent.click(screen.getByRole("button", { name: "Xoá vĩnh viễn" }))
+    fireEvent.change(screen.getByLabelText("Mật khẩu", { exact: false }), {
+      target: { value: MOCK_ACCOUNT.password },
+    })
+    fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }))
+
+    expect(screen.getByText("Đã xoá sạch.")).toBeInTheDocument()
+    expect(usageKb()).toBeLessThan(20)
+  })
+
   it("wraps the settings cards in the ob-card-grid entrance animation class", async () => {
     render(<SettingsView />)
     await waitFor(() => expect(screen.getByText("Module hiển thị")).toBeInTheDocument())

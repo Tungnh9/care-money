@@ -11,6 +11,7 @@ import { ActionTooltip } from "@/components/ob/action-tooltip"
 import { onDataChanged } from "@/lib/data-change-bus"
 import { getSyncSecret, setSyncSecret } from "@/lib/sync-secret-storage"
 import type { ExportedInfo, ImportedInfo, PendingRestore, SyncResult } from "../hooks/use-data-management"
+import { StorageUsage } from "./storage-usage"
 
 // Có cả năm: bản sao cũ cả năm trời vẫn phải nhận ra được là cũ.
 function formatSnapshotTime(iso: string | null): string {
@@ -95,7 +96,9 @@ function DataCard({
 
   return (
     <Card label="Dữ liệu" className="min-w-0 flex-[1_1_300px]">
-      <div>
+      <StorageUsage />
+
+      <div className="mt-5 border-t border-[var(--ob-color-border)] pt-4">
         <span className="mb-1 block [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
           Sao lưu file
         </span>
