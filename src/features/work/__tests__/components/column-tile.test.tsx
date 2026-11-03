@@ -51,6 +51,15 @@ describe("ColumnTile", () => {
     expect(input).toHaveValue("")
   })
 
+  it("spaces the add button from the cards with a margin outside its dashed border, not padding inside it", () => {
+    renderTile(1)
+
+    const add = screen.getByRole("button", { name: 'Thêm việc vào cột "Đang làm"' })
+    // Padding đặt lên chính nút nằm trong viền nét đứt: chữ bị đẩy lệch xuống và nút dính vào thẻ phía trên.
+    expect(add.className).not.toMatch(/(^|\s)(pt|pb|py|p)-/)
+    expect(add.parentElement).toHaveClass("mt-auto", "pt-3")
+  })
+
   it("Esc in the add box closes only the box, not the sheet around it", () => {
     const onOpenChange = vi.fn()
     render(

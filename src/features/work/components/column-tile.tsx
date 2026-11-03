@@ -85,7 +85,10 @@ function ColumnTile({
       ) : (
         <p className={EMPTY_CLASS}>Chưa có việc nào.</p>
       )}
-      <AddTaskRow columnTitle={column.title} onAdd={onAdd} className="mt-auto pt-3" />
+      {/* Khoảng cách nằm ở lớp bọc: đặt lên chính nút thì thành padding bên trong viền nét đứt. */}
+      <div className="mt-auto pt-3">
+        <AddTaskRow columnTitle={column.title} onAdd={onAdd} />
+      </div>
     </Card>
   )
 }
