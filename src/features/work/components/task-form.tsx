@@ -7,7 +7,7 @@ import { Field } from "@/components/ui/field"
 import { formatDayInput, parseDayInput, shiftDay } from "@/lib/date"
 import { cn } from "@/lib/utils"
 import { fridayOf } from "@/lib/work/work-calculations"
-import type { WorkPriority } from "@/lib/work/types"
+import type { WorkColumn, WorkPriority } from "@/lib/work/types"
 import type { TaskInput } from "@/lib/work/use-work"
 
 const PRIORITIES: { value: WorkPriority; label: string }[] = [
@@ -16,17 +16,24 @@ const PRIORITIES: { value: WorkPriority; label: string }[] = [
   { value: "low", label: "Thấp" },
 ]
 
-// Hộp sửa thẻ (thẻ mới thêm bằng ô "+ Thêm thẻ" cuối cột, chỉ cần tên).
+const CHOICE_CLASS =
+  "min-h-[var(--ob-hit-min)] rounded-[var(--ob-radius-pill)] border-[1.5px] px-[14px] text-[13px] font-semibold"
+const CHOICE_ON = "border-transparent bg-[var(--ob-color-action-soft)] text-[var(--ob-color-action-strong)]"
+const CHOICE_OFF = "border-[var(--ob-color-border)] text-[var(--ob-color-text-muted)]"
+
+// Hộp sửa việc. Có `columns` thì có thêm nhóm nút "Trạng thái" để chuyển việc sang cột khác.
 interface TaskFormProps {
   today: string
   initial: TaskInput
+  columns?: WorkColumn[]
   onSubmit: (input: TaskInput) => void
   onCancel: () => void
   onDelete: () => void
 }
 
-function TaskForm({ today, initial, onSubmit, onCancel, onDelete }: TaskFormProps) {
+function TaskForm({ today, initial, columns, onSubmit, onCancel, onDelete }: TaskFormProps) {
   const [title, setTitle] = useState(initial.title)
+  const [columnId, setColumnId] = useState(initial.columnId ?? columns?.[0]?.id)
   const [dueText, setDueText] = useState(initial.dueDate ? formatDayInput(initial.dueDate) : "")
   const [priority, setPriority] = useState<WorkPriority>(initial.priority)
 
@@ -42,7 +49,7 @@ function TaskForm({ today, initial, onSubmit, onCancel, onDelete }: TaskFormProp
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (disabled) return
-    onSubmit({ title, dueDate, priority })
+    onSubmit(columns ? { title, dueDate, priority, columnId } : { title, dueDate, priority })
   }
 
   return (
@@ -54,6 +61,27 @@ function TaskForm({ today, initial, onSubmit, onCancel, onDelete }: TaskFormProp
         onChange={(e) => setTitle(e.target.value)}
       />
 
+      {columns && columns.length > 1 ? (
+        <div>
+          <span className="mb-[var(--ob-space-2)] block [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
+            Trạng thái
+          </span>
+          <div role="group" aria-label="Trạng thái" className="flex flex-wrap gap-2">
+            {columns.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                aria-pressed={columnId === c.id}
+                onClick={() => setColumnId(c.id)}
+                className={cn(CHOICE_CLASS, columnId === c.id ? CHOICE_ON : CHOICE_OFF)}
+              >
+                {c.title}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       <div>
         <div role="group" aria-label="Chọn hạn nhanh" className="mb-2 flex flex-wrap gap-2">
           {quickDays.map(({ label, day }) => (
@@ -62,12 +90,7 @@ function TaskForm({ today, initial, onSubmit, onCancel, onDelete }: TaskFormProp
               type="button"
               aria-pressed={dueDate === day}
               onClick={() => setDueText(formatDayInput(day))}
-              className={cn(
-                "min-h-[var(--ob-hit-min)] rounded-[var(--ob-radius-pill)] border-[1.5px] px-[14px] text-[13px] font-semibold",
-                dueDate === day
-                  ? "border-transparent bg-[var(--ob-color-action-soft)] text-[var(--ob-color-action-strong)]"
-                  : "border-[var(--ob-color-border)] text-[var(--ob-color-text-muted)]"
-              )}
+              className={cn(CHOICE_CLASS, dueDate === day ? CHOICE_ON : CHOICE_OFF)}
             >
               {label}
             </button>
@@ -76,12 +99,7 @@ function TaskForm({ today, initial, onSubmit, onCancel, onDelete }: TaskFormProp
             type="button"
             aria-pressed={dueText.trim() === ""}
             onClick={() => setDueText("")}
-            className={cn(
-              "min-h-[var(--ob-hit-min)] rounded-[var(--ob-radius-pill)] border-[1.5px] px-[14px] text-[13px] font-semibold",
-              dueText.trim() === ""
-                ? "border-transparent bg-[var(--ob-color-action-soft)] text-[var(--ob-color-action-strong)]"
-                : "border-[var(--ob-color-border)] text-[var(--ob-color-text-muted)]"
-            )}
+            className={cn(CHOICE_CLASS, dueText.trim() === "" ? CHOICE_ON : CHOICE_OFF)}
           >
             Không hạn
           </button>
@@ -128,7 +146,7 @@ function TaskForm({ today, initial, onSubmit, onCancel, onDelete }: TaskFormProp
           onClick={onDelete}
           className="mr-auto !border-transparent !text-[var(--ob-color-expense)] hover:!bg-[var(--ob-color-expense-soft)]"
         >
-          Xoá thẻ
+          Xoá việc
         </Button>
         <Button variant="ghost" size="sm" type="button" onClick={onCancel}>
           Huỷ
