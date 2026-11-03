@@ -110,13 +110,9 @@ function useWork() {
         const patch = { title, dueDate: input.dueDate, priority: input.priority }
         const patched = { ...current, tasks: current.tasks.map((t) => (t.id === id ? { ...t, ...patch } : t)) }
         const from = current.tasks.find((t) => t.id === id)!.columnId
-        const to = input.columnId
-        persist(
-          to === undefined || to === from
-            ? patched
-            : board.moveTask(patched, id, to, placementIndex(patched, to), dayKey())
-        )
-        toast.success("Đã cập nhật việc")
+        const target = current.columns.find((c) => c.id === input.columnId && c.id !== from)
+        persist(target ? board.moveTask(patched, id, target.id, placementIndex(patched, target.id), dayKey()) : patched)
+        toast.success(target ? `Đã chuyển sang “${target.title}”` : "Đã cập nhật việc")
         return true
       } catch {
         toast.error("Không thể cập nhật việc. Vui lòng thử lại.")
@@ -126,22 +122,22 @@ function useWork() {
     [persist]
   )
 
-  const moveTask = useCallback(
-    (id: number, columnId: number, index: number) =>
-      update(
-        (current) => board.moveTask(current, id, columnId, index, dayKey()),
-        "Không thể chuyển thẻ. Vui lòng thử lại."
-      ),
-    [update]
-  )
-
+  // Menu "Chuyển sang" trên thẻ. Trả false (không báo "Đã chuyển") khi việc/cột vừa bị nơi khác xoá hay ghi lỗi.
   const moveTaskTo = useCallback(
-    (id: number, columnId: number) =>
-      update(
-        (current) => board.moveTask(current, id, columnId, placementIndex(current, columnId), dayKey()),
-        "Không thể chuyển việc. Vui lòng thử lại."
-      ),
-    [update]
+    (id: number, columnId: number): boolean => {
+      const current = getStoredWork()
+      const column = current.columns.find((c) => c.id === columnId)
+      if (!column || !current.tasks.some((t) => t.id === id)) return false
+      try {
+        persist(board.moveTask(current, id, columnId, placementIndex(current, columnId), dayKey()))
+        toast.success(`Đã chuyển sang “${column.title}”`)
+        return true
+      } catch {
+        toast.error("Không thể chuyển việc. Vui lòng thử lại.")
+        return false
+      }
+    },
+    [persist]
   )
 
   // Tick ở Tổng quan: chưa xong → ĐẦU cột "đã xong" (cột này dài dần, thẻ vừa xong phải thấy ngay);
@@ -222,7 +218,6 @@ function useWork() {
     standups: state.standups,
     addTask,
     updateTask,
-    moveTask,
     moveTaskTo,
     toggleTask,
     removeTask,

@@ -86,11 +86,7 @@ function WorkView() {
   const handlers = {
     onToggle: (task: WorkTask) => work.toggleTask(task.id),
     onOpen: (task: WorkTask) => setEditingId(task.id),
-    onMove: (task: WorkTask, columnId: number) => {
-      work.moveTaskTo(task.id, columnId)
-      const title = columns.find((c) => c.id === columnId)?.title
-      if (title) toast.success(`Đã chuyển sang “${title}”`)
-    },
+    onMove: (task: WorkTask, columnId: number) => work.moveTaskTo(task.id, columnId),
     onDelete: (task: WorkTask) => setDeletingId(task.id),
     onShowAll: (column: WorkColumn) => setAllColumnId(column.id),
   }

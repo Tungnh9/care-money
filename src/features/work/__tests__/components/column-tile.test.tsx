@@ -1,7 +1,9 @@
 import { describe, it, expect, vi } from "vitest"
 import { fireEvent, render, screen } from "@testing-library/react"
 
+import { Modal } from "@/components/ui/modal"
 import { DEFAULT_COLUMNS } from "@/lib/work/board"
+import { AddTaskRow } from "../../components/add-task-row"
 import { ColumnTile } from "../../components/column-tile"
 import { TODAY, task } from "./tile-fixtures"
 
@@ -47,5 +49,20 @@ describe("ColumnTile", () => {
 
     expect(onAdd).toHaveBeenCalledWith("Viết test")
     expect(input).toHaveValue("")
+  })
+
+  it("Esc in the add box closes only the box, not the sheet around it", () => {
+    const onOpenChange = vi.fn()
+    render(
+      <Modal open onOpenChange={onOpenChange} ariaLabel="Đang làm" variant="sheet">
+        <AddTaskRow columnTitle="Đang làm" onAdd={vi.fn(() => true)} />
+      </Modal>
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: 'Thêm việc vào cột "Đang làm"' }))
+    fireEvent.keyDown(screen.getByLabelText('Tên việc mới ở cột "Đang làm"'), { key: "Escape" })
+
+    expect(screen.queryByLabelText('Tên việc mới ở cột "Đang làm"')).not.toBeInTheDocument()
+    expect(onOpenChange).not.toHaveBeenCalled()
   })
 })

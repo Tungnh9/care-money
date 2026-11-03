@@ -85,7 +85,7 @@ interface DoneCheckProps extends ToneProps {
 function DoneCheck({ task, onToggle, tone = "light" }: DoneCheckProps) {
   const label = task.done ? `Bỏ đánh dấu xong "${task.title}"` : `Đánh dấu xong "${task.title}"`
   return (
-    <label className="-m-[11px] grid size-11 flex-none cursor-pointer place-items-center">
+    <label className="relative z-[1] -m-[11px] grid size-11 flex-none cursor-pointer place-items-center">
       <input
         type="checkbox"
         checked={task.done}
@@ -125,7 +125,7 @@ function TaskMenu({ task, columns, onOpen, onMove, onDelete, tone = "light" }: T
       <DropdownMenuTrigger
         aria-label={`Thao tác với "${task.title}"`}
         className={cn(
-          "-my-2 -mr-1.5 grid size-11 flex-none place-items-center rounded-[var(--ob-radius-sm)]",
+          "relative z-[1] -my-2 -mr-1.5 grid size-11 flex-none place-items-center rounded-[var(--ob-radius-sm)]",
           tone === "dark"
             ? "text-[var(--ob-vo-300)] hover:bg-[rgb(255_248_239_/_0.08)] hover:text-[var(--ob-kem)]"
             : "text-[var(--ob-color-text-subtle)] hover:bg-[var(--ob-color-surface-sunken)] hover:text-[var(--ob-color-text)]"
@@ -170,6 +170,7 @@ interface TaskCardProps {
 }
 
 // Thẻ việc trên nền sáng (ô theo cột, khung "Xem tất cả"): tick, tên (bấm để sửa), "…", chip hạn + ưu tiên.
+// Nút tên phủ cả thẻ (after:inset-0) — chạm chỗ nào trên thẻ cũng mở hộp sửa; ô tick và "…" nằm trên lớp đó.
 function TaskCard({ task, today, columns, onToggle, onOpen, onMove, onDelete, className }: TaskCardProps) {
   const late = dueLabel(task, today)?.tone === "late"
   const meta = task.done || task.dueDate !== null || task.priority !== "normal"
@@ -189,7 +190,7 @@ function TaskCard({ task, today, columns, onToggle, onOpen, onMove, onDelete, cl
           type="button"
           onClick={() => onOpen(task)}
           className={cn(
-            "min-w-0 flex-1 text-left text-[13.5px] leading-[1.4] font-semibold wrap-anywhere hover:text-[var(--ob-color-action-strong)]",
+            "min-w-0 flex-1 text-left text-[13.5px] leading-[1.4] font-semibold wrap-anywhere hover:text-[var(--ob-color-action-strong)] after:absolute after:inset-0 after:rounded-[inherit] after:content-['']",
             task.done && "font-medium text-[var(--ob-color-text-subtle)]"
           )}
         >

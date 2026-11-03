@@ -46,8 +46,10 @@ function ColumnManager({
   const remaining = removing ? columns.filter((c) => c.id !== removing.id) : []
   const removingCount = removing ? (taskCounts.get(removing.id) ?? 0) : 0
 
-  function commitRename(column: WorkColumn, value: string) {
-    if (value.trim() && value.trim() !== column.title) onRename(column.id, value)
+  // Bỏ trống thì trả lại tên cũ — ô không giữ khoảng trắng trong khi tên thật vẫn như cũ.
+  function commitRename(column: WorkColumn, input: HTMLInputElement) {
+    if (!input.value.trim()) input.value = column.title
+    else if (input.value.trim() !== column.title) onRename(column.id, input.value)
   }
 
   function handleAdd(e: FormEvent) {
@@ -75,7 +77,7 @@ function ColumnManager({
                   key={column.title}
                   aria-label={`Tên cột "${column.title}"`}
                   defaultValue={column.title}
-                  onBlur={(e) => commitRename(column, e.target.value)}
+                  onBlur={(e) => commitRename(column, e.target)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") e.currentTarget.blur()
                     if (e.key === "Escape") {

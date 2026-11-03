@@ -38,7 +38,7 @@ function UpcomingTile({ tasks, today, onOpen, className }: UpcomingTileProps) {
           {items.slice(0, SHOWN).map((task) => {
             const [y, m, d] = task.dueDate!.split("-").map(Number)
             return (
-              <li key={task.id} className="grid grid-cols-[40px_minmax(0,1fr)] items-center gap-2.5">
+              <li key={task.id} className="relative grid grid-cols-[40px_minmax(0,1fr)] items-center gap-2.5">
                 <span className="flex h-[42px] flex-col items-center justify-center rounded-[12px] bg-[var(--ob-color-surface-sunken)] shadow-[inset_0_0_0_1px_var(--ob-color-border)]">
                   <span className="text-[10px] leading-[1.1] font-bold text-[var(--ob-color-text-subtle)]">
                     {WEEKDAY_SHORT[new Date(y, m - 1, d).getDay()]}
@@ -50,7 +50,7 @@ function UpcomingTile({ tasks, today, onOpen, className }: UpcomingTileProps) {
                 <button
                   type="button"
                   onClick={() => onOpen(task)}
-                  className="min-w-0 text-left text-[13.5px] leading-[1.38] font-semibold wrap-anywhere hover:text-[var(--ob-color-action-strong)]"
+                  className="min-w-0 text-left text-[13.5px] leading-[1.38] font-semibold wrap-anywhere hover:text-[var(--ob-color-action-strong)] after:absolute after:inset-0 after:content-['']"
                 >
                   <span className="line-clamp-2">{task.title}</span>
                 </button>

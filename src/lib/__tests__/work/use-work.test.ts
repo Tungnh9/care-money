@@ -93,19 +93,6 @@ describe("useWork", () => {
     ])
   })
 
-  it("moveTask moves a card to a column at a position and saves the order", async () => {
-    seed([stored({ id: 1 }), stored({ id: 2 }), stored({ id: 3, columnId: 2 })])
-    const { result } = renderHook(() => useWork())
-    await waitFor(() => expect(result.current.tasks).toHaveLength(3))
-
-    act(() => {
-      result.current.moveTask(2, 2, 0)
-    })
-
-    expect(columnIds(1)).toEqual([1])
-    expect(columnIds(2)).toEqual([2, 3])
-  })
-
   it("toggleTask sends a card to the done column today, and back to the first column", async () => {
     seed([stored({ id: 1, columnId: 2 })])
     const { result } = renderHook(() => useWork())
@@ -211,6 +198,38 @@ describe("useWork", () => {
     })
     expect(columnIds(2)).toEqual([1, 2, 3])
     expect(getStoredWork().tasks.find((t) => t.id === 1)?.title).toBe("Đổi")
+  })
+
+  it("moveTaskTo says where the card went, and reports false without a success toast when the card is gone", async () => {
+    seed([stored({ id: 1 })])
+    const { result } = renderHook(() => useWork())
+    await waitFor(() => expect(result.current.tasks).toHaveLength(1))
+
+    let ok: boolean | undefined
+    act(() => {
+      ok = result.current.moveTaskTo(1, 2)
+    })
+    expect(ok).toBe(true)
+    expect(toast.success).toHaveBeenCalledWith("Đã chuyển sang “Đang làm”")
+
+    vi.mocked(toast.success).mockClear()
+    act(() => {
+      ok = result.current.moveTaskTo(99, 2)
+    })
+    expect(ok).toBe(false)
+    expect(toast.success).not.toHaveBeenCalled()
+  })
+
+  it("updateTask that changes the column says where the card went instead of a plain update", async () => {
+    seed([stored({ id: 1 })])
+    const { result } = renderHook(() => useWork())
+    await waitFor(() => expect(result.current.tasks).toHaveLength(1))
+
+    act(() => {
+      result.current.updateTask(1, { title: "Việc 1", dueDate: null, priority: "normal", columnId: 3 })
+    })
+    expect(toast.success).toHaveBeenCalledWith("Đã chuyển sang “Hoàn thành”")
+    expect(toast.success).not.toHaveBeenCalledWith("Đã cập nhật việc")
   })
 
   it("moveTaskTo puts a card on top of the done column, or at the bottom of another column", async () => {

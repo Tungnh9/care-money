@@ -82,13 +82,13 @@ function TodayTile({ tasks, today, onToggle, onOpen, className }: TodayTileProps
           {shown.map((task) => (
             <li
               key={task.id}
-              className="grid min-h-12 grid-cols-[22px_minmax(0,1fr)_auto] items-center gap-x-3 rounded-[14px] px-2.5 py-2 hover:bg-[var(--ob-kem)]/5"
+              className="relative grid min-h-12 grid-cols-[22px_minmax(0,1fr)_auto] items-center gap-x-3 rounded-[14px] px-2.5 py-2 hover:bg-[var(--ob-kem)]/5"
             >
               <DoneCheck task={task} onToggle={onToggle} tone="dark" />
               <button
                 type="button"
                 onClick={() => onOpen(task)}
-                className="min-w-0 text-left text-[14.5px] leading-[1.38] font-semibold wrap-anywhere hover:text-[var(--ob-cam-200)]"
+                className="min-w-0 text-left text-[14.5px] leading-[1.38] font-semibold wrap-anywhere hover:text-[var(--ob-cam-200)] after:absolute after:inset-0 after:rounded-[14px] after:content-['']"
               >
                 <span className="line-clamp-2">{task.title}</span>
               </button>

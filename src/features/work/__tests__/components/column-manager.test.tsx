@@ -57,4 +57,15 @@ describe("ColumnManager", () => {
     expect(onAdd).toHaveBeenCalledWith("Chờ duyệt")
     expect(screen.getByLabelText("Tên cột mới")).toHaveValue("")
   })
+
+  it("puts the name back when the field is left blank, without renaming", () => {
+    const { onRename } = renderManager()
+
+    const name = screen.getByLabelText('Tên cột "Đang làm"')
+    fireEvent.change(name, { target: { value: "  " } })
+    fireEvent.blur(name)
+
+    expect(onRename).not.toHaveBeenCalled()
+    expect(name).toHaveValue("Đang làm")
+  })
 })

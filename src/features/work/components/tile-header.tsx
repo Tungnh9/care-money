@@ -10,11 +10,10 @@ interface TileHeaderProps {
   label: string
   count?: number
   action?: ReactNode
-  dark?: boolean
 }
 
 // Đầu mỗi ô Bento, cùng kiểu trang Tổng quan: ô icon, nhãn chữ nhỏ viết hoa (là tên của ô), số đếm, nút link.
-function TileHeader({ id, icon, iconClassName, label, count, action, dark }: TileHeaderProps) {
+function TileHeader({ id, icon, iconClassName, label, count, action }: TileHeaderProps) {
   return (
     <div className="mb-4 flex min-h-9 items-center gap-2.5">
       <span
@@ -28,10 +27,7 @@ function TileHeader({ id, icon, iconClassName, label, count, action, dark }: Til
       </span>
       <h2
         id={id}
-        className={cn(
-          "min-w-0 truncate [font:var(--ob-text-micro-wrap)] uppercase tracking-[var(--ob-track-micro)]",
-          dark ? "text-[var(--ob-kem)]/65" : "text-[var(--ob-color-text-muted)]"
-        )}
+        className="min-w-0 truncate [font:var(--ob-text-micro-wrap)] text-[var(--ob-color-text-muted)] uppercase tracking-[var(--ob-track-micro)]"
       >
         {label}
       </h2>

@@ -49,7 +49,12 @@ function AddTaskRow({ columnTitle, onAdd, className }: AddTaskRowProps) {
         placeholder="Tên việc"
         value={text}
         onChange={(e) => setText(e.target.value)}
-        onKeyDown={(e) => e.key === "Escape" && setText(null)}
+        onKeyDown={(e) => {
+          if (e.key !== "Escape") return
+          // Trong khung trượt: Esc chỉ đóng ô gõ, không đóng luôn khung.
+          e.stopPropagation()
+          setText(null)
+        }}
         className="min-h-[var(--ob-hit-min)] flex-1 rounded-[var(--ob-radius-md)] border-[1.5px] border-[var(--ob-color-border)] bg-[var(--ob-color-surface)] px-3 text-sm focus:border-[var(--ob-color-focus)]"
       />
       <Button variant="primary" size="sm" type="submit" disabled={!text.trim()} className="min-h-[var(--ob-hit-min)]">
