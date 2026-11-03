@@ -309,4 +309,72 @@ describe("Modal", () => {
 
     expect(screen.getByRole("button", { name: "Cuối thật" })).toHaveFocus()
   })
+  it("keepMounted keeps the content and its state while closed, hidden from view and from the accessibility tree", () => {
+    function Harness() {
+      const [open, setOpen] = useState(true)
+      return (
+        <>
+          <button type="button" onClick={() => setOpen((value) => !value)}>
+            Bật tắt
+          </button>
+          <Modal open={open} onOpenChange={setOpen} ariaLabel="Khung" keepMounted>
+            <input aria-label="Ghi chú" />
+          </Modal>
+        </>
+      )
+    }
+    render(<Harness />)
+
+    fireEvent.change(screen.getByLabelText("Ghi chú"), { target: { value: "đang gõ dở" } })
+    fireEvent.click(screen.getByRole("button", { name: "Bật tắt" }))
+
+    expect(screen.queryByRole("dialog", { name: "Khung" })).not.toBeInTheDocument()
+    expect(screen.getByLabelText("Ghi chú")).not.toBeVisible()
+
+    fireEvent.click(screen.getByRole("button", { name: "Bật tắt" }))
+    expect(screen.getByRole("dialog", { name: "Khung" })).toBeInTheDocument()
+    expect(screen.getByLabelText("Ghi chú")).toHaveValue("đang gõ dở")
+  })
+
+  it("keepMounted does not lock page scrolling or listen for Escape while closed", () => {
+    const onOpenChange = vi.fn()
+    render(
+      <Modal open={false} onOpenChange={onOpenChange} ariaLabel="Khung" keepMounted>
+        <p>Nội dung</p>
+      </Modal>
+    )
+
+    fireEvent.keyDown(window, { key: "Escape" })
+    expect(onOpenChange).not.toHaveBeenCalled()
+    expect(document.body.style.overflow).not.toBe("hidden")
+  })
+
+  it("variant sheet docks the panel to the edge of the screen instead of centring it", () => {
+    render(
+      <Modal open onOpenChange={vi.fn()} ariaLabel="Khung" variant="sheet">
+        <p>Nội dung</p>
+      </Modal>
+    )
+
+    expect(screen.getByRole("dialog", { name: "Khung" })).toHaveAttribute("data-variant", "sheet")
+  })
+
+  it("Escape closes only the topmost of two open modals (a dialog opened on top of a sheet)", () => {
+    const outer = vi.fn()
+    const inner = vi.fn()
+    render(
+      <>
+        <Modal open onOpenChange={outer} ariaLabel="Ngoài" variant="sheet">
+          <button type="button">A</button>
+        </Modal>
+        <Modal open onOpenChange={inner} ariaLabel="Trong">
+          <button type="button">B</button>
+        </Modal>
+      </>
+    )
+
+    fireEvent.keyDown(window, { key: "Escape" })
+    expect(inner).toHaveBeenCalledWith(false)
+    expect(outer).not.toHaveBeenCalled()
+  })
 })

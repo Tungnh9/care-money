@@ -93,19 +93,6 @@ describe("useWork", () => {
     ])
   })
 
-  it("moveTask moves a card to a column at a position and saves the order", async () => {
-    seed([stored({ id: 1 }), stored({ id: 2 }), stored({ id: 3, columnId: 2 })])
-    const { result } = renderHook(() => useWork())
-    await waitFor(() => expect(result.current.tasks).toHaveLength(3))
-
-    act(() => {
-      result.current.moveTask(2, 2, 0)
-    })
-
-    expect(columnIds(1)).toEqual([1])
-    expect(columnIds(2)).toEqual([2, 3])
-  })
-
   it("toggleTask sends a card to the done column today, and back to the first column", async () => {
     seed([stored({ id: 1, columnId: 2 })])
     const { result } = renderHook(() => useWork())
@@ -165,6 +152,101 @@ describe("useWork", () => {
         doneAt: "2026-10-12",
       })
     )
+  })
+
+  it("addTask can set the due date and priority right away (the quick-add bar)", async () => {
+    const { result } = renderHook(() => useWork())
+    await waitFor(() => expect(result.current.columns).toEqual(DEFAULT_COLUMNS))
+
+    act(() => {
+      result.current.addTask("Gọi khách", undefined, { dueDate: "2026-10-13", priority: "high" })
+    })
+
+    expect(getStoredWork().tasks[0]).toMatchObject({
+      title: "Gọi khách",
+      columnId: 1,
+      dueDate: "2026-10-13",
+      priority: "high",
+    })
+  })
+
+  it("updateTask with a different columnId moves the card in the same write: on top of the done column", async () => {
+    seed([stored({ id: 1, columnId: 3, done: true, doneAt: "2026-10-12" }), stored({ id: 2 })])
+    const { result } = renderHook(() => useWork())
+    await waitFor(() => expect(result.current.tasks).toHaveLength(2))
+
+    act(() => {
+      result.current.updateTask(2, { title: "Việc 2", dueDate: null, priority: "normal", columnId: 3 })
+    })
+
+    expect(columnIds(3)).toEqual([2, 1])
+    expect(getStoredWork().tasks.find((t) => t.id === 2)).toMatchObject({ done: true, doneAt: "2026-10-13" })
+  })
+
+  it("updateTask moving a card into a non-done column puts it at the bottom, and the same column keeps its place", async () => {
+    seed([stored({ id: 1, columnId: 2 }), stored({ id: 2, columnId: 2 }), stored({ id: 3 }), stored({ id: 4 })])
+    const { result } = renderHook(() => useWork())
+    await waitFor(() => expect(result.current.tasks).toHaveLength(4))
+
+    act(() => {
+      result.current.updateTask(3, { title: "Việc 3", dueDate: null, priority: "normal", columnId: 2 })
+    })
+    expect(columnIds(2)).toEqual([1, 2, 3])
+
+    act(() => {
+      result.current.updateTask(1, { title: "Đổi", dueDate: null, priority: "normal", columnId: 2 })
+    })
+    expect(columnIds(2)).toEqual([1, 2, 3])
+    expect(getStoredWork().tasks.find((t) => t.id === 1)?.title).toBe("Đổi")
+  })
+
+  it("moveTaskTo says where the card went, and reports false without a success toast when the card is gone", async () => {
+    seed([stored({ id: 1 })])
+    const { result } = renderHook(() => useWork())
+    await waitFor(() => expect(result.current.tasks).toHaveLength(1))
+
+    let ok: boolean | undefined
+    act(() => {
+      ok = result.current.moveTaskTo(1, 2)
+    })
+    expect(ok).toBe(true)
+    expect(toast.success).toHaveBeenCalledWith("Đã chuyển sang “Đang làm”")
+
+    vi.mocked(toast.success).mockClear()
+    act(() => {
+      ok = result.current.moveTaskTo(99, 2)
+    })
+    expect(ok).toBe(false)
+    expect(toast.success).not.toHaveBeenCalled()
+  })
+
+  it("updateTask that changes the column says where the card went instead of a plain update", async () => {
+    seed([stored({ id: 1 })])
+    const { result } = renderHook(() => useWork())
+    await waitFor(() => expect(result.current.tasks).toHaveLength(1))
+
+    act(() => {
+      result.current.updateTask(1, { title: "Việc 1", dueDate: null, priority: "normal", columnId: 3 })
+    })
+    expect(toast.success).toHaveBeenCalledWith("Đã chuyển sang “Hoàn thành”")
+    expect(toast.success).not.toHaveBeenCalledWith("Đã cập nhật việc")
+  })
+
+  it("moveTaskTo puts a card on top of the done column, or at the bottom of another column", async () => {
+    seed([
+      stored({ id: 1, columnId: 3, done: true, doneAt: "2026-10-12" }),
+      stored({ id: 2 }),
+      stored({ id: 3, columnId: 2 }),
+    ])
+    const { result } = renderHook(() => useWork())
+    await waitFor(() => expect(result.current.tasks).toHaveLength(3))
+
+    act(() => result.current.moveTaskTo(2, 3))
+    expect(columnIds(3)).toEqual([2, 1])
+
+    act(() => result.current.moveTaskTo(1, 2))
+    expect(columnIds(2)).toEqual([3, 1])
+    expect(getStoredWork().tasks.find((t) => t.id === 1)).toMatchObject({ done: false, doneAt: null })
   })
 
   it("updateTask refuses with an error toast when the task was deleted elsewhere, so the editor stays open", async () => {

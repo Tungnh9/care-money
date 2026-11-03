@@ -5,7 +5,10 @@ import {
   fridayOf,
   groupTasks,
   previousWorkday,
+  recentDone,
   suggestStandup,
+  todayFocus,
+  upcomingTasks,
   weekRange,
   weeklyReport,
   weeklyReportData,
@@ -209,6 +212,75 @@ describe("suggestStandup", () => {
     }
 
     expect(suggestStandup(state, TODAY).today).toBe("- Đến hạn\n- Đang viết bài")
+  })
+})
+
+describe("suggestStandup — blockers", () => {
+  it("carries the blockers of the previous workday's standup into today's suggestion", () => {
+    const state = {
+      columns: DEFAULT_COLUMNS,
+      tasks: [],
+      standups: [{ day: "2026-10-12", yesterday: "", today: "", blockers: "  Chờ cấp quyền staging \n" }],
+    }
+
+    expect(suggestStandup(state, TODAY).blockers).toBe("Chờ cấp quyền staging")
+  })
+
+  it("does not carry blockers from an older standup when days were skipped", () => {
+    const state = {
+      columns: DEFAULT_COLUMNS,
+      tasks: [],
+      standups: [{ day: "2026-10-05", yesterday: "", today: "", blockers: "Chờ cấp quyền staging" }],
+    }
+
+    expect(suggestStandup(state, TODAY).blockers).toBe("")
+  })
+})
+
+describe("todayFocus", () => {
+  it("lists open overdue tasks before those due today, and counts what was finished today", () => {
+    const tasks = [
+      task({ id: 1, title: "Hôm nay", dueDate: TODAY }),
+      task({ id: 2, title: "Trễ", dueDate: "2026-10-10" }),
+      task({ id: 3, title: "Tuần sau", dueDate: "2026-10-20" }),
+      task({ id: 4, title: "Xong hôm nay", dueDate: TODAY, done: true, doneAt: TODAY }),
+      task({ id: 5, title: "Xong hôm qua", done: true, doneAt: "2026-10-12" }),
+      task({ id: 6, title: "Không hạn" }),
+    ]
+
+    const focus = todayFocus(tasks, TODAY)
+
+    expect(focus.items.map((t) => t.title)).toEqual(["Trễ", "Hôm nay"])
+    expect(focus.doneToday).toBe(1)
+  })
+})
+
+describe("upcomingTasks", () => {
+  it("keeps open tasks due within the next 7 days (not today), soonest first", () => {
+    const tasks = [
+      task({ id: 1, title: "Ngày 20", dueDate: "2026-10-20" }),
+      task({ id: 2, title: "Ngày 21", dueDate: "2026-10-21" }),
+      task({ id: 3, title: "Hôm nay", dueDate: TODAY }),
+      task({ id: 4, title: "Ngày mai", dueDate: "2026-10-14" }),
+      task({ id: 5, title: "Đã xong", dueDate: "2026-10-15", done: true, doneAt: TODAY }),
+      task({ id: 6, title: "Không hạn" }),
+    ]
+
+    expect(upcomingTasks(tasks, TODAY).map((t) => t.title)).toEqual(["Ngày mai", "Ngày 20"])
+  })
+})
+
+describe("recentDone", () => {
+  it("lists done tasks newest first, keeping the done column's order (just ticked on top) within a day", () => {
+    // Tick xong thì việc lên ĐẦU cột cuối — việc id nhỏ vừa tick phải đứng trên việc id lớn xong sáng nay.
+    const tasks = [
+      task({ id: 3, title: "Vừa tick", done: true, doneAt: TODAY }),
+      task({ id: 14, title: "Xong sáng nay", done: true, doneAt: TODAY }),
+      task({ id: 1, title: "Cũ", done: true, doneAt: "2026-10-01" }),
+      task({ id: 4, title: "Chưa xong" }),
+    ]
+
+    expect(recentDone(tasks).map((t) => t.title)).toEqual(["Vừa tick", "Xong sáng nay", "Cũ"])
   })
 })
 

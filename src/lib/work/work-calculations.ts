@@ -104,8 +104,33 @@ function suggestStandup(state: WorkState, today: string): Omit<StandupEntry, "da
   return {
     yesterday: [...finished, ...carried].join("\n"),
     today: todayLines.join("\n"),
-    blockers: "",
+    // Vướng mắc hôm trước thường chưa gỡ xong — mang sang để khỏi gõ lại, hết vướng thì xoá đi.
+    blockers: lastStandup?.blockers.trim() ?? "",
   }
+}
+
+// Ô "Hôm nay" của trang Làm việc: việc chưa xong đã quá hạn rồi tới việc đến hạn hôm nay, kèm số việc
+// đã xong trong hôm nay (cho thanh tiến độ).
+function todayFocus(tasks: WorkTask[], today: string): { items: WorkTask[]; doneToday: number } {
+  const groups = groupTasks(tasks, today)
+  return {
+    items: [...groups.overdue, ...groups.dueToday],
+    doneToday: tasks.filter((t) => t.done && t.doneAt === today).length,
+  }
+}
+
+// Việc chưa xong có hạn trong `days` ngày tới (không tính hôm nay), hạn sớm trước.
+function upcomingTasks(tasks: WorkTask[], today: string, days = 7): WorkTask[] {
+  const last = shiftDay(today, days)
+  return tasks
+    .filter((t) => !t.done && t.dueDate !== null && t.dueDate > today && t.dueDate <= last)
+    .sort((a, b) => a.dueDate!.localeCompare(b.dueDate!) || a.id - b.id)
+}
+
+// Việc đã xong, mới xong trước — ô "Đã xong" và danh sách đầy đủ của cột cuối. Cùng ngày thì giữ thứ tự
+// trong cột cuối (sort ổn định): việc vừa tick được chèn lên ĐẦU cột, nên đứng trên việc xong sớm hơn.
+function recentDone(tasks: WorkTask[]): WorkTask[] {
+  return tasks.filter((t) => t.done).sort((a, b) => (b.doneAt ?? "").localeCompare(a.doneAt ?? ""))
 }
 
 function section(title: string, body: string): string[] {
@@ -191,7 +216,10 @@ export {
   fridayOf,
   groupTasks,
   previousWorkday,
+  recentDone,
   suggestStandup,
+  todayFocus,
+  upcomingTasks,
   weekRange,
   weeklyReport,
   weeklyReportData,

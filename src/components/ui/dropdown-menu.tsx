@@ -19,7 +19,7 @@ function DropdownMenuTrigger({ ...props }: MenuPrimitive.Trigger.Props) {
   return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />
 }
 
-// Menu render qua portal — không bị khung cuộn (vd. bảng Kanban cuộn ngang) cắt mất.
+// Menu render qua portal — không bị khung cuộn hay khung trượt (overflow) cắt mất.
 function DropdownMenuContent({
   align = "start",
   alignOffset = 0,

@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest"
 import { fireEvent, render, screen } from "@testing-library/react"
 
 import { TaskForm } from "../../components/task-form"
+import { DEFAULT_COLUMNS } from "@/lib/work/board"
 import type { TaskInput } from "@/lib/work/use-work"
 
 // 2026-10-13 là thứ Ba → "Thứ 6" là 2026-10-16.
@@ -72,11 +73,11 @@ describe("TaskForm", () => {
     expect(screen.getByText("Nhập ngày dạng dd/mm/yyyy, vd: 20/10/2026")).toBeInTheDocument()
   })
 
-  it("hands Huỷ and Xoá thẻ to the caller", () => {
+  it("hands Huỷ and Xoá việc to the caller", () => {
     const { onCancel, onDelete, onSubmit } = renderForm()
 
     fireEvent.click(screen.getByRole("button", { name: "Huỷ" }))
-    fireEvent.click(screen.getByRole("button", { name: "Xoá thẻ" }))
+    fireEvent.click(screen.getByRole("button", { name: "Xoá việc" }))
 
     expect(onCancel).toHaveBeenCalledTimes(1)
     expect(onDelete).toHaveBeenCalledTimes(1)
@@ -88,5 +89,44 @@ describe("TaskForm", () => {
 
     expect(screen.getByRole("group", { name: "Chọn hạn nhanh" })).toBeInTheDocument()
     expect(screen.getByRole("group", { name: "Ưu tiên" })).toBeInTheDocument()
+  })
+
+  it("moves the task to another column with the status buttons", () => {
+    const onSubmit = vi.fn()
+    render(
+      <TaskForm
+        today={TODAY}
+        initial={{ ...PLAIN, columnId: 1 }}
+        columns={DEFAULT_COLUMNS}
+        onSubmit={onSubmit}
+        onCancel={vi.fn()}
+        onDelete={vi.fn()}
+      />
+    )
+
+    const status = screen.getByRole("group", { name: "Trạng thái" })
+    expect(screen.getByRole("button", { name: "Bắt đầu" })).toHaveAttribute("aria-pressed", "true")
+    fireEvent.click(screen.getByRole("button", { name: "Hoàn thành" }))
+    expect(status).toBeInTheDocument()
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
+
+    expect(onSubmit).toHaveBeenCalledWith({ title: "Gửi báo cáo", dueDate: null, priority: "normal", columnId: 3 })
+  })
+
+  it("leaves the column out when the status was not changed, so saving does not undo a move made elsewhere", () => {
+    const onSubmit = vi.fn()
+    render(
+      <TaskForm
+        today={TODAY}
+        initial={{ ...PLAIN, columnId: 1 }}
+        columns={DEFAULT_COLUMNS}
+        onSubmit={onSubmit}
+        onCancel={vi.fn()}
+        onDelete={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
+    expect(onSubmit).toHaveBeenCalledWith({ title: "Gửi báo cáo", dueDate: null, priority: "normal" })
   })
 })

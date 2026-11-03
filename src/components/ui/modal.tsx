@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useSyncExternalStore } from "react"
 import type { ReactNode } from "react"
 import { createPortal } from "react-dom"
 
@@ -30,7 +30,14 @@ interface ModalProps {
   ariaLabel?: string
   backdropTestId?: string
   panelClassName?: string
+  // "sheet": khung trượt dính mép phải (máy tính) / mép dưới (điện thoại) thay cho hộp giữa màn hình.
+  variant?: "center" | "sheet"
+  // Đóng rồi vẫn giữ nội dung trong cây (ẩn đi), để state bên trong — vd. chữ đang gõ — còn nguyên khi
+  // mở lại. Lúc đóng không khoá cuộn, không bẫy Tab, không nghe Esc.
+  keepMounted?: boolean
 }
+
+const subscribeNothing = () => () => {}
 
 function Modal({
   open,
@@ -42,7 +49,16 @@ function Modal({
   ariaLabel,
   backdropTestId = "modal-backdrop",
   panelClassName,
+  variant = "center",
+  keepMounted = false,
 }: ModalProps) {
+  // Portal cần document — server và lượt hydrate đầu không có, render null rồi mới gắn portal (khung
+  // keepMounted gắn ngay cả khi đang đóng).
+  const isClient = useSyncExternalStore(
+    subscribeNothing,
+    () => true,
+    () => false
+  )
   const panelRef = useRef<HTMLDivElement>(null)
   const pendingRestoreRef = useRef<number | null>(null)
 
@@ -97,6 +113,15 @@ function Modal({
   useEffect(() => {
     if (!open) return
 
+    // Hộp mở chồng lên hộp khác (vd. hộp sửa mở từ khung trượt): chỉ hộp trên cùng — portal gắn sau cùng
+    // vào body — nhận Esc và bẫy Tab, để Esc không đóng luôn hộp bên dưới.
+    function isTopmost() {
+      const panels = Array.from(document.querySelectorAll<HTMLElement>('[aria-modal="true"]')).filter(
+        (p) => !p.closest("[hidden]")
+      )
+      return panels[panels.length - 1] === panelRef.current
+    }
+
     function trapTab(e: KeyboardEvent) {
       const panel = panelRef.current
       if (!panel) return
@@ -114,6 +139,7 @@ function Modal({
     }
 
     function handleKeyDown(e: KeyboardEvent) {
+      if (!isTopmost()) return
       if (e.key === "Escape") {
         onOpenChange(false)
         return
@@ -125,10 +151,18 @@ function Modal({
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [open, onOpenChange])
 
-  if (!open) return null
+  if (!isClient || (!open && !keepMounted)) return null
+
+  const sheet = variant === "sheet"
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div
+      hidden={!open}
+      className={cn(
+        "fixed inset-0 z-50 flex",
+        sheet ? "items-end md:items-stretch md:justify-end" : "items-center justify-center p-4"
+      )}
+    >
       <div
         data-testid={backdropTestId}
         aria-hidden="true"
@@ -142,11 +176,15 @@ function Modal({
         aria-labelledby={ariaLabelledBy}
         aria-describedby={ariaDescribedBy}
         aria-label={ariaLabel}
+        data-variant={variant}
         className={cn(
-          // Cao tối đa bằng lớp phủ (màn hình trừ đệm p-4), nội dung cao hơn thì tự cuộn bên trong — điện
-          // thoại xoay ngang/cửa sổ thấp vẫn thấy tiêu đề và tới được nút cuối. Cuộn trong hộp chứ không
-          // cuộn cả lớp phủ, để nền mờ absolute vẫn phủ kín màn hình và cuộn được ở mọi chỗ trên hộp.
-          "relative max-h-full w-full max-w-[400px] overflow-y-auto overscroll-contain rounded-[var(--ob-radius-lg)] border-[1.5px] border-[var(--ob-color-border)] bg-[var(--ob-color-surface)] p-6 shadow-[var(--ob-shadow-md)]",
+          sheet &&
+            "relative max-h-[90svh] w-full overflow-y-auto overscroll-contain rounded-t-[var(--ob-radius-xl)] border-[1.5px] border-b-0 border-[var(--ob-color-border)] bg-[var(--ob-color-surface)] p-5 shadow-[var(--ob-shadow-lg)] md:h-full md:max-h-none md:max-w-[560px] md:rounded-none md:rounded-l-[var(--ob-radius-xl)] md:border-r-0 md:border-b-[1.5px] md:p-7",
+          !sheet &&
+            // Cao tối đa bằng lớp phủ (màn hình trừ đệm p-4), nội dung cao hơn thì tự cuộn bên trong — điện
+            // thoại xoay ngang/cửa sổ thấp vẫn thấy tiêu đề và tới được nút cuối. Cuộn trong hộp chứ không
+            // cuộn cả lớp phủ, để nền mờ absolute vẫn phủ kín màn hình và cuộn được ở mọi chỗ trên hộp.
+            "relative max-h-full w-full max-w-[400px] overflow-y-auto overscroll-contain rounded-[var(--ob-radius-lg)] border-[1.5px] border-[var(--ob-color-border)] bg-[var(--ob-color-surface)] p-6 shadow-[var(--ob-shadow-md)]",
           panelClassName
         )}
       >
