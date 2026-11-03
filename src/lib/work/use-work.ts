@@ -20,6 +20,14 @@ interface TaskInput {
   title: string
   dueDate: string | null
   priority: WorkPriority
+  // Có và khác cột hiện tại thì việc chuyển sang cột đó (dòng "Trạng thái" trong hộp sửa).
+  columnId?: number
+}
+
+// Chỗ thả khi chuyển việc sang cột khác bằng menu hay hộp sửa: vào cột cuối ("đã xong") thì lên ĐẦU — cột
+// đó dài dần, việc vừa xong phải thấy ngay — còn cột khác thì xuống cuối.
+function placementIndex(state: WorkState, columnId: number): number {
+  return state.columns[state.columns.length - 1]?.id === columnId ? 0 : Number.MAX_SAFE_INTEGER
 }
 
 function useWork() {
@@ -57,9 +65,9 @@ function useWork() {
     [persist]
   )
 
-  // Gõ tên ở "+ Thêm thẻ" cuối cột là xong — hạn và ưu tiên sửa sau khi bấm vào thẻ.
+  // Mặc định vào cột đầu, không hạn, ưu tiên thường; ô thêm nhanh đầu trang đặt luôn hạn/ưu tiên qua `extra`.
   const addTask = useCallback(
-    (title: string, columnId?: number): boolean => {
+    (title: string, columnId?: number, extra?: { dueDate?: string | null; priority?: WorkPriority }): boolean => {
       const clean = title.trim()
       if (!clean) return false
       const current = getStoredWork()
@@ -70,8 +78,8 @@ function useWork() {
         const task: WorkTask = {
           id: nextId(current.tasks),
           title: clean,
-          dueDate: null,
-          priority: "normal",
+          dueDate: extra?.dueDate ?? null,
+          priority: extra?.priority ?? "normal",
           columnId: target.id,
           done,
           doneAt: done ? today : null,
@@ -87,7 +95,7 @@ function useWork() {
     [persist]
   )
 
-  // Sửa tên/hạn/ưu tiên — cột và trạng thái xong giữ nguyên (chuyển cột đi qua moveTask).
+  // Sửa tên/hạn/ưu tiên; có `columnId` khác cột cũ thì chuyển cột luôn trong cùng 1 lần ghi.
   const updateTask = useCallback(
     (id: number, input: TaskInput): boolean => {
       const title = input.title.trim()
@@ -100,7 +108,14 @@ function useWork() {
       }
       try {
         const patch = { title, dueDate: input.dueDate, priority: input.priority }
-        persist({ ...current, tasks: current.tasks.map((t) => (t.id === id ? { ...t, ...patch } : t)) })
+        const patched = { ...current, tasks: current.tasks.map((t) => (t.id === id ? { ...t, ...patch } : t)) }
+        const from = current.tasks.find((t) => t.id === id)!.columnId
+        const to = input.columnId
+        persist(
+          to === undefined || to === from
+            ? patched
+            : board.moveTask(patched, id, to, placementIndex(patched, to), dayKey())
+        )
         toast.success("Đã cập nhật việc")
         return true
       } catch {
@@ -116,6 +131,15 @@ function useWork() {
       update(
         (current) => board.moveTask(current, id, columnId, index, dayKey()),
         "Không thể chuyển thẻ. Vui lòng thử lại."
+      ),
+    [update]
+  )
+
+  const moveTaskTo = useCallback(
+    (id: number, columnId: number) =>
+      update(
+        (current) => board.moveTask(current, id, columnId, placementIndex(current, columnId), dayKey()),
+        "Không thể chuyển việc. Vui lòng thử lại."
       ),
     [update]
   )
@@ -199,6 +223,7 @@ function useWork() {
     addTask,
     updateTask,
     moveTask,
+    moveTaskTo,
     toggleTask,
     removeTask,
     addColumn,
