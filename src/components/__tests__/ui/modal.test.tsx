@@ -358,4 +358,23 @@ describe("Modal", () => {
 
     expect(screen.getByRole("dialog", { name: "Khung" })).toHaveAttribute("data-variant", "sheet")
   })
+
+  it("Escape closes only the topmost of two open modals (a dialog opened on top of a sheet)", () => {
+    const outer = vi.fn()
+    const inner = vi.fn()
+    render(
+      <>
+        <Modal open onOpenChange={outer} ariaLabel="Ngoài" variant="sheet">
+          <button type="button">A</button>
+        </Modal>
+        <Modal open onOpenChange={inner} ariaLabel="Trong">
+          <button type="button">B</button>
+        </Modal>
+      </>
+    )
+
+    fireEvent.keyDown(window, { key: "Escape" })
+    expect(inner).toHaveBeenCalledWith(false)
+    expect(outer).not.toHaveBeenCalled()
+  })
 })

@@ -36,7 +36,6 @@ Tính năng đồng bộ dữ liệu qua nhiều máy (`/api/sync`, backend Verc
 | State | Zustand (`useSettings`) + `useState` đọc/ghi localStorage riêng từng feature (finance, budget, journal, study, goals) |
 | UI primitive | `@base-ui/react`, custom qua CVA (`class-variance-authority`) để khớp token `--ob-*` |
 | Biểu đồ | ApexCharts (`apexcharts` + `react-apexcharts`) — dùng ở trang Chi tiêu |
-| Kéo thả | dnd-kit (`@dnd-kit/core` + `@dnd-kit/sortable`) — bảng Kanban trang Làm việc |
 | Rich text / an toàn | `dompurify` — sanitize nội dung nhật ký (HTML do người dùng nhập) |
 | Thông báo / icon | `sonner` (toast), `lucide-react` (icon) |
 | Backend đồng bộ | `@vercel/blob` — lưu 1 file snapshot JSON cho `/api/sync` |
@@ -65,7 +64,7 @@ src/
 │       ├── study/page.tsx      # "/study"    — Học tập
 │       ├── goals/page.tsx      # "/goals"    — Mục tiêu
 │       ├── life-plan/page.tsx  # "/life-plan" — Plan (ghi chép, kế hoạch và ảnh trên 1 dòng thời gian)
-│       ├── work/page.tsx       # "/work"     — Làm việc (bảng Kanban, standup, báo cáo tuần)
+│       ├── work/page.tsx       # "/work"     — Làm việc (màn Bento: hôm nay, standup, tuần này, ô theo cột)
 │       └── settings/page.tsx   # "/settings" — Cài đặt
 ├── features/             # business logic theo feature — xem CLAUDE.md mục Feature Rules
 │                          # 11 feature hiện có: overview, finance, budget, journal, study, goals, life-plan, work, settings, login, calc
@@ -93,7 +92,7 @@ public/assets/             # logo, app-icon, avatar, icons/ (13 icon module dùn
 | `/study` | `study` | Học tập — 4 tab: **Hôm nay** (task hàng ngày + Pomodoro + pick ngẫu nhiên-nhưng-cố-định-theo-ngày 5 từ vựng/1 điểm ngữ pháp) · **Từ vựng** (lưới 13 chủ đề kèm tiến độ đã học; mở 1 chủ đề thì thấy từ chia theo cấp độ CEFR A1 → C2; dải nút lọc theo cấp dùng ở cả 2 màn) · **Ngữ pháp** (2 tab sau đọc từ `content/*.jsonl`) · **Trò chơi** (3 mini-game ôn từ vựng — xem chi tiết bên dưới) |
 | `/goals` | `goals` | Mục tiêu — 3 mục tiêu tính từ dữ liệu Tài chính thật, riêng mục "mua xe" có thể gắn thủ công vào 1 quỹ tiết kiệm cụ thể |
 | `/life-plan` | `life-plan` | Plan — 1 dòng thời gian (mới nhất ở trên, vạch "Hôm nay" chia phần sắp tới và phần đã qua, hiện dần 20 mục mỗi đợt) gồm **ghi chép** (ngày, tiêu đề, nội dung giữ xuống dòng, tối đa 10 ảnh, gắn hoặc không gắn 1 kế hoạch) và **kế hoạch** (tên, năm muốn đạt — tháng tuỳ chọn, trạng thái Dự định/Đang làm/Đã đạt, nhãn "Quá hạn" khi chưa đạt mà trễ hạn); bấm 1 kế hoạch ở dải nút đầu trang để chỉ xem kế hoạch đó và các ghi chép đã gắn, xoá kế hoạch thì ghi chép chỉ bị bỏ gắn. Ảnh thu nhỏ ngay trên trình duyệt (cạnh dài ≤ 1600px, WebP 0,8) rồi lưu riêng tư trên Cloudinary qua `/api/life-plan/images`, mỗi máy chỉ tải về 1 lần rồi giữ trong IndexedDB; đầu trang hiện tổng dung lượng ảnh đã dùng. Chữ nằm trong localStorage `life-plan-data` và đi cùng sao lưu/đồng bộ (bản sao chỉ mang mã ảnh) |
-| `/work` | `work` | Làm việc — 3 tab: **Việc cần làm** (bảng Kanban kiểu Trello: cột tuỳ biến — mặc định Bắt đầu / Đang làm / Hoàn thành, đổi tên/thêm/xoá/đổi chỗ được, cột cuối luôn là cột "đã xong"; kéo thả thẻ giữa các cột và trong cột, hoặc chọn "Chuyển sang…"; "+ Thêm thẻ" cuối mỗi cột; bấm thẻ để sửa hạn, ưu tiên Cao/Thường/Thấp, xoá) · **Standup** (Hôm qua / Hôm nay / Vướng mắc, tự điền gợi ý từ danh sách việc, nút Copy) · **Báo cáo tuần** (việc đã xong, việc còn dở, vướng mắc, nút Copy). Thẻ "Việc hôm nay" ở Tổng quan |
+| `/work` | `work` | Làm việc — một màn **Bento** (lưới ô to nhỏ như Tổng quan, không tab): ô thêm việc nhanh (tên + chip Hôm nay / Ngày mai / Cao, vào cột đầu) · ô tối **Hôm nay** (việc trễ hạn + đến hạn hôm nay, tick là xong, thanh "x/y xong hôm nay") · ô **Standup** (xem trước Hôm qua / Hôm nay / Vướng mắc — gợi ý mang theo vướng mắc của bản trước; "Viết standup" mở khung trượt soạn/lưu/copy) · ô **Tuần này** (số việc xong từng ngày, "Báo cáo" mở báo cáo tuần trong khung trượt) · ô **Sắp tới** (hạn trong 7 ngày) · mỗi cột của bảng 1 ô (cột tuỳ biến — mặc định Bắt đầu / Đang làm / Hoàn thành; cột cuối luôn là cột "đã xong", ô của nó chỉ hiện 5 việc vừa xong; "Xem tất cả" mở cả cột trong khung trượt). Thẻ việc: tick, bấm tên để sửa (tên, trạng thái, hạn, ưu tiên), menu "…" (Sửa / Chuyển sang… / Xoá), chip "Trễ N ngày" / "Hôm nay" / "T5 · 05/11", cờ cam cho ưu tiên cao. Nút "Quản lý cột" cạnh tiêu đề: đổi tên/thứ tự, thêm, xoá cột. Thẻ "Việc hôm nay" ở Tổng quan |
 | `/settings` | `settings` | Cài đặt — hồ sơ, danh sách mood, danh sách tag chi tiêu, bật/tắt module (điều khiển sidebar + Tổng quan), xuất/nhập dữ liệu (JSON), đồng bộ 2 chiều qua cloud (bấm tay "Tải lên"/"Tải xuống"), xoá toàn bộ dữ liệu |
 | _(modal, không có route)_ | `calc` | Máy tính bỏ túi — mở từ sidebar, gõ biểu thức trực tiếp (sanitize trước khi `Function()` eval), xem trước kết quả, lưu 4 phép tính gần nhất |
 | `/login` | `login` | Đăng nhập mock (so khớp tài khoản hardcode trong `src/lib/mock-account.ts`, không có backend thật) — khoá 10 phút sau 5 lần sai (`useAttemptLockout`), bảo vệ toàn app qua `AuthGuard` |
@@ -119,9 +118,9 @@ Tab "Trò chơi" gồm 3 mini-game ôn từ vựng, dùng chung 1 khung điều 
 | `AlertDialog` | `open` · `onOpenChange` · `title` · `description` · `confirmLabel` · `cancelLabel` · `onConfirm` · `destructive` |
 | `Button` | `variant` primary/secondary/reward/ghost/**outline** · `size` sm/md/lg · `fullWidth` |
 | `Card` | `tone` plain/invert/reward/soft · `label` · `action` · `elevated` |
-| `DropdownMenu` | `DropdownMenuTrigger` · `DropdownMenuContent` (`align`, `side` — portal, không bị khung cuộn cắt) · `DropdownMenuLabel` · `DropdownMenuItem` · `DropdownMenuRadioGroup` (`value`, `onValueChange`) + `DropdownMenuRadioItem` (`closeOnClick`) — menu `@base-ui/react`, dùng cho nút "Chuyển" trên thẻ Kanban |
+| `DropdownMenu` | `DropdownMenuTrigger` · `DropdownMenuContent` (`align`, `side` — portal, không bị khung cuộn cắt) · `DropdownMenuLabel` · `DropdownMenuItem` · `DropdownMenuRadioGroup` (`value`, `onValueChange`) + `DropdownMenuRadioItem` (`closeOnClick`) — menu `@base-ui/react`, dùng cho menu "…" (Sửa / Chuyển sang / Xoá) trên thẻ việc ở trang Làm việc |
 | `Field` | `label` · `hint` · `prefix` · `suffix` · `numeric` · `group` (format số kiểu `vi-VN`) · `invalid` |
-| `Modal` | `open` · `onOpenChange` · `role` dialog/alertdialog · `ariaLabelledBy`/`ariaLabel` · `panelClassName` — portal, focus trap, khoá scroll, nền cho `AlertDialog` và mọi modal chỉnh sửa trong các feature |
+| `Modal` | `open` · `onOpenChange` · `role` dialog/alertdialog · `ariaLabelledBy`/`ariaLabel` · `panelClassName` · `variant` center/sheet (khung trượt mép phải, điện thoại trượt từ dưới) · `keepMounted` (đóng vẫn giữ nội dung, vd. chữ đang gõ) — portal, focus trap, khoá scroll, Esc chỉ đóng hộp trên cùng; nền cho `AlertDialog` và mọi modal chỉnh sửa trong các feature |
 | `Popover` | `PopoverTrigger` (`render`) · `PopoverContent` (`align`, `side`, `sideOffset` — portal, z-50 dưới tooltip) — popup `@base-ui/react`, dùng cho lịch chọn tháng ở thẻ "Tổng hợp chi tiêu tháng" |
 | `Progress` | `value` · `track` · `tone` reward/action/expense · `label` · `hint` |
 | `Switch` | `label` · `hint` · `checked` · `onCheckedChange` · `disabled` |

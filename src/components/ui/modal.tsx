@@ -113,6 +113,15 @@ function Modal({
   useEffect(() => {
     if (!open) return
 
+    // Hộp mở chồng lên hộp khác (vd. hộp sửa mở từ khung trượt): chỉ hộp trên cùng — portal gắn sau cùng
+    // vào body — nhận Esc và bẫy Tab, để Esc không đóng luôn hộp bên dưới.
+    function isTopmost() {
+      const panels = Array.from(document.querySelectorAll<HTMLElement>('[aria-modal="true"]')).filter(
+        (p) => !p.closest("[hidden]")
+      )
+      return panels[panels.length - 1] === panelRef.current
+    }
+
     function trapTab(e: KeyboardEvent) {
       const panel = panelRef.current
       if (!panel) return
@@ -130,6 +139,7 @@ function Modal({
     }
 
     function handleKeyDown(e: KeyboardEvent) {
+      if (!isTopmost()) return
       if (e.key === "Escape") {
         onOpenChange(false)
         return

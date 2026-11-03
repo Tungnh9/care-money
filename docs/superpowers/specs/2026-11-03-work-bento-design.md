@@ -123,7 +123,9 @@ Trang Làm việc chỉ còn **một màn Bento**. Không còn tab, không còn 
   |---|---|
   | dưới 576px | 1 |
   | từ 576px (`@xl`) | 2 |
-  | từ 896px (`@4xl`) | 4 |
+  | từ 1024px (`@5xl`) | 4 |
+
+  *(tôi quyết, sau khi chụp bản thật)* Ban đầu là 896px (`@4xl`). Nhưng ở màn 1280px, nội dung rộng 952px nên ô 1 cột chỉ còn khoảng 220px: nhãn "Tuần này" bị cắt và nút "Viết standup" xuống dòng.
 
 - Thứ tự ô và cỡ ở lưới 4 cột:
 
