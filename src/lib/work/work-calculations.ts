@@ -127,9 +127,10 @@ function upcomingTasks(tasks: WorkTask[], today: string, days = 7): WorkTask[] {
     .sort((a, b) => a.dueDate!.localeCompare(b.dueDate!) || a.id - b.id)
 }
 
-// Việc đã xong, mới xong trước — ô "Đã xong" và danh sách đầy đủ của cột cuối.
+// Việc đã xong, mới xong trước — ô "Đã xong" và danh sách đầy đủ của cột cuối. Cùng ngày thì giữ thứ tự
+// trong cột cuối (sort ổn định): việc vừa tick được chèn lên ĐẦU cột, nên đứng trên việc xong sớm hơn.
 function recentDone(tasks: WorkTask[]): WorkTask[] {
-  return tasks.filter((t) => t.done).sort((a, b) => (b.doneAt ?? "").localeCompare(a.doneAt ?? "") || b.id - a.id)
+  return tasks.filter((t) => t.done).sort((a, b) => (b.doneAt ?? "").localeCompare(a.doneAt ?? ""))
 }
 
 function section(title: string, body: string): string[] {

@@ -49,7 +49,13 @@ function TaskForm({ today, initial, columns, onSubmit, onCancel, onDelete }: Tas
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (disabled) return
-    onSubmit(columns ? { title, dueDate, priority, columnId } : { title, dueDate, priority })
+    // Chỉ gửi cột khi người dùng đổi trạng thái — không thì lưu hộp sửa sẽ kéo việc về cột cũ nếu tab khác
+    // vừa chuyển nó đi (vd. vừa tick xong).
+    onSubmit(
+      columnId !== undefined && columnId !== initial.columnId
+        ? { title, dueDate, priority, columnId }
+        : { title, dueDate, priority }
+    )
   }
 
   return (

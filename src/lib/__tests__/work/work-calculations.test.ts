@@ -271,15 +271,16 @@ describe("upcomingTasks", () => {
 })
 
 describe("recentDone", () => {
-  it("lists done tasks newest first, then by id descending", () => {
+  it("lists done tasks newest first, keeping the done column's order (just ticked on top) within a day", () => {
+    // Tick xong thì việc lên ĐẦU cột cuối — việc id nhỏ vừa tick phải đứng trên việc id lớn xong sáng nay.
     const tasks = [
+      task({ id: 3, title: "Vừa tick", done: true, doneAt: TODAY }),
+      task({ id: 14, title: "Xong sáng nay", done: true, doneAt: TODAY }),
       task({ id: 1, title: "Cũ", done: true, doneAt: "2026-10-01" }),
-      task({ id: 2, title: "Mới A", done: true, doneAt: TODAY }),
-      task({ id: 3, title: "Mới B", done: true, doneAt: TODAY }),
       task({ id: 4, title: "Chưa xong" }),
     ]
 
-    expect(recentDone(tasks).map((t) => t.title)).toEqual(["Mới B", "Mới A", "Cũ"])
+    expect(recentDone(tasks).map((t) => t.title)).toEqual(["Vừa tick", "Xong sáng nay", "Cũ"])
   })
 })
 

@@ -112,4 +112,21 @@ describe("TaskForm", () => {
 
     expect(onSubmit).toHaveBeenCalledWith({ title: "Gửi báo cáo", dueDate: null, priority: "normal", columnId: 3 })
   })
+
+  it("leaves the column out when the status was not changed, so saving does not undo a move made elsewhere", () => {
+    const onSubmit = vi.fn()
+    render(
+      <TaskForm
+        today={TODAY}
+        initial={{ ...PLAIN, columnId: 1 }}
+        columns={DEFAULT_COLUMNS}
+        onSubmit={onSubmit}
+        onCancel={vi.fn()}
+        onDelete={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }))
+    expect(onSubmit).toHaveBeenCalledWith({ title: "Gửi báo cáo", dueDate: null, priority: "normal" })
+  })
 })
