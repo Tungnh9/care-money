@@ -6,7 +6,7 @@ import { cva } from "class-variance-authority"
 import { Delete, Eraser, X, type LucideIcon } from "lucide-react"
 
 import { ActionTooltip } from "@/components/ob/action-tooltip"
-import { Monkey } from "@/components/ob/monkey"
+import { Snake } from "@/components/ob/snake"
 import { cn } from "@/lib/utils"
 import { useCalculator, type HistoryItem } from "../hooks/use-calculator"
 
@@ -219,7 +219,7 @@ function CalculatorModal({ open, onOpenChange }: CalculatorModalProps) {
     >
       <div className="ob-calc-box" ref={boxRef}>
         <div className="ob-calc-head mb-[14px] flex items-center gap-[11px]">
-          <Monkey pose="calc" size={46} />
+          <Snake pose="calc" size={46} />
           <div>
             <div className="text-[15px] font-bold text-[var(--ob-color-text)]">Máy tính</div>
             <div className="text-[12px] text-[var(--ob-color-text-muted)]">Gõ bàn phím cũng được · Esc để đóng</div>

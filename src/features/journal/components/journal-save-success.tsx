@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Fireworks } from "@/components/ob/fireworks"
-import { Monkey } from "@/components/ob/monkey"
+import { Snake } from "@/components/ob/snake"
 import type { JournalEntry } from "@/lib/journal/types"
 
 interface JournalSaveSuccessProps {
@@ -15,7 +15,7 @@ function JournalSaveSuccess({ entry, onWriteMore, onViewEntries }: JournalSaveSu
     <Card tone="soft" className="relative col-span-full">
       <Fireworks />
       <div className="mb-4 flex items-center gap-[14px]">
-        <Monkey pose="cheer" size={62} />
+        <Snake pose="cheer" size={62} />
         <div>
           <div className="[font:var(--ob-text-h3)]">Đã lưu vào nhật ký</div>
           <div className="mt-[3px] text-[13.5px] text-[var(--ob-color-text-muted)]">

@@ -32,7 +32,7 @@ describe("Empty", () => {
     expect(screen.getByRole("button", { name: "Viết nhật ký hôm nay" })).toBeInTheDocument()
   })
 
-  it("renders the Monkey mascot", () => {
+  it("renders the snake mascot", () => {
     const { container } = render(<Empty title="Chưa có bài nào" />)
 
     expect(container.querySelector("svg")).toBeInTheDocument()

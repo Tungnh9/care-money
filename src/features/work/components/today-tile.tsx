@@ -3,7 +3,7 @@
 import { useId, useState } from "react"
 
 import { Card } from "@/components/ui/card"
-import { Monkey } from "@/components/ob/monkey"
+import { Snake } from "@/components/ob/snake"
 import { formatDayKey } from "@/lib/date"
 import { cn } from "@/lib/utils"
 import type { WorkTask } from "@/lib/work/types"
@@ -60,7 +60,7 @@ function TodayTile({ tasks, today, onToggle, onOpen, className }: TodayTileProps
             <span className="font-semibold text-[var(--ob-chuoi-300)]">{items.length - late} đến hạn hôm nay</span>
           </p>
         </div>
-        <Monkey pose={items.length ? "wave" : "cheer"} size={76} dark className="-mt-1 -mr-1 flex-none" />
+        <Snake pose={items.length ? "wave" : "cheer"} size={76} dark className="-mt-1 -mr-1 flex-none" />
       </div>
 
       {total > 0 ? (

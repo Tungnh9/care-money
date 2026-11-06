@@ -10,6 +10,10 @@ import { Tag } from "@/components/ui/tag"
 import { Figure } from "@/components/ob/figure"
 import { Streak } from "@/components/ob/streak"
 import { TaskItem } from "@/components/ob/task-item"
+import { Snake, type SnakeProps } from "@/components/ob/snake"
+
+// Đủ 7 dáng của linh vật; ô tối là cỡ nhỏ trên nền đậm (`dark`) như ô Hôm nay ở trang Làm việc.
+const SNAKE_POSES: NonNullable<SnakeProps["pose"]>[] = ["wave", "cheer", "banana", "book", "sleep", "focus", "calc"]
 
 export default function SandboxPage() {
   const [checked, setChecked] = useState(true)
@@ -18,6 +22,20 @@ export default function SandboxPage() {
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-[var(--ob-space-8)] p-[var(--ob-space-8)]">
+      <section data-testid="snake-poses" className="grid grid-cols-2 gap-[var(--ob-space-4)] sm:grid-cols-4">
+        {SNAKE_POSES.map((pose) => (
+          <Card key={pose} label={pose} className="flex flex-col items-center gap-[var(--ob-space-3)]">
+            <Snake pose={pose} size={112} />
+            <div className="flex items-end gap-[var(--ob-space-3)]">
+              <Snake pose={pose} size={46} />
+              <div className="rounded-[var(--ob-radius-md)] bg-[var(--ob-color-surface-invert)] p-1.5">
+                <Snake pose={pose} size={46} dark />
+              </div>
+            </div>
+          </Card>
+        ))}
+      </section>
+
       <section className="flex flex-wrap items-center gap-[var(--ob-space-3)]">
         <Button variant="primary">Primary</Button>
         <Button variant="secondary">Secondary</Button>

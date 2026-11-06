@@ -1,10 +1,10 @@
 import type { ReactNode } from "react"
 
-import { Monkey } from "./monkey"
-import type { MonkeyProps } from "./monkey"
+import { Snake } from "./snake"
+import type { SnakeProps } from "./snake"
 
 interface EmptyProps {
-  pose?: MonkeyProps["pose"]
+  pose?: SnakeProps["pose"]
   title: ReactNode
   hint?: ReactNode
   children?: ReactNode
@@ -14,7 +14,7 @@ interface EmptyProps {
 function Empty({ pose = "sleep", title, hint, children, size = 88 }: EmptyProps) {
   return (
     <div className="flex flex-col items-center px-1 pt-2.5 pb-1 text-center">
-      <Monkey pose={pose} size={size} className="mb-3.5" />
+      <Snake pose={pose} size={size} className="mb-3.5" />
       <div className="mb-[5px] text-[14.5px] font-bold">{title}</div>
       {hint ? (
         <p className="mx-auto mb-4 max-w-[30ch] text-[13px] leading-[1.55] text-[var(--ob-color-text-subtle)]">

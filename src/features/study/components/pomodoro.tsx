@@ -5,8 +5,9 @@ import { useEffect, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Monkey } from "@/components/ob/monkey"
+import { Snake } from "@/components/ob/snake"
 import { dayKey } from "@/lib/date"
+import { cn } from "@/lib/utils"
 import {
   BREAK_SECONDS,
   WORK_SECONDS,
@@ -161,7 +162,11 @@ function Pomodoro() {
   return (
     <Card tone={isWork ? "plain" : "reward"} label={isWork ? "Pomodoro · tập trung" : "Pomodoro · nghỉ ngắn"}>
       <div className="flex flex-wrap items-center gap-6">
-        <Monkey size={72} pose={!isWork ? "banana" : running ? "focus" : "sleep"} />
+        {/* Giờ nghỉ thẻ nền vàng trùng màu thân rắn — đặt rắn trên đĩa kem cho khỏi chìm. -m-1 trừ đúng p-1 nên chỗ đứng
+            vẫn 72px, bố cục không nhảy khi đổi chế độ. */}
+        <div className={cn("flex-none rounded-full", !isWork && "-m-1 bg-[var(--ob-kem)] p-1")}>
+          <Snake size={72} pose={!isWork ? "banana" : running ? "focus" : "sleep"} />
+        </div>
         <div className="relative size-[132px] flex-none">
           <svg width="132" height="132" viewBox="0 0 132 132" className="rotate-[-90deg]">
             <circle

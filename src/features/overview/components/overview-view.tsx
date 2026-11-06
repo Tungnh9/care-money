@@ -14,7 +14,7 @@ import { ensureReviewStates, getDueWords } from "@/lib/study/srs-calculations"
 import type { GrammarEntry, VocabEntry } from "@/lib/study/types"
 import { useSettings } from "@/lib/settings/use-settings"
 import { useWork } from "@/lib/work/use-work"
-import { Monkey } from "@/components/ob/monkey"
+import { Snake } from "@/components/ob/snake"
 import { useMoneyVisibility } from "@/components/money-visibility-provider"
 import { dayKey, longDate, monthKey } from "@/lib/date"
 import { formatMoney } from "@/lib/format"
@@ -133,7 +133,7 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
   return (
     <div>
       <div className="mb-5 flex items-center gap-[14px]">
-        <Monkey pose="wave" size={56} />
+        <Snake pose="wave" size={56} />
         <div>
           <h1 className="mb-1 [font:var(--ob-text-h2)] tracking-[var(--ob-track-heading)]">
             {greeting.prefix}

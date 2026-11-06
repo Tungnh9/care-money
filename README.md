@@ -71,7 +71,7 @@ src/
 │                          # (xem mục Tính năng dưới để biết mỗi feature làm gì)
 ├── components/
 │   ├── ui/                # 14 component nền shadcn/ui + @base-ui/react, custom theo token --ob-*
-│   ├── ob/                 # 15 component riêng Orange Banana (mascot Monkey, Streak, FundPicker, GrammarHighlightCard...)
+│   ├── ob/                 # 15 component riêng Orange Banana (mascot Snake, Streak, FundPicker, GrammarHighlightCard...)
 │   ├── auth-guard.tsx      # bọc root layout, check localStorage, đẩy về /login nếu chưa đăng nhập
 │   └── money-visibility-provider.tsx  # context "ẩn số tiền", bọc trong layout (app)
 ├── lib/                   # helper + data layer dùng chung ≥ 2 feature (finance/, budget/, goals/, journal/, study/, net-worth/, settings/) — xem bảng ở mục Component hiện có
@@ -134,10 +134,10 @@ Tab "Trò chơi" gồm 3 mini-game ôn từ vựng, dùng chung 1 khung điều 
 
 | Component | Props chính |
 | --- | --- |
-| `Monkey` | `pose` wave/cheer/banana/book/sleep/focus/calc · `size` · `dark` — mascot chính của app, xem chi tiết dưới |
+| `Snake` | `pose` wave/cheer/banana/book/sleep/focus/calc · `size` · `dark` — mascot chính của app (rắn chuối), xem chi tiết dưới |
 | `Figure` | `value` · `unit` · `delta` · `direction` up/down · `caption` · `size` lg/sm |
 | `CountMoney` | như `Figure` (trừ `value`/`unit`) + animation đếm số tiền tăng dần, tự mask khi bật "ẩn số tiền" |
-| `Empty` | `pose` (dùng lại `Monkey`, mặc định `sleep`) · `title` · `hint` · `size` — trạng thái rỗng chung |
+| `Empty` | `pose` (dùng lại `Snake`, mặc định `sleep`) · `title` · `hint` · `size` — trạng thái rỗng chung |
 | `NetWorthCard` | `summary` (`FinanceSummary`) — card tài sản ròng, ghép từ `Card` + `CountMoney` |
 | `Streak` | `days` · `done` · `icon` — dùng cả cho streak học tập lẫn streak chơi mini-game |
 | `Tabs` | `tabs` · `active` · `onChange` |
@@ -150,7 +150,7 @@ Tab "Trò chơi" gồm 3 mini-game ôn từ vựng, dùng chung 1 khung điều 
 | `GrammarHighlightCard` · `GrammarListCard` | `entry` / `entries` · `vocab` — thẻ "Ngữ pháp hôm nay" (dùng ở Học tập và Tổng quan) và danh sách ngữ pháp, tô sáng từ vựng trong câu ví dụ, có nút dịch từng câu |
 | `HighlightedSentence` | `sentence` · `vocabIndex` — 1 câu ví dụ với các từ có trong kho từ vựng được tô sáng (dùng trong 2 thẻ trên) |
 
-**Mascot `Monkey`** xuất hiện lặp lại nhiều nơi (trạng thái rỗng, trang chủ...) qua 7 giá trị `pose`: `wave` (mặc định, vẫy tay có animation), `cheer` (ăn mừng), `banana` (cầm chuối), `book` (cầm sách), `sleep` (ngủ, dùng trong `Empty`), `focus` (đang tập trung), `calc` (cầm máy tính). `dark` đổi màu để dùng trên nền tối.
+**Mascot `Snake`** là rắn chuối (chủ app tuổi Tân Tỵ): rắn con vàng như chuối chín có chấm nâu, cuộn 2 vòng, cuống chuối kèm lá non trên đầu, chóp đuôi nâu như đầu quả chuối — không có tay nên đuôi làm thay. Xuất hiện lặp lại nhiều nơi (trạng thái rỗng, trang chủ...) qua 7 giá trị `pose`: `wave` (mặc định, vẫy đuôi có animation), `cheer` (ăn mừng, đuôi giơ cao + lấp lánh), `banana` (dựng quả chuối trên chóp đuôi), `book` (đọc sách), `sleep` (ngủ, dùng trong `Empty`), `focus` (đeo tai nghe tập trung), `calc` (đuôi bấm máy tính). `dark` cho nền tối: bóng dưới chân, chữ z, tai nghe và cuống chuối đổi sang màu sáng hơn. Nền vàng (`--ob-color-reward`) trùng màu thân rắn nên vòng cuộn và đuôi biến mất — chỗ nào đặt rắn trên nền vàng thì lót đĩa kem như thẻ nghỉ của Pomodoro. Tâm của animation vẫy đuôi, chớp mắt, chữ z (`.ob-wave-tail`, `.ob-blink`, `.ob-z1`–`.ob-z3` trong `globals.css`) đặt theo toạ độ viewBox 64×64 của `Snake` — vẽ lại linh vật thì dời theo.
 
 ### Khác
 

@@ -35,6 +35,16 @@ describe("Pomodoro", () => {
     expect(container.querySelector('[data-pose="banana"]')).toBeInTheDocument()
   })
 
+  it("sets the mascot on a cream disc only on the yellow break card, where its yellow coils would vanish", () => {
+    const { container } = render(<Pomodoro />)
+    const mascotHolder = () => container.querySelector("[data-pose]")?.parentElement
+
+    expect(mascotHolder()).not.toHaveClass("bg-[var(--ob-kem)]")
+
+    fireClickAndAdvance("Sang nghỉ 5 phút", 0)
+    expect(mascotHolder()).toHaveClass("bg-[var(--ob-kem)]")
+  })
+
   it("counts down once started, and can be paused", () => {
     render(<Pomodoro />)
 

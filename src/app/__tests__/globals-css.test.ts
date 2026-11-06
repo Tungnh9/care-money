@@ -36,7 +36,7 @@ function declares(rule: Rule, prop: string, value?: string): boolean {
 }
 
 describe("globals.css — giảm chuyển động", () => {
-  it.each([".ob-conf", ".ob-firework-spark", ".ob-tada"])(
+  it.each([".ob-conf", ".ob-firework-spark", ".ob-tada", ".ob-wave-tail", ".ob-blink", ".ob-z"])(
     "only animates %s when the user has not asked for reduced motion",
     (selector) => {
       const animated = rulesFor(selector).filter((rule) => declares(rule, "animation"))
@@ -44,6 +44,21 @@ describe("globals.css — giảm chuyển động", () => {
       for (const rule of animated) expect(wrappersOf(rule)).toContain(NO_PREFERENCE)
     }
   )
+
+  // Đổi tên class hay keyframes của linh vật mà quên 1 nơi thì animation im lặng không chạy — khoá tên khớp nhau.
+  it.each([".ob-wave-tail", ".ob-blink", ".ob-z"])("animates %s with keyframes that exist", (selector) => {
+    const keyframes: string[] = []
+    root.walkAtRules("keyframes", (at) => {
+      keyframes.push(at.params)
+    })
+    const names = rulesFor(selector).flatMap((rule) =>
+      rule.nodes.flatMap((node) =>
+        node.type === "decl" && node.prop === "animation" ? [node.value.split(/\s+/)[0]] : []
+      )
+    )
+    expect(names.length).toBeGreaterThan(0)
+    for (const name of names) expect(keyframes).toContain(name)
+  })
 
   it("hides confetti pieces and firework sparks under reduced motion instead of leaving them frozen on the card", () => {
     const hidden: string[] = []
