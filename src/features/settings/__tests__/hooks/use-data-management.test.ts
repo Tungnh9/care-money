@@ -20,14 +20,21 @@ import {
   setStoredLifePlan,
   type LifePlanState,
 } from "@/lib/life-plan/life-plan-storage"
-import { onDataChanged } from "@/lib/data-change-bus"
+import { notifyDataChanged, onDataChanged } from "@/lib/data-change-bus"
 import { DEFAULT_SETTINGS, SETTINGS_STORAGE_KEY } from "@/lib/settings/settings-storage"
 import { setSyncSecret } from "@/lib/sync-secret-storage"
 import { CAR_GOAL_FUND_KEY, getCarGoalFundName, setCarGoalFundName } from "@/lib/goals/car-goal-storage"
 import { EXPORT_VERSION } from "@/lib/data-transfer"
+import {
+  BACKUP_STATUS_KEY,
+  dataFingerprint,
+  getBackupStatus,
+  setBackupStatus,
+} from "@/lib/backup/backup-status-storage"
 import { useDataManagement } from "../../hooks/use-data-management"
 
 vi.mock("../../api", () => ({
+  listCloudVersions: vi.fn(),
   pushSnapshot: vi.fn(),
   pullSnapshot: vi.fn(),
 }))
@@ -39,7 +46,7 @@ vi.mock("@/lib/life-plan/image-cache", () => ({
   putCachedImage: vi.fn(),
 }))
 
-import { pushSnapshot, pullSnapshot } from "../../api"
+import { listCloudVersions, pushSnapshot, pullSnapshot } from "../../api"
 import { clearImageCache } from "@/lib/life-plan/image-cache"
 
 const WRITE_FAILED =
@@ -388,7 +395,7 @@ describe("useDataManagement", () => {
     setStoredJournal({
       entries: [{ id: 1, text: "Bài 1", time: "09:00", date: "10/08", words: 2, mood: null }],
     })
-    vi.mocked(pushSnapshot).mockResolvedValue({ ok: true, summary: "Đã tải lên" })
+    vi.mocked(pushSnapshot).mockResolvedValue({ ok: true, summary: "Đã tải lên", etag: "etag-new" })
     const { result } = renderDataManagement()
 
     await act(async () => {
@@ -410,7 +417,8 @@ describe("useDataManagement", () => {
         work: DEFAULT_WORK_STATE,
         lifePlan: DEFAULT_LIFE_PLAN_STATE,
         goals: { carFundName: null },
-      })
+      }),
+      { baseEtag: null, force: false }
     )
     expect(result.current.syncResult).toEqual({ ok: true, summary: "Đã tải lên" })
     expect(result.current.syncing).toBe(false)
@@ -419,7 +427,7 @@ describe("useDataManagement", () => {
   it("pushToCloud clears an old sync result as soon as a new upload starts", async () => {
     const { result } = renderDataManagement()
     vi.mocked(pushSnapshot).mockResolvedValueOnce({ ok: false, error: "Sai secret đồng bộ." })
-    let resolvePush!: (value: { ok: true; summary: string }) => void
+    let resolvePush!: (value: { ok: true; summary: string; etag: string | null }) => void
     vi.mocked(pushSnapshot).mockReturnValueOnce(new Promise((resolve) => (resolvePush = resolve)))
 
     await act(async () => {
@@ -436,7 +444,7 @@ describe("useDataManagement", () => {
     expect(result.current.syncResult).toBeNull()
 
     await act(async () => {
-      resolvePush({ ok: true, summary: "Đã tải lên" })
+      resolvePush({ ok: true, summary: "Đã tải lên", etag: null })
       await pending
     })
     expect(result.current.syncResult).toEqual({ ok: true, summary: "Đã tải lên" })
@@ -490,13 +498,14 @@ describe("useDataManagement", () => {
       },
       summary: "5 bài nhật ký",
       exportedAt: "2026-09-20T02:00:00.000Z",
+      etag: null,
     })
 
     await act(async () => {
       await result.current.pullFromCloud("my-secret")
     })
 
-    expect(pullSnapshot).toHaveBeenCalledWith("my-secret")
+    expect(pullSnapshot).toHaveBeenCalledWith("my-secret", undefined)
     expect(onReplaceJournal).not.toHaveBeenCalled()
     expect(result.current.syncing).toBe(false)
     expect(result.current.pendingRestore).toMatchObject({ source: "cloud", exportedAt: "2026-09-20T02:00:00.000Z" })
@@ -553,6 +562,7 @@ describe("useDataManagement", () => {
         },
         summary: "ok",
         exportedAt: null,
+        etag: null,
       })
       await pending
     })
@@ -606,6 +616,7 @@ describe("useDataManagement", () => {
       },
       summary: "ok",
       exportedAt: null,
+      etag: null,
     })
 
     await act(async () => {
@@ -699,6 +710,7 @@ describe("useDataManagement", () => {
       },
       summary: "1 bài nhật ký",
       exportedAt: null,
+      etag: null,
     })
 
     await pullAndConfirm(result, "my-secret")
@@ -796,7 +808,7 @@ describe("useDataManagement", () => {
 
     it("pushToCloud sends the current car-goal link", async () => {
       setCarGoalFundName("Quỹ mua xe")
-      vi.mocked(pushSnapshot).mockResolvedValue({ ok: true, summary: "ok" })
+      vi.mocked(pushSnapshot).mockResolvedValue({ ok: true, summary: "ok", etag: null })
       const { result } = renderDataManagement()
 
       await act(async () => {
@@ -805,7 +817,8 @@ describe("useDataManagement", () => {
 
       expect(pushSnapshot).toHaveBeenCalledWith(
         "my-secret",
-        expect.objectContaining({ goals: { carFundName: "Quỹ mua xe" } })
+        expect.objectContaining({ goals: { carFundName: "Quỹ mua xe" } }),
+        expect.anything()
       )
     })
 
@@ -853,6 +866,7 @@ describe("useDataManagement", () => {
         },
         summary: "ok",
         exportedAt: null,
+        etag: null,
       })
       const { result } = renderDataManagement()
 
@@ -878,6 +892,7 @@ describe("useDataManagement", () => {
         },
         summary: "ok",
         exportedAt: null,
+        etag: null,
       })
       const { result } = renderDataManagement()
 
@@ -902,6 +917,7 @@ describe("useDataManagement", () => {
         },
         summary: "ok",
         exportedAt: null,
+        etag: null,
       })
       const { result } = renderDataManagement()
 
@@ -949,7 +965,7 @@ describe("useDataManagement", () => {
 
     it("pushToCloud sends this device's notes and plans", async () => {
       setStoredLifePlan(RESTORED_LIFE_PLAN)
-      vi.mocked(pushSnapshot).mockResolvedValue({ ok: true, summary: "ok" })
+      vi.mocked(pushSnapshot).mockResolvedValue({ ok: true, summary: "ok", etag: null })
       const { result } = renderDataManagement()
 
       await act(async () => {
@@ -958,7 +974,8 @@ describe("useDataManagement", () => {
 
       expect(pushSnapshot).toHaveBeenLastCalledWith(
         "my-secret",
-        expect.objectContaining({ lifePlan: RESTORED_LIFE_PLAN })
+        expect.objectContaining({ lifePlan: RESTORED_LIFE_PLAN }),
+        expect.anything()
       )
     })
 
@@ -1013,6 +1030,473 @@ describe("useDataManagement", () => {
       expect(onReplaceLifePlan).toHaveBeenCalledWith(DEFAULT_LIFE_PLAN_STATE)
       expect(clearImageCache).toHaveBeenCalledTimes(1)
       expect(fetchMock).not.toHaveBeenCalled()
+    })
+  })
+  // onReplace* thật ghi xuống storage (qua setStored*) — để thấy Hoàn tác trả đúng chuỗi cũ.
+  function renderWritingDataManagement() {
+    const rendered = renderDataManagement()
+    rendered.onReplaceJournal.mockImplementation(setStoredJournal)
+    rendered.onReplaceLifePlan.mockImplementation(setStoredLifePlan)
+    return rendered
+  }
+
+  const INCOMING_JOURNAL = {
+    entries: [{ id: 1, text: "Bài trong bản sao", time: "09:00", date: "10/08", words: 4, mood: null }],
+  }
+
+  function cloudCopy(extra: Record<string, unknown> = {}) {
+    return {
+      ok: true as const,
+      data: {
+        journal: INCOMING_JOURNAL,
+        finance: DEFAULT_FINANCE_STATE,
+        study: DEFAULT_STUDY_STATE,
+        settings: DEFAULT_SETTINGS,
+        budget: DEFAULT_BUDGET_STATE,
+        netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
+        work: DEFAULT_WORK_STATE,
+        lifePlan: RESTORED_LIFE_PLAN,
+      },
+      summary: "1 bài nhật ký",
+      exportedAt: "2026-11-06T14:05:00.000Z",
+      etag: "etag-cloud",
+      ...extra,
+    }
+  }
+
+  describe("hoàn tác lần nạp", () => {
+    it("puts this device's data and backup status back exactly as before the restore", async () => {
+      setStoredJournal(LOCAL_JOURNAL)
+      setBackupStatus({ fileAt: null, cloudAt: null, fingerprint: null, cloudEtag: "etag-before" })
+      const rawJournal = window.localStorage.getItem(JOURNAL_STORAGE_KEY)
+      const rawStatus = window.localStorage.getItem(BACKUP_STATUS_KEY)
+      const { result } = renderWritingDataManagement()
+
+      await importAndConfirm(result, backupFile({ journal: INCOMING_JOURNAL }))
+      expect(getStoredJournal()).toEqual(INCOMING_JOURNAL)
+      expect(result.current.restoreUndo).toEqual({ source: "file", status: "ready" })
+
+      act(() => {
+        result.current.undoRestore()
+      })
+
+      expect(window.localStorage.getItem(JOURNAL_STORAGE_KEY)).toBe(rawJournal)
+      expect(window.localStorage.getItem(BACKUP_STATUS_KEY)).toBe(rawStatus)
+      expect(result.current.restoreUndo).toEqual({ source: "file", status: "done" })
+    })
+
+    it("tells every open page to reload after undoing", async () => {
+      setStoredJournal(LOCAL_JOURNAL)
+      const { result } = renderWritingDataManagement()
+      await importAndConfirm(result, backupFile({ journal: INCOMING_JOURNAL }))
+      const listener = vi.fn()
+      const unsubscribe = onDataChanged(listener)
+
+      try {
+        act(() => {
+          result.current.undoRestore()
+        })
+      } finally {
+        unsubscribe()
+      }
+
+      expect(listener).toHaveBeenCalled()
+    })
+
+    it("stops offering undo as soon as anything else is written, so the undo can't wipe that change", async () => {
+      setStoredJournal(LOCAL_JOURNAL)
+      const { result } = renderWritingDataManagement()
+      await importAndConfirm(result, backupFile({ journal: INCOMING_JOURNAL }))
+
+      const edited = { entries: [...INCOMING_JOURNAL.entries, { ...LOCAL_JOURNAL.entries[0], id: 2 }] }
+      act(() => {
+        setStoredJournal(edited)
+      })
+
+      expect(result.current.restoreUndo).toBeNull()
+      act(() => {
+        result.current.undoRestore()
+      })
+      expect(getStoredJournal()).toEqual(edited)
+    })
+
+    it("also stops when another tab writes", async () => {
+      setStoredJournal(LOCAL_JOURNAL)
+      const { result } = renderWritingDataManagement()
+      await importAndConfirm(result, backupFile({ journal: INCOMING_JOURNAL }))
+
+      act(() => {
+        window.localStorage.setItem(WORK_STORAGE_KEY, '{"from":"other tab"}')
+        window.dispatchEvent(new StorageEvent("storage", { key: WORK_STORAGE_KEY }))
+      })
+
+      expect(result.current.restoreUndo).toBeNull()
+    })
+
+    it("keeps the undo through a change notification that wrote nothing new", async () => {
+      setStoredJournal(LOCAL_JOURNAL)
+      const { result } = renderWritingDataManagement()
+      await importAndConfirm(result, backupFile({ journal: INCOMING_JOURNAL }))
+
+      act(() => {
+        notifyDataChanged()
+      })
+
+      expect(result.current.restoreUndo).toEqual({ source: "file", status: "ready" })
+    })
+
+    it("takes down the 'Đã nạp' banner on undo, so the next action can't bring it back", async () => {
+      setStoredJournal(LOCAL_JOURNAL)
+      vi.mocked(pushSnapshot).mockResolvedValue({ ok: false, error: "Sai secret đồng bộ." })
+      const { result } = renderWritingDataManagement()
+      await importAndConfirm(result, backupFile({ journal: INCOMING_JOURNAL }))
+
+      act(() => {
+        result.current.undoRestore()
+      })
+      expect(result.current.imported).toBeNull()
+
+      await act(async () => {
+        await result.current.pushToCloud("my-secret")
+      })
+
+      expect(result.current.restoreUndo).toBeNull()
+      expect(result.current.imported).toBeNull()
+    })
+
+    it("is dropped by the next action on the card", async () => {
+      const { result } = renderWritingDataManagement()
+      await importAndConfirm(result, backupFile({ journal: INCOMING_JOURNAL }))
+
+      act(() => {
+        result.current.exportData()
+      })
+
+      expect(result.current.restoreUndo).toBeNull()
+    })
+
+    it("offers no undo when the restore failed", async () => {
+      const { result, onReplaceFinance } = renderDataManagement()
+      onReplaceFinance.mockImplementation(() => {
+        throw new Error("QuotaExceededError")
+      })
+
+      await importAndConfirm(result, backupFile({}))
+
+      expect(result.current.imported).toEqual({ ok: false, error: WRITE_FAILED })
+      expect(result.current.restoreUndo).toBeNull()
+    })
+
+    it("undoes a cloud restore too, labelled as such", async () => {
+      setStoredJournal(LOCAL_JOURNAL)
+      vi.mocked(pullSnapshot).mockResolvedValue(cloudCopy())
+      const { result } = renderWritingDataManagement()
+
+      await pullAndConfirm(result, "my-secret")
+      expect(result.current.restoreUndo).toEqual({ source: "cloud", status: "ready" })
+
+      act(() => {
+        result.current.undoRestore()
+      })
+
+      expect(getStoredJournal()).toEqual(LOCAL_JOURNAL)
+      expect(result.current.restoreUndo).toEqual({ source: "cloud", status: "done" })
+      expect(result.current.syncResult).toBeNull()
+    })
+  })
+
+  describe("trạng thái sao lưu", () => {
+    it("exportData records the file backup and a fingerprint of what it holds", () => {
+      setStoredJournal(LOCAL_JOURNAL)
+      const { result } = renderDataManagement()
+
+      act(() => {
+        result.current.exportData()
+      })
+
+      const status = getBackupStatus()
+      expect(status.fileAt).not.toBeNull()
+      expect(status.fingerprint).toBe(dataFingerprint())
+    })
+
+    it("pushToCloud sends the ETag this device is based on and saves the new one", async () => {
+      setBackupStatus({ fileAt: null, cloudAt: null, fingerprint: null, cloudEtag: "etag-base" })
+      vi.mocked(pushSnapshot).mockResolvedValue({ ok: true, summary: "ok", etag: "etag-new" })
+      const { result } = renderDataManagement()
+
+      await act(async () => {
+        await result.current.pushToCloud("my-secret")
+      })
+
+      expect(pushSnapshot).toHaveBeenLastCalledWith("my-secret", expect.anything(), {
+        baseEtag: "etag-base",
+        force: false,
+      })
+      const status = getBackupStatus()
+      expect(status.cloudEtag).toBe("etag-new")
+      expect(status.cloudAt).not.toBeNull()
+      expect(status.fingerprint).toBe(dataFingerprint())
+    })
+
+    it("keeps counting a change made while the upload was on its way as not backed up", async () => {
+      let resolvePush!: (value: { ok: true; summary: string; etag: string | null }) => void
+      vi.mocked(pushSnapshot).mockReturnValue(new Promise((resolve) => (resolvePush = resolve)))
+      const { result } = renderDataManagement()
+
+      let pending!: Promise<void>
+      act(() => {
+        pending = result.current.pushToCloud("my-secret")
+      })
+      setStoredJournal(LOCAL_JOURNAL)
+      await act(async () => {
+        resolvePush({ ok: true, summary: "ok", etag: "etag-new" })
+        await pending
+      })
+
+      expect(getBackupStatus().fingerprint).not.toBe(dataFingerprint())
+    })
+
+    it("a confirmed pull remembers the cloud copy's ETag and when it was made", async () => {
+      vi.mocked(pullSnapshot).mockResolvedValue(cloudCopy())
+      const { result } = renderWritingDataManagement()
+
+      await pullAndConfirm(result, "my-secret")
+
+      expect(getBackupStatus()).toEqual({
+        fileAt: null,
+        cloudAt: "2026-11-06T14:05:00.000Z",
+        fingerprint: dataFingerprint(),
+        cloudEtag: "etag-cloud",
+      })
+    })
+
+    it("a cancelled pull changes nothing", async () => {
+      vi.mocked(pullSnapshot).mockResolvedValue(cloudCopy())
+      const { result } = renderDataManagement()
+
+      await act(async () => {
+        await result.current.pullFromCloud("my-secret")
+      })
+      act(() => {
+        result.current.cancelRestore()
+      })
+
+      expect(window.localStorage.getItem(BACKUP_STATUS_KEY)).toBeNull()
+    })
+
+    it("wipeData forgets everything this device knew about its backups", () => {
+      setBackupStatus({ fileAt: "2026-11-01T00:00:00.000Z", cloudAt: null, fingerprint: "x", cloudEtag: "e" })
+      const { result } = renderDataManagement()
+
+      act(() => {
+        result.current.wipeData()
+      })
+
+      expect(window.localStorage.getItem(BACKUP_STATUS_KEY)).toBeNull()
+    })
+  })
+
+  describe("xung đột khi tải lên", () => {
+    it("waits for the user instead of reporting an error, and says whether this device ever synced", async () => {
+      vi.mocked(pushSnapshot).mockResolvedValue({
+        ok: false,
+        error: "Đã đổi.",
+        conflict: true,
+        cloudUploadedAt: "2026-11-06T14:05:00.000Z",
+      })
+      const { result } = renderDataManagement()
+
+      await act(async () => {
+        await result.current.pushToCloud("my-secret")
+      })
+
+      expect(result.current.pushConflict).toEqual({ cloudUploadedAt: "2026-11-06T14:05:00.000Z", hasBase: false })
+      expect(result.current.syncResult).toBeNull()
+      expect(result.current.syncing).toBe(false)
+      expect(window.localStorage.getItem(BACKUP_STATUS_KEY)).toBeNull()
+
+      act(() => {
+        result.current.cancelPushConflict()
+      })
+      expect(result.current.pushConflict).toBeNull()
+    })
+
+    it("overwrites only when asked to, and clears the warning", async () => {
+      setBackupStatus({ fileAt: null, cloudAt: null, fingerprint: null, cloudEtag: "etag-base" })
+      vi.mocked(pushSnapshot).mockResolvedValueOnce({
+        ok: false,
+        error: "Đã đổi.",
+        conflict: true,
+        cloudUploadedAt: null,
+      })
+      vi.mocked(pushSnapshot).mockResolvedValueOnce({ ok: true, summary: "ok", etag: "etag-new" })
+      const { result } = renderDataManagement()
+
+      await act(async () => {
+        await result.current.pushToCloud("my-secret")
+      })
+      expect(result.current.pushConflict).toEqual({ cloudUploadedAt: null, hasBase: true })
+
+      await act(async () => {
+        await result.current.pushToCloud("my-secret", true)
+      })
+
+      expect(pushSnapshot).toHaveBeenLastCalledWith("my-secret", expect.anything(), {
+        baseEtag: "etag-base",
+        force: true,
+      })
+      expect(result.current.pushConflict).toBeNull()
+      expect(result.current.syncResult).toEqual({ ok: true, summary: "ok" })
+    })
+
+    it("downloading first clears the warning", async () => {
+      vi.mocked(pushSnapshot).mockResolvedValue({ ok: false, error: "x", conflict: true, cloudUploadedAt: null })
+      vi.mocked(pullSnapshot).mockResolvedValue(cloudCopy())
+      const { result } = renderDataManagement()
+
+      await act(async () => {
+        await result.current.pushToCloud("my-secret")
+      })
+      await act(async () => {
+        await result.current.pullFromCloud("my-secret")
+      })
+
+      expect(result.current.pushConflict).toBeNull()
+      expect(result.current.pendingRestore).toMatchObject({ source: "cloud", etag: "etag-cloud", old: false })
+    })
+  })
+
+  describe("bản cũ trên đám mây", () => {
+    const VERSION = { id: "1762437900000", uploadedAt: "2026-11-06T14:05:00.000Z", size: 200 }
+
+    it("loads the list of older versions", async () => {
+      let resolveList!: (value: Awaited<ReturnType<typeof listCloudVersions>>) => void
+      vi.mocked(listCloudVersions).mockReturnValue(new Promise((resolve) => (resolveList = resolve)))
+      const { result } = renderDataManagement()
+
+      let pending!: Promise<void>
+      act(() => {
+        pending = result.current.loadCloudVersions("my-secret")
+      })
+      expect(result.current.cloudVersions).toEqual({ status: "loading" })
+
+      await act(async () => {
+        resolveList({ ok: true, versions: [VERSION] })
+        await pending
+      })
+      expect(listCloudVersions).toHaveBeenCalledWith("my-secret")
+      expect(result.current.cloudVersions).toEqual({ status: "ready", versions: [VERSION] })
+
+      act(() => {
+        result.current.closeCloudVersions()
+      })
+      expect(result.current.cloudVersions).toBeNull()
+    })
+
+    it("shows why the list could not be loaded", async () => {
+      vi.mocked(listCloudVersions).mockResolvedValue({ ok: false, error: "Sai secret đồng bộ." })
+      const { result } = renderDataManagement()
+
+      await act(async () => {
+        await result.current.loadCloudVersions("my-secret")
+      })
+
+      expect(result.current.cloudVersions).toEqual({ status: "error", error: "Sai secret đồng bộ." })
+    })
+
+    it("stages an older version for confirmation, and restoring it keeps this device's cloud ETag", async () => {
+      setBackupStatus({ fileAt: null, cloudAt: "2026-11-07T00:00:00.000Z", fingerprint: null, cloudEtag: "etag-base" })
+      vi.mocked(pullSnapshot).mockResolvedValue(cloudCopy({ etag: null }))
+      const { result } = renderWritingDataManagement()
+
+      await act(async () => {
+        await result.current.pullCloudVersion("my-secret", VERSION)
+      })
+
+      expect(pullSnapshot).toHaveBeenCalledWith("my-secret", VERSION.id)
+      expect(result.current.pendingRestore).toMatchObject({ source: "cloud", old: true, etag: null })
+
+      act(() => {
+        result.current.confirmRestore()
+      })
+
+      expect(getStoredJournal()).toEqual(INCOMING_JOURNAL)
+      expect(getBackupStatus()).toMatchObject({ cloudEtag: "etag-base", cloudAt: "2026-11-07T00:00:00.000Z" })
+    })
+  })
+
+  describe("giữ mục chỉ có trên máy này", () => {
+    it("lists what only this device has when staging a restore", async () => {
+      setStoredJournal(LOCAL_JOURNAL)
+      setStoredLifePlan(LOCAL_LIFE_PLAN)
+      const { result } = renderDataManagement()
+
+      await act(async () => {
+        await result.current.importData(backupFile({ journal: INCOMING_JOURNAL, lifePlan: RESTORED_LIFE_PLAN }))
+      })
+
+      expect(result.current.pendingRestore?.localOnly).toBe("1 bài nhật ký · 1 ghi chép Plan")
+    })
+
+    it("has nothing to keep when the copy already holds everything on this device", async () => {
+      setStoredJournal(INCOMING_JOURNAL)
+      const { result } = renderDataManagement()
+
+      await act(async () => {
+        await result.current.importData(backupFile({ journal: INCOMING_JOURNAL }))
+      })
+
+      expect(result.current.pendingRestore?.localOnly).toBeNull()
+    })
+
+    it("merges them into the restored copy on 'Nạp và giữ', still counting them as not backed up", async () => {
+      setStoredJournal(LOCAL_JOURNAL)
+      setStoredLifePlan(LOCAL_LIFE_PLAN)
+      const { result } = renderWritingDataManagement()
+
+      await act(async () => {
+        await result.current.importData(backupFile({ journal: INCOMING_JOURNAL, lifePlan: RESTORED_LIFE_PLAN }))
+      })
+      act(() => {
+        result.current.confirmRestore(true)
+      })
+
+      expect(getStoredJournal().entries.map((entry) => entry.text)).toEqual(["Bài trên máy", "Bài trong bản sao"])
+      expect(getStoredLifePlan().notes.map((note) => note.title)).toEqual([
+        "Đi xem nhà",
+        "Ký hợp đồng",
+        "Ghi chép trên máy",
+      ])
+      expect(result.current.imported).toEqual({
+        ok: true,
+        file: "backup.json",
+        summary: expect.stringMatching(/ · giữ lại 1 bài nhật ký · 1 ghi chép Plan chỉ có trên máy này$/),
+      })
+      expect(getBackupStatus().fingerprint).toBeNull()
+    })
+
+    it("also keeps an entry written in another tab while the dialog was open", async () => {
+      const { result } = renderWritingDataManagement()
+      await act(async () => {
+        await result.current.importData(backupFile({ journal: INCOMING_JOURNAL }))
+      })
+      expect(result.current.pendingRestore?.localOnly).toBeNull()
+
+      setStoredJournal(LOCAL_JOURNAL)
+      act(() => {
+        result.current.confirmRestore(true)
+      })
+
+      expect(getStoredJournal().entries.map((entry) => entry.text)).toEqual(["Bài trên máy", "Bài trong bản sao"])
+    })
+
+    it("replaces everything on a plain confirm", async () => {
+      setStoredJournal(LOCAL_JOURNAL)
+      const { result } = renderWritingDataManagement()
+
+      await importAndConfirm(result, backupFile({ journal: INCOMING_JOURNAL }))
+
+      expect(getStoredJournal()).toEqual(INCOMING_JOURNAL)
     })
   })
 })

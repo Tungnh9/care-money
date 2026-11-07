@@ -27,6 +27,7 @@ import {
   type Insight,
 } from "../insights-calculations"
 import { splitGreeting } from "@/lib/settings/greeting"
+import { BackupReminderCard } from "./backup-reminder-card"
 import { BudgetSummarySection } from "./budget-summary-section"
 import { FinanceSummarySection } from "./finance-summary-section"
 import { GoalsSummarySection } from "./goals-summary-section"
@@ -146,6 +147,8 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
           <p className="text-sm text-[var(--ob-color-text-subtle)]">{longDate()}</p>
         </div>
       </div>
+
+      <BackupReminderCard />
 
       <InsightsSection insights={insights} onDismiss={dismissInsight} />
 

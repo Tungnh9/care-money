@@ -152,4 +152,30 @@ describe("AlertDialog", () => {
     expect(dialogs[1]).toHaveAccessibleName("Thay dữ liệu trên máy này?")
     expect(dialogs[1]).toHaveAccessibleDescription("Cảnh báo B")
   })
+
+  it("offers an extra, safer action between Huỷ and the confirm button, and closes after it", () => {
+    const onConfirm = vi.fn()
+    const onExtra = vi.fn()
+    const onOpenChange = vi.fn()
+    render(
+      <AlertDialog
+        open
+        onOpenChange={onOpenChange}
+        title="Thay dữ liệu?"
+        confirmLabel="Thay dữ liệu"
+        destructive
+        extraAction={{ label: "Nạp và giữ", onClick: onExtra }}
+        onConfirm={onConfirm}
+      />
+    )
+
+    const buttons = screen.getAllByRole("button").map((button) => button.textContent)
+    expect(buttons).toEqual(["Huỷ", "Nạp và giữ", "Thay dữ liệu"])
+
+    fireEvent.click(screen.getByRole("button", { name: "Nạp và giữ" }))
+
+    expect(onExtra).toHaveBeenCalledTimes(1)
+    expect(onConfirm).not.toHaveBeenCalled()
+    expect(onOpenChange).toHaveBeenCalledWith(false)
+  })
 })

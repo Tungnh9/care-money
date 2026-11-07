@@ -10,6 +10,8 @@ import { DEFAULT_SETTINGS } from "@/lib/settings/settings-storage"
 import { DEFAULT_WORK_STATE } from "@/lib/work/work-storage"
 import { DEFAULT_LIFE_PLAN_STATE } from "@/lib/life-plan/life-plan-storage"
 import { clearSyncSecret, setSyncSecret } from "@/lib/sync-secret-storage"
+import { setStoredJournal } from "@/lib/journal/journal-storage"
+import { dataFingerprint, setBackupStatus } from "@/lib/backup/backup-status-storage"
 import type { PendingRestore } from "../../hooks/use-data-management"
 import { DataCard } from "../../components/data-card"
 
@@ -19,12 +21,20 @@ const BASE_PROPS = {
   syncing: false,
   syncResult: null,
   pendingRestore: null,
+  restoreUndo: null,
+  pushConflict: null,
+  cloudVersions: null,
   onExport: vi.fn(),
   onImport: vi.fn(),
   onPushToCloud: vi.fn(),
   onPullFromCloud: vi.fn(),
   onConfirmRestore: vi.fn(),
   onCancelRestore: vi.fn(),
+  onUndoRestore: vi.fn(),
+  onCancelPushConflict: vi.fn(),
+  onLoadCloudVersions: vi.fn(),
+  onCloseCloudVersions: vi.fn(),
+  onPullCloudVersion: vi.fn(),
 }
 
 const PENDING_CLOUD_RESTORE: PendingRestore = {
@@ -43,6 +53,15 @@ const PENDING_CLOUD_RESTORE: PendingRestore = {
   exportedAt: new Date(2026, 7, 14, 9, 5).toISOString(),
   incomingCounts: "3 bài nhật ký · 0 khoản chi · 1 quỹ tiết kiệm · 0 lần mua vàng · 0 từ đã học",
   localCounts: "5 bài nhật ký · 2 khoản chi · 1 quỹ tiết kiệm · 0 lần mua vàng · 0 từ đã học",
+  localOnly: null,
+  etag: "etag-1",
+  old: false,
+}
+
+const ONE_ENTRY = { entries: [{ id: 1, text: "Bài", time: "09:00", date: "07/11", words: 1, mood: null }] }
+
+function typeSecret(value = "abc123") {
+  fireEvent.change(screen.getByLabelText("Secret đồng bộ", { exact: false }), { target: { value } })
 }
 
 describe("DataCard", () => {
@@ -216,7 +235,12 @@ describe("DataCard", () => {
     render(
       <DataCard
         {...BASE_PROPS}
-        pendingRestore={{ ...PENDING_CLOUD_RESTORE, source: "file", fileName: "backup.json", exportedAt: null }}
+        pendingRestore={{
+          ...PENDING_CLOUD_RESTORE,
+          source: "file",
+          fileName: "backup.json",
+          exportedAt: null,
+        }}
       />
     )
 
@@ -251,6 +275,271 @@ describe("DataCard", () => {
     )
     fireEvent.click(screen.getByRole("button", { name: "Thay dữ liệu" }))
     expect(onConfirmRestore).toHaveBeenCalledTimes(1)
+    expect(onConfirmRestore).toHaveBeenCalledWith(false)
+  })
+
+  it("offers to keep what only this device has, listing it, and confirms with keepLocal", () => {
+    const onConfirmRestore = vi.fn()
+    render(
+      <DataCard
+        {...BASE_PROPS}
+        pendingRestore={{ ...PENDING_CLOUD_RESTORE, localOnly: "2 bài nhật ký · 1 ghi chép Plan" }}
+        onConfirmRestore={onConfirmRestore}
+      />
+    )
+
+    const dialog = screen.getByRole("alertdialog")
+    expect(
+      within(dialog).getByText("Chỉ có trên máy này, bản sắp nạp không có: 2 bài nhật ký · 1 ghi chép Plan.", {
+        exact: false,
+      })
+    ).toBeInTheDocument()
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Nạp và giữ" }))
+
+    expect(onConfirmRestore).toHaveBeenCalledWith(true)
+  })
+
+  it("has no keep option when the incoming copy already holds everything on this device", () => {
+    render(<DataCard {...BASE_PROPS} pendingRestore={PENDING_CLOUD_RESTORE} />)
+
+    const dialog = screen.getByRole("alertdialog")
+    expect(within(dialog).queryByRole("button", { name: "Nạp và giữ" })).not.toBeInTheDocument()
+    expect(within(dialog).queryByText("Chỉ có trên máy này", { exact: false })).not.toBeInTheDocument()
+    expect(within(dialog).getByText("Hoàn tác được ngay sau khi nạp", { exact: false })).toBeInTheDocument()
+  })
+
+  it("names an older cloud version as such", () => {
+    render(<DataCard {...BASE_PROPS} pendingRestore={{ ...PENDING_CLOUD_RESTORE, etag: null, old: true }} />)
+
+    expect(
+      within(screen.getByRole("alertdialog")).getByText("Bản cũ trên đám mây được tạo lúc", { exact: false })
+    ).toBeInTheDocument()
+  })
+
+  describe("hoàn tác lần nạp", () => {
+    it("offers Hoàn tác under the banner of the restore that just finished, and only there", () => {
+      const onUndoRestore = vi.fn()
+      render(
+        <DataCard
+          {...BASE_PROPS}
+          imported={{ ok: true, file: "backup.json", summary: "3 bài nhật ký" }}
+          syncResult={{ ok: true, summary: "Đã tải lên" }}
+          restoreUndo={{ source: "file", status: "ready" }}
+          onUndoRestore={onUndoRestore}
+        />
+      )
+
+      const undoButtons = screen.getAllByRole("button", { name: "Hoàn tác" })
+      expect(undoButtons).toHaveLength(1)
+      expect(screen.getByText("Đã nạp backup.json").parentElement).toContainElement(undoButtons[0])
+      expect(screen.getByText("Được tới khi bạn sửa dữ liệu hay rời trang Cài đặt.")).toBeInTheDocument()
+
+      fireEvent.click(undoButtons[0])
+
+      expect(onUndoRestore).toHaveBeenCalledTimes(1)
+    })
+
+    it("offers it under the sync banner after a cloud restore", () => {
+      render(
+        <DataCard
+          {...BASE_PROPS}
+          syncResult={{ ok: true, summary: "1 bài nhật ký" }}
+          restoreUndo={{ source: "cloud", status: "ready" }}
+        />
+      )
+
+      expect(screen.getByText("Đã đồng bộ").parentElement).toContainElement(
+        screen.getByRole("button", { name: "Hoàn tác" })
+      )
+    })
+
+    it("says the restore was undone once it has been", () => {
+      const { rerender } = render(<DataCard {...BASE_PROPS} restoreUndo={{ source: "file", status: "done" }} />)
+
+      expect(screen.getByText("Đã hoàn tác lần nạp")).toBeInTheDocument()
+      expect(screen.getByText("Dữ liệu trên máy đã về như trước khi nạp file.")).toBeInTheDocument()
+      expect(screen.queryByRole("button", { name: "Hoàn tác" })).not.toBeInTheDocument()
+
+      rerender(<DataCard {...BASE_PROPS} restoreUndo={{ source: "cloud", status: "done" }} />)
+      expect(screen.getByText("Đã hoàn tác lần tải xuống")).toBeInTheDocument()
+      expect(screen.getByText("Dữ liệu trên máy đã về như trước khi tải xuống.")).toBeInTheDocument()
+    })
+
+    it("shows no Hoàn tác once the undo has expired", () => {
+      render(<DataCard {...BASE_PROPS} imported={{ ok: true, file: "backup.json", summary: "3 bài nhật ký" }} />)
+
+      expect(screen.getByText("Đã nạp backup.json")).toBeInTheDocument()
+      expect(screen.queryByRole("button", { name: "Hoàn tác" })).not.toBeInTheDocument()
+    })
+  })
+
+  describe("xung đột khi tải lên", () => {
+    it("explains that another device uploaded since this one last synced, and offers to download first", () => {
+      const onPullFromCloud = vi.fn()
+      const onCancelPushConflict = vi.fn()
+      render(
+        <DataCard
+          {...BASE_PROPS}
+          pushConflict={{ cloudUploadedAt: new Date(2026, 10, 6, 21, 5).toISOString(), hasBase: true }}
+          onPullFromCloud={onPullFromCloud}
+          onCancelPushConflict={onCancelPushConflict}
+        />
+      )
+      typeSecret()
+
+      const dialog = screen.getByRole("alertdialog")
+      expect(within(dialog).getByText("Máy khác đã tải lên sau lần đồng bộ trước")).toBeInTheDocument()
+      expect(within(dialog).getByText("21:05 ngày 06/11/2026")).toBeInTheDocument()
+
+      fireEvent.click(within(dialog).getByRole("button", { name: "Tải xuống trước" }))
+
+      expect(onPullFromCloud).toHaveBeenCalledWith("abc123")
+      expect(onCancelPushConflict).toHaveBeenCalled()
+    })
+
+    it("says this device never downloaded the cloud copy, and overwrites only on 'Vẫn tải lên'", () => {
+      const onPushToCloud = vi.fn()
+      render(
+        <DataCard
+          {...BASE_PROPS}
+          pushConflict={{ cloudUploadedAt: null, hasBase: false }}
+          onPushToCloud={onPushToCloud}
+        />
+      )
+      typeSecret()
+
+      const dialog = screen.getByRole("alertdialog")
+      expect(within(dialog).getByText("Đám mây đang có 1 bản khác")).toBeInTheDocument()
+      expect(within(dialog).getByText("máy này chưa tải bản đó xuống lần nào", { exact: false })).toBeInTheDocument()
+
+      fireEvent.click(within(dialog).getByRole("button", { name: "Vẫn tải lên" }))
+
+      expect(onPushToCloud).toHaveBeenCalledWith("abc123", true)
+    })
+  })
+
+  describe("bản cũ trên đám mây", () => {
+    const VERSIONS = [
+      { id: "1762437900000", uploadedAt: new Date(2026, 10, 6, 21, 5).toISOString(), size: 245_000 },
+      { id: "1762000000000", uploadedAt: new Date(2026, 10, 1, 8, 0).toISOString(), size: 2_400_000 },
+    ]
+
+    it("loads the list with the secret, and is disabled until a secret is entered", () => {
+      const onLoadCloudVersions = vi.fn()
+      render(<DataCard {...BASE_PROPS} onLoadCloudVersions={onLoadCloudVersions} />)
+
+      expect(screen.getByRole("button", { name: "Bản cũ" })).toBeDisabled()
+      typeSecret()
+      fireEvent.click(screen.getByRole("button", { name: "Bản cũ" }))
+
+      expect(onLoadCloudVersions).toHaveBeenCalledWith("abc123")
+    })
+
+    it("lists the versions newest first and restores the chosen one", () => {
+      const onPullCloudVersion = vi.fn()
+      render(
+        <DataCard
+          {...BASE_PROPS}
+          cloudVersions={{ status: "ready", versions: VERSIONS }}
+          onPullCloudVersion={onPullCloudVersion}
+        />
+      )
+      typeSecret()
+
+      const rows = screen.getAllByRole("listitem")
+      expect(rows[0]).toHaveTextContent("21:05 ngày 06/11/2026 · 239 KB")
+      expect(rows[1]).toHaveTextContent("08:00 ngày 01/11/2026 · 2,3 MB")
+
+      fireEvent.click(within(rows[1]).getByRole("button", { name: "Nạp bản này" }))
+
+      expect(onPullCloudVersion).toHaveBeenCalledWith("abc123", VERSIONS[1])
+    })
+
+    it("shows loading, error and empty states, and closes", () => {
+      const onCloseCloudVersions = vi.fn()
+      const { rerender } = render(<DataCard {...BASE_PROPS} cloudVersions={{ status: "loading" }} />)
+      expect(screen.getByText("Đang tải danh sách…")).toBeInTheDocument()
+
+      rerender(<DataCard {...BASE_PROPS} cloudVersions={{ status: "error", error: "Sai secret đồng bộ." }} />)
+      expect(screen.getByText("Sai secret đồng bộ.")).toBeInTheDocument()
+
+      rerender(
+        <DataCard
+          {...BASE_PROPS}
+          cloudVersions={{ status: "ready", versions: [] }}
+          onCloseCloudVersions={onCloseCloudVersions}
+        />
+      )
+      expect(screen.getByText("Chưa có bản cũ nào", { exact: false })).toBeInTheDocument()
+
+      fireEvent.click(screen.getByRole("button", { name: "Đóng danh sách bản cũ" }))
+      expect(onCloseCloudVersions).toHaveBeenCalled()
+    })
+  })
+
+  describe("sao lưu gần nhất", () => {
+    it("says nothing has been backed up yet and that there are unsaved changes", () => {
+      setStoredJournal(ONE_ENTRY)
+
+      render(<DataCard {...BASE_PROPS} />)
+
+      expect(screen.getByText(/^Sao lưu gần nhất:/)).toHaveTextContent(
+        "Sao lưu gần nhất: file chưa có · đám mây chưa có"
+      )
+      expect(screen.getByText("Có thay đổi chưa nằm trong bản sao nào.")).toBeInTheDocument()
+    })
+
+    it("shows how long ago each backup was and that everything is backed up", () => {
+      setStoredJournal(ONE_ENTRY)
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+      setBackupStatus({
+        fileAt: new Date().toISOString(),
+        cloudAt: yesterday.toISOString(),
+        fingerprint: dataFingerprint(),
+        cloudEtag: null,
+      })
+
+      render(<DataCard {...BASE_PROPS} />)
+
+      expect(screen.getByText(/^Sao lưu gần nhất:/)).toHaveTextContent(
+        "Sao lưu gần nhất: file hôm nay · đám mây hôm qua"
+      )
+      expect(screen.getByText("Mọi thay đổi đã có trong bản sao.")).toBeInTheDocument()
+    })
+
+    it("follows a write made after the page opened", () => {
+      setStoredJournal(ONE_ENTRY)
+      setBackupStatus({
+        fileAt: new Date().toISOString(),
+        cloudAt: null,
+        fingerprint: dataFingerprint(),
+        cloudEtag: null,
+      })
+      render(<DataCard {...BASE_PROPS} />)
+      expect(screen.getByText("Mọi thay đổi đã có trong bản sao.")).toBeInTheDocument()
+
+      act(() => {
+        setStoredJournal({ entries: [...ONE_ENTRY.entries, { ...ONE_ENTRY.entries[0], id: 2, text: "Bài mới" }] })
+      })
+
+      expect(screen.getByText("Có thay đổi chưa nằm trong bản sao nào.")).toBeInTheDocument()
+    })
+
+    it("says nothing about changes on a device with no data yet", () => {
+      render(<DataCard {...BASE_PROPS} />)
+
+      expect(screen.getByText(/^Sao lưu gần nhất:/)).toBeInTheDocument()
+      expect(screen.queryByText("Có thay đổi chưa nằm trong bản sao nào.")).not.toBeInTheDocument()
+      expect(screen.queryByText("Mọi thay đổi đã có trong bản sao.")).not.toBeInTheDocument()
+    })
+
+    it("is the target of the Overview reminder link", () => {
+      render(<DataCard {...BASE_PROPS} />)
+
+      expect(document.getElementById("data")).toContainElement(screen.getByRole("button", { name: "Xuất file JSON" }))
+    })
   })
 
   it("shows no confirm dialog while nothing is waiting to be restored", () => {

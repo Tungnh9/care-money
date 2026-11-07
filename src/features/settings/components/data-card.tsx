@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState, type ChangeEvent } from "react"
-import { AlertTriangle, Check, Copy } from "lucide-react"
+import { Check, Copy } from "lucide-react"
 
 import { AlertDialog } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
@@ -10,17 +10,21 @@ import { Field } from "@/components/ui/field"
 import { ActionTooltip } from "@/components/ob/action-tooltip"
 import { onDataChanged } from "@/lib/data-change-bus"
 import { getSyncSecret, setSyncSecret } from "@/lib/sync-secret-storage"
-import type { ExportedInfo, ImportedInfo, PendingRestore, SyncResult } from "../hooks/use-data-management"
+import type { CloudVersion } from "../api"
+import type {
+  CloudVersionsState,
+  ExportedInfo,
+  ImportedInfo,
+  PendingRestore,
+  PushConflict,
+  RestoreUndo,
+  SyncResult,
+} from "../hooks/use-data-management"
+import { formatSnapshotTime } from "../snapshot-time"
+import { BackupStatusLine } from "./backup-status-line"
+import { CloudVersionsPanel } from "./cloud-versions-panel"
+import { ResultBanner } from "./result-banner"
 import { StorageUsage } from "./storage-usage"
-
-// Có cả năm: bản sao cũ cả năm trời vẫn phải nhận ra được là cũ.
-function formatSnapshotTime(iso: string | null): string {
-  const d = iso ? new Date(iso) : null
-  if (!d || Number.isNaN(d.getTime())) return "không rõ thời điểm"
-  const time = d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
-  const date = `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`
-  return `${time} ngày ${date}`
-}
 
 interface DataCardProps {
   exported: ExportedInfo | null
@@ -28,12 +32,25 @@ interface DataCardProps {
   syncing: boolean
   syncResult: SyncResult | null
   pendingRestore: PendingRestore | null
+  restoreUndo: RestoreUndo | null
+  pushConflict: PushConflict | null
+  cloudVersions: CloudVersionsState | null
   onExport: () => void
   onImport: (file: File) => void
-  onPushToCloud: (secret: string) => void
+  onPushToCloud: (secret: string, force?: boolean) => void
   onPullFromCloud: (secret: string) => void
-  onConfirmRestore: () => void
+  onConfirmRestore: (keepLocal?: boolean) => void
   onCancelRestore: () => void
+  onUndoRestore: () => void
+  onCancelPushConflict: () => void
+  onLoadCloudVersions: (secret: string) => void
+  onCloseCloudVersions: () => void
+  onPullCloudVersion: (secret: string, version: CloudVersion) => void
+}
+
+function restoreSourceLabel(pending: PendingRestore): string {
+  if (pending.source === "file") return `File ${pending.fileName}`
+  return pending.old ? "Bản cũ trên đám mây" : "Bản trên đám mây"
 }
 
 function DataCard({
@@ -42,12 +59,20 @@ function DataCard({
   syncing,
   syncResult,
   pendingRestore,
+  restoreUndo,
+  pushConflict,
+  cloudVersions,
   onExport,
   onImport,
   onPushToCloud,
   onPullFromCloud,
   onConfirmRestore,
   onCancelRestore,
+  onUndoRestore,
+  onCancelPushConflict,
+  onLoadCloudVersions,
+  onCloseCloudVersions,
+  onPullCloudVersion,
 }: DataCardProps) {
   const fileRef = useRef<HTMLInputElement>(null)
   const [secret, setSecret] = useState("")
@@ -94,9 +119,25 @@ function DataCard({
     event.target.value = ""
   }
 
+  // Nút "Hoàn tác" dưới banner của đúng nguồn vừa nạp (file hay đám mây).
+  function undoAction(source: RestoreUndo["source"]) {
+    if (restoreUndo?.source !== source || restoreUndo.status !== "ready") return null
+    return (
+      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <Button variant="secondary" size="sm" type="button" onClick={onUndoRestore}>
+          Hoàn tác
+        </Button>
+        <span className="text-[12.5px]">Được tới khi bạn sửa dữ liệu hay rời trang Cài đặt.</span>
+      </div>
+    )
+  }
+
+  const undone = (source: RestoreUndo["source"]) => restoreUndo?.source === source && restoreUndo.status === "done"
+
   return (
-    <Card label="Dữ liệu" className="min-w-0 flex-[1_1_300px]">
+    <Card id="data" label="Dữ liệu" className="min-w-0 flex-[1_1_300px] scroll-mt-[76px]">
       <StorageUsage />
+      <BackupStatusLine />
 
       <div className="mt-5 border-t border-[var(--ob-color-border)] pt-4">
         <span className="mb-1 block [font:var(--ob-text-micro)] uppercase tracking-[var(--ob-track-micro)] text-[var(--ob-color-text-subtle)]">
@@ -124,35 +165,20 @@ function DataCard({
           </Button>
         </div>
         <input ref={fileRef} type="file" accept="application/json" onChange={handleFileChange} className="hidden" />
-        {imported ? (
-          <div
-            className="mt-[14px] flex items-start gap-[11px] rounded-[var(--ob-radius-md)] px-[15px] py-[13px] text-[13.5px] leading-[1.5]"
-            style={{
-              background: imported.ok ? "#E7F6EF" : "#FDEBF2",
-              color: imported.ok ? "#0E7A50" : "#B92E63",
-            }}
-          >
-            {imported.ok ? (
-              <Check size={17} className="mt-[1px] flex-none" />
-            ) : (
-              <AlertTriangle size={17} className="mt-[1px] flex-none" />
-            )}
-            <div>
-              {imported.ok ? (
-                <>
-                  <strong className="font-bold">Đã nạp {imported.file}</strong>
-                  <br />
-                  {imported.summary}
-                </>
-              ) : (
-                <>
-                  <strong className="font-bold">Nhập file không thành công</strong>
-                  <br />
-                  {imported.error}
-                </>
-              )}
-            </div>
-          </div>
+        {undone("file") ? (
+          <ResultBanner ok title="Đã hoàn tác lần nạp">
+            Dữ liệu trên máy đã về như trước khi nạp file.
+          </ResultBanner>
+        ) : imported ? (
+          !imported.ok ? (
+            <ResultBanner ok={false} title="Nhập file không thành công">
+              {imported.error}
+            </ResultBanner>
+          ) : (
+            <ResultBanner ok title={`Đã nạp ${imported.file}`} action={undoAction("file")}>
+              {imported.summary}
+            </ResultBanner>
+          )
         ) : null}
       </div>
 
@@ -202,36 +228,38 @@ function DataCard({
           >
             {syncing ? "Đang đồng bộ…" : "Tải xuống"}
           </Button>
-        </div>
-        {syncResult ? (
-          <div
-            className="mt-[14px] flex items-start gap-[11px] rounded-[var(--ob-radius-md)] px-[15px] py-[13px] text-[13.5px] leading-[1.5]"
-            style={{
-              background: syncResult.ok ? "#E7F6EF" : "#FDEBF2",
-              color: syncResult.ok ? "#0E7A50" : "#B92E63",
-            }}
+          <Button
+            variant="ghost"
+            size="sm"
+            type="button"
+            disabled={!secret || cloudVersions?.status === "loading"}
+            onClick={() => onLoadCloudVersions(secret)}
           >
-            {syncResult.ok ? (
-              <Check size={17} className="mt-[1px] flex-none" />
-            ) : (
-              <AlertTriangle size={17} className="mt-[1px] flex-none" />
-            )}
-            <div>
-              {syncResult.ok ? (
-                <>
-                  <strong className="font-bold">Đã đồng bộ</strong>
-                  <br />
-                  {syncResult.summary}
-                </>
-              ) : (
-                <>
-                  <strong className="font-bold">Đồng bộ không thành công</strong>
-                  <br />
-                  {syncResult.error}
-                </>
-              )}
-            </div>
-          </div>
+            Bản cũ
+          </Button>
+        </div>
+        {undone("cloud") ? (
+          <ResultBanner ok title="Đã hoàn tác lần tải xuống">
+            Dữ liệu trên máy đã về như trước khi tải xuống.
+          </ResultBanner>
+        ) : syncResult ? (
+          !syncResult.ok ? (
+            <ResultBanner ok={false} title="Đồng bộ không thành công">
+              {syncResult.error}
+            </ResultBanner>
+          ) : (
+            <ResultBanner ok title="Đã đồng bộ" action={undoAction("cloud")}>
+              {syncResult.summary}
+            </ResultBanner>
+          )
+        ) : null}
+        {cloudVersions ? (
+          <CloudVersionsPanel
+            state={cloudVersions}
+            disabled={!secret || syncing}
+            onRestore={(version) => onPullCloudVersion(secret, version)}
+            onClose={onCloseCloudVersions}
+          />
         ) : null}
       </div>
 
@@ -245,21 +273,59 @@ function DataCard({
           pendingRestore ? (
             <>
               <span className="block">
-                {pendingRestore.source === "cloud" ? "Bản trên đám mây" : `File ${pendingRestore.fileName}`} được tạo
-                lúc <strong className="font-bold">{formatSnapshotTime(pendingRestore.exportedAt)}</strong>
+                {restoreSourceLabel(pendingRestore)} được tạo lúc{" "}
+                <strong className="font-bold">{formatSnapshotTime(pendingRestore.exportedAt)}</strong>
               </span>
               <span className="mt-2 block">Bản sắp nạp: {pendingRestore.incomingCounts}</span>
               <span className="block">Trên máy này: {pendingRestore.localCounts}</span>
+              {pendingRestore.localOnly ? (
+                <span className="mt-2 block font-semibold text-[var(--ob-color-expense)]">
+                  Chỉ có trên máy này, bản sắp nạp không có: {pendingRestore.localOnly}. Chọn &quot;Nạp và giữ&quot; để
+                  gộp chúng vào bản sắp nạp.
+                </span>
+              ) : null}
               <span className="mt-2 block">
-                Toàn bộ dữ liệu trên máy này sẽ bị thay bằng bản đó và không hoàn tác được. Nếu chưa chắc, hãy Huỷ rồi
-                bấm &quot;Xuất file JSON&quot; trước.
+                Toàn bộ dữ liệu trên máy này sẽ bị thay bằng bản đó. Hoàn tác được ngay sau khi nạp, tới khi bạn sửa dữ
+                liệu hay rời trang Cài đặt — nếu chưa chắc, hãy Huỷ rồi bấm &quot;Xuất file JSON&quot; trước.
               </span>
             </>
           ) : null
         }
+        extraAction={
+          pendingRestore?.localOnly ? { label: "Nạp và giữ", onClick: () => onConfirmRestore(true) } : undefined
+        }
         confirmLabel="Thay dữ liệu"
         destructive
-        onConfirm={onConfirmRestore}
+        onConfirm={() => onConfirmRestore(false)}
+      />
+
+      <AlertDialog
+        open={pushConflict !== null}
+        onOpenChange={(open) => {
+          if (!open) onCancelPushConflict()
+        }}
+        title={pushConflict?.hasBase ? "Máy khác đã tải lên sau lần đồng bộ trước" : "Đám mây đang có 1 bản khác"}
+        description={
+          pushConflict ? (
+            <>
+              <span className="block">
+                Bản trên đám mây được tải lên lúc{" "}
+                <strong className="font-bold">{formatSnapshotTime(pushConflict.cloudUploadedAt)}</strong>
+                {pushConflict.hasBase
+                  ? ", sau lần đồng bộ trước của máy này."
+                  : ", và máy này chưa tải bản đó xuống lần nào."}
+              </span>
+              <span className="mt-2 block">
+                Tải lên bây giờ sẽ thay bản đó bằng dữ liệu trên máy này — những gì máy kia thêm mà máy này chưa có sẽ
+                không còn trong bản mới nhất (vẫn lấy lại được ở &quot;Bản cũ&quot;). Nên tải xuống trước.
+              </span>
+            </>
+          ) : null
+        }
+        extraAction={{ label: "Tải xuống trước", onClick: () => onPullFromCloud(secret) }}
+        confirmLabel="Vẫn tải lên"
+        destructive
+        onConfirm={() => onPushToCloud(secret, true)}
       />
     </Card>
   )

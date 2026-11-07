@@ -12,12 +12,18 @@ import { DEFAULT_LIFE_PLAN_STATE, type LifePlanState } from "@/lib/life-plan/lif
 import type { LifeNote, LifePlan } from "@/lib/life-plan/types"
 import {
   EXPORT_VERSION,
+  RESTORE_KEYS,
   buildExportPayload,
   exportFileName,
+  isSnapshotEmpty,
   parseImportPayload,
+  readLocalSnapshot,
   restoreCounts,
   type ExportSnapshot,
 } from "@/lib/data-transfer"
+import { setStoredJournal } from "@/lib/journal/journal-storage"
+import { setStoredBudget } from "@/lib/budget/budget-storage"
+import { setCarGoalFundName } from "@/lib/goals/car-goal-storage"
 
 describe("buildExportPayload", () => {
   it("wraps a snapshot with the version and export timestamp", () => {
@@ -804,5 +810,88 @@ describe("parseImportPayload — tích lũy bạc", () => {
       expect(result.data.finance.silverStores).toEqual([])
       expect(restoreCounts(result.data)).toContain("0 lần mua bạc")
     }
+  })
+})
+
+describe("readLocalSnapshot", () => {
+  it("reads every section this device holds, including the car-goal link", () => {
+    window.localStorage.clear()
+    setStoredJournal({ entries: [{ id: 1, text: "Bài", time: "09:00", date: "07/11", words: 1, mood: null }] })
+    setCarGoalFundName("Quỹ mua xe")
+
+    const snapshot = readLocalSnapshot()
+
+    expect(snapshot.journal.entries).toHaveLength(1)
+    expect(snapshot.goals).toEqual({ carFundName: "Quỹ mua xe" })
+    expect(snapshot.lifePlan).toEqual(DEFAULT_LIFE_PLAN_STATE)
+    window.localStorage.clear()
+  })
+
+  it("covers every key a restore writes", () => {
+    expect(RESTORE_KEYS).toEqual(
+      expect.arrayContaining(["journal-entries", "finance-data", "life-plan-data", "car-goal-fund-name"])
+    )
+  })
+})
+
+describe("isSnapshotEmpty", () => {
+  const EMPTY: ExportSnapshot = {
+    journal: DEFAULT_JOURNAL_STATE,
+    finance: DEFAULT_FINANCE_STATE,
+    study: DEFAULT_STUDY_STATE,
+    settings: DEFAULT_SETTINGS,
+    budget: DEFAULT_BUDGET_STATE,
+    netWorthHistory: DEFAULT_NET_WORTH_HISTORY,
+    work: DEFAULT_WORK_STATE,
+    lifePlan: DEFAULT_LIFE_PLAN_STATE,
+    goals: { carFundName: null },
+  }
+
+  it("is empty with only defaults, settings or recorded net-worth history", () => {
+    expect(isSnapshotEmpty(EMPTY)).toBe(true)
+    expect(
+      isSnapshotEmpty({
+        ...EMPTY,
+        settings: { ...DEFAULT_SETTINGS, profile: { ...DEFAULT_SETTINGS.profile, displayName: "Tùng" } },
+        netWorthHistory: [{ date: "2026-11-07", net: 0, savingsTotal: 0 }],
+      })
+    ).toBe(true)
+  })
+
+  it("is not empty once anything the user enters is there", () => {
+    expect(
+      isSnapshotEmpty({
+        ...EMPTY,
+        journal: { entries: [{ id: 1, text: "a", time: "", date: "", words: 1, mood: null }] },
+      })
+    ).toBe(false)
+    expect(
+      isSnapshotEmpty({ ...EMPTY, budget: { ...DEFAULT_BUDGET_STATE, salaries: [{ month: "2026-11", amount: 1 }] } })
+    ).toBe(false)
+    expect(
+      isSnapshotEmpty({ ...EMPTY, budget: { ...DEFAULT_BUDGET_STATE, salaries: [{ month: "2026-11", amount: 0 }] } })
+    ).toBe(true)
+    expect(
+      isSnapshotEmpty({
+        ...EMPTY,
+        lifePlan: { notes: [], plans: [{ id: 1, title: "p", targetYear: 2030, status: "planned" }] },
+      })
+    ).toBe(false)
+  })
+
+  it("counts gold/silver gifts and sales, settlements and standups as data too", () => {
+    const one = [{}] as never[]
+    for (const finance of [{ goldGifts: one }, { goldSales: one }, { silverGifts: one }, { silverSales: one }]) {
+      expect(isSnapshotEmpty({ ...EMPTY, finance: { ...DEFAULT_FINANCE_STATE, ...finance } })).toBe(false)
+    }
+    expect(isSnapshotEmpty({ ...EMPTY, budget: { ...DEFAULT_BUDGET_STATE, settlements: one } })).toBe(false)
+    expect(isSnapshotEmpty({ ...EMPTY, work: { ...DEFAULT_WORK_STATE, standups: one } })).toBe(false)
+  })
+
+  it("reads a fresh device as empty", () => {
+    window.localStorage.clear()
+    setStoredBudget(DEFAULT_BUDGET_STATE)
+
+    expect(isSnapshotEmpty(readLocalSnapshot())).toBe(true)
   })
 })

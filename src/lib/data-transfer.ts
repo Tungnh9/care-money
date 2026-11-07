@@ -1,11 +1,37 @@
-import { parseFinanceState, type FinanceState } from "@/lib/finance/finance-storage"
-import { parseJournalState, type JournalState } from "@/lib/journal/journal-storage"
-import { parseStudyState, type StudyState } from "@/lib/study/study-storage"
-import { parseBudgetState, type BudgetState } from "@/lib/budget/budget-storage"
-import { parseNetWorthHistory, type NetWorthHistory } from "@/lib/net-worth/net-worth-history-storage"
-import { parseAppSettings, type AppSettings } from "@/lib/settings/settings-storage"
-import { parseWorkState, type WorkState } from "@/lib/work/work-storage"
-import { parseLifePlanState, type LifePlanState } from "@/lib/life-plan/life-plan-storage"
+import {
+  FINANCE_STORAGE_KEY,
+  getStoredFinance,
+  parseFinanceState,
+  type FinanceState,
+} from "@/lib/finance/finance-storage"
+import {
+  JOURNAL_STORAGE_KEY,
+  getStoredJournal,
+  parseJournalState,
+  type JournalState,
+} from "@/lib/journal/journal-storage"
+import { STUDY_STORAGE_KEY, getStoredStudy, parseStudyState, type StudyState } from "@/lib/study/study-storage"
+import { BUDGET_STORAGE_KEY, getStoredBudget, parseBudgetState, type BudgetState } from "@/lib/budget/budget-storage"
+import {
+  NET_WORTH_HISTORY_KEY,
+  getStoredNetWorthHistory,
+  parseNetWorthHistory,
+  type NetWorthHistory,
+} from "@/lib/net-worth/net-worth-history-storage"
+import {
+  SETTINGS_STORAGE_KEY,
+  getStoredSettings,
+  parseAppSettings,
+  type AppSettings,
+} from "@/lib/settings/settings-storage"
+import { WORK_STORAGE_KEY, getStoredWork, parseWorkState, type WorkState } from "@/lib/work/work-storage"
+import {
+  LIFE_PLAN_STORAGE_KEY,
+  getStoredLifePlan,
+  parseLifePlanState,
+  type LifePlanState,
+} from "@/lib/life-plan/life-plan-storage"
+import { CAR_GOAL_FUND_KEY, getCarGoalFundName } from "@/lib/goals/car-goal-storage"
 import { dayKey } from "@/lib/date"
 
 const EXPORT_VERSION = 1
@@ -30,6 +56,62 @@ interface GoalsSnapshot {
 // `goals` là undefined, nghĩa là "giữ nguyên liên kết đang có trên máy", khác với carFundName null
 // ("không gắn quỹ nào").
 type ImportedSnapshot = Omit<ExportSnapshot, "goals"> & { goals?: GoalsSnapshot }
+
+// Mọi key mà 1 lần nạp bản sao ghi đè (Cài đặt → applySnapshot) — chụp lại chuỗi thô trước khi ghi để trả về
+// nguyên trạng nếu 1 lần ghi giữa chừng lỗi, hay khi bấm "Hoàn tác". Cũng là phần dữ liệu mà dấu vân tay sao lưu
+// (lib/backup) theo dõi. Thêm 1 lần ghi mới vào applySnapshot thì thêm key của nó vào đây.
+const RESTORE_KEYS = [
+  JOURNAL_STORAGE_KEY,
+  FINANCE_STORAGE_KEY,
+  STUDY_STORAGE_KEY,
+  SETTINGS_STORAGE_KEY,
+  BUDGET_STORAGE_KEY,
+  NET_WORTH_HISTORY_KEY,
+  WORK_STORAGE_KEY,
+  LIFE_PLAN_STORAGE_KEY,
+  CAR_GOAL_FUND_KEY,
+]
+
+// Toàn bộ dữ liệu trên máy này, đúng phần đi vào file xuất / bản đám mây. Chỉ gọi trên trình duyệt.
+function readLocalSnapshot(): ExportSnapshot {
+  return {
+    journal: getStoredJournal(),
+    finance: getStoredFinance(),
+    study: getStoredStudy(),
+    settings: getStoredSettings(),
+    budget: getStoredBudget(),
+    netWorthHistory: getStoredNetWorthHistory(),
+    work: getStoredWork(),
+    lifePlan: getStoredLifePlan(),
+    goals: { carFundName: getCarGoalFundName() },
+  }
+}
+
+// Máy chưa có gì người dùng tự nhập — máy mới, trình duyệt vừa bị xoá dữ liệu, hay vừa "Xoá toàn bộ". Chỉ đếm thứ
+// người dùng nhập: cửa hàng vàng/bạc mặc định, cài đặt hay lịch sử tài sản (tự ghi mỗi ngày mở Tổng quan) không tính.
+function isSnapshotEmpty(snapshot: ImportedSnapshot): boolean {
+  const { journal, finance, study, budget, work, lifePlan } = snapshot
+  return (
+    journal.entries.length === 0 &&
+    finance.savings.length === 0 &&
+    finance.cards.length === 0 &&
+    finance.gold.length === 0 &&
+    finance.goldGifts.length === 0 &&
+    finance.goldSales.length === 0 &&
+    finance.silver.length === 0 &&
+    finance.silverGifts.length === 0 &&
+    finance.silverSales.length === 0 &&
+    finance.invests.length === 0 &&
+    study.learned.length === 0 &&
+    budget.expenses.length === 0 &&
+    budget.settlements.length === 0 &&
+    !budget.salaries.some((salary) => salary.amount > 0) &&
+    work.tasks.length === 0 &&
+    work.standups.length === 0 &&
+    lifePlan.notes.length === 0 &&
+    lifePlan.plans.length === 0
+  )
+}
 
 interface ExportPayload extends ExportSnapshot {
   version: typeof EXPORT_VERSION
@@ -148,9 +230,12 @@ function restoreCounts(snapshot: ImportedSnapshot): string {
 
 export {
   EXPORT_VERSION,
+  RESTORE_KEYS,
   buildExportPayload,
   exportFileName,
+  isSnapshotEmpty,
   parseImportPayload,
+  readLocalSnapshot,
   restoreCounts,
   uploadedSummary,
   type ExportPayload,

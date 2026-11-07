@@ -41,6 +41,14 @@ function SettingsView() {
     pendingRestore,
     confirmRestore,
     cancelRestore,
+    restoreUndo,
+    undoRestore,
+    pushConflict,
+    cancelPushConflict,
+    cloudVersions,
+    loadCloudVersions,
+    closeCloudVersions,
+    pullCloudVersion,
   } = useDataManagement({
     onReplaceJournal: replaceJournal,
     onReplaceFinance: replaceFinance,
@@ -100,12 +108,20 @@ function SettingsView() {
           syncing={syncing}
           syncResult={syncResult}
           pendingRestore={pendingRestore}
+          restoreUndo={restoreUndo}
+          pushConflict={pushConflict}
+          cloudVersions={cloudVersions}
           onExport={exportData}
           onImport={importData}
           onPushToCloud={pushToCloud}
           onPullFromCloud={pullFromCloud}
           onConfirmRestore={confirmRestore}
           onCancelRestore={cancelRestore}
+          onUndoRestore={undoRestore}
+          onCancelPushConflict={cancelPushConflict}
+          onLoadCloudVersions={loadCloudVersions}
+          onCloseCloudVersions={closeCloudVersions}
+          onPullCloudVersion={pullCloudVersion}
         />
         <ResetCard counts={counts} onWipe={wipeData} onExport={exportData} />
       </div>
