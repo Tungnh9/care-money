@@ -1,12 +1,19 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { History } from "lucide-react"
 
 import { AlertDialog } from "@/components/ui/alert-dialog"
-import { longDate } from "@/lib/date"
+import { dayKey, longDate } from "@/lib/date"
 import { cn } from "@/lib/utils"
 import { useSettings } from "@/lib/settings/use-settings"
 import { useJournal } from "@/lib/journal/use-journal"
+import {
+  clearJournalDraft,
+  getJournalDraft,
+  setJournalDraft,
+  type JournalDraft,
+} from "@/lib/journal/journal-draft-storage"
 import { findOnThisDay } from "../journal-calculations"
 import { JournalEditor, type EditorDraft } from "./journal-editor"
 import { JournalEntriesCard } from "./journal-entries-card"
@@ -16,6 +23,17 @@ import { OnThisDayCard } from "./on-this-day-card"
 import type { JournalEntry, MoodSnapshot } from "@/lib/journal/types"
 
 const EMPTY_DRAFT: EditorDraft = { html: "", words: 0 }
+// Gõ liên tục thì gom lại ghi 1 lần; rời trang, ẩn tab hay đóng app thì ghi ngay phần đang chờ.
+const DRAFT_SAVE_DELAY_MS = 600
+
+// "lúc 21:30" nếu nháp từ hôm nay, "lúc 21:30 ngày 05/11" nếu từ hôm khác.
+function restoredLabel(savedAt: string): string {
+  const at = new Date(savedAt)
+  if (Number.isNaN(at.getTime())) return ""
+  const time = at.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
+  if (dayKey(at) === dayKey()) return `lúc ${time}`
+  return `lúc ${time} ngày ${String(at.getDate()).padStart(2, "0")}/${String(at.getMonth() + 1).padStart(2, "0")}`
+}
 
 function JournalView() {
   const { settings } = useSettings()
@@ -34,6 +52,63 @@ function JournalView() {
   // không render lại cả trang (danh sách bài lọc HTML từng bài mỗi lần render).
   const latestDraftRef = useRef<EditorDraft>(EMPTY_DRAFT)
   const editDirtyRef = useRef(false)
+  // Bản nháp bài mới lấy lại từ máy (lần trước rời trang khi đang viết dở): thời điểm lưu, để báo kèm "Bỏ nháp".
+  const [restoredAt, setRestoredAt] = useState<string | null>(null)
+  // Tăng lên để khung soạn bài mới remount: nó chỉ đọc initialDraft lúc mount.
+  const [editorVersion, setEditorVersion] = useState(0)
+  // Bản nháp chờ ghi xuống máy (gom các lần gõ liền nhau) và hẹn giờ ghi.
+  const pendingDraftRef = useRef<JournalDraft | null>(null)
+  const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Chỉ đọc ref nên ổn định qua mọi lần render — dùng được trong effect lắng nghe ẩn tab/rời trang.
+  const flushDraft = useCallback(() => {
+    if (draftTimerRef.current) clearTimeout(draftTimerRef.current)
+    draftTimerRef.current = null
+    if (pendingDraftRef.current) setJournalDraft(pendingDraftRef.current)
+    pendingDraftRef.current = null
+  }, [])
+
+  function scheduleDraftSave(next: EditorDraft, draftMoodLabel: string) {
+    pendingDraftRef.current = { ...next, mood: draftMoodLabel, savedAt: new Date().toISOString() }
+    if (draftTimerRef.current) clearTimeout(draftTimerRef.current)
+    draftTimerRef.current = setTimeout(flushDraft, DRAFT_SAVE_DELAY_MS)
+  }
+
+  function dropSavedDraft() {
+    if (draftTimerRef.current) clearTimeout(draftTimerRef.current)
+    draftTimerRef.current = null
+    pendingDraftRef.current = null
+    clearJournalDraft()
+    setRestoredAt(null)
+  }
+
+  // Mở trang: lấy lại bản nháp bài mới còn trên máy. localStorage không có lúc SSR, chỉ đọc được sau khi mount.
+  useEffect(() => {
+    const saved = getJournalDraft()
+    if (!saved) return
+    const restored = { html: saved.html, words: saved.words }
+    latestDraftRef.current = restored
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDraft(restored)
+    setDraftMood(saved.mood)
+    setMood(saved.mood)
+    setRestoredAt(saved.savedAt)
+    setEditorVersion((version) => version + 1)
+  }, [])
+
+  // Ẩn tab, đóng app hay rời trang Nhật ký: ghi ngay bản nháp đang chờ, không đợi hết giờ hẹn.
+  useEffect(() => {
+    function handleVisibility() {
+      if (document.visibilityState === "hidden") flushDraft()
+    }
+    document.addEventListener("visibilitychange", handleVisibility)
+    window.addEventListener("pagehide", flushDraft)
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility)
+      window.removeEventListener("pagehide", flushDraft)
+      flushDraft()
+    }
+  }, [flushDraft])
 
   const moodEnabled = settings.modules.find((m) => m.key === "tamtrang")?.on ?? true
   const selectedMood = settings.moods.find((m) => m.label === mood)
@@ -72,11 +147,22 @@ function JournalView() {
     }
     const entry = saveEntry(input)
     if (!entry) return false
-    // Bản nháp đã thành bài — lần sau khung soạn bài mới bắt đầu trống.
+    // Bản nháp đã thành bài — lần sau khung soạn bài mới bắt đầu trống, và không còn nháp trên máy.
     latestDraftRef.current = EMPTY_DRAFT
     setDraft(EMPTY_DRAFT)
+    dropSavedDraft()
     setJustSaved(entry)
     return true
+  }
+
+  // "Bỏ nháp" ở dòng báo khôi phục: xoá nháp trên máy, khung soạn bài mới trống lại, bỏ mood đã chọn.
+  function discardRestoredDraft() {
+    dropSavedDraft()
+    latestDraftRef.current = EMPTY_DRAFT
+    setDraft(EMPTY_DRAFT)
+    setDraftMood("")
+    setMood("")
+    setEditorVersion((version) => version + 1)
   }
 
   function handleEdit(entry: JournalEntry) {
@@ -95,13 +181,20 @@ function JournalView() {
   }
 
   function handleDraftChange(next: EditorDraft) {
-    if (editingEntry) editDirtyRef.current = true
-    else latestDraftRef.current = next
+    if (editingEntry) {
+      editDirtyRef.current = true
+      return
+    }
+    latestDraftRef.current = next
+    scheduleDraftSave(next, mood)
+    // "Xoá nháp" trong khung soạn: không còn gì để báo đã khôi phục.
+    if (!next.words && restoredAt) setRestoredAt(null)
   }
 
   function handleSelectMood(label: string) {
     setMood(label)
     if (editingEntry) editDirtyRef.current = true
+    else if (latestDraftRef.current.words) scheduleDraftSave(latestDraftRef.current, label)
   }
 
   function handleDelete(id: number) {
@@ -131,15 +224,35 @@ function JournalView() {
               onViewEntries={handleViewEntries}
             />
           ) : (
-            <JournalEditor
-              key={editingEntry?.id ?? "new"}
-              selectedMood={selectedMoodSnapshot}
-              onSave={handleSave}
-              editingEntry={editingEntry}
-              onCancelEdit={leaveEditMode}
-              initialDraft={draft}
-              onDraftChange={handleDraftChange}
-            />
+            <>
+              {restoredAt && !editingEntry ? (
+                <div
+                  role="status"
+                  className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-[var(--ob-radius-md)] border-[1.5px] border-[var(--ob-cam-200)] bg-[var(--ob-cam-50)] px-4 py-1 text-[13.5px]"
+                >
+                  <History size={16} aria-hidden className="flex-none text-[var(--ob-color-action-strong)]" />
+                  <span>
+                    <strong className="font-bold">Đã khôi phục bản nháp</strong> {restoredLabel(restoredAt)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={discardRestoredDraft}
+                    className="ml-auto min-h-[var(--ob-hit-min)] font-semibold text-[var(--ob-color-action-strong)] underline underline-offset-2"
+                  >
+                    Bỏ nháp
+                  </button>
+                </div>
+              ) : null}
+              <JournalEditor
+                key={editingEntry?.id ?? `new-${editorVersion}`}
+                selectedMood={selectedMoodSnapshot}
+                onSave={handleSave}
+                editingEntry={editingEntry}
+                onCancelEdit={leaveEditMode}
+                initialDraft={draft}
+                onDraftChange={handleDraftChange}
+              />
+            </>
           )}
         </div>
         {onThisDay ? (

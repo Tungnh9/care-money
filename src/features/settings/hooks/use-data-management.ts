@@ -38,6 +38,7 @@ import {
   type LifePlanState,
 } from "@/lib/life-plan/life-plan-storage"
 import { clearImageCache } from "@/lib/life-plan/image-cache"
+import { clearJournalDraft } from "@/lib/journal/journal-draft-storage"
 import { clearSyncSecret } from "@/lib/sync-secret-storage"
 import { pushSnapshot, pullSnapshot } from "../api"
 import {
@@ -299,8 +300,9 @@ function useDataManagement({
     // clearImageCache không bao giờ lỗi.
     void clearImageCache()
     setCarGoalFundName(null)
-    // "Làm lại từ đầu" trên máy này — không giữ lại credential đồng bộ.
+    // "Làm lại từ đầu" trên máy này — không giữ lại credential đồng bộ, hay bản nháp nhật ký đang viết dở.
     clearSyncSecret()
+    clearJournalDraft()
     // Trạng thái của tính năng tự động sao lưu đã bỏ (2026-10-12) — không còn gì đọc tới, dọn luôn.
     window.localStorage.removeItem("auto-backup-status")
     setExported(null)

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 
 import { JournalView } from "../../components/journal-view"
 import type { JournalEntry } from "@/lib/journal/types"
@@ -506,5 +506,103 @@ describe("JournalView — sửa, xoá và giữ nội dung đang viết", () => 
 
     expect(screen.queryByText("Bỏ thay đổi chưa lưu?")).not.toBeInTheDocument()
     expect(screen.getByRole("textbox")).toHaveTextContent(ENTRY_B.text)
+  })
+})
+
+describe("JournalView — bản nháp trên máy", () => {
+  const DRAFT_KEY = "journal-draft"
+
+  function storedDraft() {
+    const raw = window.localStorage.getItem(DRAFT_KEY)
+    return raw ? JSON.parse(raw) : null
+  }
+
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it("keeps a half-written entry and its mood when the page is left, and gives them back with a note", async () => {
+    const { unmount } = render(<JournalView />)
+    fireEvent.click(screen.getByText("Vui"))
+    typeInto(await screen.findByRole("textbox"), "Đang viết dở thì phải chuyển trang")
+    unmount()
+
+    expect(storedDraft()).toMatchObject({ mood: "Vui", words: 7 })
+
+    render(<JournalView />)
+    expect(await screen.findByText("Đã khôi phục bản nháp")).toBeInTheDocument()
+    expect(screen.getByRole("textbox")).toHaveTextContent("Đang viết dở thì phải chuyển trang")
+    expect(screen.getByRole("button", { pressed: true })).toHaveTextContent("Vui")
+  })
+
+  it("writes the draft shortly after typing stops, without waiting for the page to be left", () => {
+    vi.useFakeTimers()
+    render(<JournalView />)
+
+    typeInto(screen.getByRole("textbox"), "Vừa gõ xong")
+    expect(storedDraft()).toBeNull()
+    act(() => {
+      vi.advanceTimersByTime(600)
+    })
+
+    expect(storedDraft()).toMatchObject({ words: 3 })
+  })
+
+  it("writes the draft at once when the tab is hidden", async () => {
+    render(<JournalView />)
+    typeInto(await screen.findByRole("textbox"), "Sắp tắt màn hình")
+
+    Object.defineProperty(document, "visibilityState", { value: "hidden", configurable: true })
+    try {
+      fireEvent(document, new Event("visibilitychange"))
+    } finally {
+      Object.defineProperty(document, "visibilityState", { value: "visible", configurable: true })
+    }
+
+    expect(storedDraft()).toMatchObject({ words: 4 })
+  })
+
+  it("drops the draft from the device once the entry is saved", async () => {
+    const { unmount } = render(<JournalView />)
+    typeInto(await screen.findByRole("textbox"), "Viết xong rồi")
+    fireEvent.click(screen.getByRole("button", { name: "Lưu vào nhật ký" }))
+    await screen.findByText("Đã lưu vào nhật ký")
+    unmount()
+
+    expect(storedDraft()).toBeNull()
+  })
+
+  it("throws the restored draft away with Bỏ nháp, leaving an empty editor", async () => {
+    const savedAt = new Date()
+    savedAt.setHours(21, 30, 0, 0)
+    window.localStorage.setItem(
+      DRAFT_KEY,
+      JSON.stringify({ html: "Nháp cũ", words: 2, mood: "Vui", savedAt: savedAt.toISOString() })
+    )
+    render(<JournalView />)
+
+    expect(await screen.findByText("lúc 21:30", { exact: false })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole("button", { name: "Bỏ nháp" }))
+
+    expect(screen.queryByText("Đã khôi phục bản nháp")).not.toBeInTheDocument()
+    expect(screen.getByRole("textbox")).toHaveTextContent("")
+    expect(screen.queryByRole("button", { pressed: true })).not.toBeInTheDocument()
+    expect(storedDraft()).toBeNull()
+  })
+
+  it("leaves the kept draft alone while an old entry is being edited", async () => {
+    seedEntries(ENTRY_A)
+    const { unmount } = render(<JournalView />)
+    typeInto(await screen.findByRole("textbox"), "Nháp bài mới")
+    fireEvent.click(screen.getByRole("button", { name: "Sửa bài 28/09 20:00" }))
+    typeInto(screen.getByRole("textbox"), "Sửa bài cũ khác hẳn")
+    unmount()
+
+    expect(storedDraft()).toMatchObject({ words: 3 })
+    expect(storedDraft().html).toContain("Nháp bài mới")
   })
 })
