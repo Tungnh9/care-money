@@ -351,6 +351,8 @@ describe("LifePlanView — lưu ghi chép có ảnh", () => {
 
     fireEvent.click(within(dialog).getByRole("button", { name: "Bỏ ảnh 1" }))
     fireEvent.click(within(dialog).getByRole("button", { name: "Huỷ" }))
+    // Đã bỏ 1 ảnh là có thay đổi chưa lưu — form hỏi lại trước khi đóng.
+    fireEvent.click(within(dialog).getByRole("button", { name: "Bỏ thay đổi" }))
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
     expect(getStoredLifePlan().notes[0].images).toEqual([cloudPhoto(1)])

@@ -9,6 +9,7 @@ import { isTargetMonth, isTargetYear } from "@/lib/life-plan/life-plan-storage"
 import type { LifePlan, LifePlanInput, LifePlanStatus } from "@/lib/life-plan/types"
 import { cn } from "@/lib/utils"
 import { PLAN_STATUSES } from "../labels"
+import { DiscardConfirm } from "./discard-confirm"
 
 interface PlanFormModalProps {
   // null = kế hoạch mới.
@@ -27,6 +28,15 @@ function PlanFormModal({ plan, onSubmit, onClose }: PlanFormModalProps) {
   const [monthText, setMonthText] = useState(plan?.targetMonth === undefined ? "" : String(plan.targetMonth))
   const [status, setStatus] = useState<LifePlanStatus>(plan?.status ?? "planned")
   const [note, setNote] = useState(plan?.note ?? "")
+  // Như NoteFormModal: giá trị lúc mở form để biết có gì chưa lưu, và đang hỏi lại trước khi bỏ.
+  const [initial] = useState(() => ({ title, yearText, monthText, status, note }))
+  const [confirmingDiscard, setConfirmingDiscard] = useState(false)
+  const dirty =
+    title !== initial.title ||
+    yearText !== initial.yearText ||
+    monthText !== initial.monthText ||
+    status !== initial.status ||
+    note !== initial.note
 
   const year = Number(yearText.trim())
   const month = monthText.trim() === "" ? undefined : Number(monthText.trim())
@@ -47,8 +57,16 @@ function PlanFormModal({ plan, onSubmit, onClose }: PlanFormModalProps) {
     if (onSubmit(input)) onClose()
   }
 
+  // Huỷ, Esc hay chạm ra ngoài: có thay đổi chưa lưu thì hỏi lại trước; đang hỏi mà lại Esc/chạm ra ngoài thì thôi
+  // hỏi, ở lại sửa tiếp.
+  function close() {
+    if (confirmingDiscard) setConfirmingDiscard(false)
+    else if (dirty) setConfirmingDiscard(true)
+    else onClose()
+  }
+
   return (
-    <Modal open onOpenChange={(open) => !open && onClose()} ariaLabelledBy={titleId} panelClassName="max-w-[460px]">
+    <Modal open onOpenChange={(open) => !open && close()} ariaLabelledBy={titleId} panelClassName="max-w-[460px]">
       <div id={titleId} className="mb-4 text-[17px] font-bold">
         {plan ? "Sửa kế hoạch" : "Thêm kế hoạch"}
       </div>
@@ -108,14 +126,24 @@ function PlanFormModal({ plan, onSubmit, onClose }: PlanFormModalProps) {
 
         <Field label="Ghi chú" placeholder="Không bắt buộc" value={note} onChange={(e) => setNote(e.target.value)} />
 
-        <div className="mt-2 flex justify-end gap-[10px]">
-          <Button variant="ghost" size="sm" type="button" onClick={onClose}>
-            Huỷ
-          </Button>
-          <Button variant="primary" size="sm" type="submit" disabled={disabled}>
-            Lưu
-          </Button>
-        </div>
+        {confirmingDiscard ? (
+          <DiscardConfirm
+            title={plan ? "Bỏ các thay đổi chưa lưu?" : "Bỏ kế hoạch đang soạn?"}
+            detail={plan ? "Những gì vừa sửa sẽ mất, kế hoạch giữ như trước." : "Những gì vừa nhập sẽ mất."}
+            discardLabel={plan ? "Bỏ thay đổi" : "Bỏ kế hoạch"}
+            onKeep={() => setConfirmingDiscard(false)}
+            onDiscard={onClose}
+          />
+        ) : (
+          <div className="mt-2 flex justify-end gap-[10px]">
+            <Button variant="ghost" size="sm" type="button" onClick={close}>
+              Huỷ
+            </Button>
+            <Button variant="primary" size="sm" type="submit" disabled={disabled}>
+              Lưu
+            </Button>
+          </div>
+        )}
       </form>
     </Modal>
   )

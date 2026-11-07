@@ -120,4 +120,32 @@ describe("PlanFormModal", () => {
     expect(onSubmit).not.toHaveBeenCalled()
     expect(onClose).toHaveBeenCalled()
   })
+  it("asks before throwing away changes on Huỷ, Esc or a tap outside, and keeps them on Tiếp tục soạn", () => {
+    const { dialog, onClose } = renderForm(PLAN)
+    typeInto(dialog, "Tên kế hoạch", "Mua nhà ở Đà Nẵng")
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Huỷ" }))
+    expect(onClose).not.toHaveBeenCalled()
+    expect(within(dialog).getByRole("alert")).toHaveTextContent("Bỏ các thay đổi chưa lưu?")
+    expect(within(dialog).getByRole("button", { name: "Tiếp tục soạn" })).toHaveFocus()
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Tiếp tục soạn" }))
+    expect(within(dialog).queryByRole("alert")).not.toBeInTheDocument()
+    expect(within(dialog).getByLabelText("Tên kế hoạch")).toHaveValue("Mua nhà ở Đà Nẵng")
+
+    fireEvent.keyDown(document, { key: "Escape" })
+    expect(within(dialog).getByRole("alert")).toBeInTheDocument()
+    fireEvent.click(within(dialog).getByRole("button", { name: "Bỏ thay đổi" }))
+    expect(onClose).toHaveBeenCalled()
+  })
+
+  it("asks about a new plan being typed with its own wording", () => {
+    const { dialog } = renderForm()
+    typeInto(dialog, "Tên kế hoạch", "Học lái xe")
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Huỷ" }))
+
+    expect(within(dialog).getByRole("alert")).toHaveTextContent("Bỏ kế hoạch đang soạn?")
+    expect(within(dialog).getByRole("button", { name: "Bỏ kế hoạch" })).toBeInTheDocument()
+  })
 })

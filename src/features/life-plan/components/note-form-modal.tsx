@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils"
 import { compressImage } from "../compress-image"
 import { removePhoto, removePhotos, uploadPhoto } from "../note-photos"
 import { uploadNoteImages } from "../save-note-images"
+import { DiscardConfirm } from "./discard-confirm"
 import { LifePlanImage } from "./life-plan-image"
 
 interface NoteFormModalProps {
@@ -68,6 +69,17 @@ function NoteFormModal({ note, plans, today, photoLockReasons, onSubmit, onClose
   const [picked, setPicked] = useState<PickedPhoto[]>([])
   const [compressing, setCompressing] = useState(false)
   const [saving, setSaving] = useState(false)
+  // Giá trị lúc mở form — so với hiện tại để biết có gì chưa lưu. Chụp 1 lần: `today` đổi lúc nửa đêm không được
+  // làm form chưa động tới thành "đã sửa".
+  const [initial] = useState(() => ({
+    dayText: formatDayInput(note?.day ?? today),
+    title: note?.title ?? "",
+    content: note?.content ?? "",
+    planId: note?.planId,
+    imageIds: (note?.images ?? []).map((image) => image.id).join(","),
+  }))
+  // Đang hỏi "Bỏ ghi chép đang soạn?" thay cho hàng nút Huỷ/Lưu.
+  const [confirmingDiscard, setConfirmingDiscard] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const nextKeyRef = useRef(0)
   const aliveRef = useRef(true)
@@ -106,9 +118,22 @@ function NoteFormModal({ note, plans, today, photoLockReasons, onSubmit, onClose
         : []),
   ]
 
+  const dirty =
+    dayText !== initial.dayText ||
+    title !== initial.title ||
+    content !== initial.content ||
+    planId !== initial.planId ||
+    kept.map((image) => image.id).join(",") !== initial.imageIds ||
+    picked.length > 0
+
+  // Huỷ, Esc hay chạm ra ngoài: có chữ/ảnh chưa lưu thì hỏi lại trước; đang hỏi mà lại Esc/chạm ra ngoài thì thôi
+  // hỏi, ở lại soạn tiếp.
   function close() {
     // Đang tải ảnh lên thì không đóng: đóng giữa chừng vẫn lưu khi tải xong, trái ý người vừa bấm Huỷ.
-    if (!saving) onClose()
+    if (saving) return
+    if (confirmingDiscard) setConfirmingDiscard(false)
+    else if (dirty) setConfirmingDiscard(true)
+    else onClose()
   }
 
   async function handleFiles(event: ChangeEvent<HTMLInputElement>) {
@@ -336,14 +361,30 @@ function NoteFormModal({ note, plans, today, photoLockReasons, onSubmit, onClose
             ))}
           </div>
 
-          <div className="mt-2 flex justify-end gap-[10px]">
-            <Button variant="ghost" size="sm" type="button" onClick={close}>
-              Huỷ
-            </Button>
-            <Button variant="primary" size="sm" type="submit" disabled={invalid || busy}>
-              {saving ? "Đang lưu…" : "Lưu"}
-            </Button>
-          </div>
+          {confirmingDiscard ? (
+            <DiscardConfirm
+              title={note ? "Bỏ các thay đổi chưa lưu?" : "Bỏ ghi chép đang soạn?"}
+              detail={
+                picked.length
+                  ? `Chữ vừa viết và ${picked.length} ảnh mới chọn sẽ mất.`
+                  : note
+                    ? "Những gì vừa sửa sẽ mất, ghi chép giữ như trước."
+                    : "Chữ vừa viết sẽ mất."
+              }
+              discardLabel={note ? "Bỏ thay đổi" : "Bỏ ghi chép"}
+              onKeep={() => setConfirmingDiscard(false)}
+              onDiscard={onClose}
+            />
+          ) : (
+            <div className="mt-2 flex justify-end gap-[10px]">
+              <Button variant="ghost" size="sm" type="button" onClick={close}>
+                Huỷ
+              </Button>
+              <Button variant="primary" size="sm" type="submit" disabled={invalid || busy}>
+                {saving ? "Đang lưu…" : "Lưu"}
+              </Button>
+            </div>
+          )}
         </fieldset>
       </form>
     </Modal>

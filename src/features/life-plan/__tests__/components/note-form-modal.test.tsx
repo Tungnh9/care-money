@@ -405,3 +405,52 @@ describe("NoteFormModal — lưu", () => {
     expect(deleteCachedImage).toHaveBeenCalledWith(cloudPhoto(1).id)
   })
 })
+
+describe("NoteFormModal — hỏi trước khi bỏ chữ/ảnh đang soạn", () => {
+  it("closes straight away when nothing was typed", () => {
+    const { dialog, onClose } = renderForm()
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Huỷ" }))
+
+    expect(onClose).toHaveBeenCalled()
+  })
+
+  it("asks on Huỷ, keeps the text on Tiếp tục soạn, and closes on Bỏ ghi chép", () => {
+    const { dialog, onClose } = renderForm()
+    typeInto(dialog, "Tiêu đề", "Chuẩn bị đi Đà Lạt")
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Huỷ" }))
+    expect(onClose).not.toHaveBeenCalled()
+    expect(within(dialog).getByRole("alert")).toHaveTextContent("Bỏ ghi chép đang soạn?")
+    expect(within(dialog).getByRole("alert")).toHaveTextContent("Chữ vừa viết sẽ mất.")
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Tiếp tục soạn" }))
+    expect(within(dialog).getByLabelText("Tiêu đề")).toHaveValue("Chuẩn bị đi Đà Lạt")
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Huỷ" }))
+    fireEvent.click(within(dialog).getByRole("button", { name: "Bỏ ghi chép" }))
+    expect(onClose).toHaveBeenCalled()
+  })
+
+  it("asks on Esc too, and a second Esc just goes back to the form", () => {
+    const { dialog, onClose } = renderForm()
+    typeInto(dialog, "Nội dung", "Viết dở")
+
+    fireEvent.keyDown(window, { key: "Escape" })
+    expect(within(dialog).getByRole("alert")).toBeInTheDocument()
+    fireEvent.keyDown(window, { key: "Escape" })
+
+    expect(within(dialog).queryByRole("alert")).not.toBeInTheDocument()
+    expect(onClose).not.toHaveBeenCalled()
+  })
+
+  it("names the new photos that would be lost", async () => {
+    const { dialog } = renderForm()
+    pickPhotos(dialog, "a.jpg", "b.jpg")
+    await waitForPreviews(dialog, 2)
+
+    fireEvent.click(within(dialog).getByRole("button", { name: "Huỷ" }))
+
+    expect(within(dialog).getByRole("alert")).toHaveTextContent("Chữ vừa viết và 2 ảnh mới chọn sẽ mất.")
+  })
+})
