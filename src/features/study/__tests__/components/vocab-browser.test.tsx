@@ -39,15 +39,18 @@ function renderBrowser({ vocab = VOCAB, topic = null, level = null }: Overrides 
       level={level}
       onTopicChange={onTopicChange}
       onLevelChange={onLevelChange}
+      memorizing={false}
+      onMemorizingChange={vi.fn()}
     />
   )
   return { ...view, onTopicChange, onLevelChange, onToggleLearned }
 }
 
-// Giữ chủ đề và cấp như StudyView — để thấy focus và khung nhìn sau khi màn thật sự đổi.
+// Giữ chủ đề, cấp và chế độ Ghi nhớ như StudyView — để thấy focus, khung nhìn và bài Ghi nhớ sau khi màn thật sự đổi.
 function StatefulBrowser() {
   const [topic, setTopic] = useState<string | null>(null)
   const [level, setLevel] = useState<CefrLevel | null>(null)
+  const [memorizing, setMemorizing] = useState(false)
   return (
     <VocabBrowser
       vocab={VOCAB}
@@ -57,6 +60,8 @@ function StatefulBrowser() {
       level={level}
       onTopicChange={setTopic}
       onLevelChange={setLevel}
+      memorizing={memorizing}
+      onMemorizingChange={setMemorizing}
     />
   )
 }
@@ -97,6 +102,8 @@ describe("VocabBrowser", () => {
         level={null}
         onTopicChange={onTopicChange}
         onLevelChange={vi.fn()}
+        memorizing={false}
+        onMemorizingChange={vi.fn()}
       />
     )
     expect(screen.getByText("Ăn uống · 2 từ")).toBeInTheDocument()
@@ -144,6 +151,8 @@ describe("VocabBrowser", () => {
         level="A1"
         onTopicChange={vi.fn()}
         onLevelChange={onLevelChange}
+        memorizing={false}
+        onMemorizingChange={vi.fn()}
       />
     )
     expect(screen.getByText("Chủ đề · 2")).toBeInTheDocument()
@@ -228,6 +237,69 @@ describe("VocabBrowser", () => {
     expect(tile).toHaveClass("scroll-mt-[72px]", "scroll-mb-[96px]")
   })
 
+  it("puts the Ghi nhớ button last in a topic's filter row, after the last level chip, and not on the topic grid", () => {
+    const { unmount } = renderBrowser({ topic: "jobs" })
+
+    const row = screen.getByRole("group", { name: "Lọc theo cấp độ" }).parentElement as HTMLElement
+    const buttons = within(row).getAllByRole("button")
+    expect(buttons.map((button) => button.textContent)).toEqual(["Tất cả", "A1 · 1", "B1 · 1", "Ghi nhớ"])
+    expect(buttons.at(-1)).toHaveAttribute("aria-pressed", "false")
+    unmount()
+
+    renderBrowser({ topic: null })
+    expect(screen.queryByRole("button", { name: "Ghi nhớ" })).not.toBeInTheDocument()
+  })
+
+  it("swaps the topic's word grid for the memorize drill, and back, with Ghi nhớ", () => {
+    render(<StatefulBrowser />)
+    fireEvent.click(screen.getByRole("button", { name: "Nghề nghiệp" }))
+
+    fireEvent.click(screen.getByRole("button", { name: "Ghi nhớ" }))
+    expect(screen.getByRole("button", { name: "Ghi nhớ" })).toHaveAttribute("aria-pressed", "true")
+    expect(screen.getByText("Từ 1/2 · Đúng 0")).toBeInTheDocument()
+    expect(screen.getByText("nghĩa v-3")).toBeInTheDocument()
+    expect(screen.queryByText("word-v-3")).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: "Ghi nhớ" }))
+    expect(screen.getByText("word-v-3")).toBeInTheDocument()
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument()
+  })
+
+  it("drills only the words of the chosen level, starting a new round when the level changes", () => {
+    render(<StatefulBrowser />)
+    fireEvent.click(screen.getByRole("button", { name: "Nghề nghiệp" }))
+    fireEvent.click(screen.getByRole("button", { name: "Ghi nhớ" }))
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "word-v-3" } })
+    fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }))
+    expect(screen.getByText("Từ 1/2 · Đúng 1")).toBeInTheDocument()
+
+    // v-3 vẫn trong danh sách A1, nhưng đổi cấp là lượt mới: không còn kết quả cũ.
+    fireEvent.click(screen.getByRole("button", { name: "A1 · 1" }))
+    expect(screen.getByText("Từ 1/1 · Đúng 0")).toBeInTheDocument()
+    expect(screen.getByRole("textbox")).toHaveValue("")
+
+    // Đang ở từ thứ 2 mà danh sách mới chỉ còn 1 từ: lượt mới bắt đầu lại từ từ đầu, không trỏ ra ngoài danh sách.
+    fireEvent.click(screen.getByRole("button", { name: "Tất cả" }))
+    fireEvent.click(screen.getByRole("button", { name: "Sau" }))
+    expect(screen.getByText("nghĩa v-4")).toBeInTheDocument()
+    fireEvent.click(screen.getByRole("button", { name: "B1 · 1" }))
+    expect(screen.getByText("Từ 1/1 · Đúng 0")).toBeInTheDocument()
+    expect(screen.getByText("nghĩa v-4")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Ghi nhớ" })).toHaveAttribute("aria-pressed", "true")
+  })
+
+  it("leaves the memorize drill when going back to the topics", () => {
+    render(<StatefulBrowser />)
+    fireEvent.click(screen.getByRole("button", { name: "Nghề nghiệp" }))
+    fireEvent.click(screen.getByRole("button", { name: "Ghi nhớ" }))
+
+    fireEvent.click(screen.getByRole("button", { name: "Tất cả chủ đề" }))
+    fireEvent.click(screen.getByRole("button", { name: "Ăn uống" }))
+
+    expect(screen.getByRole("button", { name: "Ghi nhớ" })).toHaveAttribute("aria-pressed", "false")
+    expect(screen.getByText("word-v-1")).toBeInTheDocument()
+  })
+
   it("lays the grids out by the card's own width, not the screen's", () => {
     const { container, rerender } = renderBrowser()
     const gridClasses = () =>
@@ -244,6 +316,8 @@ describe("VocabBrowser", () => {
         level={null}
         onTopicChange={vi.fn()}
         onLevelChange={vi.fn()}
+        memorizing={false}
+        onMemorizingChange={vi.fn()}
       />
     )
     const wordGrids = gridClasses()

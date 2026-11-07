@@ -17,6 +17,7 @@ import {
   type TopicSummary,
 } from "../vocab-catalog"
 import { LevelFilter } from "./level-filter"
+import { VocabMemorize } from "./vocab-memorize"
 import { VocabWordCard } from "./vocab-word-card"
 
 interface VocabBrowserProps {
@@ -29,6 +30,9 @@ interface VocabBrowserProps {
   level: CefrLevel | null
   onTopicChange: (topic: string | null) => void
   onLevelChange: (level: CefrLevel | null) => void
+  // Chế độ Ghi nhớ của chủ đề đang mở (thay lưới từ bằng bài gõ lại từng từ). Mở hay đóng chủ đề là tắt.
+  memorizing: boolean
+  onMemorizingChange: (memorizing: boolean) => void
 }
 
 // Số cột theo bề rộng của chính Card (container query), không theo màn hình.
@@ -80,7 +84,7 @@ function TopicTile({ summary, statsId, onOpen }: TopicTileProps) {
 }
 
 // Tab Từ vựng: lưới chủ đề, hay các từ của 1 chủ đề chia theo cấp A1 → C2. Dải lọc theo cấp dùng chung cho cả 2 màn;
-// chủ đề và cấp đang chọn do StudyView giữ, để chuyển tab rồi quay lại vẫn còn.
+// chủ đề, cấp đang chọn và chế độ Ghi nhớ do StudyView giữ, để chuyển tab rồi quay lại vẫn còn.
 function VocabBrowser({
   vocab,
   learned,
@@ -89,6 +93,8 @@ function VocabBrowser({
   level,
   onTopicChange,
   onLevelChange,
+  memorizing,
+  onMemorizingChange,
 }: VocabBrowserProps) {
   const statsBaseId = useId()
   const cardRef = useRef<HTMLElement>(null)
@@ -120,11 +126,13 @@ function VocabBrowser({
 
   function openTopic(next: string) {
     pendingMove.current = { kind: "open" }
+    onMemorizingChange(false)
     onTopicChange(next)
   }
 
   function backToTopics(current: string) {
     pendingMove.current = { kind: "back", topic: current }
+    onMemorizingChange(false)
     onTopicChange(null)
   }
 
@@ -175,8 +183,20 @@ function VocabBrowser({
         </Button>
       }
     >
-      <LevelFilter counts={levelCounts(topicWords)} active={level} onChange={onLevelChange} />
-      {shown.length ? (
+      <LevelFilter
+        counts={levelCounts(topicWords)}
+        active={level}
+        onChange={onLevelChange}
+        memorize={{ active: memorizing, onToggle: () => onMemorizingChange(!memorizing) }}
+      />
+      {memorizing ? (
+        // Đúng thứ tự trên lưới (A1 → C2). key: đổi cấp đang lọc là lượt mới, bắt đầu lại từ từ đầu tiên.
+        <VocabMemorize
+          key={`${topic}|${level ?? "all"}`}
+          words={groupByLevel(shown).flatMap((group) => group.words)}
+          pool={vocab}
+        />
+      ) : shown.length ? (
         <div className="flex flex-col gap-5">
           {groupByLevel(shown).map((group) => (
             <div key={group.level ?? "none"}>

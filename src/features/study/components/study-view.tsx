@@ -26,9 +26,11 @@ interface StudyViewProps {
 
 function StudyView({ vocab, grammar }: StudyViewProps) {
   const [tab, setTab] = useState(TABS[0])
-  // Chủ đề đang mở và cấp đang lọc ở tab Từ vựng — giữ ở đây để sang tab khác rồi quay lại vẫn còn.
+  // Chủ đề đang mở, cấp đang lọc và chế độ Ghi nhớ ở tab Từ vựng — giữ ở đây để sang tab khác rồi quay lại vẫn còn
+  // (lượt Ghi nhớ thì bắt đầu lại từ từ đầu: kết quả từng lượt không lưu).
   const [vocabTopic, setVocabTopic] = useState<string | null>(null)
   const [vocabLevel, setVocabLevel] = useState<CefrLevel | null>(null)
+  const [vocabMemorizing, setVocabMemorizing] = useState(false)
   const {
     tasks,
     learned,
@@ -107,6 +109,8 @@ function StudyView({ vocab, grammar }: StudyViewProps) {
               level={vocabLevel}
               onTopicChange={setVocabTopic}
               onLevelChange={setVocabLevel}
+              memorizing={vocabMemorizing}
+              onMemorizingChange={setVocabMemorizing}
             />
           ) : (
             <GrammarListCard entries={grammar} vocab={vocab} />

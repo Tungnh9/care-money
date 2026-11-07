@@ -114,6 +114,19 @@ describe("StudyView", () => {
     expect(screen.getByText("Khác · 10 từ")).toBeInTheDocument()
   })
 
+  it("keeps the Ghi nhớ mode of the open topic when switching to another tab and back", () => {
+    render(<StudyView vocab={VOCAB} grammar={GRAMMAR} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Từ vựng" }))
+    fireEvent.click(screen.getByRole("button", { name: "Khác" }))
+    fireEvent.click(screen.getByRole("button", { name: "Ghi nhớ" }))
+    fireEvent.click(screen.getByRole("button", { name: "Ngữ pháp" }))
+    fireEvent.click(screen.getByRole("button", { name: "Từ vựng" }))
+
+    expect(screen.getByRole("button", { name: "Ghi nhớ" })).toHaveAttribute("aria-pressed", "true")
+    expect(screen.getByText("Từ 1/10 · Đúng 0")).toBeInTheDocument()
+  })
+
   it("stagger-animates the Từ vựng tab content in on tab switch", () => {
     render(<StudyView vocab={VOCAB} grammar={GRAMMAR} />)
 
