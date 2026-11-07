@@ -170,8 +170,8 @@ describe("OverviewView", () => {
   it("shows the real SRS due-word count for Học tập, synced with the Study page", async () => {
     render(<OverviewView vocab={VOCAB} grammar={GRAMMAR} />)
 
-    // Toàn bộ 10 từ đều "mới" (chưa từng ôn) nên đều tới hạn ngay hôm đầu tiên.
-    await waitFor(() => expect(screen.getByText("10 từ cần ôn")).toBeInTheDocument())
+    // Toàn bộ 10 từ đều "mới" (chưa từng ôn): 0 lượt ôn, 10 từ mới hôm nay.
+    await waitFor(() => expect(screen.getByText("0 từ cần ôn · 10 từ mới")).toBeInTheDocument())
     for (const entry of VOCAB.slice(0, 5)) {
       expect(screen.getByText(entry.word)).toBeInTheDocument()
     }

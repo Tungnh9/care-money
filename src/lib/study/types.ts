@@ -60,6 +60,9 @@ interface WordReviewState {
   repetitions: number
   dueAt: string // dayKey "YYYY-MM-DD"
   lastReviewedAt: string | null
+  // dayKey lần đầu 1 từ MỚI được chấm (thẻ ôn hay mini-game) — để đếm số từ mới đã học hôm nay. Từ chấm trước khi
+  // có field này, hay từ seed "đã học", không có.
+  introducedOn?: string
 }
 
 export type {

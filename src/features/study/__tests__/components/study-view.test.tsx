@@ -41,13 +41,13 @@ describe("StudyView", () => {
     const key = dayKey()
     const dailyGrammar = pickDaily(GRAMMAR, 1, key, "grammar")[0]
 
-    // Toàn bộ 10 từ đều "mới" (chưa từng ôn) nên đều tới hạn ngay hôm đầu tiên — cap hiển thị 5,
+    // Toàn bộ 10 từ đều "mới" (chưa từng ôn) nên cả 10 là từ mới hôm nay (đúng DAILY_NEW_WORDS) — cap hiển thị 5,
     // thứ tự ổn định giữ đúng thứ tự gốc trong VOCAB khi cùng hạn ôn (sort ổn định, cùng dueAt).
     for (const word of VOCAB.slice(0, 5)) {
       expect(screen.getByText(word.word)).toBeInTheDocument()
     }
     expect(screen.getByText(dailyGrammar.title)).toBeInTheDocument()
-    expect(screen.getByText("0/3 nhiệm vụ · 10 từ cần ôn · ngày 14/08")).toBeInTheDocument()
+    expect(screen.getByText("0/3 nhiệm vụ · 0 từ cần ôn · 10 từ mới · ngày 14/08")).toBeInTheDocument()
   })
 
   it("marking a word as learned on the Từ vựng tab updates the progress card", async () => {
@@ -69,7 +69,9 @@ describe("StudyView", () => {
 
     fireEvent.click(screen.getByText("Ôn 20 từ vựng"))
 
-    await waitFor(() => expect(screen.getByText("1/3 nhiệm vụ · 10 từ cần ôn · ngày 14/08")).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getByText("1/3 nhiệm vụ · 0 từ cần ôn · 10 từ mới · ngày 14/08")).toBeInTheDocument()
+    )
   })
 
   it("stagger-animates the Hôm nay boxes in on mount, like the Tài chính page", () => {
@@ -167,13 +169,15 @@ describe("StudyView", () => {
   it("grading a due word from Hôm nay keeps its card visible but drops it out of the due count", async () => {
     render(<StudyView vocab={VOCAB} grammar={GRAMMAR} />)
 
-    expect(screen.getByText("0/3 nhiệm vụ · 10 từ cần ôn · ngày 14/08")).toBeInTheDocument()
+    expect(screen.getByText("0/3 nhiệm vụ · 0 từ cần ôn · 10 từ mới · ngày 14/08")).toBeInTheDocument()
 
     const revealButtons = screen.getAllByRole("button", { name: /Hiện nghĩa/ })
     fireEvent.click(revealButtons[0])
     fireEvent.click(screen.getByRole("button", { name: "Nhớ" }))
 
-    await waitFor(() => expect(screen.getByText("0/3 nhiệm vụ · 9 từ cần ôn · ngày 14/08")).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getByText("0/3 nhiệm vụ · 0 từ cần ôn · 9 từ mới · ngày 14/08")).toBeInTheDocument()
+    )
     // Thẻ vừa chấm vẫn còn hiển thị (đóng băng theo phiên), không biến mất khỏi lưới.
     expect(screen.getByText(VOCAB[0].word)).toBeInTheDocument()
   })
@@ -214,7 +218,9 @@ describe("StudyView", () => {
     fireEvent.click(sorted[1]) // luôn là 1 cặp giống nhau — chắc chắn ăn cặp, bất kể 6 cặp nào được rút ngẫu nhiên
 
     fireEvent.click(screen.getByRole("button", { name: "Hôm nay" }))
-    await waitFor(() => expect(screen.getByText("0/3 nhiệm vụ · 9 từ cần ôn · ngày 14/08")).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getByText("0/3 nhiệm vụ · 0 từ cần ôn · 9 từ mới · ngày 14/08")).toBeInTheDocument()
+    )
   })
 
   it("shows the actually-due words for a returning user, not the cold-seed order (regression: ReviewDueCard must not freeze before hydration)", async () => {

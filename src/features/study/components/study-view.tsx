@@ -6,7 +6,7 @@ import { Tabs } from "@/components/ob/tabs"
 import { dayKey } from "@/lib/date"
 import { pickDaily } from "@/lib/study/daily-pick"
 import type { CefrLevel } from "@/lib/study/cefr"
-import { ensureReviewStates, getDueWords } from "@/lib/study/srs-calculations"
+import { ensureReviewStates, getTodayQueue } from "@/lib/study/srs-calculations"
 import { useStudy } from "@/lib/study/use-study"
 import type { GrammarEntry, VocabEntry } from "@/lib/study/types"
 import { GameTab } from "./games/game-tab"
@@ -53,7 +53,7 @@ function StudyView({ vocab, grammar }: StudyViewProps) {
 
   const key = dayKey()
   const dailyGrammar = pickDaily(grammar, 1, key, "grammar")[0]
-  const dueWords = getDueWords(ensureReviewStates(wordReviews, vocab, learned, key), vocab, key)
+  const queue = getTodayQueue(ensureReviewStates(wordReviews, vocab, learned, key), vocab, key)
 
   const done = tasks.filter((t) => t.done).length
   const [day, month] = key.split("-").reverse()
@@ -62,7 +62,8 @@ function StudyView({ vocab, grammar }: StudyViewProps) {
     <div>
       <h1 className="mb-1 [font:var(--ob-text-h2)] tracking-[var(--ob-track-heading)]">Học tập</h1>
       <p className="mb-5 text-sm text-[var(--ob-color-text-subtle)]">
-        {done}/{tasks.length} nhiệm vụ · {dueWords.length} từ cần ôn · ngày {day}/{month}
+        {done}/{tasks.length} nhiệm vụ · {queue.reviews.length} từ cần ôn · {queue.fresh.length} từ mới · ngày {day}/
+        {month}
       </p>
 
       <Tabs tabs={TABS} active={tab} onChange={setTab} />
@@ -74,7 +75,7 @@ function StudyView({ vocab, grammar }: StudyViewProps) {
           </div>
           {hydrated ? (
             <ReviewDueCard
-              dueWords={dueWords}
+              queue={queue}
               // Chấm tay ở thẻ ôn: "Nhớ"/"Dễ" tính luôn là đã học (mini-game bên dưới thì không).
               onGrade={(wordId, grade) => gradeWord(wordId, grade, { markLearned: true })}
               className="min-w-0 flex-[1_1_100%]"

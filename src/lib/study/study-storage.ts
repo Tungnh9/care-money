@@ -55,6 +55,7 @@ const wordReviewStateSchema: z.ZodType<WordReviewState> = z.object({
   repetitions: z.number(),
   dueAt: z.string(),
   lastReviewedAt: z.string().nullable(),
+  introducedOn: z.string().optional().catch(undefined),
 })
 
 // Field nào sai shape thì rơi về default riêng field đó, không kéo sập cả state.

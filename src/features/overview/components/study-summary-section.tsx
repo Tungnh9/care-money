@@ -18,8 +18,8 @@ interface StudySummarySectionProps {
   tasks: Task[]
   onToggleTask: (index: number) => void
   learned: string[]
-  // Đã tính sẵn ở overview-view.tsx (getDueWords, giống hệt trang Học tập) — CHƯA cắt theo cap,
-  // component này tự cắt để hiển thị, giữ đúng ý nghĩa "tổng số thật" cho nơi gọi nếu cần dùng.
+  // Đã tính sẵn ở overview-view.tsx (getTodayQueue, giống hệt trang Học tập: ôn lại trước, từ mới hôm nay sau) —
+  // CHƯA cắt theo cap, component này tự cắt để hiển thị.
   dueWords: VocabEntry[]
 }
 

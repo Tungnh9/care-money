@@ -10,7 +10,7 @@ import { useJournal } from "@/lib/journal/use-journal"
 import { useBudget } from "@/lib/budget/use-budget"
 import { remainingToSettle, salaryForMonth, totalExpensesForMonth } from "@/lib/budget/budget-calculations"
 import { useStudy } from "@/lib/study/use-study"
-import { ensureReviewStates, getDueWords } from "@/lib/study/srs-calculations"
+import { ensureReviewStates, getTodayQueue } from "@/lib/study/srs-calculations"
 import type { GrammarEntry, VocabEntry } from "@/lib/study/types"
 import { useSettings } from "@/lib/settings/use-settings"
 import { useWork } from "@/lib/work/use-work"
@@ -90,7 +90,7 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
 
   // Đúng với cách trang Học tập tính "từ cần ôn" — không dùng pickDaily/learnedToday nữa, vì
   // 2 trang phải khớp cùng 1 khái niệm "hôm nay cần ôn từ nào" thay vì mỗi nơi tính 1 kiểu.
-  const dueWords = getDueWords(ensureReviewStates(wordReviews, vocab, learned, dayKey()), vocab, dayKey())
+  const studyQueue = getTodayQueue(ensureReviewStates(wordReviews, vocab, learned, dayKey()), vocab, dayKey())
 
   const goldPricePerPhan = goldReferencePricePerPhan(summary, goldStores)
   const { goals, avg: avgGoal } = getGoals(
@@ -194,14 +194,19 @@ function OverviewView({ vocab, grammar }: OverviewViewProps) {
 
       {enabled("hoctap") ? (
         <>
-          <SectionHead icon="cap" title="Học tập" hint={`${dueWords.length} từ cần ôn`} href="/study" />
+          <SectionHead
+            icon="cap"
+            title="Học tập"
+            hint={`${studyQueue.reviews.length} từ cần ôn · ${studyQueue.fresh.length} từ mới`}
+            href="/study"
+          />
           <StudySummarySection
             vocab={vocab}
             grammar={grammar}
             tasks={tasks}
             onToggleTask={toggleTask}
             learned={learned}
-            dueWords={dueWords}
+            dueWords={[...studyQueue.reviews, ...studyQueue.fresh]}
           />
         </>
       ) : null}

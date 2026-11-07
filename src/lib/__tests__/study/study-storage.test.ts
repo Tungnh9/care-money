@@ -89,6 +89,25 @@ describe("getStoredStudy", () => {
     expect(state.wordReviews["v-2" as keyof typeof state.wordReviews]).toBeUndefined()
   })
 
+  it("keeps the day a word was first learned, and drops only a malformed value of it", () => {
+    const base = { wordId: "v-1", easeFactor: 2.5, intervalDays: 1, repetitions: 1, dueAt: "2026-01-02" }
+    window.localStorage.setItem(
+      STUDY_STORAGE_KEY,
+      JSON.stringify({
+        ...DEFAULT_STUDY_STATE,
+        wordReviews: {
+          "v-1": { ...base, lastReviewedAt: "t", introducedOn: "2026-01-01" },
+          "v-2": { ...base, wordId: "v-2", lastReviewedAt: "t", introducedOn: 5 },
+        },
+      })
+    )
+
+    const { wordReviews } = getStoredStudy()
+    expect(wordReviews["v-1"].introducedOn).toBe("2026-01-01")
+    expect(wordReviews["v-2"]).toBeDefined()
+    expect(wordReviews["v-2"].introducedOn).toBeUndefined()
+  })
+
   it("keeps valid learned ids and drops only a wrong-typed element (and duplicates)", () => {
     window.localStorage.setItem(
       STUDY_STORAGE_KEY,

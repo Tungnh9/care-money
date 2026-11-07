@@ -10,6 +10,8 @@ import type { ReviewGrade, VocabEntry } from "@/lib/study/types"
 
 interface ReviewWordCardProps {
   entry: VocabEntry
+  // Từ chưa học lần nào — gắn nhãn "Mới" để phân biệt với lượt ôn lại.
+  isNew?: boolean
   onGrade: (wordId: string, grade: ReviewGrade) => void
 }
 
@@ -20,7 +22,7 @@ const GRADE_BUTTONS: { grade: ReviewGrade; label: string; variant: "outline" | "
   { grade: "easy", label: "Dễ", variant: "reward" },
 ]
 
-function ReviewWordCard({ entry, onGrade }: ReviewWordCardProps) {
+function ReviewWordCard({ entry, isNew = false, onGrade }: ReviewWordCardProps) {
   const [revealed, setRevealed] = useState(false)
   const [graded, setGraded] = useState<ReviewGrade | null>(null)
 
@@ -44,6 +46,11 @@ function ReviewWordCard({ entry, onGrade }: ReviewWordCardProps) {
       <div className="flex flex-1 flex-col gap-2 p-[14px]">
         <div className="flex flex-wrap items-baseline gap-[7px]">
           <span className="text-base font-bold">{entry.word}</span>
+          {isNew ? (
+            <span className="rounded-[var(--ob-radius-pill)] bg-[var(--ob-color-action-soft)] px-[7px] py-[1px] text-[10.5px] font-bold text-[var(--ob-color-action-strong)]">
+              Mới
+            </span>
+          ) : null}
           {entry.phonetic ? (
             <span className="[font-family:var(--ob-font-num)] text-[12px] text-[var(--ob-color-text-subtle)]">
               {entry.phonetic}

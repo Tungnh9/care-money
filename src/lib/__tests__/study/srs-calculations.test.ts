@@ -3,11 +3,14 @@ import { describe, it, expect } from "vitest"
 import {
   SRS_EASE_START,
   SRS_EASE_FLOOR,
+  DAILY_NEW_WORDS,
   initialReviewState,
   seedLearnedReviewState,
   applyGrade,
   ensureReviewStates,
   getDueWords,
+  getTodayQueue,
+  isNewWord,
 } from "@/lib/study/srs-calculations"
 import type { VocabEntry, WordReviewState } from "@/lib/study/types"
 
@@ -182,5 +185,111 @@ describe("getDueWords", () => {
     const due = getDueWords(wordReviews, [vocab("v-1"), vocab("v-2")], "2026-01-05")
 
     expect(due.map((v) => v.id)).toEqual(["v-2", "v-1"])
+  })
+})
+
+describe("applyGrade — ngày học từ mới", () => {
+  it("records the day a new word is first graded, whatever the grade", () => {
+    for (const grade of ["again", "hard", "good", "easy"] as const) {
+      expect(applyGrade(initialReviewState("v-1", "2026-01-01"), grade, "2026-01-03", "t").introducedOn).toBe(
+        "2026-01-03"
+      )
+    }
+  })
+
+  it("keeps that first day on later grades", () => {
+    const first = applyGrade(initialReviewState("v-1", "2026-01-01"), "again", "2026-01-03", "t1")
+    const second = applyGrade(first, "good", "2026-01-04", "t2")
+
+    expect(second.introducedOn).toBe("2026-01-03")
+  })
+
+  it("does not mark a review of a word learned elsewhere, or graded before the field existed", () => {
+    const seeded = applyGrade(seedLearnedReviewState("v-1", "2026-01-01"), "good", "2026-01-07", "t")
+    const older = applyGrade(
+      { ...initialReviewState("v-2", "2026-01-01"), repetitions: 1, lastReviewedAt: "t0" },
+      "good",
+      "2026-01-07",
+      "t"
+    )
+
+    expect(seeded.introducedOn).toBeUndefined()
+    expect(older.introducedOn).toBeUndefined()
+  })
+})
+
+describe("isNewWord", () => {
+  it("is true only for a word never graded", () => {
+    const fresh = initialReviewState("v-1", "2026-01-01")
+    expect(isNewWord(fresh)).toBe(true)
+    expect(isNewWord(applyGrade(fresh, "again", "2026-01-01", "t"))).toBe(false)
+    expect(isNewWord(seedLearnedReviewState("v-2", "2026-01-01"))).toBe(false)
+  })
+})
+
+describe("getTodayQueue", () => {
+  const TODAY = "2026-01-10"
+
+  function newWords(count: number) {
+    const entries = Array.from({ length: count }, (_, i) => vocab(`n-${i}`))
+    const states = Object.fromEntries(entries.map((v) => [v.id, initialReviewState(v.id, "2026-01-01")]))
+    return { entries, states }
+  }
+
+  it("splits real reviews from new words, and caps new words for the day", () => {
+    const { entries, states } = newWords(30)
+    const review = vocab("r-1")
+    const wordReviews = {
+      ...states,
+      [review.id]: {
+        ...initialReviewState(review.id, "2026-01-01"),
+        repetitions: 1,
+        lastReviewedAt: "t",
+        dueAt: TODAY,
+      },
+    }
+
+    const queue = getTodayQueue(wordReviews, [...entries, review], TODAY)
+
+    expect(queue.reviews.map((v) => v.id)).toEqual(["r-1"])
+    expect(queue.fresh).toHaveLength(DAILY_NEW_WORDS)
+    expect(queue.fresh.map((v) => v.id)).toEqual(entries.slice(0, DAILY_NEW_WORDS).map((v) => v.id))
+    expect(queue.newLeft).toBe(30)
+  })
+
+  it("counts a word forgotten yesterday as a review, not a new word", () => {
+    const word = vocab("v-1")
+    const forgotten = applyGrade(initialReviewState(word.id, "2026-01-08"), "again", "2026-01-09", "t")
+
+    expect(getTodayQueue({ [word.id]: forgotten }, [word], TODAY)).toEqual({ reviews: [word], fresh: [], newLeft: 0 })
+  })
+
+  it("gives fewer new words once some were already learned today, and none after the daily amount", () => {
+    const { entries, states } = newWords(30)
+    let wordReviews = states
+    for (const entry of entries.slice(0, 4)) {
+      wordReviews = { ...wordReviews, [entry.id]: applyGrade(wordReviews[entry.id], "good", TODAY, "t") }
+    }
+
+    const queue = getTodayQueue(wordReviews, entries, TODAY)
+    expect(queue.fresh.map((v) => v.id)).toEqual(entries.slice(4, DAILY_NEW_WORDS).map((v) => v.id))
+
+    for (const entry of entries.slice(4, DAILY_NEW_WORDS)) {
+      wordReviews = { ...wordReviews, [entry.id]: applyGrade(wordReviews[entry.id], "good", TODAY, "t") }
+    }
+    expect(getTodayQueue(wordReviews, entries, TODAY)).toMatchObject({ fresh: [], newLeft: 30 - DAILY_NEW_WORDS })
+  })
+
+  it("starts a fresh allowance of new words the next day", () => {
+    const { entries, states } = newWords(30)
+    let wordReviews = states
+    for (const entry of entries.slice(0, DAILY_NEW_WORDS)) {
+      wordReviews = { ...wordReviews, [entry.id]: applyGrade(wordReviews[entry.id], "good", "2026-01-09", "t") }
+    }
+
+    const queue = getTodayQueue(wordReviews, entries, TODAY)
+
+    expect(queue.fresh).toHaveLength(DAILY_NEW_WORDS)
+    expect(queue.reviews).toHaveLength(DAILY_NEW_WORDS)
   })
 })
